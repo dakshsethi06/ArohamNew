@@ -8,17 +8,37 @@ router.get("/", requireAuth, async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("cart_items")
-      .select("qty, is_temporary, product:products(id, name, slug, price, img, original_price, stock, emoji)")
+      .select("qty, is_temporary, product:products(*)")
       .eq("user_id", req.user.id)
       .eq("is_temporary", isTemp);
 
     if (error) throw error;
-    const items = data.map((item) => ({
-      ...item.product,
-      qty: item.qty,
-      is_temporary: item.is_temporary,
-      subtotal: item.product.price * item.qty
-    }));
+    const items = data.map((item) => {
+      const p = item.product || {};
+      return {
+        id: p.id,
+        slug: p.slug,
+        name: p.name,
+        subtitle: p.subtitle,
+        category: p.category,
+        purpose: p.purpose,
+        price: (p.price || 0) / 100,
+        original: (p.original_price || p.price || 0) / 100,
+        rating: p.rating,
+        reviews: p.reviews,
+        img: p.img,
+        badges: p.badges || [],
+        shortDesc: p.short_desc,
+        benefits: p.benefits || [],
+        size: p.size,
+        material: p.material,
+        useFor: p.use_for || [],
+        stock: p.stock,
+        qty: item.qty,
+        is_temporary: item.is_temporary,
+        subtotal: ((p.price || 0) / 100) * item.qty
+      };
+    });
     res.json(items);
   } catch (e) {
     res.status(500).json({ error: e.message });
