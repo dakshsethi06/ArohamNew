@@ -1,5 +1,7 @@
 // server.js — Aroham backend entry point
 require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
 // Capture logs in memory for debugging
 global.debugLogs = [];
 const originalLog = console.log;
