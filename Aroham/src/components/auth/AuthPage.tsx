@@ -59,7 +59,7 @@ export function AuthPage() {
     <div style={formStyle} className="space-y-5">
       <div><h2 className="mb-1" style={{ fontFamily: SERIF, fontSize: "1.75rem", fontWeight: 500, color: MAROON }}>Welcome Back</h2><p className="text-sm" style={{ color: "#7A6A58" }}>Continue your journey toward harmony and positive energy.</p></div>
       {errorMsg && <p className="text-sm text-red-500 font-semibold">{errorMsg}</p>}
-      <div className="space-y-3"><AuthInput label="Phone Number" type="tel" value={phone} onChange={setPhone} /><PasswordInput label="Password" value={password} onChange={setPassword} /></div>
+      <div className="space-y-3"><AuthInput label="Phone Number" type="tel" value={phone} onChange={v => setPhone(v.replace(/\D/g, "").slice(0, 10))} /><PasswordInput label="Password" value={password} onChange={setPassword} /></div>
       <div className="flex items-center justify-between">
         <button onClick={() => setRememberMe(v => !v)} className="flex items-center gap-2 cursor-pointer text-sm" style={{ color: "#5A4A3A" }}>
           <div className="w-4 h-4 rounded flex-shrink-0 flex items-center justify-center transition-all" style={{ border: `2px solid ${rememberMe ? MAROON : "rgba(91,31,36,0.25)"}`, background: rememberMe ? MAROON : "transparent" }}>
@@ -100,7 +100,7 @@ export function AuthPage() {
       {errorMsg && <p className="text-sm text-red-500 font-semibold">{errorMsg}</p>}
       <div className="space-y-3">
         <AuthInput label="Full Name" value={name} onChange={setName} />
-        <AuthInput label="Phone Number" type="tel" value={phone} onChange={v => { setPhone(v); setEmail(`${v}@aroham.in`); }} />
+        <AuthInput label="Phone Number" type="tel" value={phone} onChange={v => { const digits = v.replace(/\D/g, "").slice(0, 10); setPhone(digits); setEmail(`${digits}@aroham.in`); }} />
         <AuthInput label="Email (optional)" type="email" value={email} onChange={setEmail} />
         <PasswordInput label="Password" value={password} onChange={setPassword} />
         <PasswordInput label="Confirm Password" value={confirmPass} onChange={setConfirmPass} />
@@ -116,8 +116,9 @@ export function AuthPage() {
         if (!name || !phone || !password) { setErrorMsg("Please fill in all required fields."); return; }
         if (password !== confirmPass) { setErrorMsg("Passwords do not match."); return; }
         if (password.length < 8) { setErrorMsg("Password must be at least 8 characters."); return; }
+        if (!/[a-zA-Z]/.test(password) || !/\d/.test(password)) { setErrorMsg("Password must contain at least one letter and one number."); return; }
         const phoneDigits = phone.replace(/\D/g, "");
-        if (phoneDigits.length !== 10) { setErrorMsg("Phone must be exactly 10 digits."); return; }
+        if (phoneDigits.length !== 10) { setErrorMsg("Phone number must be exactly 10 digits."); return; }
         setLoading(true); setErrorMsg("");
         try {
           // Call backend signup — creates Supabase auth user + inserts into users table
