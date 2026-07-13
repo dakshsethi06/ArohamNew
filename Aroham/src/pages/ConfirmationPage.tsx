@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { Lock, CheckCircle, Package, Mail, ArrowRight, Truck } from "lucide-react";
 import { MAROON, GOLD, SAFFRON, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
 import { useCart } from "@/context/CartContext";
+import { api } from "@/lib/api";
 
 function CheckoutHeader() {
   const navigate = useNavigate();
@@ -49,20 +50,63 @@ function Confetti() {
 
 export function ConfirmationPage() {
   const navigate = useNavigate();
-  const { items } = useCart();
   const [visible, setVisible] = useState(false);
   const [timelineReached, setTimelineReached] = useState(0);
+  const [orderItems, setOrderItems] = useState<{ id: number; name: string; img: string; price: number; qty: number }[]>([]);
+  const [totalAmount, setTotalAmount] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+
   const orderId = sessionStorage.getItem("aroham_last_order_id") || "—";
   const displayOrderId = orderId !== "—" ? `ARH-${orderId}` : "Confirmed";
 
   useEffect(() => {
     const t1 = setTimeout(() => setVisible(true), 80);
     const timers = TIMELINE_STEPS.map((_, i) => setTimeout(() => setTimelineReached(i + 1), 600 + i * 350));
-    return () => { clearTimeout(t1); timers.forEach(clearTimeout); };
-  }, []);
 
-  const subtotal = items.reduce((s, i) => s + i.product.price * i.qty, 0);
-  const total = subtotal + 99 + Math.round(subtotal * 0.05);
+    if (orderId && orderId !== "—") {
+      Promise.all([api("/orders"), api("/products")])
+        .then(([orders, products]: [any[], any[]]) => {
+          const found = orders.find(o => o.id === orderId);
+          if (found) {
+            const mappedItems = (found.order_items || []).map((oi: any) => {
+              const matchedProduct = products.find(p => p.id === oi.product_id);
+              return {
+                id: oi.product_id,
+                name: oi.name,
+                img: matchedProduct?.img || matchedProduct?.image || "📿",
+                price: (oi.price || 0) / 100,
+                qty: oi.qty || 1
+              };
+            });
+            setOrderItems(mappedItems);
+            setTotalAmount((found.amount || 0) / 100);
+          }
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error("Failed to load confirmation details:", err);
+          setLoading(false);
+        });
+    } else {
+      setLoading(false);
+    }
+
+    return () => {
+      clearTimeout(t1);
+      timers.forEach(clearTimeout);
+    };
+  }, [orderId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#FAF7F2" }}>
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-full border-4 border-t-transparent mx-auto mb-4 animate-spin" style={{ borderColor: `${GOLD} transparent ${GOLD} ${GOLD}` }} />
+          <p className="text-sm" style={{ color: "#9A8A78", fontFamily: SANS }}>Loading order details...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: "#FAF7F2", minHeight: "100vh", fontFamily: SANS, position: "relative" }}>
@@ -99,7 +143,7 @@ export function ConfirmationPage() {
             </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0" style={{ borderColor: "rgba(91,31,36,0.07)" }}>
-            {[["Order Date", new Date().toLocaleDateString("en-IN", {day:"2-digit",month:"short",year:"numeric"})], ["Est. Delivery", "7–10 business days"], ["Payment", "Razorpay"], ["Total", `₹${total.toLocaleString("en-IN")}`]].map(([l, v]) => (
+            {[["Order Date", new Date().toLocaleDateString("en-IN", {day:"2-digit",month:"short",year:"numeric"})], ["Est. Delivery", "7–10 business days"], ["Payment", "Razorpay"], ["Total", `₹${totalAmount.toLocaleString("en-IN")}`]].map(([l, v]) => (
               <div key={l} className="px-6 py-5"><p className="text-[10px] tracking-widest uppercase font-semibold mb-1" style={{ color: "#9A8A78" }}>{l}</p><p className="text-sm font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>{v}</p></div>
             ))}
           </div>
@@ -108,14 +152,14 @@ export function ConfirmationPage() {
           <div>
             <h2 className="mb-5 text-xl font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Items in Your Order</h2>
             <div className="space-y-4">
-              {items.map(({ product: p, qty }) => (
+              {orderItems.map((p) => (
                 <div key={p.id} className="flex gap-5 p-5 rounded-2xl group transition-all hover:shadow-lg" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.07)" }}>
                   <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-amber-50"><img src={p.img} alt={p.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" /></div>
                   <div className="flex-1">
                     <span className="px-2 py-0.5 rounded-full text-[9px] font-bold" style={{ background: "rgba(91,31,36,0.07)", color: MAROON }}>Temple Energized</span>
                     <h3 className="text-sm font-semibold mt-1 mb-0.5" style={{ fontFamily: SERIF, color: MAROON }}>{p.name}</h3>
-                    <p className="text-xs mb-2" style={{ color: "#7A6A58" }}>Qty: {qty}</p>
-                    <p className="text-base font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{(p.price * qty).toLocaleString("en-IN")}</p>
+                    <p className="text-xs mb-2" style={{ color: "#7A6A58" }}>Qty: {p.qty}</p>
+                    <p className="text-base font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{(p.price * p.qty).toLocaleString("en-IN")}</p>
                   </div>
                 </div>
               ))}
