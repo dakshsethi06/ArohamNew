@@ -6,6 +6,28 @@ const { validateItems } = require("../services/validationService");
 const { createPendingOrder, getUserOrders } = require("../services/orderService");
 const supabase = require("../config/supabase");
 
+// GET /api/orders/debug-last - Debug latest order details
+router.get("/debug-last", async (req, res) => {
+  try {
+    const { data: orders, error } = await supabase
+      .from("orders")
+      .select("*, order_items(*), payments(*)")
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (error) {
+      return res.json({ error: error.message });
+    }
+
+    res.json({
+      success: true,
+      order: orders[0] || null
+    });
+  } catch (e) {
+    res.json({ error: e.message });
+  }
+});
+
 // POST /api/orders  body: { items: [{id, qty}], address: {...}, checkoutType }
 // Validates → creates PENDING order + items + reserves stock + payment record
 // → creates Razorpay order → returns checkout details to frontend
