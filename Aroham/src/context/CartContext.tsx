@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect, useRef } from "react";
 import { ArohamProduct } from "@/types/product";
 import { CartItem } from "@/types/cart";
 import { useAuth } from "./AuthContext";
@@ -25,8 +25,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [showCart, setShowCart] = useState(false);
   const { isLoggedIn } = useAuth();
 
+  // Track previous login state to detect logout
+  const prevIsLoggedIn = useRef<boolean | null>(null);
+
   // Load from LocalStorage or Backend
   useEffect(() => {
+    const justLoggedOut = prevIsLoggedIn.current === true && !isLoggedIn;
+    prevIsLoggedIn.current = isLoggedIn;
+
     if (isLoggedIn) {
       api("/cart").then(data => {
         // Assume backend returns array of cart items mapping to our structure
@@ -37,7 +43,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
           })));
         }
       }).catch(e => console.error("Error fetching cart:", e));
+    } else if (justLoggedOut) {
+      // User just logged out — clear cart and localStorage
+      setItems([]);
+      localStorage.removeItem("aroham_cart");
+      localStorage.removeItem("aroham_buy_now_intent");
     } else {
+      // Guest session — load from localStorage
       const local = localStorage.getItem("aroham_cart");
       if (local) {
         try { setItems(JSON.parse(local)); } catch (e) { }

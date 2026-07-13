@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { Lock, CheckCircle, Package, Mail, ArrowRight, Truck } from "lucide-react";
 import { MAROON, GOLD, SAFFRON, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
-import { ORDER_NUMBER } from "@/constants/data";
 import { useCart } from "@/context/CartContext";
 
 function CheckoutHeader() {
@@ -53,6 +52,8 @@ export function ConfirmationPage() {
   const { items } = useCart();
   const [visible, setVisible] = useState(false);
   const [timelineReached, setTimelineReached] = useState(0);
+  const orderId = sessionStorage.getItem("aroham_last_order_id") || "—";
+  const displayOrderId = orderId !== "—" ? `ARH-${orderId}` : "Confirmed";
 
   useEffect(() => {
     const t1 = setTimeout(() => setVisible(true), 80);
@@ -91,14 +92,14 @@ export function ConfirmationPage() {
       <div className="max-w-6xl mx-auto px-6 lg:px-10 py-12 pb-24 space-y-8">
         <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 4px 40px rgba(91,31,36,0.07)" }}>
           <div className="px-8 py-5 flex flex-wrap items-center justify-between gap-4" style={{ background: `linear-gradient(90deg,${MAROON},#7A2A30)` }}>
-            <div><p className="text-xs tracking-widest uppercase mb-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>Order Number</p><p className="text-lg font-semibold" style={{ fontFamily: SERIF, color: GOLD }}>{ORDER_NUMBER}</p></div>
+            <div><p className="text-xs tracking-widest uppercase mb-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>Order Number</p><p className="text-lg font-semibold" style={{ fontFamily: SERIF, color: GOLD }}>{displayOrderId}</p></div>
             <div className="flex gap-3">
               <button className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold" style={{ background: "rgba(255,255,255,0.12)", color: IVORY, border: "1px solid rgba(255,255,255,0.2)" }}><Package size={12} /> Track Order</button>
               <button className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold" style={{ background: GOLD, color: "#1A0D0E" }}><Mail size={12} /> Invoice</button>
             </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0" style={{ borderColor: "rgba(91,31,36,0.07)" }}>
-            {[["Order Date", "5 July 2025"], ["Est. Delivery", "15 July 2025"], ["Payment", "UPI — GPay"], ["Total", `₹${total.toLocaleString("en-IN")}`]].map(([l, v]) => (
+            {[["Order Date", new Date().toLocaleDateString("en-IN", {day:"2-digit",month:"short",year:"numeric"})], ["Est. Delivery", "7–10 business days"], ["Payment", "Razorpay"], ["Total", `₹${total.toLocaleString("en-IN")}`]].map(([l, v]) => (
               <div key={l} className="px-6 py-5"><p className="text-[10px] tracking-widest uppercase font-semibold mb-1" style={{ color: "#9A8A78" }}>{l}</p><p className="text-sm font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>{v}</p></div>
             ))}
           </div>

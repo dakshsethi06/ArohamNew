@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Lock, ChevronLeft, ChevronRight, Search, CheckCircle } from "lucide-react";
+import { Lock, ChevronLeft, ChevronRight, ShieldCheck } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
-import { UPI_APPS, BANKS_DATA, WALLETS_DATA, EMI_PLANS } from "@/constants/data";
-import { CardInput } from "@/components/auth/CardInput";
 import { CheckoutProgress } from "@/components/checkout/CheckoutProgress";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
@@ -15,7 +13,8 @@ declare global {
   }
 }
 
-type PayMethod = "upi" | "card" | "netbanking" | "wallet" | "emi" | "cod";
+// Razorpay public key — safe to expose in frontend
+const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_T905SJtpz903AN";
 
 function CheckoutHeader() {
   const navigate = useNavigate();
@@ -37,21 +36,12 @@ function CheckoutHeader() {
 
 export function PaymentPage() {
   const navigate = useNavigate();
-  const { items } = useCart();
-  const [method, setMethod] = useState<PayMethod>("upi");
-  const [upiId, setUpiId] = useState("");
-  const [upiApp, setUpiApp] = useState("");
-  const [card, setCard] = useState({ number: "", expiry: "", cvv: "", name: "", save: false });
-  const [bankSearch, setBankSearch] = useState("");
-  const [selectedBank, setSelectedBank] = useState("");
-  const [selectedWallet, setSelectedWallet] = useState("");
-  const [selectedEmi, setSelectedEmi] = useState(0);
+  const { items, clearCart } = useCart();
+  const { user } = useAuth();
   const [placing, setPlacing] = useState(false);
 
   const subtotal = items.reduce((s, i) => s + i.product.price * i.qty, 0);
   const total = subtotal + 99 + Math.round(subtotal * 0.05);
-  const filteredBanks = BANKS_DATA.filter(b => b.name.toLowerCase().includes(bankSearch.toLowerCase()));
-  const { user } = useAuth();
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
@@ -64,45 +54,56 @@ export function PaymentPage() {
     });
   };
 
-  const handlePlace = async () => { 
-    if (method === "cod") {
-      setPlacing(true); 
-      setTimeout(() => { setPlacing(false); navigate("/checkout/confirm"); }, 1800); 
-      return;
-    }
+  const handlePay = async () => {
+    if (items.length === 0) { alert("Your cart is empty."); return; }
 
     setPlacing(true);
     try {
       const isLoaded = await loadRazorpayScript();
       if (!isLoaded) { alert("Failed to load Razorpay. Please check your connection."); setPlacing(false); return; }
 
-      // Create Order on Backend
+      // Read shipping address saved by ShippingPage
+      const shippingAddr = (() => {
+        try { return JSON.parse(sessionStorage.getItem("aroham_shipping_addr") || "null"); } catch { return null; }
+      })();
+
+      // Create Order on Backend — match exact backend contract
       const orderData = await api("/orders", {
         method: "POST",
         body: JSON.stringify({
-          amount: total * 100, // Amount in paise
-          currency: "INR",
-          receipt: "receipt_temp_" + Date.now()
+          items: items.map(i => ({ id: i.product.id, qty: i.qty })),
+          address: shippingAddr,
+          checkoutType: "cart"
         })
       });
 
+      const rzpKey = orderData.keyId || RAZORPAY_KEY_ID;
+      const rzpOrderId = orderData.razorpayOrderId;
+      const internalOrderId = orderData.orderId;
+
       const options = {
-        key: "rzp_test_YourTestKey", // Replace with real key in production
+        key: rzpKey,
         amount: orderData.amount,
-        currency: orderData.currency,
+        currency: orderData.currency || "INR",
         name: "Aroham",
-        description: "Sacred Products",
-        order_id: orderData.id,
+        description: "Sacred Products – Temple Energized",
+        image: "/favicon.ico",
+        order_id: rzpOrderId,
         handler: async function (response: any) {
           try {
             await api("/payments/verify", {
               method: "POST",
               body: JSON.stringify({
+                orderId: internalOrderId,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature
               })
             });
+            await clearCart();
+            sessionStorage.removeItem("aroham_shipping_addr");
+            // Store order ID for confirmation page
+            sessionStorage.setItem("aroham_last_order_id", String(internalOrderId));
             navigate("/checkout/confirm");
           } catch (e: any) {
             alert("Payment verification failed: " + e.message);
@@ -111,36 +112,32 @@ export function PaymentPage() {
         prefill: {
           name: user?.user_metadata?.full_name || "Customer",
           email: user?.email || "",
-          contact: user?.phone || ""
+          contact: user?.user_metadata?.phone || ""
         },
-        theme: { color: MAROON }
+        notes: { items_count: items.length },
+        theme: { color: MAROON },
+        modal: {
+          ondismiss: () => setPlacing(false)
+        }
       };
 
       const rzp = new window.Razorpay(options);
       rzp.on("payment.failed", function (response: any) {
-        alert(response.error.description);
+        alert("Payment failed: " + (response.error?.description || "Please try again."));
+        setPlacing(false);
       });
       rzp.open();
 
     } catch (e: any) {
       alert("Error initiating payment: " + e.message);
-    } finally {
       setPlacing(false);
     }
   };
 
-  const PAYMENT_METHODS: [PayMethod, string, string, string][] = [
-    ["upi",        "UPI",                   "Pay instantly via any UPI app",  "⚡"],
-    ["card",       "Credit / Debit Card",    "Visa, Mastercard, RuPay",        "💳"],
-    ["netbanking", "Net Banking",            "All major Indian banks",          "🏦"],
-    ["wallet",     "Wallets",                "Amazon Pay, Paytm & more",        "👜"],
-    ["emi",        "EMI",                    "No-cost EMI available",           "📅"],
-    ["cod",        "Cash on Delivery",       "Pay when order arrives",          "📦"],
-  ];
-
   return (
     <div style={{ background: "#FAF7F2", minHeight: "100vh", fontFamily: SANS }}>
       <CheckoutHeader />
+      {/* Page header */}
       <div className="pt-3 pb-5 lg:pt-2 lg:pb-4 relative overflow-hidden" style={{ background: "linear-gradient(135deg,#F5EDE0,#FAF7F2,#F0E8D8)" }}>
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `repeating-linear-gradient(0deg,${MAROON} 0,${MAROON} 1px,transparent 1px,transparent 48px),repeating-linear-gradient(90deg,${MAROON} 0,${MAROON} 1px,transparent 1px,transparent 48px)` }} />
         <div className="relative max-w-7xl mx-auto px-5 lg:px-10">
@@ -156,147 +153,60 @@ export function PaymentPage() {
               <Lock size={11} style={{ color: GOLD }} /><span className="text-[10px] font-semibold" style={{ color: "#8B6914" }}>256-bit SSL</span>
             </div>
           </div>
-          <p className="text-sm" style={{ color: "#7A6A58" }}>Complete your sacred purchase securely.</p>
+          <p className="text-sm" style={{ color: "#7A6A58" }}>Complete your sacred purchase securely via Razorpay.</p>
         </div>
       </div>
+
       <div className="max-w-7xl mx-auto px-5 lg:px-10 py-10 lg:py-6 pb-32 lg:pb-6 mx-[-20px] my-[0px]">
         <div className="grid lg:grid-cols-[1fr_380px] gap-10 items-start">
-          <div className="lg:ml-[-35px] lg:mr-[0px] my-[0px] px-4 lg:px-0 space-y-4 lg:space-y-3">
+          {/* Left — Pay via Razorpay card */}
+          <div className="lg:ml-[-35px] lg:mr-[0px] my-[0px] px-4 lg:px-0 space-y-4">
+            {/* Razorpay pay card */}
             <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
-              <div className="px-6 pt-6 pb-4 lg:pt-4 lg:pb-3" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}><h2 className="text-lg font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Payment Method</h2></div>
-              <div className="divide-y" style={{ borderColor: "rgba(91,31,36,0.06)" }}>
-                {PAYMENT_METHODS.map(([id, label, desc, icon]) => {
-                  const active = method === id;
-                  return (
-                    <div key={id}>
-                      <button onClick={() => setMethod(id)} className="w-full flex items-center gap-4 px-6 py-4 lg:py-3 transition-colors text-left"
-                        style={{ background: active ? "rgba(200,160,68,0.04)" : "transparent" }}>
-                        <div className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center transition-all" style={{ border: `2px solid ${active ? GOLD : "rgba(91,31,36,0.2)"}`, background: active ? GOLD : "transparent" }}>
-                          {active && <div className="w-2 h-2 rounded-full bg-white" />}
-                        </div>
-                        <span className="text-lg flex-shrink-0">{icon}</span>
-                        <div className="flex-1">
-                          <div className="text-sm font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>{label}</div>
-                          <div className="text-xs" style={{ color: "#9A8A78" }}>{desc}</div>
-                        </div>
-                        <ChevronRight size={14} className="flex-shrink-0 transition-transform duration-200" style={{ color: "#9A8A78", transform: active ? "rotate(90deg)" : "rotate(0deg)" }} />
-                      </button>
-                      {active && (
-                        <div className="px-6 pb-6 pt-2" style={{ background: "rgba(200,160,68,0.03)", borderTop: "1px solid rgba(200,160,68,0.12)" }}>
-                          {id === "upi" && (
-                            <div className="space-y-5">
-                              <div className="grid grid-cols-5 gap-2">
-                                {UPI_APPS.map(app => (
-                                  <button key={app.name} onClick={() => setUpiApp(app.name)} className="flex flex-col items-center gap-2 p-3 rounded-2xl transition-all hover:-translate-y-0.5"
-                                    style={{ border: `1.5px solid ${upiApp === app.name ? GOLD : "rgba(91,31,36,0.1)"}`, background: upiApp === app.name ? "rgba(200,160,68,0.08)" : "#FFFFFF" }}>
-                                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold text-white" style={{ background: app.color }}>{app.icon}</div>
-                                    <span className="text-[9px] text-center leading-tight font-medium" style={{ color: MAROON }}>{app.name}</span>
-                                  </button>
-                                ))}
-                              </div>
-                              <div className="flex gap-2">
-                                <input value={upiId} onChange={e => setUpiId(e.target.value)} placeholder="yourname@upi"
-                                  className="flex-1 px-4 py-3 rounded-2xl text-sm outline-none" style={{ border: "1.5px solid rgba(91,31,36,0.14)", background: "#FFFFFF", color: "#222222", fontFamily: SANS }}
-                                  onFocus={e => { e.target.style.borderColor = GOLD; }} onBlur={e => { e.target.style.borderColor = "rgba(91,31,36,0.14)"; }} />
-                                <button className="px-5 py-3 rounded-2xl text-sm font-semibold" style={{ background: MAROON, color: IVORY }}>Verify</button>
-                              </div>
-                            </div>
-                          )}
-                          {id === "card" && (
-                            <div className="space-y-4">
-                              <div className="relative w-full max-w-xs mx-auto h-40 rounded-2xl p-5 overflow-hidden" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30,#3A1015)` }}>
-                                <div className="flex justify-between items-start mb-6">
-                                  <span className="text-sm font-semibold" style={{ fontFamily: SERIF, color: GOLD }}>Aroham</span>
-                                  <div className="flex gap-1"><div className="w-7 h-7 rounded-full opacity-80" style={{ background: "#EB001B" }} /><div className="w-7 h-7 rounded-full opacity-80 -ml-3" style={{ background: "#F79E1B" }} /></div>
-                                </div>
-                                <div className="text-sm tracking-widest mb-3" style={{ color: "rgba(255,255,255,0.9)", fontFamily: "monospace" }}>{card.number || "•••• •••• •••• ••••"}</div>
-                                <div className="flex justify-between">
-                                  <div><div className="text-[9px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(255,255,255,0.5)" }}>Holder</div><div className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.9)" }}>{card.name || "FULL NAME"}</div></div>
-                                  <div><div className="text-[9px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(255,255,255,0.5)" }}>Expires</div><div className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.9)" }}>{card.expiry || "MM/YY"}</div></div>
-                                </div>
-                              </div>
-                              <CardInput value={card.number} onChange={v => setCard(c => ({ ...c, number: v.replace(/\D/g, "").slice(0, 16).replace(/(.{4})/g, "$1 ").trim() }))} placeholder="1234 5678 9012 3456" maxLength={19} />
-                              <div className="grid grid-cols-2 gap-3">
-                                <CardInput value={card.expiry} onChange={v => { const d = v.replace(/\D/g, "").slice(0, 4); setCard(c => ({ ...c, expiry: d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d })); }} placeholder="MM / YY" maxLength={5} />
-                                <CardInput value={card.cvv} onChange={v => setCard(c => ({ ...c, cvv: v.replace(/\D/g, "").slice(0, 4) }))} placeholder="• • •" maxLength={4} type="password" />
-                              </div>
-                              <CardInput value={card.name} onChange={v => setCard(c => ({ ...c, name: v.toUpperCase() }))} placeholder="CARDHOLDER NAME" maxLength={26} />
-                            </div>
-                          )}
-                          {id === "netbanking" && (
-                            <div className="space-y-4">
-                              <div className="relative">
-                                <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "#9A8A78" }} />
-                                <input value={bankSearch} onChange={e => setBankSearch(e.target.value)} placeholder="Search bank..."
-                                  className="w-full pl-10 pr-4 py-3 rounded-2xl text-sm outline-none" style={{ border: "1.5px solid rgba(91,31,36,0.14)", background: "#FFFFFF", color: "#222222", fontFamily: SANS }}
-                                  onFocus={e => { e.target.style.borderColor = GOLD; }} onBlur={e => { e.target.style.borderColor = "rgba(91,31,36,0.14)"; }} />
-                              </div>
-                              <div className="grid grid-cols-2 gap-2">
-                                {filteredBanks.map(bank => (
-                                  <button key={bank.code} onClick={() => setSelectedBank(bank.code)} className="flex items-center gap-3 p-3.5 rounded-2xl text-left transition-all"
-                                    style={{ border: `1.5px solid ${selectedBank === bank.code ? GOLD : "rgba(91,31,36,0.1)"}`, background: selectedBank === bank.code ? "rgba(200,160,68,0.08)" : "#FFFFFF" }}>
-                                    <div className="w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center text-[10px] font-black" style={{ background: "rgba(91,31,36,0.08)", color: MAROON }}>{bank.code.slice(0, 2)}</div>
-                                    <span className="text-xs font-medium" style={{ color: MAROON }}>{bank.name}</span>
-                                    {selectedBank === bank.code && <CheckCircle size={13} className="ml-auto" style={{ color: GOLD }} />}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          {id === "wallet" && (
-                            <div className="grid grid-cols-2 gap-3">
-                              {WALLETS_DATA.map(w => (
-                                <button key={w.name} onClick={() => setSelectedWallet(w.name)} className="flex items-center gap-3 p-4 rounded-2xl transition-all"
-                                  style={{ border: `1.5px solid ${selectedWallet === w.name ? GOLD : "rgba(91,31,36,0.1)"}`, background: selectedWallet === w.name ? "rgba(200,160,68,0.08)" : "#FFFFFF" }}>
-                                  <div className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center text-sm font-black text-white" style={{ background: w.color }}>{w.icon}</div>
-                                  <span className="text-xs font-semibold" style={{ color: MAROON }}>{w.name}</span>
-                                  {selectedWallet === w.name && <CheckCircle size={14} className="ml-auto" style={{ color: GOLD }} />}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                          {id === "emi" && (
-                            <div className="space-y-3">
-                              {EMI_PLANS.map((plan, i) => (
-                                <button key={i} onClick={() => setSelectedEmi(i)} className="w-full flex items-center justify-between p-4 rounded-2xl transition-all"
-                                  style={{ border: `1.5px solid ${selectedEmi === i ? GOLD : "rgba(91,31,36,0.1)"}`, background: selectedEmi === i ? "rgba(200,160,68,0.08)" : "#FFFFFF" }}>
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center" style={{ border: `2px solid ${selectedEmi === i ? GOLD : "rgba(91,31,36,0.2)"}`, background: selectedEmi === i ? GOLD : "transparent" }}>
-                                      {selectedEmi === i && <div className="w-2 h-2 rounded-full bg-white" />}
-                                    </div>
-                                    <div className="text-left">
-                                      <div className="text-sm font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>{plan.months} Months</div>
-                                      <div className="text-[10px]" style={{ color: "#7A6A58" }}>{plan.interest}</div>
-                                    </div>
-                                  </div>
-                                  <span className="text-sm font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>{plan.per}</span>
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                          {id === "cod" && (
-                            <div className="rounded-2xl p-5" style={{ background: "linear-gradient(135deg,#FAF0D8,#FAF7F2)", border: `1px solid rgba(200,160,68,0.22)` }}>
-                              <div className="flex items-start gap-4">
-                                <span className="text-3xl">📦</span>
-                                <div>
-                                  <h4 className="text-sm font-semibold mb-1.5" style={{ fontFamily: SERIF, color: MAROON }}>Cash on Delivery</h4>
-                                  <p className="text-xs leading-relaxed mb-3" style={{ color: "#7A6A58" }}>Pay ₹{total.toLocaleString("en-IN")} in cash when your order arrives. A ₹49 handling fee applies.</p>
-                                  {["No online payment required", "Pay at your doorstep", "Sacred products delivered safely"].map(t => (
-                                    <div key={t} className="flex items-center gap-2 text-xs mb-1" style={{ color: "#5A4A3A" }}><CheckCircle size={11} style={{ color: GOLD }} /> {t}</div>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+              <div className="px-6 pt-6 pb-4" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
+                <h2 className="text-lg font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Payment</h2>
+              </div>
+              <div className="p-8 flex flex-col items-center text-center gap-6">
+                {/* Razorpay brand */}
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg" style={{ background: "linear-gradient(135deg,#072654,#3395FF)" }}>
+                    <span className="text-white font-black text-2xl" style={{ fontFamily: "sans-serif" }}>R</span>
+                  </div>
+                  <div>
+                    <p className="text-base font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Pay Securely with Razorpay</p>
+                    <p className="text-xs mt-1" style={{ color: "#9A8A78" }}>UPI · Cards · Net Banking · Wallets · EMI · COD</p>
+                  </div>
+                </div>
+
+                {/* Total amount */}
+                <div className="w-full rounded-2xl py-4 px-6" style={{ background: "linear-gradient(135deg,#FAF0D8,#FAF7F2)", border: "1px solid rgba(200,160,68,0.22)" }}>
+                  <p className="text-xs mb-1" style={{ color: "#9A8A78" }}>Total Amount</p>
+                  <p className="text-3xl font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{total.toLocaleString("en-IN")}</p>
+                  <p className="text-xs mt-1" style={{ color: "#4A8A4A" }}>Includes shipping + GST</p>
+                </div>
+
+                {/* Pay button */}
+                <button
+                  onClick={handlePay}
+                  disabled={placing || items.length === 0}
+                  className="w-full py-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2.5 transition-all hover:opacity-90 hover:shadow-xl disabled:opacity-60"
+                  style={{ background: `linear-gradient(135deg,#072654,#3395FF)`, color: "#FFFFFF" }}
+                >
+                  {placing
+                    ? <><span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />Processing…</>
+                    : <><Lock size={15} />Pay ₹{total.toLocaleString("en-IN")} with Razorpay</>
+                  }
+                </button>
+
+                <p className="text-[11px]" style={{ color: "#B0A090" }}>
+                  By proceeding, you agree to our Terms & Conditions. Your payment is processed securely by Razorpay.
+                </p>
               </div>
             </div>
-            <div className="rounded-3xl p-6" style={{ background: "linear-gradient(135deg,#FAF0D8,#FAF7F2)", border: `1px solid rgba(200,160,68,0.22)` }}>
-              <div className="flex items-center gap-2 mb-4"><Lock size={14} style={{ color: GOLD }} /><span className="text-sm font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>100% Secure Checkout</span></div>
+
+            {/* Trust badges */}
+            <div className="rounded-3xl p-6" style={{ background: "linear-gradient(135deg,#FAF0D8,#FAF7F2)", border: "1px solid rgba(200,160,68,0.22)" }}>
+              <div className="flex items-center gap-2 mb-4"><ShieldCheck size={14} style={{ color: GOLD }} /><span className="text-sm font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>100% Secure Checkout</span></div>
               <div className="grid grid-cols-4 gap-3">
                 {[{ i: "🔒", l: "SSL Encrypted", s: "256-bit" }, { i: "🛡", l: "PCI DSS", s: "Compliant" }, { i: "💳", l: "Razorpay", s: "Secured" }, { i: "🚫", l: "No Data", s: "Stored" }].map(({ i, l, s }) => (
                   <div key={l} className="flex flex-col items-center text-center gap-1 p-3 rounded-2xl" style={{ background: "rgba(255,255,255,0.7)" }}>
@@ -308,7 +218,8 @@ export function PaymentPage() {
               </div>
             </div>
           </div>
-          {/* Right sidebar */}
+
+          {/* Right sidebar – order summary */}
           <div className="lg:sticky lg:top-24 ml-[-20px] mr-[0px] my-[0px]">
             <CheckoutProgress step={2} />
             <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 4px 30px rgba(91,31,36,0.07)" }}>
@@ -329,21 +240,18 @@ export function PaymentPage() {
                 <div className="h-px" style={{ background: `linear-gradient(90deg,transparent,rgba(200,160,68,0.3),transparent)` }} />
                 <div className="flex justify-between items-baseline"><span className="text-sm font-semibold" style={{ color: MAROON }}>Grand Total</span><span className="text-2xl font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{total.toLocaleString("en-IN")}</span></div>
               </div>
-              <div className="px-6 pb-6 lg:pb-4 space-y-3 lg:space-y-2">
-                <button onClick={handlePlace} disabled={placing}
-                  className="w-full py-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90 hover:shadow-lg disabled:opacity-70"
-                  style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
-                  {placing ? <><span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />Processing…</> : <><Lock size={14} />Place Order · ₹{total.toLocaleString("en-IN")}</>}
-                </button>
+              <div className="px-6 pb-6 lg:pb-4">
                 <button onClick={() => navigate(-1)} className="w-full py-3 rounded-2xl text-sm font-medium border transition-all hover:bg-amber-50" style={{ borderColor: "rgba(91,31,36,0.2)", color: MAROON }}>← Back to Address</button>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Mobile sticky pay button */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 px-5 py-4" style={{ background: "rgba(250,247,242,0.97)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(91,31,36,0.1)" }}>
-        <button onClick={handlePlace} disabled={placing} className="w-full py-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-70" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
-          {placing ? <><span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />Processing…</> : <><Lock size={14} />Place Order · ₹{total.toLocaleString("en-IN")}</>}
+        <button onClick={handlePay} disabled={placing || items.length === 0} className="w-full py-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-70" style={{ background: "linear-gradient(135deg,#072654,#3395FF)", color: "#FFFFFF" }}>
+          {placing ? <><span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />Processing…</> : <><Lock size={14} />Pay ₹{total.toLocaleString("en-IN")} with Razorpay</>}
         </button>
       </div>
     </div>

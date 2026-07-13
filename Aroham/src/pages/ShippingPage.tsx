@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { Lock, ChevronLeft, ChevronRight, CheckCircle, Truck } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF } from "@/constants/theme";
-import { INDIA_STATES, SAVED_ADDRESSES } from "@/constants/data";
+import { INDIA_STATES } from "@/constants/data";
 import { FloatingInput } from "@/components/auth/FloatingInput";
 import { FloatingSelect } from "@/components/auth/FloatingSelect";
 import { OrderSummaryCard } from "@/components/checkout/OrderSummaryCard";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
+import { api } from "@/lib/api";
 
 function CheckoutHeader() {
   const navigate = useNavigate();
@@ -29,10 +31,73 @@ function CheckoutHeader() {
 export function ShippingPage() {
   const navigate = useNavigate();
   const { items, openCart } = useCart();
-  const [selectedAddr, setSelectedAddr] = useState(1);
+  const { isLoggedIn } = useAuth();
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [selectedAddr, setSelectedAddr] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ firstName: "", lastName: "", phone: "", email: "", pin: "", house: "", street: "", landmark: "", city: "", state: "", addressType: "Home", saveAddress: true, sameBilling: true, specialRequest: "" });
+  const [savingAddress, setSavingAddress] = useState(false);
   const set = (k: keyof typeof form) => (v: string | boolean) => setForm(p => ({ ...p, [k]: v }));
+
+  // Save selected address to sessionStorage so PaymentPage can use it
+  const getSelectedAddressObj = () => savedAddresses.find(a => a.id === selectedAddr) || null;
+
+  // Save new address to DB
+  const handleSaveAddress = async () => {
+    if (!form.firstName || !form.phone || !form.city || !form.pin) {
+      alert("Please fill in all required fields."); return;
+    }
+    setSavingAddress(true);
+    try {
+      const payload = {
+        name: `${form.firstName} ${form.lastName}`.trim(),
+        phone: form.phone.replace(/\D/g, ""),
+        email: form.email,
+        address: `${form.house}, ${form.street}${form.landmark ? ", " + form.landmark : ""}`.trim(),
+        city: form.city,
+        pincode: form.pin,
+        address_type: form.addressType,
+      };
+      const result = await api("/addresses", { method: "POST", body: JSON.stringify(payload) });
+      const newAddr = result.data || result;
+      setSavedAddresses(prev => [newAddr, ...prev]);
+      setSelectedAddr(newAddr.id);
+      setShowForm(false);
+      setForm({ firstName: "", lastName: "", phone: "", email: "", pin: "", house: "", street: "", landmark: "", city: "", state: "", addressType: "Home", saveAddress: true, sameBilling: true, specialRequest: "" });
+    } catch (e: any) {
+      alert("Failed to save address: " + (e.message || "Please try again."));
+    } finally {
+      setSavingAddress(false);
+    }
+  };
+
+  // Fetch real addresses from backend when logged in
+  useEffect(() => {
+    if (isLoggedIn) {
+      api("/addresses")
+        .then(data => {
+          if (Array.isArray(data) && data.length > 0) {
+            setSavedAddresses(data);
+            const def = data.find((a: any) => a.is_default) || data[0];
+            setSelectedAddr(def.id);
+          } else {
+            // No saved addresses — open the new address form automatically
+            setSavedAddresses([]);
+            setShowForm(true);
+          }
+        })
+        .catch(() => {
+          setSavedAddresses([]);
+          setShowForm(true);
+        });
+    } else {
+      // Logged out — clear addresses
+      setSavedAddresses([]);
+      setSelectedAddr(null);
+      setShowForm(true);
+    }
+  }, [isLoggedIn]);
+
 
   return (
     <div className="w-full overflow-x-hidden" style={{ background: "#FAF7F2", minHeight: "100vh", fontFamily: SANS }}>
@@ -53,14 +118,20 @@ export function ShippingPage() {
       <div className="max-w-7xl mx-auto px-5 lg:px-10 py-10 lg:py-6 pb-32 lg:pb-6 mx-[-20px] my-[0px]">
         <div className="grid lg:grid-cols-[1fr_380px] gap-10 items-start">
           <div className="lg:ml-[-35px] lg:mr-[0px] my-[0px] px-4 lg:px-0">
+            {savedAddresses.length > 0 && (
             <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
               <div className="px-6 pt-6 pb-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
                 <h2 className="text-lg font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Saved Addresses</h2>
                 <button onClick={() => setShowForm(!showForm)} className="text-xs font-semibold px-4 py-2 rounded-full transition-all hover:opacity-80" style={{ background: "rgba(91,31,36,0.07)", color: MAROON }}>{showForm ? "Cancel" : "+ New Address"}</button>
               </div>
+
               <div className="p-6 space-y-3">
-                {SAVED_ADDRESSES.map(addr => {
+                {savedAddresses.length === 0 && !showForm && (
+                  <p className="text-sm text-center py-4" style={{ color: "#9A8A78" }}>No saved addresses yet. Add one below.</p>
+                )}
+                {savedAddresses.map(addr => {
                   const sel = selectedAddr === addr.id;
+                  const addrLine = [addr.line1 || addr.address_line1, addr.city, addr.state].filter(Boolean).join(", ");
                   return (
                     <div key={addr.id} onClick={() => setSelectedAddr(addr.id)}
                       className="group relative p-5 rounded-2xl cursor-pointer transition-all duration-200"
@@ -72,11 +143,11 @@ export function ShippingPage() {
                           </div>
                           <div>
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-sm font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>{addr.type}</span>
-                              {addr.isDefault && <span className="px-2 py-0.5 rounded-full text-[9px] font-bold" style={{ background: "rgba(200,160,68,0.15)", color: "#8B6914" }}>DEFAULT</span>}
+                              <span className="text-sm font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>{addr.address_type || addr.type || "Home"}</span>
+                              {(addr.is_default || addr.isDefault) && <span className="px-2 py-0.5 rounded-full text-[9px] font-bold" style={{ background: "rgba(200,160,68,0.15)", color: "#8B6914" }}>DEFAULT</span>}
                             </div>
-                            <p className="text-xs font-medium mb-0.5" style={{ color: "#3A2A1A" }}>{addr.name} · {addr.phone}</p>
-                            <p className="text-xs" style={{ color: "#7A6A58" }}>{addr.line1}, {addr.city}, {addr.state} – {addr.pin}</p>
+                            <p className="text-xs font-medium mb-0.5" style={{ color: "#3A2A1A" }}>{addr.full_name || addr.name} · {addr.phone}</p>
+                            <p className="text-xs" style={{ color: "#7A6A58" }}>{addrLine} – {addr.pincode || addr.pin}</p>
                           </div>
                         </div>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -92,7 +163,9 @@ export function ShippingPage() {
                 })}
               </div>
             </div>
+            )}
             {showForm && (
+
               <div className="rounded-3xl overflow-hidden mt-4" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
                 <div className="px-6 pt-6 pb-4" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}><h2 className="text-lg font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>New Address</h2></div>
                 <div className="p-6 space-y-4">
@@ -114,9 +187,14 @@ export function ShippingPage() {
                     <FloatingInput label="City" value={form.city} onChange={set("city") as (v: string) => void} required />
                     <FloatingSelect label="State" options={INDIA_STATES} value={form.state} onChange={set("state") as (v: string) => void} />
                   </div>
-                  <button className="w-full py-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 mt-2 transition-all hover:opacity-90"
+                  <button
+                    onClick={handleSaveAddress}
+                    disabled={savingAddress}
+                    className="w-full py-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 mt-2 transition-all hover:opacity-90 disabled:opacity-60"
                     style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
-                    <CheckCircle size={15} /> Deliver Here
+                    {savingAddress
+                      ? <><span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />Saving…</>
+                      : <><CheckCircle size={15} /> Save &amp; Deliver Here</>}
                   </button>
                 </div>
               </div>
@@ -133,11 +211,19 @@ export function ShippingPage() {
               </div>
             </div>
           </div>
-          <OrderSummaryCard cartItems={items} onBack={() => { navigate("/"); openCart(); }} onNext={() => navigate("/checkout/payment")} nextLabel="Proceed to Payment" step={1} />
+          <OrderSummaryCard cartItems={items} onBack={() => { navigate("/"); openCart(); }} onNext={() => {
+            const addr = getSelectedAddressObj();
+            if (addr) sessionStorage.setItem("aroham_shipping_addr", JSON.stringify(addr));
+            navigate("/checkout/payment");
+          }} nextLabel="Proceed to Payment" step={1} />
         </div>
       </div>
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 px-5 py-4" style={{ background: "rgba(250,247,242,0.97)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(91,31,36,0.1)" }}>
-        <button onClick={() => navigate("/checkout/payment")} className="w-full py-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
+        <button onClick={() => {
+          const addr = getSelectedAddressObj();
+          if (addr) sessionStorage.setItem("aroham_shipping_addr", JSON.stringify(addr));
+          navigate("/checkout/payment");
+        }} className="w-full py-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
           <Lock size={14} /> Proceed to Payment
         </button>
       </div>

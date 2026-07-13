@@ -7,6 +7,7 @@ import { OtpBoxes } from "./OtpBoxes";
 import { Countdown } from "./Countdown";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
+import { api } from "@/lib/api";
 
 type AuthState = "signin" | "signup" | "otp" | "success" | "forgot-phone" | "forgot-otp" | "forgot-newpass" | "forgot-success";
 
@@ -41,6 +42,7 @@ export function AuthPage() {
   const [forgotPhone, setForgotPhone] = useState("");
   const [panelVisible, setPanelVisible] = useState(true);
   const [rememberMe, setRememberMe] = useState(false);
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -68,11 +70,21 @@ export function AuthPage() {
         <button onClick={() => goTo("forgot-phone")} className="text-xs font-semibold hover:opacity-70" style={{ color: MAROON }}>Forgot Password?</button>
       </div>
       <button onClick={async () => {
+        if (!phone || !password) { setErrorMsg("Please enter phone and password."); return; }
         setLoading(true); setErrorMsg("");
-        const { error } = await supabase.auth.signInWithPassword({ email: `${phone}@aroham.com`, password });
-        setLoading(false);
-        if (error) setErrorMsg(error.message);
-        else goTo("success");
+        // Look up the email associated with this phone number from the backend
+        try {
+          const res = await fetch(`${import.meta.env.VITE_API_BASE || "http://localhost:5000/api"}/auth/email-by-phone?phone=${encodeURIComponent(phone)}`);
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Account not found for this phone number.");
+          const { error } = await supabase.auth.signInWithPassword({ email: data.email, password });
+          setLoading(false);
+          if (error) setErrorMsg(error.message);
+          else goTo("success");
+        } catch (e: any) {
+          setLoading(false);
+          setErrorMsg(e.message || "Sign in failed.");
+        }
       }} disabled={loading} className="w-full py-4 rounded-2xl text-sm font-semibold tracking-wide transition-all hover:opacity-90 hover:shadow-lg" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>{loading ? "Signing In..." : "Sign In"}</button>
       <div className="flex items-center gap-3"><div className="flex-1 h-px" style={{ background: "rgba(91,31,36,0.1)" }} /><span className="text-xs" style={{ color: "#9A8A78" }}>OR</span><div className="flex-1 h-px" style={{ background: "rgba(91,31,36,0.1)" }} /></div>
       <button className="w-full py-3.5 rounded-2xl text-sm font-medium flex items-center justify-center gap-3 border hover:bg-gray-50" style={{ borderColor: "rgba(91,31,36,0.14)", color: "#3A3A3A" }}>
@@ -82,26 +94,57 @@ export function AuthPage() {
       <p className="text-center text-sm" style={{ color: "#7A6A58" }}>Don't have an account? <button onClick={() => switchTab("signup")} className="font-semibold hover:opacity-70" style={{ color: MAROON }}>Create Account</button></p>
     </div>
   );
-
   const signupJsx = (
     <div style={formStyle} className="space-y-5">
       <div><h2 className="mb-1" style={{ fontFamily: SERIF, fontSize: "1.75rem", fontWeight: 500, color: MAROON }}>Begin Your Spiritual Journey</h2><p className="text-sm" style={{ color: "#7A6A58" }}>Create your secure Aroham account.</p></div>
-      <div className="space-y-3"><AuthInput label="Full Name" value={name} onChange={setName} /><AuthInput label="Phone Number" type="tel" value={phone} onChange={setPhone} /><PasswordInput label="Password" value={password} onChange={setPassword} /><PasswordInput label="Confirm Password" value={confirmPass} onChange={setConfirmPass} /></div>
+      {errorMsg && <p className="text-sm text-red-500 font-semibold">{errorMsg}</p>}
+      <div className="space-y-3">
+        <AuthInput label="Full Name" value={name} onChange={setName} />
+        <AuthInput label="Phone Number" type="tel" value={phone} onChange={v => { setPhone(v); setEmail(`${v}@aroham.in`); }} />
+        <AuthInput label="Email (optional)" type="email" value={email} onChange={setEmail} />
+        <PasswordInput label="Password" value={password} onChange={setPassword} />
+        <PasswordInput label="Confirm Password" value={confirmPass} onChange={setConfirmPass} />
+      </div>
       <button onClick={() => setAgreed(a => !a)} className="flex items-start gap-3 text-sm text-left w-full" style={{ color: "#5A4A3A" }}>
         <div className="w-5 h-5 mt-0.5 rounded-md flex-shrink-0 flex items-center justify-center transition-all" style={{ border: `2px solid ${agreed ? MAROON : "rgba(91,31,36,0.22)"}`, background: agreed ? MAROON : "transparent" }}>
           {agreed && <CheckCircle size={11} color="white" strokeWidth={3} />}
         </div>
         I agree to the <span className="font-semibold" style={{ color: MAROON }}>Terms</span> and <span className="font-semibold" style={{ color: MAROON }}>Privacy Policy</span>
       </button>
-      <button onClick={async () => { 
-        if (agreed && name && phone) {
-          setLoading(true);
-          const { error } = await supabase.auth.signUp({ email: `${phone}@aroham.com`, password, options: { data: { full_name: name } } });
+      <button onClick={async () => {
+        if (!agreed) { setErrorMsg("Please agree to the Terms."); return; }
+        if (!name || !phone || !password) { setErrorMsg("Please fill in all required fields."); return; }
+        if (password !== confirmPass) { setErrorMsg("Passwords do not match."); return; }
+        if (password.length < 8) { setErrorMsg("Password must be at least 8 characters."); return; }
+        const phoneDigits = phone.replace(/\D/g, "");
+        if (phoneDigits.length !== 10) { setErrorMsg("Phone must be exactly 10 digits."); return; }
+        setLoading(true); setErrorMsg("");
+        try {
+          // Call backend signup — creates Supabase auth user + inserts into users table
+          await api("/auth/signup", {
+            method: "POST",
+            body: JSON.stringify({
+              fullName: name,
+              phone: phoneDigits,
+              email: email || `${phoneDigits}@aroham.in`,
+              password,
+              otp: "1234" // backend currently accepts 1234 as valid OTP
+            })
+          });
+          // Auto sign in after successful signup
+          const { error: signInErr } = await supabase.auth.signInWithPassword({
+            email: email || `${phoneDigits}@aroham.in`,
+            password
+          });
           setLoading(false);
-          if (error) alert(error.message); else goTo("success"); // Skipping OTP for simplicity since email=phone
-        } 
+          if (signInErr) { setErrorMsg("Account created! Please sign in."); goTo("signin"); }
+          else goTo("success");
+        } catch (e: any) {
+          setLoading(false);
+          setErrorMsg(e.message || "Signup failed. Please try again.");
+        }
       }} disabled={loading} className="w-full py-4 rounded-2xl text-sm font-semibold tracking-wide transition-all hover:opacity-90 hover:shadow-lg"
-        style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY, opacity: agreed ? 1 : 0.55 }}>{loading ? "Please wait..." : "Continue"}</button>
+        style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY, opacity: agreed ? 1 : 0.55 }}>{loading ? "Creating Account..." : "Create Account"}</button>
       <p className="text-center text-sm" style={{ color: "#7A6A58" }}>Already have an account? <button onClick={() => switchTab("signin")} className="font-semibold hover:opacity-70" style={{ color: MAROON }}>Sign In</button></p>
     </div>
   );

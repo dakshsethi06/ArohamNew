@@ -26,6 +26,7 @@ export function Nav() {
     ["Home", () => { navigate("/"); setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50); }],
     ["Shop", () => navigate("/shop")],
     ["Consult", () => navigate("/consult")],
+    ...(isLoggedIn ? [["My Orders", () => navigate("/profile?tab=orders")] as [string, () => void]] : []),
   ];
 
   return (

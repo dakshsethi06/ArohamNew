@@ -18,18 +18,31 @@ export function ProductDetailPage() {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const [product, setProduct] = useState<ArohamProduct | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     api("/products").then((data: ArohamProduct[]) => {
       const found = data.find(p => p.slug === slug);
       if (found) setProduct(found);
-    }).catch(console.error);
+    }).catch(console.error).finally(() => setLoading(false));
   }, [slug]);
 
   const [tab, setTab] = useState(0);
   const [qty, setQty] = useState(1);
   const [selectedImg, setSelectedImg] = useState(0);
   const [contactOpen, setContactOpen] = useState(false);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#FAF7F2" }}>
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-full border-4 border-t-transparent mx-auto mb-4 animate-spin" style={{ borderColor: `${GOLD} transparent ${GOLD} ${GOLD}` }} />
+          <p className="text-sm" style={{ color: "#9A8A78", fontFamily: SANS }}>Loading product...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -200,7 +213,12 @@ export function ProductDetailPage() {
                 style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
                 <ShoppingCart size={16} /> Add to Cart
               </button>
-              <button className="w-full py-3.5 rounded-2xl text-sm font-semibold border transition-all hover:bg-amber-50 flex items-center justify-center gap-2" style={{ borderColor: GOLD, color: MAROON }}>⚡ Buy Now</button>
+              <button
+                onClick={async () => { await addToCart(product, qty); navigate("/checkout/shipping"); }}
+                className="w-full py-3.5 rounded-2xl text-sm font-semibold border transition-all hover:bg-amber-50 flex items-center justify-center gap-2"
+                style={{ borderColor: GOLD, color: MAROON }}>⚡ Buy Now
+              </button>
+
             </div>
             <div className="grid grid-cols-5 gap-2">
               {[{ icon: Flame, l: "Temple Energized" }, { icon: Gem, l: "100% Authentic" }, { icon: Award, l: "Handcrafted" }, { icon: Shield, l: "Secure Pay" }, { icon: Package, l: "Easy Returns" }].map(({ icon: Icon, l }) => (
