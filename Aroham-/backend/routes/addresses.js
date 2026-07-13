@@ -2,27 +2,6 @@ const router = require("express").Router();
 const requireAuth = require("../middleware/auth");
 const supabase = require("../config/supabase");
 
-// GET /api/addresses/debug-schema - Query columns to debug missing id
-router.get("/debug-schema", async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from("addresses")
-      .select("*")
-      .limit(1);
-
-    if (error) {
-      return res.json({ error: error.message });
-    }
-
-    res.json({
-      success: true,
-      empty: data.length === 0,
-      columns: data.length > 0 ? Object.keys(data[0]) : "unknown (table is empty)"
-    });
-  } catch (e) {
-    res.json({ error: e.message });
-  }
-});
 
 // GET /api/addresses - Fetch saved addresses for the user
 router.get("/", requireAuth, async (req, res) => {
