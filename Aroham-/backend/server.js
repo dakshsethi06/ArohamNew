@@ -5,14 +5,25 @@ global.debugLogs = [];
 const originalLog = console.log;
 const originalError = console.error;
 
+const safeStringify = (val) => {
+  try {
+    if (typeof val === "object" && val !== null) {
+      return JSON.stringify(val);
+    }
+    return String(val);
+  } catch (e) {
+    return `[Unstringifiable: ${e.message}]`;
+  }
+};
+
 console.log = (...args) => {
-  global.debugLogs.push({ time: new Date().toISOString(), type: "log", msg: args.map(a => typeof a === "object" ? JSON.stringify(a) : String(a)).join(" ") });
+  global.debugLogs.push({ time: new Date().toISOString(), type: "log", msg: args.map(safeStringify).join(" ") });
   if (global.debugLogs.length > 200) global.debugLogs.shift();
   originalLog.apply(console, args);
 };
 
 console.error = (...args) => {
-  global.debugLogs.push({ time: new Date().toISOString(), type: "error", msg: args.map(a => typeof a === "object" ? JSON.stringify(a) : String(a)).join(" ") });
+  global.debugLogs.push({ time: new Date().toISOString(), type: "error", msg: args.map(safeStringify).join(" ") });
   if (global.debugLogs.length > 200) global.debugLogs.shift();
   originalError.apply(console, args);
 };
