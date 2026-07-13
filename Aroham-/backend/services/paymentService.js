@@ -27,8 +27,11 @@ async function confirmOrder(orderId, paymentDetails) {
     .eq("order_id", orderId);
 
   // 2. Fetch full order & items for Shiprocket
-  const { data: order } = await supabase.from("orders").select("*, users(*)").eq("id", orderId).single();
-  const { data: items } = await supabase.from("order_items").select("*").eq("order_id", orderId);
+  const { data: order, error: orderErr } = await supabase.from("orders").select("*").eq("id", orderId).single();
+  const { data: items, error: itemsErr } = await supabase.from("order_items").select("*").eq("order_id", orderId);
+
+  if (orderErr) console.error("[Shiprocket Debug] Error fetching order:", orderErr.message);
+  if (itemsErr) console.error("[Shiprocket Debug] Error fetching items:", itemsErr.message);
 
   // 3. Commit stock
   for (const it of items || []) {
@@ -36,6 +39,7 @@ async function confirmOrder(orderId, paymentDetails) {
   }
 
   // 4. Trigger Shiprocket (if credentials exist)
+  console.log("[Shiprocket Debug] Triggering check. Email:", process.env.SHIPROCKET_EMAIL ? "Present" : "Missing", "Password:", process.env.SHIPROCKET_PASSWORD ? "Present" : "Missing", "Order:", !!order, "Items count:", items?.length);
   if (process.env.SHIPROCKET_EMAIL && process.env.SHIPROCKET_PASSWORD && order && items) {
     try {
       const shiprocket = new ShiprocketService(process.env.SHIPROCKET_EMAIL, process.env.SHIPROCKET_PASSWORD);
