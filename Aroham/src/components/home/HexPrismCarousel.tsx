@@ -1,0 +1,150 @@
+import { useState, useRef, useEffect } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
+import { ArohamProduct } from "@/types/product";
+
+export function HexPrismCarousel({ products, onProductClick }: { products: ArohamProduct[]; onProductClick: (p: ArohamProduct) => void }) {
+  const [current, setCurrent] = useState(0);
+  const [expanded, setExpanded] = useState(false);
+  const n = products?.length || 0;
+
+  const faceW = expanded ? 110 : 150;
+  const faceH = expanded ? 145 : 200;
+  const tz    = expanded ? 140 : 190;
+  const activeScale = expanded ? 1.25 : 1.35;
+
+  const pauseRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoRef  = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const pauseAuto = () => {
+    if (autoRef.current) { clearInterval(autoRef.current); autoRef.current = null; }
+    if (pauseRef.current) clearTimeout(pauseRef.current);
+    pauseRef.current = setTimeout(() => {
+      autoRef.current = setInterval(() => { setCurrent(c => (c + 1) % n); setExpanded(false); }, 5000);
+    }, 10000);
+  };
+
+  const prev = () => { setCurrent(c => (c - 1 + n) % n); setExpanded(false); pauseAuto(); };
+  const next = () => { setCurrent(c => (c + 1) % n); setExpanded(false); pauseAuto(); };
+
+  useEffect(() => {
+    if (n === 0) return;
+    autoRef.current = setInterval(() => { setCurrent(c => (c + 1) % n); setExpanded(false); }, 5000);
+    return () => {
+      if (autoRef.current) clearInterval(autoRef.current);
+      if (pauseRef.current) clearTimeout(pauseRef.current);
+    };
+  }, [n]);
+
+  const dragRef = useRef<{ startX: number; dragging: boolean }>({ startX: 0, dragging: false });
+  const wheelCooldown = useRef(false);
+  const onDragStart = (clientX: number) => { dragRef.current = { startX: clientX, dragging: true }; };
+  const onDragEnd   = (clientX: number) => {
+    if (!dragRef.current.dragging) return;
+    dragRef.current.dragging = false;
+    const delta = dragRef.current.startX - clientX;
+    if (Math.abs(delta) > 30) { delta > 0 ? next() : prev(); }
+  };
+
+  if (n === 0) return null;
+  const p = products[current];
+
+  return (
+    <div className="relative flex flex-col items-center w-full flex-1" style={{ transition: "all 0.5s cubic-bezier(0.4,0,0.2,1)" }}>
+      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: "80%", height: 120, background: "radial-gradient(ellipse at 50% 0%, rgba(91,31,36,0.28) 0%, transparent 72%)", pointerEvents: "none", zIndex: 0 }} />
+      <style>{`
+        @keyframes faceGlow {
+          0%,100% { box-shadow: 0 0 24px 6px rgba(200,160,68,0.22); }
+          50%      { box-shadow: 0 0 48px 14px rgba(200,160,68,0.38); }
+        }
+        @keyframes floatUp {
+          0%,100% { transform: translateY(0px); }
+          50%      { transform: translateY(-6px); }
+        }
+      `}</style>
+      <div className="relative flex items-center justify-center w-full"
+        style={{ height: faceH + 60, marginTop: expanded ? 40 : 72, marginBottom: expanded ? 8 : 20, transition: "all 0.5s cubic-bezier(0.4,0,0.2,1)" }}>
+        <button aria-label="Previous product" onClick={prev}
+          className="absolute left-0 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+          style={{ background: "rgba(200,160,68,0.13)", border: `1px solid rgba(200,160,68,0.3)`, color: GOLD, top: "50%", transform: "translateY(-50%)" }}>
+          <ChevronLeft size={18} />
+        </button>
+        <div
+          onMouseDown={e => onDragStart(e.clientX)} onMouseUp={e => onDragEnd(e.clientX)}
+          onMouseLeave={e => onDragEnd(e.clientX)}
+          onTouchStart={e => onDragStart(e.touches[0].clientX)} onTouchEnd={e => onDragEnd(e.changedTouches[0].clientX)}
+          onWheel={e => { e.preventDefault(); if (wheelCooldown.current) return; const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY; if (Math.abs(d) < 25) return; d > 0 ? next() : prev(); wheelCooldown.current = true; setTimeout(() => { wheelCooldown.current = false; }, 500); pauseAuto(); }}
+          style={{ perspective: 1100, width: faceW * 5, height: faceH, display: "flex", alignItems: "center", justifyContent: "center", cursor: "grab", userSelect: "none" }}>
+          <div style={{ width: faceW, height: faceH, position: "relative", transformStyle: "preserve-3d", transform: `rotateY(${-current * (360 / n)}deg)`, transition: "transform 0.7s cubic-bezier(0.4,0,0.2,1)" }}>
+            {products.map((prod, i) => {
+              const angle = i * (360 / n);
+              const isActive = i === current;
+              return (
+                <div key={prod.id}
+                  onClick={() => { pauseAuto(); if (isActive) { setExpanded(e => !e); } else { setCurrent(i); setExpanded(false); } }}
+                  style={{ position: "absolute", width: faceW, height: faceH, transform: `rotateY(${angle}deg) translateZ(${tz}px) ${isActive ? `scale(${activeScale})` : "scale(0.88)"}`, backfaceVisibility: "hidden", borderRadius: 22, overflow: "hidden", cursor: "pointer", display: "flex", flexDirection: "column",
+                    background: isActive ? `linear-gradient(170deg,${MAROON} 0%,#2A0A0E 100%)` : `linear-gradient(170deg,#1A0808 0%,#0D0404 100%)`,
+                    border: `2px solid ${isActive ? GOLD : "rgba(200,160,68,0.12)"}`,
+                    boxShadow: isActive ? "0 0 0 1px rgba(200,160,68,0.15)" : "none",
+                    animation: isActive ? "faceGlow 2.8s ease-in-out infinite" : "none",
+                    transition: "transform 0.5s cubic-bezier(0.4,0,0.2,1), border 0.3s, width 0.5s, height 0.5s",
+                    zIndex: isActive ? 20 : 1 }}>
+                  <div style={{ flex: "1 1 0", overflow: "hidden", position: "relative", minHeight: 0 }}>
+                    <img src={prod.img} alt={`${prod.name} - ${prod.subtitle}`}
+                      style={{ width: "100%", height: "100%", objectFit: "cover", opacity: isActive ? 0.92 : 0.38, transform: isActive ? "scale(1.06)" : "scale(1)", transition: "all 0.5s ease" }} />
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 45%, rgba(20,4,6,0.85) 100%)" }} />
+                    <div style={{ position: "absolute", top: 8, left: 8, background: "rgba(91,31,36,0.92)", color: GOLD, fontSize: 6, fontWeight: 700, padding: "2px 8px", borderRadius: 99, letterSpacing: "0.14em", textTransform: "uppercase", backdropFilter: "blur(4px)" }}>
+                      {prod.badges[0]}
+                    </div>
+                    <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 6px" }}>
+                      <div style={{ fontFamily: SERIF, fontSize: 7, fontWeight: 700, color: IVORY, lineHeight: 1.2, textShadow: "0 1px 8px rgba(0,0,0,0.8)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {prod.name}
+                      </div>
+                      <div style={{ fontSize: 6, color: "rgba(250,247,242,0.55)", fontFamily: SANS, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>
+                        {prod.subtitle}
+                      </div>
+                    </div>
+                  </div>
+                  {isActive && (
+                    <div style={{ padding: "7px 10px", textAlign: "center", background: `linear-gradient(90deg,${GOLD} 0%,#E8B84B 100%)`, color: "#1A0D0E", fontSize: 6.5, fontWeight: 800, letterSpacing: "0.1em", flexShrink: 0 }}>
+                      {expanded ? "TAP TO CLOSE ✕" : "TAP TO EXPAND ↓"}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <button aria-label="Next product" onClick={next}
+          className="absolute right-0 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+          style={{ background: "rgba(200,160,68,0.13)", border: `1px solid rgba(200,160,68,0.3)`, color: GOLD, top: "50%", transform: "translateY(-50%)" }}>
+          <ChevronRight size={18} />
+        </button>
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: expanded ? 10 : 4, transition: "all 0.4s" }}>
+        {products.map((_, i) => (
+          <div key={i} onClick={() => { setCurrent(i); setExpanded(false); pauseAuto(); }}
+            style={{ width: i === current ? 20 : 6, height: 6, borderRadius: 99, background: i === current ? GOLD : "rgba(200,160,68,0.25)", transition: "all 0.35s", cursor: "pointer" }} />
+        ))}
+      </div>
+
+      <div className="flex-1" />
+
+      <div style={{ width: "100%", overflow: "hidden", maxHeight: expanded ? 220 : 0, opacity: expanded ? 1 : 0, transition: "max-height 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.4s ease", pointerEvents: expanded ? "auto" : "none" }}>
+        <div className="rounded-2xl p-4" style={{ background: "rgba(91,31,36,0.10)", border: "1px solid rgba(200,160,68,0.2)", backdropFilter: "blur(8px)" }}>
+          <div className="flex gap-4 items-start">
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold leading-snug mb-0.5" style={{ fontFamily: SERIF, fontSize: 13, color: IVORY }}>{p.name}</div>
+              <div className="text-[11px] leading-relaxed mb-3" style={{ color: "rgba(250,247,242,0.55)" }}>{p.shortDesc}</div>
+              <div className="flex gap-2 items-center">
+                <button onClick={() => onProductClick(p)} className="flex-1 py-2 rounded-xl text-xs font-semibold text-center transition-all hover:opacity-90 active:scale-95" style={{ background: MAROON, color: IVORY }}>View Details</button>
+                <div className="px-3 py-2 rounded-xl text-xs font-bold flex items-center" style={{ background: "rgba(200,160,68,0.18)", color: GOLD, fontFamily: PRICE_FONT, whiteSpace: "nowrap" }}>₹{p.price}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
