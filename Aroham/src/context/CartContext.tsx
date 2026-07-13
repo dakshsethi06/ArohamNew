@@ -37,10 +37,31 @@ export function CartProvider({ children }: { children: ReactNode }) {
       api("/cart").then(data => {
         // Assume backend returns array of cart items mapping to our structure
         if (Array.isArray(data)) {
-          setItems(data.map((item: any) => ({
-            product: item.product || { id: item.product_id, name: "Product", price: 0 },
-            qty: item.quantity || item.qty || 1
-          })));
+          setItems(data.map((item: any) => {
+            const p = item.product || item;
+            return {
+              product: {
+                id: p.id || p.product_id || item.product_id || item.id,
+                name: p.name || "Product",
+                price: p.price || 0,
+                slug: p.slug || "",
+                subtitle: p.subtitle || "",
+                category: p.category || "",
+                purpose: p.purpose || "",
+                original: p.original || p.original_price || p.price || 0,
+                rating: p.rating || 5,
+                reviews: p.reviews || 0,
+                img: p.img || "",
+                badges: p.badges || [],
+                shortDesc: p.shortDesc || p.short_desc || "",
+                benefits: p.benefits || [],
+                size: p.size || "",
+                material: p.material || "",
+                useFor: p.useFor || p.use_for || []
+              },
+              qty: item.qty || item.quantity || 1
+            };
+          }));
         }
       }).catch(e => console.error("Error fetching cart:", e));
     } else if (justLoggedOut) {
