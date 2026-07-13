@@ -16,6 +16,8 @@ router.post("/verify", requireAuth, async (req, res) => {
       return res.status(400).json({ success: false, error: "Invalid payment signature" });
     }
     await confirmOrder(orderId, { razorpay_payment_id });
+    // Clear the cart securely ONLY after payment success
+    await supabase.from("cart_items").delete().eq("user_id", req.user.id);
     res.json({ success: true, status: "CONFIRMED" });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });

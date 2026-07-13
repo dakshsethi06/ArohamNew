@@ -47,12 +47,6 @@ router.post("/", requireAuth, async (req, res) => {
 
     const { order, amount } = await createPendingOrder(req.user.id, check.products, address);
 
-    // Clear cart items in database
-    const isTemp = checkoutType === "buy_now";
-    await supabase.from("cart_items")
-      .delete()
-      .eq("user_id", req.user.id)
-      .eq("is_temporary", isTemp);
 
     // Initiate Payment: create Razorpay order (amount in paise)
     const rzpOrder = await razorpay.orders.create({

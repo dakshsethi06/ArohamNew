@@ -27,10 +27,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Track previous login state to detect logout
   const prevIsLoggedIn = useRef<boolean | null>(null);
+  const isLoggingOut = useRef(false);
 
   // Load from LocalStorage or Backend
   useEffect(() => {
     const justLoggedOut = prevIsLoggedIn.current === true && !isLoggedIn;
+    if (justLoggedOut) isLoggingOut.current = true;
     prevIsLoggedIn.current = isLoggedIn;
 
     if (isLoggedIn) {
@@ -69,6 +71,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setItems([]);
       localStorage.removeItem("aroham_cart");
       localStorage.removeItem("aroham_buy_now_intent");
+      setTimeout(() => { isLoggingOut.current = false; }, 100);
     } else {
       // Guest session — load from localStorage
       const local = localStorage.getItem("aroham_cart");
@@ -80,7 +83,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Save to LocalStorage if not logged in
   useEffect(() => {
-    if (!isLoggedIn) {
+    if (!isLoggedIn && !isLoggingOut.current) {
       localStorage.setItem("aroham_cart", JSON.stringify(items));
     }
   }, [items, isLoggedIn]);

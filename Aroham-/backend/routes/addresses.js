@@ -21,7 +21,7 @@ router.get("/", requireAuth, async (req, res) => {
 
 // POST /api/addresses - Save a shipping address
 router.post("/", requireAuth, async (req, res) => {
-  const { name, phone, email, address, city, pincode } = req.body;
+  const { name, phone, email, address, city, state, pincode } = req.body;
   if (!phone || !/^\d{10}$/.test(phone.trim())) {
     return res.status(400).json({ error: "Phone number must be exactly 10 digits" });
   }
@@ -35,6 +35,7 @@ router.post("/", requireAuth, async (req, res) => {
       .eq("phone", phone)
       .eq("address", address)
       .eq("city", city)
+      .eq("state", state)
       .eq("pincode", pincode)
       .maybeSingle();
 
@@ -45,7 +46,7 @@ router.post("/", requireAuth, async (req, res) => {
 
     const { data, error } = await supabase
       .from("addresses")
-      .insert({ user_id: req.user.id, name, phone, email, address, city, pincode })
+      .insert({ user_id: req.user.id, name, phone, email, address, city, state, pincode })
       .select()
       .single();
 

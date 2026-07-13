@@ -15,7 +15,7 @@ export function FloatingSelect({ label, options, value, onChange }: {
         style={{ background:"#FFFFFF", border:`1.5px solid ${focused?GOLD:"rgba(91,31,36,0.14)"}`,
           boxShadow:focused?`0 0 0 3px rgba(200,160,68,0.1)`:"none",
           color:value?"#222222":"#9A8A78", fontFamily:SANS }}>
-        <option value="">Select {label}</option>
+        <option value="" disabled hidden></option>
         {options.map(o=><option key={o} value={o}>{o}</option>)}
       </select>
       <label className="absolute left-4 pointer-events-none transition-all duration-200"

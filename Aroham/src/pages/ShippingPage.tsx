@@ -118,7 +118,7 @@ export function ShippingPage() {
       <div className="max-w-7xl mx-auto px-5 lg:px-10 py-10 lg:py-6 pb-32 lg:pb-6 mx-[-20px] my-[0px]">
         <div className="grid lg:grid-cols-[1fr_380px] gap-10 items-start">
           <div className="lg:ml-[-35px] lg:mr-[0px] my-[0px] px-4 lg:px-0">
-            {savedAddresses.length > 0 && (
+            {savedAddresses.length > 0 && !showForm && (
             <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
               <div className="px-6 pt-6 pb-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
                 <h2 className="text-lg font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Saved Addresses</h2>

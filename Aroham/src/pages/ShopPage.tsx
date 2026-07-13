@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { Star, Heart, Eye, Filter, X, CheckCircle, ChevronRight } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
 import { CATEGORIES, PURPOSES, PRICE_RANGES } from "@/constants/data";
-import { api } from "@/lib/api";
+import { useProducts } from "@/hooks/useProducts";
 import { ArohamProduct } from "@/types/product";
 
 export function ShopPage() {
@@ -16,13 +16,7 @@ export function ShopPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [wish, setWish] = useState<Record<number, boolean>>({});
 
-  const [products, setProducts] = useState<ArohamProduct[]>([]);
-
-  useEffect(() => {
-    api("/products")
-      .then(data => setProducts(data))
-      .catch(err => console.error("Failed to load products", err));
-  }, []);
+  const { products } = useProducts();
 
   const filtered = products.filter(p => {
     if (cats.length && !cats.includes(p.category)) return false;

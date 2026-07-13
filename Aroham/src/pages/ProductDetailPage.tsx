@@ -3,7 +3,8 @@ import { useParams, useNavigate } from "react-router";
 import { Star, ShoppingCart, Share2, Heart, ChevronRight, Sparkles, Flame, Gem, Award, Shield, Package, Truck, CheckCircle, Mail, Phone, ChevronDown } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
 import { useCart } from "@/context/CartContext";
-import { api } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import { useProducts } from "@/hooks/useProducts";
 import { ArohamProduct } from "@/types/product";
 
 const PROD_TABS = ["Description", "Benefits", "How to Use", "Temple Ritual", "Reviews"];
@@ -17,16 +18,19 @@ export function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { isLoggedIn, openAuth } = useAuth();
+  const { products, loading: productsLoading } = useProducts();
   const [product, setProduct] = useState<ArohamProduct | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    api("/products").then((data: ArohamProduct[]) => {
-      const found = data.find(p => p.slug === slug);
+    if (!productsLoading) {
+      const found = products.find(p => p.slug === slug);
       if (found) setProduct(found);
-    }).catch(console.error).finally(() => setLoading(false));
-  }, [slug]);
+      setLoading(false);
+    }
+  }, [slug, products, productsLoading]);
 
   const [tab, setTab] = useState(0);
   const [qty, setQty] = useState(1);
@@ -214,7 +218,11 @@ export function ProductDetailPage() {
                 <ShoppingCart size={16} /> Add to Cart
               </button>
               <button
-                onClick={async () => { await addToCart(product, qty); navigate("/checkout/shipping"); }}
+                onClick={async () => { 
+                  await addToCart(product, qty); 
+                  if (!isLoggedIn) openAuth();
+                  else navigate("/checkout/shipping"); 
+                }}
                 className="w-full py-3.5 rounded-2xl text-sm font-semibold border transition-all hover:bg-amber-50 flex items-center justify-center gap-2"
                 style={{ borderColor: GOLD, color: MAROON }}>⚡ Buy Now
               </button>

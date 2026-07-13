@@ -19,8 +19,16 @@ export function ProfilePage() {
 
   // Fetch real profile from DB
   useEffect(() => {
+    const cachedProfile = sessionStorage.getItem("aroham_user_profile");
+    if (cachedProfile) {
+      try { setProfile(JSON.parse(cachedProfile)); setLoadingProfile(false); } catch (e) {}
+    }
+    
     api("/auth/profile")
-      .then(data => setProfile(data))
+      .then(data => {
+        setProfile(data);
+        sessionStorage.setItem("aroham_user_profile", JSON.stringify(data));
+      })
       .catch(console.error)
       .finally(() => setLoadingProfile(false));
   }, []);

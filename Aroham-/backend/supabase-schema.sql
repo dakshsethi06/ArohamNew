@@ -88,7 +88,7 @@ create table if not exists cart_items (
 );
 create table if not exists addresses (
   id bigint generated always as identity primary key, user_id uuid references auth.users not null,
-  name text not null, phone text not null, email text, address text not null, city text not null, pincode text not null, created_at timestamptz default now()
+  name text not null, phone text not null, email text, address text not null, city text not null, state text, pincode text not null, created_at timestamptz default now()
 );
 create table if not exists users (
   id uuid references auth.users on delete cascade primary key,

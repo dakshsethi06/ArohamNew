@@ -7,22 +7,15 @@ import { WhyAroham } from "@/components/home/WhyAroham";
 import { VideoTestimonials } from "@/components/home/VideoTestimonials";
 import { CommunityComments } from "@/components/home/CommunityComments";
 import { Newsletter } from "@/components/home/Newsletter";
-import { useState, useEffect } from "react";
 import { COMBOS } from "@/constants/data";
 import { ArohamProduct } from "@/types/product";
 import { useCart } from "@/context/CartContext";
-import { api } from "@/lib/api";
+import { useProducts } from "@/hooks/useProducts";
 
 export function HomePage() {
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const [products, setProducts] = useState<ArohamProduct[]>([]);
-
-  useEffect(() => {
-    api("/products")
-      .then(data => setProducts(data))
-      .catch(err => console.error("Failed to load products", err));
-  }, []);
+  const { products } = useProducts();
 
   const goToShop = () => navigate("/shop");
   const goToProduct = (p: ArohamProduct) => navigate(`/shop/${p.slug}`);

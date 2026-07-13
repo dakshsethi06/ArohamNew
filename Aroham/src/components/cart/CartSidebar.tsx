@@ -2,10 +2,12 @@ import { useNavigate } from "react-router";
 import { X, ChevronLeft, Minus, Plus, Trash2, Lock } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 
 export function CartSidebar() {
   const navigate = useNavigate();
   const { items, closeCart, removeFromCart, updateQty } = useCart();
+  const { isLoggedIn, openAuth } = useAuth();
   const subtotal = items.reduce((s, i) => s + i.product.price * i.qty, 0);
   const total = subtotal + 99 + Math.round(subtotal * 0.05);
 
@@ -79,7 +81,15 @@ export function CartSidebar() {
                 <span style={{ fontFamily: PRICE_FONT, fontSize: "1.1rem" }}>₹{total.toLocaleString("en-IN")}</span>
               </div>
             </div>
-            <button onClick={() => { closeCart(); navigate("/checkout/shipping"); }}
+            <button onClick={() => { 
+              if (!isLoggedIn) {
+                closeCart();
+                openAuth();
+              } else {
+                closeCart(); 
+                navigate("/checkout/shipping"); 
+              }
+            }}
               className="w-full py-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90 hover:shadow-lg"
               style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
               <Lock size={14} /> Proceed to Checkout

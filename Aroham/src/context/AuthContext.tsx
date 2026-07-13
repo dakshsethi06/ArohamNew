@@ -70,6 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = () => setIsLoggedIn(true);
   const logout = async () => {
     await supabase.auth.signOut();
+    sessionStorage.removeItem("aroham_user_profile");
     setIsLoggedIn(false);
     setUser(null);
     setSession(null);
