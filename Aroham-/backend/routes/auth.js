@@ -42,6 +42,7 @@ router.post("/signup", async (req, res) => {
     }
 
     // Create user in Supabase auth using email + password (marks email_confirm: true to bypass verification)
+    let userId;
     const { data, error: authErr } = await supabase.auth.admin.createUser({
       email,
       password,
@@ -49,19 +50,50 @@ router.post("/signup", async (req, res) => {
       user_metadata: { full_name: fullName, phone }
     });
 
-    if (authErr) throw authErr;
-    if (!data.user) throw new Error("Failed to create user account");
+    if (authErr) {
+      if (authErr.message.includes("already registered") || authErr.message.includes("already exists")) {
+        // Self-healing: Find user by email in auth
+        const { data: listData, error: listErr } = await supabase.auth.admin.listUsers();
+        const users = listData?.users || [];
+        const existingAuthUser = users.find(u => u.email === email);
+        if (existingAuthUser) {
+          // Check if profile exists in public users table
+          const { data: existingProfile } = await supabase
+            .from("users")
+            .select("id")
+            .eq("id", existingAuthUser.id)
+            .maybeSingle();
 
-    // Insert user details into public users table
+          if (!existingProfile) {
+            // Profile is missing! Update the auth user credentials and insert profile
+            await supabase.auth.admin.updateUserById(existingAuthUser.id, {
+              password,
+              user_metadata: { full_name: fullName, phone }
+            });
+            userId = existingAuthUser.id;
+          } else {
+            return res.status(400).json({ error: "A user with this email address has already been registered" });
+          }
+        } else {
+          throw authErr;
+        }
+      } else {
+        throw authErr;
+      }
+    } else {
+      userId = data.user.id;
+    }
+
+    // Insert user details into public users table (satisfy gender/dob not-null constraints)
     const { error: profErr } = await supabase
       .from("users")
       .insert({
-        id: data.user.id,
+        id: userId,
         full_name: fullName,
         phone,
         email,
-        gender,
-        dob,
+        gender: gender || "Other",
+        dob: dob || new Date().toISOString().split("T")[0],
         tob: tob || null,
         pob_city: pobCity || null,
         pob_state: pobState || null,
