@@ -1,7 +1,21 @@
 // server.js — Aroham backend entry point
 require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
+// Capture logs in memory for debugging
+global.debugLogs = [];
+const originalLog = console.log;
+const originalError = console.error;
+
+console.log = (...args) => {
+  global.debugLogs.push({ time: new Date().toISOString(), type: "log", msg: args.map(a => typeof a === "object" ? JSON.stringify(a) : String(a)).join(" ") });
+  if (global.debugLogs.length > 200) global.debugLogs.shift();
+  originalLog.apply(console, args);
+};
+
+console.error = (...args) => {
+  global.debugLogs.push({ time: new Date().toISOString(), type: "error", msg: args.map(a => typeof a === "object" ? JSON.stringify(a) : String(a)).join(" ") });
+  if (global.debugLogs.length > 200) global.debugLogs.shift();
+  originalError.apply(console, args);
+};
 
 const app = express();
 

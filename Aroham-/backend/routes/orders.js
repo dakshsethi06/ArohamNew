@@ -28,6 +28,14 @@ router.get("/debug-last", async (req, res) => {
   }
 });
 
+// GET /api/orders/debug-logs - Fetch the in-memory debug logs
+router.get("/debug-logs", (req, res) => {
+  res.json({
+    success: true,
+    logs: global.debugLogs || []
+  });
+});
+
 // POST /api/orders  body: { items: [{id, qty}], address: {...}, checkoutType }
 // Validates → creates PENDING order + items + reserves stock + payment record
 // → creates Razorpay order → returns checkout details to frontend
