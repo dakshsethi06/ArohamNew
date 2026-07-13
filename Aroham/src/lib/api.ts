@@ -1,6 +1,7 @@
 import { supabase } from "./supabase";
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000/api";
+
 
 export async function api(endpoint: string, options: RequestInit = {}) {
   const { data: { session } } = await supabase.auth.getSession();
