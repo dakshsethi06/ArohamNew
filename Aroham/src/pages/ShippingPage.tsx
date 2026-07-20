@@ -167,7 +167,14 @@ export function ShippingPage() {
             {showForm && (
 
               <div className="rounded-3xl overflow-hidden mt-4" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
-                <div className="px-6 pt-6 pb-4" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}><h2 className="text-lg font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>New Address</h2></div>
+                <div className="px-6 pt-6 pb-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
+                  <h2 className="text-lg font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>New Address</h2>
+                  {savedAddresses.length > 0 && (
+                    <button onClick={() => setShowForm(false)} className="text-xs font-semibold px-4 py-2 rounded-full transition-all hover:opacity-80 flex items-center gap-1" style={{ background: "rgba(91,31,36,0.07)", color: MAROON }}>
+                      <ChevronLeft size={14} /> Back to Saved
+                    </button>
+                  )}
+                </div>
                 <div className="p-6 space-y-4">
                   <div className="grid sm:grid-cols-2 gap-4">
                     <FloatingInput label="First Name" value={form.firstName} onChange={set("firstName") as (v: string) => void} required />

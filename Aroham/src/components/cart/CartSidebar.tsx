@@ -39,7 +39,7 @@ export function CartSidebar() {
               <div className="text-5xl mb-4">🪷</div>
               <p className="text-sm font-semibold mb-1" style={{ fontFamily: SERIF, color: MAROON }}>Your cart is peaceful</p>
               <p className="text-xs" style={{ color: "#7A6A58" }}>Add sacred products to begin your journey</p>
-              <button onClick={closeCart} className="mt-4 px-6 py-2.5 rounded-full text-sm font-medium" style={{ background: MAROON, color: IVORY }}>Explore Products</button>
+              <button onClick={() => { closeCart(); navigate("/shop"); }} className="mt-4 px-6 py-2.5 rounded-full text-sm font-medium" style={{ background: MAROON, color: IVORY }}>Explore Products</button>
             </div>
           ) : items.map(({ product: p, qty }) => (
             <div key={p.id} className="flex gap-3 p-4 rounded-2xl" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.07)" }}>
