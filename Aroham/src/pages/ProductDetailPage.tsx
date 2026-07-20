@@ -307,13 +307,13 @@ export function ProductDetailPage() {
                   value={pin}
                   onChange={e => setPin(e.target.value.replace(/\D/g, ""))}
                   placeholder="Enter 6-digit Pincode"
-                  className="flex-1 px-4 py-2.5 rounded-xl text-sm outline-none transition-all"
+                  className="flex-1 min-w-0 px-3 py-2.5 rounded-xl text-sm outline-none transition-all"
                   style={{ border: "1.5px solid rgba(91,31,36,0.12)", background: "#FAF7F2", color: "#222222", fontFamily: SANS }}
                 />
                 <button
                   onClick={checkDelivery}
                   disabled={checking}
-                  className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wide transition-all active:scale-95"
+                  className="flex-shrink-0 px-3 py-2.5 rounded-xl text-xs font-bold uppercase whitespace-nowrap transition-all active:scale-95"
                   style={{ background: MAROON, color: IVORY }}
                 >
                   {checking ? "Checking..." : "Check"}

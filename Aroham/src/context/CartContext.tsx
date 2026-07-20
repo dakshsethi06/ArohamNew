@@ -34,12 +34,21 @@ interface CartContextValue {
   removeFromCart: (id: number) => void;
   updateQty: (id: number, delta: number) => void;
   clearCart: () => void;
+  toast: string | null;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showToast = (productName: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast(productName);
+    toastTimer.current = setTimeout(() => setToast(null), 2200);
+  };
   const [showCart, setShowCart] = useState(false);
   const { isLoggedIn } = useAuth();
 
@@ -161,6 +170,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
     if (openSidebar) {
       setShowCart(true);
+    } else {
+      showToast(product.name);
     }
 
     if (isLoggedIn) {
@@ -212,9 +223,46 @@ export function CartProvider({ children }: { children: ReactNode }) {
       items, cartCount, subtotal, discount, total,
       appliedCoupon, applyCoupon, removeCoupon,
       showCart, openCart: () => setShowCart(true), closeCart: () => setShowCart(false),
-      addToCart, removeFromCart, updateQty, clearCart,
+      addToCart, removeFromCart, updateQty, clearCart, toast,
     }}>
       {children}
+      {/* Add-to-cart toast */}
+      <div
+        style={{
+          position: "fixed",
+          top: 24,
+          left: "50%",
+          transform: `translateX(-50%) translateY(${toast ? "0" : "-120%"})`,
+          opacity: toast ? 1 : 0,
+          transition: "all 0.35s cubic-bezier(0.4,0,0.2,1)",
+          zIndex: 9999,
+          pointerEvents: "none",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "12px 20px",
+            borderRadius: 16,
+            background: "rgba(91,31,36,0.95)",
+            backdropFilter: "blur(12px)",
+            boxShadow: "0 8px 32px rgba(91,31,36,0.3), 0 2px 8px rgba(0,0,0,0.1)",
+            color: "#FAF7F2",
+            fontFamily: "'Space Grotesk', sans-serif",
+            fontSize: 13,
+            fontWeight: 600,
+            whiteSpace: "nowrap",
+            maxWidth: "90vw",
+          }}
+        >
+          <span style={{ fontSize: 18 }}>✓</span>
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+            {toast} added to cart
+          </span>
+        </div>
+      </div>
     </CartContext.Provider>
   );
 }
