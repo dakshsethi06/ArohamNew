@@ -226,9 +226,15 @@ async function payNow() {
     showToast("Initiating secure checkout...");
     const cart = await fetchCartItems();
     const items = cart.map(i => ({ id: i.id, qty: i.qty }));
+    const promoCode = localStorage.getItem("applied_promo") || null;
     const o = await api("/orders", {
       method: "POST",
-      body: JSON.stringify({ items, address: window.checkoutAddress, checkoutType: window.isBuyNow ? "buy_now" : "regular" })
+      body: JSON.stringify({ 
+        items, 
+        address: window.checkoutAddress, 
+        checkoutType: window.isBuyNow ? "buy_now" : "regular",
+        promoCode
+      })
     });
     new Razorpay({
       key: o.keyId, order_id: o.razorpayOrderId, amount: o.amount, currency: o.currency,

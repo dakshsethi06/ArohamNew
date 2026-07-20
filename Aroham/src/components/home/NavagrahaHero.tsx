@@ -52,7 +52,7 @@ export function NavagrahaHero({ onShop, onConsult }: { onShop: () => void; onCon
           <p className="text-sm mb-7 max-w-sm mx-auto lg:mx-0" style={{ color: "rgba(250,247,242,0.55)", fontFamily: "'Space Grotesk', sans-serif", fontWeight: 400, lineHeight: 1.7 }}>
             Authentic Vedic products &amp; expert consultations to align your life with cosmic energy. Temple energized. Astrologer recommended.
           </p>
-          <div className="flex gap-3 justify-center lg:justify-start mb-8">
+          <div className="flex flex-wrap gap-3 justify-center lg:justify-start mb-8">
             <button onClick={onShop} className="flex items-center gap-2 px-7 py-3.5 rounded-full text-sm font-semibold tracking-wide transition-all hover:scale-105 hover:shadow-2xl whitespace-nowrap"
               style={{ background: `linear-gradient(135deg,${SAFFRON},${GOLD})`, color: "#1A0D0E", fontFamily: "'Space Grotesk',sans-serif", boxShadow: `0 4px 20px rgba(231,139,47,0.35)` }}>
               🛍 Shop Now
@@ -103,7 +103,7 @@ export function NavagrahaHero({ onShop, onConsult }: { onShop: () => void; onCon
               const orbitR = Math.round(g.orbit * S);
               const gi = i + 1;
               return (
-                <div key={g.name} className="absolute mx-[-150px] my-[0px]"
+                <div key={g.name} className="absolute my-0"
                   style={{ width: orbitSize, height: orbitSize, top: "50%", left: "44%", transform: "translate(-50%,-50%)" }}>
                   <div className="absolute group"
                     style={{ top: "50%", left: "50%", ["--r" as string]: `${orbitR}px`,

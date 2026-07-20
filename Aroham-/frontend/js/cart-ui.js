@@ -181,15 +181,70 @@ async function renderCart() {
       <strong>${formatINR(i.price * i.qty)}</strong>
     </div>`).join("");
 
+  const PROMO_CODES = [
+    { code: "AROHAM10", type: "percentage", value: 10, description: "Get 10% off on all sacred items." },
+    { code: "DEVOTION20", type: "percentage", value: 20, minPurchase: 300000, description: "Get 20% off on orders above ₹3,000." },
+    { code: "FESTIVE500", type: "flat", value: 50000, minPurchase: 250000, description: "Flat ₹500 off on orders above ₹2,500." },
+    { code: "FREEENERGIZATION", type: "flat", value: 9900, description: "Free Temple Consecration (Save ₹99)." },
+    { code: "FIRST300", type: "flat", value: 30000, description: "Flat ₹300 off on your first order." }
+  ];
+
   const subtotal = cartSubtotal(cart);
-  const gst = Math.floor(subtotal * 0.05); // 5% GST
+  let discount = 0;
+  let appliedPromo = null;
+  const appliedCode = localStorage.getItem("applied_promo");
+
+  if (appliedCode) {
+    appliedPromo = PROMO_CODES.find(p => p.code.toUpperCase() === appliedCode.toUpperCase());
+    if (appliedPromo) {
+      if (appliedPromo.minPurchase && subtotal < appliedPromo.minPurchase) {
+        localStorage.removeItem("applied_promo");
+        showToast(`Coupon ${appliedPromo.code} removed (Subtotal less than ${formatINR(appliedPromo.minPurchase)})`);
+        appliedPromo = null;
+      } else {
+        if (appliedPromo.type === "percentage") {
+          discount = Math.floor(subtotal * (appliedPromo.value / 100));
+        } else if (appliedPromo.type === "flat") {
+          discount = Math.min(subtotal, appliedPromo.value);
+        }
+      }
+    } else {
+      localStorage.removeItem("applied_promo");
+    }
+  }
+
+  const discountedSubtotal = Math.max(0, subtotal - discount);
+  const gst = Math.floor(discountedSubtotal * 0.05); // 5% GST on discounted subtotal
   const templeFee = 9900; // ₹99
   const shipping = subtotal >= 99900 ? 0 : 10000; // Free if >= ₹999, else ₹100
   
   document.getElementById("summary-subtotal").textContent = formatINR(subtotal);
   document.getElementById("summary-shipping").textContent = shipping > 0 ? formatINR(shipping) : "Free";
   document.getElementById("summary-gst").textContent = formatINR(gst);
-  document.getElementById("summary-total").textContent = formatINR(subtotal + gst + templeFee + shipping);
+
+  const discountRow = document.getElementById("discount-row");
+  const summaryDiscount = document.getElementById("summary-discount");
+  const promoInputContainer = document.getElementById("promo-input-container");
+  const promoBadgeContainer = document.getElementById("promo-badge-container");
+  const appliedPromoCodeSpan = document.getElementById("applied-promo-code");
+
+  if (discount > 0 && appliedPromo) {
+    if (discountRow) {
+      discountRow.classList.remove("hidden");
+      summaryDiscount.textContent = `-${formatINR(discount)}`;
+    }
+    if (promoInputContainer) promoInputContainer.classList.add("hidden");
+    if (promoBadgeContainer) {
+      promoBadgeContainer.classList.remove("hidden");
+      appliedPromoCodeSpan.textContent = appliedPromo.code;
+    }
+  } else {
+    if (discountRow) discountRow.classList.add("hidden");
+    if (promoInputContainer) promoInputContainer.classList.remove("hidden");
+    if (promoBadgeContainer) promoBadgeContainer.classList.add("hidden");
+  }
+
+  document.getElementById("summary-total").textContent = formatINR(discountedSubtotal + gst + templeFee + shipping);
   
   actionsBlock.classList.remove("hidden");
   
@@ -197,5 +252,47 @@ async function renderCart() {
     showAddressSection();
   }
 }
+
+window.applyPromoCode = function(code) {
+  if (!code) return showToast("Please enter a promo code");
+  const PROMO_CODES = [
+    { code: "AROHAM10", type: "percentage", value: 10, description: "Get 10% off on all sacred items." },
+    { code: "DEVOTION20", type: "percentage", value: 20, minPurchase: 300000, description: "Get 20% off on orders above ₹3,000." },
+    { code: "FESTIVE500", type: "flat", value: 50000, minPurchase: 250000, description: "Flat ₹500 off on orders above ₹2,500." },
+    { code: "FREEENERGIZATION", type: "flat", value: 9900, description: "Free Temple Consecration (Save ₹99)." },
+    { code: "FIRST300", type: "flat", value: 30000, description: "Flat ₹300 off on your first order." }
+  ];
+  const promo = PROMO_CODES.find(p => p.code.toUpperCase() === code.trim().toUpperCase());
+  if (!promo) return showToast("Invalid promo code");
+  
+  fetchCartItems().then(cart => {
+    const subtotal = cartSubtotal(cart);
+    if (promo.minPurchase && subtotal < promo.minPurchase) {
+      return showToast(`This offer requires a minimum purchase of ${formatINR(promo.minPurchase)}`);
+    }
+    localStorage.setItem("applied_promo", promo.code);
+    showToast(`Promo code ${promo.code} applied successfully! 🎉`);
+    if (typeof confetti === "function") {
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+    }
+    renderCart();
+  }).catch(err => {
+    showToast("Error applying promo code: " + err.message);
+  });
+};
+
+window.applyPromoFromInput = function() {
+  const input = document.getElementById("promo-input");
+  if (input) {
+    window.applyPromoCode(input.value);
+    input.value = "";
+  }
+};
+
+window.removePromoCode = function() {
+  localStorage.removeItem("applied_promo");
+  showToast("Promo code removed");
+  renderCart();
+};
 
 document.addEventListener("DOMContentLoaded", renderCart);

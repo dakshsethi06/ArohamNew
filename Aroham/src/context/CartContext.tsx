@@ -4,11 +4,29 @@ import { CartItem } from "@/types/cart";
 import { useAuth } from "./AuthContext";
 import { api } from "@/lib/api";
 
+export interface AppliedCoupon {
+  code: string;
+  type: "percent" | "flat";
+  value: number;
+  label: string;
+}
+
+export const VALID_COUPONS: Record<string, { type: "percent" | "flat"; value: number; label: string }> = {
+  AROHAM10: { type: "percent", value: 10, label: "10% OFF sacred items" },
+  SACRED15: { type: "percent", value: 15, label: "15% OFF sacred items" },
+  FIRST100: { type: "flat", value: 100, label: "₹100 Instant Discount" },
+  DIVINE20: { type: "percent", value: 20, label: "20% OFF divine discount" },
+};
+
 interface CartContextValue {
   items: CartItem[];
   cartCount: number;
   subtotal: number;
+  discount: number;
   total: number;
+  appliedCoupon: AppliedCoupon | null;
+  applyCoupon: (code: string) => { success: boolean; message: string };
+  removeCoupon: () => void;
   showCart: boolean;
   openCart: () => void;
   closeCart: () => void;
@@ -88,9 +106,52 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [items, isLoggedIn]);
 
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(() => {
+    try {
+      const saved = sessionStorage.getItem("aroham_applied_coupon");
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
   const cartCount = items.reduce((s, i) => s + i.qty, 0);
   const subtotal = items.reduce((s, i) => s + i.product.price * i.qty, 0);
-  const total = subtotal + 99 + Math.round(subtotal * 0.05);
+
+  let discount = 0;
+  if (appliedCoupon && subtotal > 0) {
+    if (appliedCoupon.type === "percent") {
+      discount = Math.round((subtotal * appliedCoupon.value) / 100);
+    } else {
+      discount = Math.min(subtotal, appliedCoupon.value);
+    }
+  }
+
+  const taxableAmount = Math.max(0, subtotal - discount);
+  const gst = Math.round(taxableAmount * 0.05);
+  const total = taxableAmount + gst;
+
+  const applyCoupon = (code: string) => {
+    const cleanCode = code.trim().toUpperCase();
+    const found = VALID_COUPONS[cleanCode];
+    if (!found) {
+      return { success: false, message: "Invalid coupon code. Try AROHAM10 or FIRST100" };
+    }
+    const coupon: AppliedCoupon = {
+      code: cleanCode,
+      type: found.type,
+      value: found.value,
+      label: found.label
+    };
+    setAppliedCoupon(coupon);
+    sessionStorage.setItem("aroham_applied_coupon", JSON.stringify(coupon));
+    return { success: true, message: `Coupon ${cleanCode} applied!` };
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    sessionStorage.removeItem("aroham_applied_coupon");
+  };
 
   const addToCart = async (product: ArohamProduct, qty: number = 1) => {
     setItems(prev => {
@@ -146,7 +207,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   return (
     <CartContext.Provider value={{
-      items, cartCount, subtotal, total,
+      items, cartCount, subtotal, discount, total,
+      appliedCoupon, applyCoupon, removeCoupon,
       showCart, openCart: () => setShowCart(true), closeCart: () => setShowCart(false),
       addToCart, removeFromCart, updateQty, clearCart,
     }}>

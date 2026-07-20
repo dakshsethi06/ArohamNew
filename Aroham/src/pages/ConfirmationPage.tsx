@@ -51,7 +51,7 @@ function Confetti() {
 export function ConfirmationPage() {
   const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
-  const [timelineReached, setTimelineReached] = useState(0);
+  const [timelineReached, setTimelineReached] = useState(1);
   const [orderItems, setOrderItems] = useState<{ id: number; name: string; img: string; price: number; qty: number }[]>([]);
   const [totalAmount, setTotalAmount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
@@ -59,9 +59,18 @@ export function ConfirmationPage() {
   const orderId = sessionStorage.getItem("aroham_last_order_id") || "—";
   const displayOrderId = orderId !== "—" ? `ARH-${orderId}` : "Confirmed";
 
+  // Calculate dynamic estimated delivery date (4 days from today)
+  const deliveryDateObj = new Date();
+  deliveryDateObj.setDate(deliveryDateObj.getDate() + 4);
+  const formattedDeliveryDate = deliveryDateObj.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  });
+
   useEffect(() => {
     const t1 = setTimeout(() => setVisible(true), 80);
-    const timers = TIMELINE_STEPS.map((_, i) => setTimeout(() => setTimelineReached(i + 1), 600 + i * 350));
+    const t2 = setTimeout(() => setTimelineReached(2), 1200);
 
     if (orderId && orderId !== "—") {
       Promise.all([api("/orders"), api("/products")])
@@ -93,7 +102,7 @@ export function ConfirmationPage() {
 
     return () => {
       clearTimeout(t1);
-      timers.forEach(clearTimeout);
+      clearTimeout(t2);
     };
   }, [orderId]);
 
@@ -133,7 +142,7 @@ export function ConfirmationPage() {
           </div>
         </div>
       </div>
-      <div className="max-w-6xl mx-auto px-6 lg:px-10 py-12 pb-24 space-y-8">
+      <div className="max-w-6xl mx-auto px-6 lg:px-10 py-12 pb-12 space-y-8">
         <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 4px 40px rgba(91,31,36,0.07)" }}>
           <div className="px-8 py-5 flex flex-wrap items-center justify-between gap-4" style={{ background: `linear-gradient(90deg,${MAROON},#7A2A30)` }}>
             <div><p className="text-xs tracking-widest uppercase mb-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>Order Number</p><p className="text-lg font-semibold" style={{ fontFamily: SERIF, color: GOLD }}>{displayOrderId}</p></div>
@@ -143,7 +152,7 @@ export function ConfirmationPage() {
             </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0" style={{ borderColor: "rgba(91,31,36,0.07)" }}>
-            {[["Order Date", new Date().toLocaleDateString("en-IN", {day:"2-digit",month:"short",year:"numeric"})], ["Est. Delivery", "7–10 business days"], ["Payment", "Razorpay"], ["Total", `₹${totalAmount.toLocaleString("en-IN")}`]].map(([l, v]) => (
+            {[["Order Date", new Date().toLocaleDateString("en-IN", {day:"2-digit",month:"short",year:"numeric"})], ["Est. Delivery", `Arriving by ${formattedDeliveryDate}`], ["Payment", "Razorpay"], ["Total", `₹${totalAmount.toLocaleString("en-IN")}`]].map(([l, v]) => (
               <div key={l} className="px-6 py-5"><p className="text-[10px] tracking-widest uppercase font-semibold mb-1" style={{ color: "#9A8A78" }}>{l}</p><p className="text-sm font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>{v}</p></div>
             ))}
           </div>
@@ -189,22 +198,17 @@ export function ConfirmationPage() {
                 );
               })}
               <div className="mt-4 pt-4 flex items-center gap-3" style={{ borderTop: "1px solid rgba(200,160,68,0.2)" }}>
-                <Truck size={16} style={{ color: GOLD }} /><div><p className="text-xs font-semibold" style={{ color: MAROON }}>Expected Delivery</p><p className="text-xs" style={{ color: "#7A6A58" }}>15 July 2025 · Free Shipping</p></div>
+                <Truck size={16} style={{ color: GOLD }} /><div><p className="text-xs font-semibold" style={{ color: MAROON }}>Expected Delivery</p><p className="text-xs" style={{ color: "#7A6A58" }}>{formattedDeliveryDate} · Free Shipping</p></div>
               </div>
             </div>
           </div>
         </div>
         <div className="flex flex-wrap justify-center gap-4">
-          <button className="flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-semibold transition-all hover:opacity-90 hover:shadow-xl" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}><Package size={15} /> Track My Order</button>
+          <button onClick={() => navigate("/profile?tab=orders")} className="flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-semibold transition-all hover:opacity-90 hover:shadow-xl" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}><Package size={15} /> Track My Order</button>
           <button onClick={() => navigate("/")} className="flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-semibold border transition-all hover:bg-amber-50" style={{ borderColor: "rgba(91,31,36,0.2)", color: MAROON }}><ArrowRight size={15} /> Continue Shopping</button>
         </div>
       </div>
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 px-5 py-4" style={{ background: "rgba(250,247,242,0.97)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(91,31,36,0.1)" }}>
-        <div className="flex gap-3">
-          <button className="flex-1 py-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}><Package size={14} /> Track Order</button>
-          <button onClick={() => navigate("/")} className="px-5 py-4 rounded-2xl text-sm font-medium border" style={{ borderColor: "rgba(91,31,36,0.2)", color: MAROON }}>Shop</button>
-        </div>
-      </div>
+
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import { X, Star, CheckCircle, Shield, Flame, Award, Package } from "lucide-react";
 import { MAROON, GOLD, SAFFRON, IVORY, SANS, SERIF } from "@/constants/theme";
 import { AuthInput } from "./AuthInput";
@@ -29,6 +30,12 @@ const TRUST_ITEMS = [
 
 export function AuthPage() {
   const { closeAuth } = useAuth();
+  const navigate = useNavigate();
+
+  const handleAuthSuccess = () => {
+    closeAuth(true);
+    navigate("/profile");
+  };
   const [authState, setAuthState] = useState<AuthState>("signin");
   const [tab, setTab] = useState<"signin" | "signup">("signin");
   const [phone, setPhone] = useState("");
@@ -80,7 +87,7 @@ export function AuthPage() {
           const { error } = await supabase.auth.signInWithPassword({ email: data.email, password });
           setLoading(false);
           if (error) setErrorMsg(error.message);
-          else goTo("success");
+          else handleAuthSuccess();
         } catch (e: any) {
           setLoading(false);
           setErrorMsg(e.message || "Sign in failed.");
@@ -139,7 +146,7 @@ export function AuthPage() {
           });
           setLoading(false);
           if (signInErr) { setErrorMsg("Account created! Please sign in."); goTo("signin"); }
-          else goTo("success");
+          else handleAuthSuccess();
         } catch (e: any) {
           setLoading(false);
           setErrorMsg(e.message || "Signup failed. Please try again.");
@@ -177,7 +184,7 @@ export function AuthPage() {
   const forgotNewPassJsx = (<div style={formStyle} className="space-y-5"><div><h2 className="mb-1" style={{ fontFamily: SERIF, fontSize: "1.75rem", fontWeight: 500, color: MAROON }}>Create New Password</h2><p className="text-sm" style={{ color: "#7A6A58" }}>Choose a strong password.</p></div><PasswordInput label="New Password" value={newPass} onChange={setNewPass} /><PasswordInput label="Confirm New Password" value={confirmPass} onChange={setConfirmPass} /><button onClick={() => goTo("forgot-success")} className="w-full py-4 rounded-2xl text-sm font-semibold transition-all hover:opacity-90 hover:shadow-lg" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>Update Password</button></div>);
   const forgotSuccessJsx = (<div style={formStyle} className="flex flex-col items-center text-center space-y-6 py-4"><div className="relative w-20 h-20"><div className="absolute inset-0 rounded-full" style={{ background: `radial-gradient(circle,rgba(200,160,68,0.2),transparent)`, transform: "scale(1.8)" }} /><div className="w-full h-full rounded-full flex items-center justify-center" style={{ background: `linear-gradient(135deg,${GOLD},${SAFFRON})`, boxShadow: `0 8px 32px rgba(200,160,68,0.4)` }}><CheckCircle size={30} color="white" strokeWidth={2.5} /></div></div><div><h2 className="mb-2" style={{ fontFamily: SERIF, fontSize: "1.6rem", fontWeight: 500, color: MAROON }}>Password Updated</h2><p className="text-sm" style={{ color: "#7A6A58" }}>You can now sign in with your new password.</p></div><button onClick={() => goTo("signin")} className="w-full py-4 rounded-2xl text-sm font-semibold transition-all hover:opacity-90 hover:shadow-lg" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>Sign In</button></div>);
 
-  const rightContent = authState === "signin" ? signinJsx : authState === "signup" ? signupJsx : authState === "otp" ? makeOtpJsx(() => goTo("success"), () => goTo("signup"), otpPhone) : authState === "success" ? successJsx : authState === "forgot-phone" ? forgotPhoneJsx : authState === "forgot-otp" ? makeOtpJsx(() => goTo("forgot-newpass"), () => goTo("forgot-phone"), fgtPhone) : authState === "forgot-newpass" ? forgotNewPassJsx : forgotSuccessJsx;
+  const rightContent = authState === "signin" ? signinJsx : authState === "signup" ? signupJsx : authState === "otp" ? makeOtpJsx(handleAuthSuccess, () => goTo("signup"), otpPhone) : authState === "success" ? successJsx : authState === "forgot-phone" ? forgotPhoneJsx : authState === "forgot-otp" ? makeOtpJsx(() => goTo("forgot-newpass"), () => goTo("forgot-phone"), fgtPhone) : authState === "forgot-newpass" ? forgotNewPassJsx : forgotSuccessJsx;
 
   return (
     <div role="dialog" aria-modal="true" aria-label="Sign in" className="fixed inset-0 z-50 flex flex-col" style={{ background: "#FAF7F2", fontFamily: SANS }}>

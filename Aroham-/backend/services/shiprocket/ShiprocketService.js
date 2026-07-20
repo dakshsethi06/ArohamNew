@@ -144,6 +144,19 @@ class ShiprocketService {
   }
 
   /**
+   * Check serviceability for a delivery pincode
+   * @param {string} pickupPincode
+   * @param {string} deliveryPincode
+   * @param {number} weight
+   * @param {number} cod (1 or 0)
+   * @returns {Object} Serviceability details
+   */
+  async checkServiceability(pickupPincode, deliveryPincode, weight = 0.5, cod = 1) {
+    const endpoint = `/courier/serviceability/?pickup_postcode=${pickupPincode}&delivery_postcode=${deliveryPincode}&weight=${weight}&cod=${cod}`;
+    return await this.api.request(endpoint, 'GET');
+  }
+
+  /**
    * Cancel a Shiprocket order by its order ID(s)
    * @param {string[]} orderIds - Array of Shiprocket order IDs to cancel
    * @returns {Object} cancellation response

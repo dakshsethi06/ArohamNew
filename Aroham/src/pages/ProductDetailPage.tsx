@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import { Star, ShoppingCart, Share2, Heart, ChevronRight, Sparkles, Flame, Gem, Award, Shield, Package, Truck, CheckCircle, Mail, Phone, ChevronDown } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
+import { CONTACT_INFO } from "@/constants/contact";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useProducts } from "@/hooks/useProducts";
@@ -36,6 +37,108 @@ export function ProductDetailPage() {
   const [qty, setQty] = useState(1);
   const [selectedImg, setSelectedImg] = useState(0);
   const [contactOpen, setContactOpen] = useState(false);
+  const [showSticky, setShowSticky] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowSticky(window.scrollY > 480);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const [pin, setPin] = useState("");
+  const [checking, setChecking] = useState(false);
+  const [deliveryResult, setDeliveryResult] = useState<{ city?: string; state?: string; date?: string; cod?: boolean; error?: string; fallback?: boolean; carrier?: string } | null>(null);
+
+  const checkDelivery = async () => {
+    if (pin.length !== 6 || !/^\d+$/.test(pin)) {
+      setDeliveryResult({ error: "Please enter a valid 6-digit pincode." });
+      return;
+    }
+    setChecking(true);
+    setDeliveryResult(null);
+    try {
+      let city = "";
+      let state = "";
+      try {
+        const locRes = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+        const locData = await locRes.json();
+        if (locData && locData[0] && locData[0].Status === "Success") {
+          const postOffice = locData[0].PostOffice[0];
+          city = postOffice.District;
+          state = postOffice.State;
+        }
+      } catch (e) {
+        console.error("Postal API error", e);
+      }
+
+      const apiBase = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+        ? "http://localhost:5000/api"
+        : (import.meta.env.VITE_API_BASE || "http://localhost:5000/api");
+
+      const shiprocketRes = await fetch(`${apiBase}/shiprocket/serviceability?delivery_pincode=${pin}`);
+      const shiprocketData = await shiprocketRes.json();
+      
+      if (shiprocketData.success && shiprocketData.data && shiprocketData.data.data) {
+        const sr = shiprocketData.data.data;
+        const companies = sr.available_courier_companies || [];
+        const firstCompany = companies[0] || {};
+        
+        let etd = firstCompany.etd;
+        let carrier = firstCompany.courier_name ? `Shiprocket (${firstCompany.courier_name})` : "Shiprocket Express";
+        let isCod = firstCompany.cod === 1;
+
+        if (!city && firstCompany.city) city = firstCompany.city;
+        if (!state && firstCompany.state) state = firstCompany.state;
+
+        let dateStr = "";
+        if (etd) {
+          const dateObj = new Date(etd);
+          dateStr = dateObj.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short" });
+        } else if (firstCompany.estimated_delivery_days) {
+          const days = parseInt(firstCompany.estimated_delivery_days, 10) || 3;
+          const date = new Date();
+          date.setDate(date.getDate() + days);
+          dateStr = date.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short" });
+        } else {
+          const date = new Date();
+          date.setDate(date.getDate() + 4);
+          dateStr = date.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short" });
+        }
+
+        setDeliveryResult({
+          city,
+          state,
+          date: dateStr,
+          cod: isCod,
+          carrier
+        });
+      } else {
+        const date = new Date();
+        date.setDate(date.getDate() + 4);
+        const dateStr = date.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short" });
+        setDeliveryResult({
+          city,
+          state,
+          date: dateStr,
+          cod: true,
+          fallback: true
+        });
+      }
+    } catch (e) {
+      const date = new Date();
+      date.setDate(date.getDate() + 4);
+      const dateStr = date.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short" });
+      setDeliveryResult({
+        date: dateStr,
+        cod: true,
+        fallback: true
+      });
+    } finally {
+      setChecking(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -161,8 +264,8 @@ export function ProductDetailPage() {
           <ChevronRight size={12} /><span>{product.name}</span>
         </div>
       </div>
-      <div className="px-5 lg:px-10 pb-10 ml-[-10px] mr-[0px] my-[0px]">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-[48%_32%_20%] gap-8">
+      <div className="px-5 lg:px-10 pb-10">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-[48%_32%_20%] gap-6 lg:gap-8">
           {/* Gallery */}
           <div>
             <div className="rounded-3xl overflow-hidden aspect-square bg-amber-50 mb-3 relative group" style={{ boxShadow: "0 8px 40px rgba(91,31,36,0.1)" }}>
@@ -228,7 +331,59 @@ export function ProductDetailPage() {
               </button>
 
             </div>
-            <div className="grid grid-cols-5 gap-2">
+
+            {/* Myntra-style Delivery & Pincode Checker */}
+            <div className="rounded-2xl p-4 mb-6" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 12px rgba(91,31,36,0.03)" }}>
+              <div className="flex items-center gap-2 mb-3">
+                <Truck size={16} style={{ color: GOLD }} />
+                <span className="text-xs font-bold uppercase tracking-wider" style={{ color: MAROON }}>Delivery Options</span>
+              </div>
+              <div className="flex gap-2 mb-3">
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={pin}
+                  onChange={e => setPin(e.target.value.replace(/\D/g, ""))}
+                  placeholder="Enter 6-digit Pincode"
+                  className="flex-1 px-4 py-2.5 rounded-xl text-sm outline-none transition-all"
+                  style={{ border: "1.5px solid rgba(91,31,36,0.12)", background: "#FAF7F2", color: "#222222", fontFamily: SANS }}
+                />
+                <button
+                  onClick={checkDelivery}
+                  disabled={checking}
+                  className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wide transition-all active:scale-95"
+                  style={{ background: MAROON, color: IVORY }}
+                >
+                  {checking ? "Checking..." : "Check"}
+                </button>
+              </div>
+              {deliveryResult && (
+                <div className="mt-3 space-y-2 text-xs transition-opacity duration-300">
+                  {deliveryResult.error ? (
+                    <p className="text-red-500 font-semibold">✕ {deliveryResult.error}</p>
+                  ) : (
+                    <>
+                      <p className="font-semibold text-emerald-600 flex items-center gap-1.5">
+                        <span>✓</span> Estimated delivery: {deliveryResult.date}
+                      </p>
+                      {deliveryResult.city && (
+                        <p style={{ color: "#7A6A58" }}>
+                          Delivered to: <strong style={{ color: MAROON }}>{deliveryResult.city}, {deliveryResult.state}</strong>
+                        </p>
+                      )}
+                      <p style={{ color: "#7A6A58" }}>
+                        🚚 Shipping Partner: <strong style={{ color: MAROON }}>{deliveryResult.carrier || "Shiprocket Express"}</strong>
+                      </p>
+                      <p style={{ color: "#7A6A58" }}>
+                        💵 Cash on Delivery (COD) <strong className={deliveryResult.cod ? "text-emerald-600" : "text-red-500"}>{deliveryResult.cod ? "Available" : "Not Available"}</strong>
+                      </p>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
               {[{ icon: Flame, l: "Temple Energized" }, { icon: Gem, l: "100% Authentic" }, { icon: Award, l: "Handcrafted" }, { icon: Shield, l: "Secure Pay" }, { icon: Package, l: "Easy Returns" }].map(({ icon: Icon, l }) => (
                 <div key={l} className="flex flex-col items-center gap-1 text-center">
                   <Icon size={16} style={{ color: GOLD }} strokeWidth={1.5} />
@@ -259,8 +414,8 @@ export function ProductDetailPage() {
               <p className="text-xs font-semibold mb-1" style={{ fontFamily: SERIF, color: MAROON }}>Need Guidance?</p>
               <p className="text-[10px] mb-3" style={{ color: "#7A6A58" }}>Talk to our Vastu Expert to confirm this is the right remedy for you.</p>
               <div className="flex gap-2">
-                <button className="flex-1 py-2 rounded-xl text-[10px] font-semibold flex items-center justify-center gap-1" style={{ background: "#25D366", color: "white" }}>💬 WhatsApp</button>
-                <button className="flex-1 py-2 rounded-xl text-[10px] font-semibold border" style={{ borderColor: "rgba(91,31,36,0.2)", color: MAROON }}>📞 Call</button>
+                <a href={CONTACT_INFO.whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex-1 py-2 rounded-xl text-[10px] font-semibold flex items-center justify-center gap-1 transition-opacity hover:opacity-90" style={{ background: "#25D366", color: "white" }}>💬 WhatsApp</a>
+                <a href={CONTACT_INFO.phoneTel} className="flex-1 py-2 rounded-xl text-[10px] font-semibold border flex items-center justify-center gap-1 transition-colors hover:bg-amber-50" style={{ borderColor: "rgba(91,31,36,0.2)", color: MAROON }}>📞 Call</a>
               </div>
             </div>
           </div>
@@ -307,13 +462,13 @@ export function ProductDetailPage() {
               </button>
               {contactOpen && (
                 <div className="mt-6 grid sm:grid-cols-3 gap-3">
-                  <a href="mailto:hello@aroham.in" className="flex items-center gap-3 p-4 rounded-2xl transition-all hover:scale-105" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
-                    <Mail size={20} style={{ color: GOLD }} /><div><div className="text-sm font-semibold" style={{ color: IVORY }}>Email Us</div><div className="text-[11px]" style={{ color: "rgba(250,247,242,0.6)" }}>hello@aroham.in</div></div>
+                  <a href={CONTACT_INFO.emailMailto} className="flex items-center gap-3 p-4 rounded-2xl transition-all hover:scale-105" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
+                    <Mail size={20} style={{ color: GOLD }} /><div><div className="text-sm font-semibold" style={{ color: IVORY }}>Email Us</div><div className="text-[11px]" style={{ color: "rgba(250,247,242,0.6)" }}>{CONTACT_INFO.email}</div></div>
                   </a>
-                  <a href="tel:+919876543210" className="flex items-center gap-3 p-4 rounded-2xl transition-all hover:scale-105" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
-                    <Phone size={20} style={{ color: GOLD }} /><div><div className="text-sm font-semibold" style={{ color: IVORY }}>Call Us</div><div className="text-[11px]" style={{ color: "rgba(250,247,242,0.6)" }}>+91 98765 43210</div></div>
+                  <a href={CONTACT_INFO.phoneTel} className="flex items-center gap-3 p-4 rounded-2xl transition-all hover:scale-105" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
+                    <Phone size={20} style={{ color: GOLD }} /><div><div className="text-sm font-semibold" style={{ color: IVORY }}>Call Us</div><div className="text-[11px]" style={{ color: "rgba(250,247,242,0.6)" }}>{CONTACT_INFO.phoneDisplay}</div></div>
                   </a>
-                  <a href="https://wa.me/919876543210" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 rounded-2xl transition-all hover:scale-105" style={{ background: "#25D366", border: "1px solid rgba(255,255,255,0.15)" }}>
+                  <a href={CONTACT_INFO.whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 rounded-2xl transition-all hover:scale-105" style={{ background: "#25D366", border: "1px solid rgba(255,255,255,0.15)" }}>
                     <span className="text-xl">💬</span><div><div className="text-sm font-semibold" style={{ color: "white" }}>WhatsApp</div><div className="text-[11px]" style={{ color: "rgba(255,255,255,0.8)" }}>Chat instantly</div></div>
                   </a>
                 </div>
@@ -323,8 +478,14 @@ export function ProductDetailPage() {
         </div>
       </div>
       {/* Mobile sticky bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 px-5 py-4"
-        style={{ background: "rgba(250,247,242,0.97)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(91,31,36,0.1)", boxShadow: "0 -4px 24px rgba(91,31,36,0.08)" }}>
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 px-5 py-4 transition-transform duration-300"
+        style={{
+          background: "rgba(250,247,242,0.97)",
+          backdropFilter: "blur(12px)",
+          borderTop: "1px solid rgba(91,31,36,0.1)",
+          boxShadow: "0 -4px 24px rgba(91,31,36,0.08)",
+          transform: showSticky ? "translateY(0)" : "translateY(100%)"
+        }}>
         <div className="flex items-center justify-between mb-2">
           <span className="text-lg font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{product.price.toLocaleString("en-IN")}</span>
           <span className="text-xs line-through" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{product.original.toLocaleString("en-IN")}</span>
@@ -335,7 +496,14 @@ export function ProductDetailPage() {
             style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
             <ShoppingCart size={14} /> Add to Cart
           </button>
-          <button className="px-5 py-4 rounded-2xl text-sm font-semibold border" style={{ borderColor: GOLD, color: MAROON }}>⚡ Buy</button>
+          <button
+            onClick={async () => {
+              await addToCart(product, qty);
+              if (!isLoggedIn) openAuth();
+              else navigate("/checkout/shipping");
+            }}
+            className="px-5 py-4 rounded-2xl text-sm font-semibold border"
+            style={{ borderColor: GOLD, color: MAROON }}>⚡ Buy</button>
         </div>
       </div>
     </div>

@@ -41,7 +41,7 @@ export function PaymentPage() {
   const [placing, setPlacing] = useState(false);
 
   const subtotal = items.reduce((s, i) => s + i.product.price * i.qty, 0);
-  const total = subtotal + 99 + Math.round(subtotal * 0.05);
+  const total = subtotal + Math.round(subtotal * 0.05);
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
@@ -157,10 +157,10 @@ export function PaymentPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-5 lg:px-10 py-10 lg:py-6 pb-32 lg:pb-6 mx-[-20px] my-[0px]">
+      <div className="max-w-7xl mx-auto px-5 lg:px-10 py-8 lg:py-6 pb-12 lg:pb-6">
         <div className="grid lg:grid-cols-[1fr_380px] gap-10 items-start">
           {/* Left — Pay via Razorpay card */}
-          <div className="lg:ml-[-35px] lg:mr-[0px] my-[0px] px-4 lg:px-0 space-y-4">
+          <div className="space-y-4">
             {/* Razorpay pay card */}
             <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
               <div className="px-6 pt-6 pb-4" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
@@ -234,7 +234,7 @@ export function PaymentPage() {
                 ))}
               </div>
               <div className="px-6 py-5 lg:py-3 space-y-3 lg:space-y-2">
-                {[["Subtotal", `₹${subtotal.toLocaleString("en-IN")}`], ["Temple Energization", "₹99"], ["Shipping", "FREE", true], ["GST (5%)", `₹${Math.round(subtotal * 0.05).toLocaleString("en-IN")}`]].map(([l, v, g]) => (
+                 {[["Subtotal", `₹${subtotal.toLocaleString("en-IN")}`], ["Shipping", "FREE", true], ["GST (5%)", `₹${Math.round(subtotal * 0.05).toLocaleString("en-IN")}`]].map(([l, v, g]) => (
                   <div key={l as string} className="flex justify-between text-sm"><span style={{ color: "#7A6A58" }}>{l as string}</span><span style={{ color: g ? "#4A8A4A" : MAROON, fontFamily: PRICE_FONT, fontWeight: 600 }}>{v as string}</span></div>
                 ))}
                 <div className="h-px" style={{ background: `linear-gradient(90deg,transparent,rgba(200,160,68,0.3),transparent)` }} />
@@ -248,12 +248,7 @@ export function PaymentPage() {
         </div>
       </div>
 
-      {/* Mobile sticky pay button */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 px-5 py-4" style={{ background: "rgba(250,247,242,0.97)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(91,31,36,0.1)" }}>
-        <button onClick={handlePay} disabled={placing || items.length === 0} className="w-full py-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-70" style={{ background: "linear-gradient(135deg,#072654,#3395FF)", color: "#FFFFFF" }}>
-          {placing ? <><span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />Processing…</> : <><Lock size={14} />Pay ₹{total.toLocaleString("en-IN")} with Razorpay</>}
-        </button>
-      </div>
+
     </div>
   );
 }

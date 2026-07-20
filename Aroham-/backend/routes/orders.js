@@ -36,16 +36,16 @@ router.get("/debug-logs", (req, res) => {
   });
 });
 
-// POST /api/orders  body: { items: [{id, qty}], address: {...}, checkoutType }
+// POST /api/orders  body: { items: [{id, qty}], address: {...}, checkoutType, promoCode }
 // Validates → creates PENDING order + items + reserves stock + payment record
 // → creates Razorpay order → returns checkout details to frontend
 router.post("/", requireAuth, async (req, res) => {
   try {
-    const { items, address, checkoutType } = req.body;
+    const { items, address, checkoutType, promoCode } = req.body;
     const check = await validateItems(items);
     if (!check.valid) return res.status(400).json({ errors: check.errors });
 
-    const { order, amount } = await createPendingOrder(req.user.id, check.products, address);
+    const { order, amount } = await createPendingOrder(req.user.id, check.products, address, promoCode);
 
 
     // Initiate Payment: create Razorpay order (amount in paise)

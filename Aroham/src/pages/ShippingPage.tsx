@@ -34,7 +34,7 @@ export function ShippingPage() {
   const { isLoggedIn } = useAuth();
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [selectedAddr, setSelectedAddr] = useState<number | null>(null);
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(true);
   const [form, setForm] = useState({ firstName: "", lastName: "", phone: "", email: "", pin: "", house: "", street: "", landmark: "", city: "", state: "", addressType: "Home", saveAddress: true, sameBilling: true, specialRequest: "" });
   const [savingAddress, setSavingAddress] = useState(false);
   const set = (k: keyof typeof form) => (v: string | boolean) => setForm(p => ({ ...p, [k]: v }));
@@ -68,6 +68,29 @@ export function ShippingPage() {
       alert("Failed to save address: " + (e.message || "Please try again."));
     } finally {
       setSavingAddress(false);
+    }
+  };
+
+  const handlePinChange = async (val: string) => {
+    const cleanVal = val.replace(/\D/g, "").slice(0, 6);
+    setForm(prev => ({ ...prev, pin: cleanVal }));
+    if (cleanVal.length === 6) {
+      try {
+        const res = await fetch(`https://api.postalpincode.in/pincode/${cleanVal}`);
+        const data = await res.json();
+        if (data && data[0] && data[0].Status === "Success") {
+          const postOffice = data[0].PostOffice[0];
+          const city = postOffice.District;
+          const state = postOffice.State;
+          setForm(prev => ({
+            ...prev,
+            city: city || prev.city,
+            state: state || prev.state
+          }));
+        }
+      } catch (e) {
+        console.error("Failed to auto-fetch city/state from pincode", e);
+      }
     }
   };
 
@@ -115,9 +138,9 @@ export function ShippingPage() {
           <p className="text-sm" style={{ color: "#7A6A58" }}>Tell us where you'd like your sacred products delivered.</p>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-5 lg:px-10 py-10 lg:py-6 pb-32 lg:pb-6 mx-[-20px] my-[0px]">
+      <div className="max-w-7xl mx-auto px-5 lg:px-10 py-8 lg:py-6 pb-12 lg:pb-6">
         <div className="grid lg:grid-cols-[1fr_380px] gap-10 items-start">
-          <div className="lg:ml-[-35px] lg:mr-[0px] my-[0px] px-4 lg:px-0">
+          <div>
             {savedAddresses.length > 0 && !showForm && (
             <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
               <div className="px-6 pt-6 pb-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
@@ -156,7 +179,7 @@ export function ShippingPage() {
                         </div>
                       </div>
                       {sel && <div className="mt-3 pt-3 flex items-center gap-2" style={{ borderTop: "1px solid rgba(200,160,68,0.2)" }}>
-                        <Truck size={12} style={{ color: "#4A8A4A" }} /><span className="text-[10px] font-medium" style={{ color: "#4A8A4A" }}>Estimated delivery: Tue, 15 Jul 2025 · Free Shipping</span>
+                        <Truck size={12} style={{ color: "#4A8A4A" }} /><span className="text-[10px] font-medium" style={{ color: "#4A8A4A" }}>Estimated delivery: 3–5 business days · Free Shipping</span>
                       </div>}
                     </div>
                   );
@@ -164,7 +187,7 @@ export function ShippingPage() {
               </div>
             </div>
             )}
-            {showForm && (
+            {(showForm || savedAddresses.length === 0) && (
 
               <div className="rounded-3xl overflow-hidden mt-4" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
                 <div className="px-6 pt-6 pb-4" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}><h2 className="text-lg font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>New Address</h2></div>
@@ -178,7 +201,7 @@ export function ShippingPage() {
                     <FloatingInput label="Email" type="email" value={form.email} onChange={set("email") as (v: string) => void} required />
                   </div>
                   <div className="grid sm:grid-cols-2 gap-4">
-                    <FloatingInput label="PIN Code" value={form.pin} onChange={set("pin") as (v: string) => void} required />
+                    <FloatingInput label="PIN Code" value={form.pin} onChange={handlePinChange} required />
                     <FloatingInput label="House / Flat No." value={form.house} onChange={set("house") as (v: string) => void} required />
                   </div>
                   <FloatingInput label="Street Address" value={form.street} onChange={set("street") as (v: string) => void} required />
@@ -218,15 +241,7 @@ export function ShippingPage() {
           }} nextLabel="Proceed to Payment" step={1} />
         </div>
       </div>
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 px-5 py-4" style={{ background: "rgba(250,247,242,0.97)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(91,31,36,0.1)" }}>
-        <button onClick={() => {
-          const addr = getSelectedAddressObj();
-          if (addr) sessionStorage.setItem("aroham_shipping_addr", JSON.stringify(addr));
-          navigate("/checkout/payment");
-        }} className="w-full py-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
-          <Lock size={14} /> Proceed to Payment
-        </button>
-      </div>
+
     </div>
   );
 }
