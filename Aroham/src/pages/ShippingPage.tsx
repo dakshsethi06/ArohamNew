@@ -118,6 +118,42 @@ export function ShippingPage() {
     }
   };
 
+  // Restore address from sessionStorage if returning to page
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem("aroham_shipping_addr");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed) {
+          const nameParts = (parsed.full_name || parsed.name || "").trim().split(" ");
+          const fName = nameParts[0] || "";
+          const lName = nameParts.slice(1).join(" ") || "";
+          const pPin = String(parsed.pincode || parsed.pin || "").replace(/\D/g, "").slice(0, 6);
+
+          setForm(prev => ({
+            ...prev,
+            firstName: fName || prev.firstName,
+            lastName: lName || prev.lastName,
+            phone: parsed.phone || prev.phone,
+            email: parsed.email || prev.email,
+            pin: pPin || prev.pin,
+            house: parsed.house || parsed.address_line1 || parsed.line1 || prev.house,
+            street: parsed.street || prev.street,
+            landmark: parsed.landmark || prev.landmark,
+            city: parsed.city || prev.city,
+            state: parsed.state || prev.state,
+          }));
+
+          if (pPin) {
+            fetchEstimate(pPin);
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Address restoration error:", e);
+    }
+  }, []);
+
   // Fetch real addresses from backend when logged in
   useEffect(() => {
     if (isLoggedIn) {
@@ -281,65 +317,78 @@ export function ShippingPage() {
           </div>
           <OrderSummaryCard cartItems={items} onBack={() => { navigate("/"); openCart(); }} onNext={async () => {
             const selected = getSelectedAddressObj();
-            const hasFilledForm = Boolean(form.firstName.trim() || form.phone.trim() || form.pin.trim() || form.house.trim() || form.city.trim());
+            const isFormDirtyOrOpen = showForm || savedAddresses.length === 0 || Boolean(form.firstName.trim() || form.phone.trim() || form.pin.trim() || form.house.trim() || form.city.trim());
 
-            // If user has filled out form or no saved address selected
-            if (showForm || !selected || hasFilledForm) {
-              if (!form.firstName.trim() || !form.phone.trim() || !form.pin.trim() || !form.house.trim() || !form.city.trim()) {
-                if (!selected) {
-                  alert("Please fill in all required delivery address fields:\n• First Name\n• Phone Number\n• House / Flat No.\n• PIN Code\n• City");
-                  setShowForm(true);
-                  return;
-                }
-              } else {
-                // Form is fully filled!
-                const newAddressObj = {
-                  id: Date.now(),
-                  full_name: `${form.firstName} ${form.lastName}`.trim(),
-                  name: `${form.firstName} ${form.lastName}`.trim(),
-                  phone: form.phone.replace(/\D/g, ""),
-                  email: form.email,
-                  address_line1: `${form.house}, ${form.street}${form.landmark ? ", " + form.landmark : ""}`.trim(),
-                  line1: `${form.house}, ${form.street}${form.landmark ? ", " + form.landmark : ""}`.trim(),
-                  city: form.city,
-                  state: form.state,
-                  pincode: form.pin,
-                  pin: form.pin,
-                  address_type: form.addressType,
-                };
+            if (isFormDirtyOrOpen) {
+              // User is filling form — validate form strictly!
+              const isFormValid = Boolean(
+                form.firstName.trim() &&
+                form.phone.trim().length >= 10 &&
+                form.pin.trim().length === 6 &&
+                form.house.trim() &&
+                form.city.trim()
+              );
 
-                if (isLoggedIn) {
-                  try {
-                    await api("/addresses", {
-                      method: "POST",
-                      body: JSON.stringify({
-                        name: newAddressObj.name,
-                        phone: newAddressObj.phone,
-                        email: newAddressObj.email,
-                        address: newAddressObj.address_line1,
-                        city: newAddressObj.city,
-                        pincode: newAddressObj.pincode,
-                        address_type: newAddressObj.address_type,
-                      })
-                    });
-                  } catch (e) {
-                    console.error("Address sync:", e);
-                  }
-                }
-
-                sessionStorage.setItem("aroham_shipping_addr", JSON.stringify(newAddressObj));
-                navigate("/checkout/payment");
+              if (!isFormValid) {
+                alert("Please fill in all required delivery address fields:\n• First Name\n• Phone Number (min 10 digits)\n• House / Flat No.\n• PIN Code (6 digits)\n• City");
+                setShowForm(true);
+                window.scrollTo({ top: 0, behavior: "smooth" });
                 return;
               }
+
+              // Address form is complete! Create and save address
+              const est = estimates[form.pin];
+              const newAddressObj = {
+                id: Date.now(),
+                full_name: `${form.firstName} ${form.lastName}`.trim(),
+                name: `${form.firstName} ${form.lastName}`.trim(),
+                phone: form.phone.replace(/\D/g, ""),
+                email: form.email,
+                address_line1: `${form.house}, ${form.street}${form.landmark ? ", " + form.landmark : ""}`.trim(),
+                line1: `${form.house}, ${form.street}${form.landmark ? ", " + form.landmark : ""}`.trim(),
+                city: form.city,
+                state: form.state,
+                pincode: form.pin,
+                pin: form.pin,
+                address_type: form.addressType,
+                courier: est?.courier || "Shiprocket Express",
+                deliveryDate: est?.deliveryDate || "3–5 business days",
+              };
+
+              if (isLoggedIn) {
+                try {
+                  await api("/addresses", {
+                    method: "POST",
+                    body: JSON.stringify({
+                      name: newAddressObj.name,
+                      phone: newAddressObj.phone,
+                      email: newAddressObj.email,
+                      address: newAddressObj.address_line1,
+                      city: newAddressObj.city,
+                      pincode: newAddressObj.pincode,
+                      address_type: newAddressObj.address_type,
+                    })
+                  });
+                } catch (e) {
+                  console.error("Address sync error:", e);
+                }
+              }
+
+              sessionStorage.setItem("aroham_shipping_addr", JSON.stringify(newAddressObj));
+              navigate("/checkout/payment");
+              return;
             }
 
+            // User is choosing a saved address
             if (selected) {
               sessionStorage.setItem("aroham_shipping_addr", JSON.stringify(selected));
               navigate("/checkout/payment");
               return;
             }
 
-            alert("Please fill in or select a delivery address.");
+            alert("Please enter or select a delivery address.");
+            setShowForm(true);
+            window.scrollTo({ top: 0, behavior: "smooth" });
           }} nextLabel="Proceed to Payment" step={1} />
         </div>
       </div>

@@ -39,8 +39,8 @@ export function NavagrahaHero({ onShop, onConsult }: { onShop: () => void; onCon
       <div className="absolute pointer-events-none" style={{ left: "-10%", bottom: "-5%", width: "55%", height: "50%", background: "radial-gradient(ellipse at 25% 90%, rgba(91,31,24,0.4) 0%, transparent 65%)", filter: "blur(55px)" }} />
       <div className="absolute pointer-events-none" style={{ right: "-5%", top: "0%", width: "50%", height: "100%", background: "radial-gradient(ellipse at 80% 50%, rgba(80,30,10,0.12) 0%, transparent 70%)", filter: "blur(30px)" }} />
 
-      <div className="relative z-10 flex flex-col lg:flex-row w-full min-h-0 lg:min-h-[100dvh]">
-        <div className="w-full lg:w-[55%] flex-shrink-0 flex flex-col justify-center text-center lg:text-left px-6 lg:pl-16 xl:pl-24 lg:pr-14 pt-20 pb-8 lg:pt-0 lg:pb-0 flex-1">
+      <div className="relative z-10 flex flex-col lg:flex-row w-full min-h-[100dvh]">
+        <div className="w-full lg:w-[55%] flex-shrink-0 flex flex-col justify-center text-center lg:text-left px-6 lg:pl-16 xl:pl-24 lg:pr-14 pt-20 pb-14 lg:pt-0 lg:pb-0 flex-1">
           <div className="flex items-center justify-center lg:justify-start gap-2.5 mb-5">
             <div className="w-1.5 h-1.5 rounded-full" style={{ background: SAFFRON }} />
             <span className="text-[11px] tracking-[0.28em] uppercase font-semibold" style={{ color: SAFFRON, fontFamily: "'Space Grotesk',sans-serif" }}>Vedic Astrology &amp; Vastu</span>
@@ -77,6 +77,10 @@ export function NavagrahaHero({ onShop, onConsult }: { onShop: () => void; onCon
         </div>
         <div className="hidden lg:flex flex-1" aria-hidden />
       </div>
+
+      {/* Smooth gradient transition to next section */}
+      <div className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none z-20"
+        style={{ background: "linear-gradient(to bottom, transparent 0%, rgba(250,247,242,0.4) 60%, #FAF7F2 100%)" }} />
 
       {/* Solar system */}
       <div className="hidden lg:block absolute z-[2]" style={{ top: "50%", right: 0, transform: "translateY(-50%)", width: "52%" }}>

@@ -147,8 +147,7 @@ export function ConfirmationPage() {
           <div className="px-8 py-5 flex flex-wrap items-center justify-between gap-4" style={{ background: `linear-gradient(90deg,${MAROON},#7A2A30)` }}>
             <div><p className="text-xs tracking-widest uppercase mb-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>Order Number</p><p className="text-lg font-semibold" style={{ fontFamily: SERIF, color: GOLD }}>{displayOrderId}</p></div>
             <div className="flex gap-3">
-              <button className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold" style={{ background: "rgba(255,255,255,0.12)", color: IVORY, border: "1px solid rgba(255,255,255,0.2)" }}><Package size={12} /> Track Order</button>
-              <button className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold" style={{ background: GOLD, color: "#1A0D0E" }}><Mail size={12} /> Invoice</button>
+              <button onClick={() => navigate("/profile?tab=orders")} className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all hover:bg-white/20" style={{ background: "rgba(255,255,255,0.12)", color: IVORY, border: "1px solid rgba(255,255,255,0.2)" }}><Package size={12} /> View My Orders</button>
             </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0" style={{ borderColor: "rgba(91,31,36,0.07)" }}>
@@ -204,7 +203,7 @@ export function ConfirmationPage() {
           </div>
         </div>
         <div className="flex flex-wrap justify-center gap-4">
-          <button onClick={() => navigate("/profile?tab=orders")} className="flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-semibold transition-all hover:opacity-90 hover:shadow-xl" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}><Package size={15} /> Track My Order</button>
+          <button onClick={() => navigate("/profile?tab=orders")} className="flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-semibold transition-all hover:opacity-90 hover:shadow-xl" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}><Package size={15} /> View My Orders</button>
           <button onClick={() => navigate("/")} className="flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-semibold border transition-all hover:bg-amber-50" style={{ borderColor: "rgba(91,31,36,0.2)", color: MAROON }}><ArrowRight size={15} /> Continue Shopping</button>
         </div>
       </div>

@@ -30,7 +30,7 @@ interface CartContextValue {
   showCart: boolean;
   openCart: () => void;
   closeCart: () => void;
-  addToCart: (product: ArohamProduct, qty?: number) => void;
+  addToCart: (product: ArohamProduct, qty?: number, openSidebar?: boolean) => void;
   removeFromCart: (id: number) => void;
   updateQty: (id: number, delta: number) => void;
   clearCart: () => void;
@@ -153,13 +153,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     sessionStorage.removeItem("aroham_applied_coupon");
   };
 
-  const addToCart = async (product: ArohamProduct, qty: number = 1) => {
+  const addToCart = async (product: ArohamProduct, qty: number = 1, openSidebar: boolean = false) => {
     setItems(prev => {
       const existing = prev.find(i => i.product.id === product.id);
       if (existing) return prev.map(i => i.product.id === product.id ? { ...i, qty: i.qty + qty } : i);
       return [...prev, { product, qty }];
     });
-    setShowCart(true);
+    if (openSidebar) {
+      setShowCart(true);
+    }
 
     if (isLoggedIn) {
       await api("/cart", {

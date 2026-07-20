@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router";
 import { Star, ShoppingCart, Share2, Heart, ChevronRight, Sparkles, Flame, Gem, Award, Shield, Package, Truck, CheckCircle, Mail, Phone, ChevronDown } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
@@ -39,14 +39,18 @@ export function ProductDetailPage() {
   const [selectedImg, setSelectedImg] = useState(0);
   const [contactOpen, setContactOpen] = useState(false);
   const [showSticky, setShowSticky] = useState(false);
+  const mainButtonsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setShowSticky(window.scrollY > 480);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    const el = mainButtonsRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      setShowSticky(!entry.isIntersecting);
+    }, { threshold: 0.1 });
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [product, loading]);
 
   const [pin, setPin] = useState("");
   const [checking, setChecking] = useState(false);
@@ -272,7 +276,7 @@ export function ProductDetailPage() {
               </div>
               <span className="text-xs" style={{ color: "#4A8A4A" }}>✓ In Stock</span>
             </div>
-            <div className="space-y-3 mb-5">
+            <div ref={mainButtonsRef} className="space-y-3 mb-5">
               <button onClick={() => addToCart(product, qty)}
                 className="w-full py-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90 hover:shadow-lg"
                 style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
@@ -281,8 +285,8 @@ export function ProductDetailPage() {
               <button
                 onClick={async () => { 
                   await addToCart(product, qty); 
-                  if (!isLoggedIn) openAuth();
-                  else navigate("/checkout/shipping"); 
+                  navigate("/checkout/shipping");
+                  window.scrollTo({ top: 0, behavior: "instant" });
                 }}
                 className="w-full py-3.5 rounded-2xl text-sm font-semibold border transition-all hover:bg-amber-50 flex items-center justify-center gap-2"
                 style={{ borderColor: GOLD, color: MAROON }}>⚡ Buy Now
@@ -457,8 +461,8 @@ export function ProductDetailPage() {
           <button
             onClick={async () => {
               await addToCart(product, qty);
-              if (!isLoggedIn) openAuth();
-              else navigate("/checkout/shipping");
+              navigate("/checkout/shipping");
+              window.scrollTo({ top: 0, behavior: "instant" });
             }}
             className="px-5 py-4 rounded-2xl text-sm font-semibold border"
             style={{ borderColor: GOLD, color: MAROON }}>⚡ Buy</button>
