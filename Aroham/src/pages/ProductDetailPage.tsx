@@ -161,7 +161,7 @@ export function ProductDetailPage() {
           <ChevronRight size={12} /><span>{product.name}</span>
         </div>
       </div>
-      <div className="px-5 lg:px-10 pb-10 ml-[-10px] mr-[0px] my-[0px]">
+      <div className="px-5 lg:px-10 pb-10">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-[48%_32%_20%] gap-8">
           {/* Gallery */}
           <div>
@@ -323,19 +323,34 @@ export function ProductDetailPage() {
         </div>
       </div>
       {/* Mobile sticky bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 px-5 py-4"
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 px-4 py-3"
         style={{ background: "rgba(250,247,242,0.97)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(91,31,36,0.1)", boxShadow: "0 -4px 24px rgba(91,31,36,0.08)" }}>
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-lg font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{product.price.toLocaleString("en-IN")}</span>
-          <span className="text-xs line-through" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{product.original.toLocaleString("en-IN")}</span>
-        </div>
-        <div className="flex gap-3">
-          <button onClick={() => addToCart(product, qty)}
-            className="flex-1 py-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2"
-            style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
-            <ShoppingCart size={14} /> Add to Cart
-          </button>
-          <button className="px-5 py-4 rounded-2xl text-sm font-semibold border" style={{ borderColor: GOLD, color: MAROON }}>⚡ Buy</button>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col flex-shrink-0">
+            <span className="text-[10px] uppercase tracking-wider font-semibold mb-0.5" style={{ color: GOLD }}>Total Price</span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-lg font-bold leading-none" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{product.price.toLocaleString("en-IN")}</span>
+              <span className="text-[10px] line-through" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{product.original.toLocaleString("en-IN")}</span>
+            </div>
+          </div>
+          <div className="flex gap-2 flex-1 justify-end max-w-[200px]">
+            <button onClick={() => addToCart(product, qty)}
+              className="w-12 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors bg-white shadow-sm"
+              style={{ border: `1.5px solid ${GOLD}`, color: MAROON }}
+              aria-label="Add to cart">
+              <ShoppingCart size={18} strokeWidth={2} />
+            </button>
+            <button
+              onClick={async () => { 
+                await addToCart(product, qty); 
+                if (!isLoggedIn) openAuth();
+                else navigate("/checkout/shipping"); 
+              }}
+              className="flex-1 h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 shadow-md"
+              style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
+              ⚡ Buy
+            </button>
+          </div>
         </div>
       </div>
     </div>

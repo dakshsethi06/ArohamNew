@@ -1,11 +1,16 @@
 import { useState } from "react";
+import { useLocation } from "react-router";
 import { MAROON } from "@/constants/theme";
 
 export function WhatsAppButton() {
   const [open,setOpen]=useState(false);
+  const location = useLocation();
+  const isProductPage = location.pathname.startsWith("/shop/");
+  const bottomClass = isProductPage ? "bottom-[100px] lg:bottom-6" : "bottom-6";
+  
   const questions=["Which Yantra is right for me?","How do I use my product?","Track my order"];
   return(
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+    <div className={`fixed ${bottomClass} right-6 z-50 flex flex-col items-end gap-3 transition-all duration-300`}>
       {open&&(
         <div className="rounded-2xl p-4 w-64 shadow-2xl" style={{background:"#FFFFFF",border:"1px solid rgba(91,31,36,0.1)"}}>
           <div className="flex items-center gap-2 mb-3 pb-3" style={{borderBottom:"1px solid rgba(91,31,36,0.08)"}}>

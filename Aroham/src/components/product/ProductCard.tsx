@@ -43,8 +43,8 @@ export function ProductCard({ product: p, onProductClick, onAddToCart, wishKey =
         </div>
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-baseline gap-1.5 min-w-0">
-            <span className="text-sm font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{p.price}</span>
-            <span className="text-[10px] line-through" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{p.original}</span>
+            <span className="text-sm font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{p.price.toLocaleString("en-IN")}</span>
+            <span className="text-[10px] line-through" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{p.original.toLocaleString("en-IN")}</span>
           </div>
           {onAddToCart && (
             <button aria-label={`Add ${p.name} to cart`}

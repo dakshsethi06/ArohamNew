@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { useEffect } from "react";
 import { Star, Heart, Eye, Filter, X, CheckCircle, ChevronRight } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
 import { CATEGORIES, PURPOSES, PRICE_RANGES } from "@/constants/data";

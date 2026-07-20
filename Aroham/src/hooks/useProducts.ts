@@ -1,16 +1,8 @@
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
+import { ArohamProduct } from "@/types/product";
 
-export interface ArohamProduct {
-  id: number;
-  name: string;
-  slug: string;
-  price: number;
-  original: number;
-  img: string;
-  subtitle: string;
-  description: string[];
-}
+export type { ArohamProduct };
 
 export function useProducts() {
   const [products, setProducts] = useState<ArohamProduct[]>([]);

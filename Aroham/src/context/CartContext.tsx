@@ -33,39 +33,69 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const justLoggedOut = prevIsLoggedIn.current === true && !isLoggedIn;
     if (justLoggedOut) isLoggingOut.current = true;
+    
+    // Check if we just logged in
+    const justLoggedIn = prevIsLoggedIn.current === false && isLoggedIn;
     prevIsLoggedIn.current = isLoggedIn;
 
     if (isLoggedIn) {
-      api("/cart").then(data => {
-        // Assume backend returns array of cart items mapping to our structure
-        if (Array.isArray(data)) {
-          setItems(data.map((item: any) => {
-            const p = item.product || item;
-            return {
-              product: {
-                id: p.id || p.product_id || item.product_id || item.id,
-                name: p.name || "Product",
-                price: p.price || 0,
-                slug: p.slug || "",
-                subtitle: p.subtitle || "",
-                category: p.category || "",
-                purpose: p.purpose || "",
-                original: p.original || p.original_price || p.price || 0,
-                rating: p.rating || 5,
-                reviews: p.reviews || 0,
-                img: p.img || "",
-                badges: p.badges || [],
-                shortDesc: p.shortDesc || p.short_desc || "",
-                benefits: p.benefits || [],
-                size: p.size || "",
-                material: p.material || "",
-                useFor: p.useFor || p.use_for || []
-              },
-              qty: item.qty || item.quantity || 1
-            };
-          }));
+      const fetchCart = () => {
+        api("/cart").then(data => {
+          if (Array.isArray(data)) {
+            setItems(data.map((item: any) => {
+              const p = item.product || item;
+              return {
+                product: {
+                  id: p.id || p.product_id || item.product_id || item.id,
+                  name: p.name || "Product",
+                  price: p.price || 0,
+                  slug: p.slug || "",
+                  subtitle: p.subtitle || "",
+                  category: p.category || "",
+                  purpose: p.purpose || "",
+                  original: p.original || p.original_price || p.price || 0,
+                  rating: p.rating || 5,
+                  reviews: p.reviews || 0,
+                  img: p.img || "",
+                  badges: p.badges || [],
+                  shortDesc: p.shortDesc || p.short_desc || "",
+                  benefits: p.benefits || [],
+                  size: p.size || "",
+                  material: p.material || "",
+                  useFor: p.useFor || p.use_for || []
+                },
+                qty: item.qty || item.quantity || 1
+              };
+            }));
+          }
+        }).catch(e => console.error("Error fetching cart:", e));
+      };
+
+      if (justLoggedIn) {
+        // Sync local guest cart to backend before fetching
+        const local = localStorage.getItem("aroham_cart");
+        let localItems: CartItem[] = [];
+        if (local) {
+          try { localItems = JSON.parse(local); } catch (e) { }
         }
-      }).catch(e => console.error("Error fetching cart:", e));
+        
+        if (localItems.length > 0) {
+          // Push each local item to the backend sequentially, then fetch
+          Promise.all(localItems.map(item => 
+            api("/cart", {
+              method: "POST",
+              body: JSON.stringify({ productId: item.product.id, qty: item.qty })
+            }).catch(e => console.error("Error syncing local item", e))
+          )).then(() => {
+            localStorage.removeItem("aroham_cart");
+            fetchCart();
+          });
+        } else {
+          fetchCart();
+        }
+      } else {
+        fetchCart();
+      }
     } else if (justLoggedOut) {
       // User just logged out — clear cart and localStorage
       setItems([]);

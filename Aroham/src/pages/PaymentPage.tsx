@@ -157,10 +157,10 @@ export function PaymentPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-5 lg:px-10 py-10 lg:py-6 pb-32 lg:pb-6 mx-[-20px] my-[0px]">
+      <div className="max-w-7xl mx-auto px-5 lg:px-10 py-10 lg:py-6 pb-32 lg:pb-6">
         <div className="grid lg:grid-cols-[1fr_380px] gap-10 items-start">
           {/* Left — Pay via Razorpay card */}
-          <div className="lg:ml-[-35px] lg:mr-[0px] my-[0px] px-4 lg:px-0 space-y-4">
+          <div className="space-y-4">
             {/* Razorpay pay card */}
             <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
               <div className="px-6 pt-6 pb-4" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
@@ -220,7 +220,7 @@ export function PaymentPage() {
           </div>
 
           {/* Right sidebar – order summary */}
-          <div className="lg:sticky lg:top-24 ml-[-20px] mr-[0px] my-[0px]">
+          <div className="lg:sticky lg:top-24">
             <CheckoutProgress step={2} />
             <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 4px 30px rgba(91,31,36,0.07)" }}>
               <div className="px-6 pt-6 pb-4 lg:pt-4 lg:pb-3" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}><h2 className="text-lg font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Order Summary</h2></div>

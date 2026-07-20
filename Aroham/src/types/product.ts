@@ -3,17 +3,18 @@ export interface ArohamProduct {
   slug: string;
   name: string;
   subtitle: string;
-  category: string;
-  purpose: string;
+  category?: string;
+  purpose?: string;
   price: number;
   original: number;
-  rating: number;
-  reviews: number;
+  rating?: number;
+  reviews?: number;
   img: string;
-  badges: string[];
-  shortDesc: string;
-  benefits: string[];
-  size: string;
-  material: string;
-  useFor: string[];
+  badges?: string[];
+  shortDesc?: string;
+  description?: string | string[];
+  benefits?: string[];
+  size?: string;
+  material?: string;
+  useFor?: string[];
 }

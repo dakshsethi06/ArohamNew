@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router";
+import { useState, useEffect } from "react";
 import { X, ChevronLeft, Minus, Plus, Trash2, Lock } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
 import { useCart } from "@/context/CartContext";
@@ -8,22 +9,22 @@ export function CartSidebar() {
   const navigate = useNavigate();
   const { items, closeCart, removeFromCart, updateQty } = useCart();
   const { isLoggedIn, openAuth } = useAuth();
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => { setMounted(true); }, []);
+  
   const subtotal = items.reduce((s, i) => s + i.product.price * i.qty, 0);
   const total = subtotal + 99 + Math.round(subtotal * 0.05);
 
   return (
     <div role="dialog" aria-modal="true" aria-label="Shopping cart" className="fixed inset-0 z-[60] flex justify-end">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={closeCart} />
-      <div className="relative w-full max-w-md flex flex-col h-full shadow-2xl"
-        style={{ background: "#FFFFFF", transform: "translateX(0)", transition: "transform 0.3s ease" }}>
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ease-out" 
+           style={{ opacity: mounted ? 1 : 0 }} onClick={closeCart} />
+      <div className="relative w-full max-w-md flex flex-col h-full shadow-2xl transition-transform duration-300 ease-out"
+        style={{ background: "#FFFFFF", transform: mounted ? "translateX(0)" : "translateX(100%)" }}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5" style={{ borderBottom: `1px solid rgba(91,31,36,0.08)` }}>
           <div className="flex items-center gap-3">
-            <button onClick={() => { closeCart(); navigate("/"); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all hover:shadow-sm active:scale-95"
-              style={{ background: "rgba(91,31,36,0.07)", color: MAROON, border: `1px solid rgba(91,31,36,0.12)` }}>
-              <ChevronLeft size={13} /> Home
-            </button>
             <div>
               <h2 className="text-lg font-semibold leading-tight" style={{ fontFamily: SERIF, color: MAROON }}>Your Cart</h2>
               <p className="text-xs" style={{ color: "#9A8A78" }}>{items.length} item{items.length !== 1 ? "s" : ""}</p>

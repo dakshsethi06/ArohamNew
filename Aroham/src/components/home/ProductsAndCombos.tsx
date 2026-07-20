@@ -19,9 +19,9 @@ export function ProductsAndCombos({ products, onProductClick, onAddCombo: _onAdd
   const shelves: [string, string, string, ArohamProduct[], string][] = [
     ["Bestselling Products", "Top Picks",     "🔥 Trending", products.slice(0, 6),                                                       SAFFRON],
     ["Fav Items",            "Fan Favourites", "❤️ Loved",   [...products].reverse().slice(0, 6),                                         "#E74C3C"],
-    ["Combo Deals",          "Bundle & Save",  "🎁 Kits",    products.slice(0, 4).concat(products.slice(4)),                       GOLD],
-    ["Mega Sale",            "Limited Time",   "⚡ Hot",      [...products].sort((a, b) => b.original - b.price - (a.original - a.price)).slice(0, 6), SAFFRON],
-    ["Discount Zone",        "Best Savings",   "🏷️ Off",     products.slice(0, 6).sort(() => 0.5 - Math.random()),                       "#4A8A4A"],
+    ["Combo Deals",          "Bundle & Save",  "🎁 Kits",    products.slice(0, 6),                                                        GOLD],
+    ["Mega Sale",            "Limited Time",   "⚡ Hot",      [...products].sort((a, b) => (b.original - b.price) - (a.original - a.price)).slice(0, 6), SAFFRON],
+    ["Discount Zone",        "Best Savings",   "🏷️ Off",     [...products].sort((a, b) => (1 - b.price / b.original) - (1 - a.price / a.original)).slice(0, 6), "#4A8A4A"],
   ];
 
   return (

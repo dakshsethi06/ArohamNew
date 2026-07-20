@@ -4,6 +4,7 @@ import { ShoppingCart, Heart, Search, User, Menu, X } from "lucide-react";
 import { MAROON, GOLD, SAFFRON, IVORY, SANS, SERIF } from "@/constants/theme";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { SearchModal } from "./SearchModal";
 
 export function Nav() {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ export function Nav() {
   const { isLoggedIn, openAuth } = useAuth();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 60);
@@ -45,15 +47,15 @@ export function Nav() {
             style={{ background: `linear-gradient(135deg,${MAROON},${SAFFRON})`, color: IVORY, fontFamily: SERIF }}>ॐ</div>
           <span className="text-xl font-semibold tracking-wide" style={{ fontFamily: SERIF, color: solid ? MAROON : "#FFD700" }}>Aroham</span>
         </button>
-        <div className="hidden lg:flex items-center gap-8">
+        <div className="hidden lg:flex items-center gap-12">
           {navLinks.map(([l, fn]) => (
             <button key={l} onClick={fn}
-              className="text-sm font-medium tracking-wide transition-colors duration-200 hover:opacity-70"
-              style={{ color: solid ? MAROON : "#FAF7F2", fontSize: "0.8125rem" }}>{l}</button>
+              className="text-base font-medium tracking-wide transition-colors duration-200 hover:opacity-70"
+              style={{ color: solid ? MAROON : "#FAF7F2" }}>{l}</button>
           ))}
         </div>
         <div className="hidden lg:flex items-center gap-4">
-          <button aria-label="Search" className="p-2 rounded-full transition-colors hover:bg-black/5" style={{ color: solid ? MAROON : IVORY }}><Search size={18} strokeWidth={1.5} /></button>
+          <button aria-label="Search" onClick={() => setIsSearchOpen(true)} className="p-2 rounded-full transition-colors hover:bg-black/5" style={{ color: solid ? MAROON : IVORY }}><Search size={18} strokeWidth={1.5} /></button>
           <button aria-label="Wishlist" className="p-2 rounded-full transition-colors hover:bg-black/5" style={{ color: solid ? MAROON : IVORY }}><Heart size={18} strokeWidth={1.5} /></button>
           <button aria-label="Open cart" onClick={openCart} className="relative p-2 rounded-full transition-colors hover:bg-black/5" style={{ color: solid ? MAROON : IVORY }}>
             <ShoppingCart size={18} strokeWidth={1.5} />
@@ -70,6 +72,7 @@ export function Nav() {
           )}
         </div>
         <div className="lg:hidden flex items-center gap-3" style={{ color: solid ? MAROON : IVORY }}>
+          <button aria-label="Search" onClick={() => setIsSearchOpen(true)} className="p-1"><Search size={20} strokeWidth={1.5} /></button>
           <button aria-label="Open cart" onClick={openCart} className="relative p-1">
             <ShoppingCart size={20} strokeWidth={1.5} />
             {cartCount > 0 && <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full text-white text-[9px] flex items-center justify-center font-semibold" style={{ background: GOLD }}>{cartCount}</span>}
@@ -90,6 +93,7 @@ export function Nav() {
           )}
         </div>
       </div>
+      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </nav>
   );
 }
