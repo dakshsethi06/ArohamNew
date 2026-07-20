@@ -139,7 +139,7 @@ export function ShippingPage() {
         </div>
       </div>
       <div className="max-w-7xl mx-auto px-5 lg:px-10 py-8 lg:py-6 pb-12 lg:pb-6">
-        <div className="grid lg:grid-cols-[1fr_380px] gap-10 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10 items-start">
           <div>
             {savedAddresses.length > 0 && !showForm && (
             <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
@@ -192,21 +192,21 @@ export function ShippingPage() {
               <div className="rounded-3xl overflow-hidden mt-4" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
                 <div className="px-6 pt-6 pb-4" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}><h2 className="text-lg font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>New Address</h2></div>
                 <div className="p-6 space-y-4">
-                  <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FloatingInput label="First Name" value={form.firstName} onChange={set("firstName") as (v: string) => void} required />
                     <FloatingInput label="Last Name" value={form.lastName} onChange={set("lastName") as (v: string) => void} required />
                   </div>
-                  <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FloatingInput label="Phone" type="tel" value={form.phone} onChange={set("phone") as (v: string) => void} required />
                     <FloatingInput label="Email" type="email" value={form.email} onChange={set("email") as (v: string) => void} required />
                   </div>
-                  <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FloatingInput label="PIN Code" value={form.pin} onChange={handlePinChange} required />
                     <FloatingInput label="House / Flat No." value={form.house} onChange={set("house") as (v: string) => void} required />
                   </div>
                   <FloatingInput label="Street Address" value={form.street} onChange={set("street") as (v: string) => void} required />
                   <FloatingInput label="Landmark (Optional)" value={form.landmark} onChange={set("landmark") as (v: string) => void} />
-                  <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FloatingInput label="City" value={form.city} onChange={set("city") as (v: string) => void} required />
                     <FloatingSelect label="State" options={INDIA_STATES} value={form.state} onChange={set("state") as (v: string) => void} />
                   </div>

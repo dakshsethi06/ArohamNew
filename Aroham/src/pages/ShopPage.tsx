@@ -137,39 +137,41 @@ export function ShopPage() {
                 <button onClick={clearAll} className="mt-4 px-6 py-2.5 rounded-full text-sm font-medium" style={{ background: MAROON, color: IVORY }}>Clear Filters</button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-5 items-stretch">
                 {filtered.map(p => (
                   <div key={p.id} onClick={() => navigate(`/shop/${p.slug}`)}
-                    className="group rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-2"
+                    className="group rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-2 h-full flex flex-col justify-between"
                     style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(91,31,36,0.06)", border: "1px solid rgba(91,31,36,0.06)" }}
                     onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.boxShadow = "0 16px 40px rgba(91,31,36,0.14)"}
                     onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.boxShadow = "0 2px 20px rgba(91,31,36,0.06)"}>
-                    <div className="relative overflow-hidden aspect-square bg-amber-50">
-                      <img src={p.img} alt={`${p.name} - ${p.subtitle}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                      <div className="absolute top-3 left-3 flex flex-col gap-1">
-                        {p.badges.map(b => <span key={b} className="px-2 py-0.5 rounded-full text-[9px] font-bold" style={{ background: "rgba(91,31,36,0.88)", color: GOLD }}>{b}</span>)}
+                    <div>
+                      <div className="relative overflow-hidden aspect-square bg-amber-50">
+                        <img src={p.img} alt={`${p.name} - ${p.subtitle}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                        <div className="absolute top-3 left-3 flex flex-col gap-1">
+                          {p.badges.map(b => <span key={b} className="px-2 py-0.5 rounded-full text-[9px] font-bold" style={{ background: "rgba(91,31,36,0.88)", color: GOLD }}>{b}</span>)}
+                        </div>
+                        <button aria-label="Add to wishlist" onClick={e => { e.stopPropagation(); setWish(w => ({ ...w, [p.id]: !w[p.id] })); }}
+                          className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.9)" }}>
+                          <Heart size={13} style={{ color: wish[p.id] ? "#E74C3C" : "#7A6A58", fill: wish[p.id] ? "#E74C3C" : "none" }} />
+                        </button>
+                        <div className="absolute inset-x-0 bottom-0 py-3 flex items-center justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-300"
+                          style={{ background: "rgba(91,31,36,0.9)" }}>
+                          <span className="text-xs font-semibold flex items-center gap-2" style={{ color: GOLD }}><Eye size={12} /> View Product</span>
+                        </div>
                       </div>
-                      <button aria-label="Add to wishlist" onClick={e => { e.stopPropagation(); setWish(w => ({ ...w, [p.id]: !w[p.id] })); }}
-                        className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.9)" }}>
-                        <Heart size={13} style={{ color: wish[p.id] ? "#E74C3C" : "#7A6A58", fill: wish[p.id] ? "#E74C3C" : "none" }} />
-                      </button>
-                      <div className="absolute inset-x-0 bottom-0 py-3 flex items-center justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-300"
-                        style={{ background: "rgba(91,31,36,0.9)" }}>
-                        <span className="text-xs font-semibold flex items-center gap-2" style={{ color: GOLD }}><Eye size={12} /> View Product</span>
+                      <div className="p-4">
+                        <h3 className="text-sm font-semibold mb-0.5 leading-snug min-h-[2.4rem] line-clamp-2 flex items-center" style={{ fontFamily: SERIF, color: MAROON }}>{p.name}</h3>
+                        <p className="text-xs mb-2 truncate" style={{ color: "#7A6A58" }}>{p.subtitle}</p>
+                        <div className="flex items-center gap-1 mb-2">
+                          {Array.from({ length: 5 }).map((_, j) => <Star key={j} size={10} fill={j < Math.round(p.rating) ? GOLD : "none"} stroke={GOLD} strokeWidth={1.5} />)}
+                          <span className="text-[10px] ml-1" style={{ color: "#9A8A78" }}>({p.reviews})</span>
+                        </div>
                       </div>
                     </div>
-                    <div className="p-4">
-                      <h3 className="text-sm font-semibold mb-0.5 leading-snug" style={{ fontFamily: SERIF, color: MAROON }}>{p.name}</h3>
-                      <p className="text-xs mb-2" style={{ color: "#7A6A58" }}>{p.subtitle}</p>
-                      <div className="flex items-center gap-1 mb-2">
-                        {Array.from({ length: 5 }).map((_, j) => <Star key={j} size={10} fill={j < Math.round(p.rating) ? GOLD : "none"} stroke={GOLD} strokeWidth={1.5} />)}
-                        <span className="text-[10px] ml-1" style={{ color: "#9A8A78" }}>({p.reviews})</span>
-                      </div>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-base font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{p.price.toLocaleString("en-IN")}</span>
-                        <span className="text-xs line-through" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{p.original.toLocaleString("en-IN")}</span>
-                        <span className="text-[10px] font-semibold" style={{ color: "#4A8A4A" }}>{Math.round((1 - p.price / p.original) * 100)}% off</span>
-                      </div>
+                    <div className="p-4 pt-0 flex items-baseline gap-2">
+                      <span className="text-base font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{p.price.toLocaleString("en-IN")}</span>
+                      <span className="text-xs line-through" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{p.original.toLocaleString("en-IN")}</span>
+                      <span className="text-[10px] font-semibold" style={{ color: "#4A8A4A" }}>{Math.round((1 - p.price / p.original) * 100)}% off</span>
                     </div>
                   </div>
                 ))}

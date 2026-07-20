@@ -135,7 +135,7 @@ export function PaymentPage() {
   };
 
   return (
-    <div style={{ background: "#FAF7F2", minHeight: "100vh", fontFamily: SANS }}>
+    <div className="w-full overflow-x-hidden" style={{ background: "#FAF7F2", minHeight: "100vh", fontFamily: SANS }}>
       <CheckoutHeader />
       {/* Page header */}
       <div className="pt-3 pb-5 lg:pt-2 lg:pb-4 relative overflow-hidden" style={{ background: "linear-gradient(135deg,#F5EDE0,#FAF7F2,#F0E8D8)" }}>
@@ -158,7 +158,7 @@ export function PaymentPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-5 lg:px-10 py-8 lg:py-6 pb-12 lg:pb-6">
-        <div className="grid lg:grid-cols-[1fr_380px] gap-10 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10 items-start">
           {/* Left — Pay via Razorpay card */}
           <div className="space-y-4">
             {/* Razorpay pay card */}
@@ -207,7 +207,7 @@ export function PaymentPage() {
             {/* Trust badges */}
             <div className="rounded-3xl p-6" style={{ background: "linear-gradient(135deg,#FAF0D8,#FAF7F2)", border: "1px solid rgba(200,160,68,0.22)" }}>
               <div className="flex items-center gap-2 mb-4"><ShieldCheck size={14} style={{ color: GOLD }} /><span className="text-sm font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>100% Secure Checkout</span></div>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
                 {[{ i: "🔒", l: "SSL Encrypted", s: "256-bit" }, { i: "🛡", l: "PCI DSS", s: "Compliant" }, { i: "💳", l: "Razorpay", s: "Secured" }, { i: "🚫", l: "No Data", s: "Stored" }].map(({ i, l, s }) => (
                   <div key={l} className="flex flex-col items-center text-center gap-1 p-3 rounded-2xl" style={{ background: "rgba(255,255,255,0.7)" }}>
                     <span className="text-xl">{i}</span>

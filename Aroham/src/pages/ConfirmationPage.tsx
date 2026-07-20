@@ -118,7 +118,7 @@ export function ConfirmationPage() {
   }
 
   return (
-    <div style={{ background: "#FAF7F2", minHeight: "100vh", fontFamily: SANS, position: "relative" }}>
+    <div className="w-full overflow-x-hidden" style={{ background: "#FAF7F2", minHeight: "100vh", fontFamily: SANS, position: "relative" }}>
       <CheckoutHeader />
       <Confetti />
       <div className="relative overflow-hidden pt-16 pb-16 px-6 lg:px-10 text-center" style={{ background: `linear-gradient(160deg,#FAF0D8,#FAF7F2,#F0E8D8)` }}>
@@ -157,7 +157,7 @@ export function ConfirmationPage() {
             ))}
           </div>
         </div>
-        <div className="grid lg:grid-cols-[1fr_380px] gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start">
           <div>
             <h2 className="mb-5 text-xl font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Items in Your Order</h2>
             <div className="space-y-4">

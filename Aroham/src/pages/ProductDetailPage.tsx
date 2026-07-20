@@ -183,7 +183,7 @@ export function ProductDetailPage() {
         ))}
       </div>
     </div>,
-    <div className="grid sm:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {product?.benefits?.map(b => (
         <div key={b} className="flex items-start gap-3 p-4 rounded-2xl" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.07)" }}>
           <div className="w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center" style={{ background: "rgba(200,160,68,0.1)" }}><Sparkles size={14} style={{ color: GOLD }} /></div>
@@ -266,7 +266,7 @@ export function ProductDetailPage() {
         </div>
       </div>
       <div className="px-5 lg:px-10 pb-10">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-[48%_32%_20%] gap-6 lg:gap-8">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[48%_32%_20%] gap-6 lg:gap-8">
           {/* Gallery */}
           <div>
             <div className="rounded-3xl overflow-hidden aspect-square bg-amber-50 mb-3 relative group" style={{ boxShadow: "0 8px 40px rgba(91,31,36,0.1)" }}>
@@ -464,7 +464,7 @@ export function ProductDetailPage() {
                 </div>
               </button>
               {contactOpen && (
-                <div className="mt-6 grid sm:grid-cols-3 gap-3">
+                <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <a href={CONTACT_INFO.emailMailto} className="flex items-center gap-3 p-4 rounded-2xl transition-all hover:scale-105" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
                     <Mail size={20} style={{ color: GOLD }} /><div><div className="text-sm font-semibold" style={{ color: IVORY }}>Email Us</div><div className="text-[11px]" style={{ color: "rgba(250,247,242,0.6)" }}>{CONTACT_INFO.email}</div></div>
                   </a>

@@ -49,9 +49,9 @@ export function ProductsAndCombos({ products, onProductClick, onAddCombo: _onAdd
                   onProductClick={onProductClick} onAddToCart={onAddToCart} />
               ))}
             </div>
-            <div className="flex md:hidden gap-3 overflow-x-auto pb-2 -mx-6 px-6" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
+            <div className="flex md:hidden gap-3 overflow-x-auto pb-2 -mx-6 px-6 items-stretch" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
               {products.map((p, pi) => (
-                <div key={`${si}-${pi}-m`} style={{ minWidth: "52vw", maxWidth: "52vw", flexShrink: 0 }}>
+                <div key={`${si}-${pi}-m`} className="flex flex-col h-full" style={{ minWidth: "52vw", maxWidth: "52vw", flexShrink: 0 }}>
                   <ProductCard product={p} wishKey={`${si}-m-${p.id}`}
                     wished={!!wish[`${si}-m-${p.id}`]} onToggleWish={toggleWish}
                     onProductClick={onProductClick} onAddToCart={onAddToCart} />

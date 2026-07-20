@@ -4,7 +4,7 @@ const STEPS = ["Cart", "Shipping", "Payment", "Confirmation"];
 
 export function CheckoutProgress({ step }: { step: number }) {
   return (
-    <div className="px-6 py-5 lg:py-3 rounded-2xl ml-[10px] mr-[20px] mt-[0px] mb-[20px] lg:mb-[12px]" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.07)" }}>
+    <div className="px-3 sm:px-6 py-5 lg:py-3 rounded-2xl mb-5 lg:mb-3" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.07)" }}>
       <div className="flex items-center justify-between">
         {STEPS.map((s, i) => (
           <div key={s} className="flex items-center">
@@ -17,7 +17,7 @@ export function CheckoutProgress({ step }: { step: number }) {
               </div>
               <span className="text-[9px] text-center leading-none" style={{ color: i === step ? MAROON : "#9A8A78", fontWeight: i === step ? 600 : 400 }}>{s}</span>
             </div>
-            {i < STEPS.length - 1 && <div className="flex-1 h-px mx-2 w-8" style={{ background: i < step ? GOLD : "rgba(91,31,36,0.1)" }} />}
+            {i < STEPS.length - 1 && <div className="flex-1 h-px mx-1 sm:mx-2 w-4 sm:w-8" style={{ background: i < step ? GOLD : "rgba(91,31,36,0.1)" }} />}
           </div>
         ))}
       </div>
