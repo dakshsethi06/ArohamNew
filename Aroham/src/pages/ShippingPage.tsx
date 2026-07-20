@@ -236,7 +236,11 @@ export function ShippingPage() {
           </div>
           <OrderSummaryCard cartItems={items} onBack={() => { navigate("/"); openCart(); }} onNext={() => {
             const addr = getSelectedAddressObj();
-            if (addr) sessionStorage.setItem("aroham_shipping_addr", JSON.stringify(addr));
+            if (!addr) {
+              alert("Please select or add a delivery address first.");
+              return;
+            }
+            sessionStorage.setItem("aroham_shipping_addr", JSON.stringify(addr));
             navigate("/checkout/payment");
           }} nextLabel="Proceed to Payment" step={1} />
         </div>

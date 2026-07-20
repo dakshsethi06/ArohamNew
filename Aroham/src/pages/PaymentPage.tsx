@@ -220,7 +220,7 @@ export function PaymentPage() {
           </div>
 
           {/* Right sidebar – order summary */}
-          <div className="lg:sticky lg:top-24 ml-[-20px] mr-[0px] my-[0px]">
+          <div className="lg:sticky lg:top-24">
             <CheckoutProgress step={2} />
             <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 4px 30px rgba(91,31,36,0.07)" }}>
               <div className="px-6 pt-6 pb-4 lg:pt-4 lg:pb-3" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}><h2 className="text-lg font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Order Summary</h2></div>

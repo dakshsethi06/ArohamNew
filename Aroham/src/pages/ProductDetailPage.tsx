@@ -257,11 +257,12 @@ export function ProductDetailPage() {
   return (
     <div className="w-full overflow-x-hidden" style={{ background: "#FAF7F2", minHeight: "100vh", fontFamily: SANS }}>
       <div className="pt-24 pb-0 px-5 lg:px-10">
-        <div className="max-w-7xl mx-auto flex items-center gap-2 text-xs mb-6" style={{ color: "#9A8A78" }}>
-          <button onClick={() => navigate("/")} className="hover:underline" style={{ color: MAROON }}>Home</button>
-          <ChevronRight size={12} />
-          <button onClick={() => navigate("/shop")} className="hover:underline" style={{ color: MAROON }}>Shop</button>
-          <ChevronRight size={12} /><span>{product.name}</span>
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center gap-2 text-xs mb-6" style={{ color: "#9A8A78" }}>
+          <button onClick={() => navigate("/")} className="hover:underline whitespace-nowrap" style={{ color: MAROON }}>Home</button>
+          <ChevronRight size={12} className="flex-shrink-0" />
+          <button onClick={() => navigate("/shop")} className="hover:underline whitespace-nowrap" style={{ color: MAROON }}>Shop</button>
+          <ChevronRight size={12} className="flex-shrink-0" />
+          <span>{product.name}</span>
         </div>
       </div>
       <div className="px-5 lg:px-10 pb-10">
@@ -294,16 +295,18 @@ export function ProductDetailPage() {
             <h1 className="mb-1" style={{ fontFamily: SERIF, fontSize: "clamp(1.5rem,3vw,2.25rem)", fontWeight: 500, color: MAROON, lineHeight: 1.15 }}>{product.name}</h1>
             <p className="text-sm mb-3" style={{ color: GOLD, fontFamily: SANS, fontWeight: 600 }}>{product.subtitle}</p>
             <p className="text-sm leading-relaxed mb-4" style={{ color: "#5A4A3A" }}>{product.shortDesc}</p>
-            <div className="flex items-center gap-3 mb-5">
-              <div className="flex">{Array.from({ length: 5 }).map((_, j) => <Star key={j} size={14} fill={j < Math.round(product.rating) ? GOLD : "none"} stroke={GOLD} strokeWidth={1.5} />)}</div>
-              <span className="text-sm font-medium" style={{ color: MAROON }}>{product.rating}</span>
-              <span className="text-xs" style={{ color: "#9A8A78" }}>({product.reviews} reviews)</span>
-              <span className="text-xs" style={{ color: "#4A8A4A" }}>· 120+ bought this month</span>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-5">
+              <div className="flex items-center gap-3">
+                <div className="flex">{Array.from({ length: 5 }).map((_, j) => <Star key={j} size={14} fill={j < Math.round(product.rating) ? GOLD : "none"} stroke={GOLD} strokeWidth={1.5} />)}</div>
+                <span className="text-sm font-medium" style={{ color: MAROON }}>{product.rating}</span>
+                <span className="text-xs whitespace-nowrap" style={{ color: "#9A8A78" }}>({product.reviews} reviews)</span>
+              </div>
+              <span className="text-xs whitespace-nowrap" style={{ color: "#4A8A4A" }}>· 120+ bought this month</span>
             </div>
-            <div className="flex items-baseline gap-3 mb-1">
+            <div className="flex flex-wrap items-baseline gap-3 mb-1">
               <span className="text-3xl font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{product.price.toLocaleString("en-IN")}</span>
-              <span className="text-base line-through" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{product.original.toLocaleString("en-IN")}</span>
-              <span className="text-sm font-bold" style={{ color: "#4A8A4A" }}>{Math.round((1 - product.price / product.original) * 100)}% off</span>
+              <span className="text-base line-through" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{Math.round(product.original).toLocaleString("en-IN")}</span>
+              <span className="text-sm font-bold whitespace-nowrap" style={{ color: "#4A8A4A" }}>{Math.round((1 - product.price / product.original) * 100)}% off</span>
             </div>
             <p className="text-[11px] mb-5" style={{ color: "#9A8A78" }}>Inclusive of GST · Free shipping · Temple energized</p>
             <div className="flex items-center gap-3 mb-4">
@@ -486,9 +489,9 @@ export function ProductDetailPage() {
           boxShadow: "0 -4px 24px rgba(91,31,36,0.08)",
           transform: showSticky ? "translateY(0)" : "translateY(100%)"
         }}>
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-3 mb-2">
           <span className="text-lg font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{product.price.toLocaleString("en-IN")}</span>
-          <span className="text-xs line-through" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{product.original.toLocaleString("en-IN")}</span>
+          <span className="text-xs line-through" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{Math.round(product.original).toLocaleString("en-IN")}</span>
         </div>
         <div className="flex gap-3">
           <button onClick={() => addToCart(product, qty)}

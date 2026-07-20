@@ -34,7 +34,7 @@ export function AuthPage() {
 
   const handleAuthSuccess = () => {
     closeAuth(true);
-    navigate("/profile");
+    navigate("/");
   };
   const [authState, setAuthState] = useState<AuthState>("signin");
   const [tab, setTab] = useState<"signin" | "signup">("signin");
