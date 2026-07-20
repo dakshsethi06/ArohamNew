@@ -15,7 +15,7 @@ export function NavagrahaHero({ onShop, onConsult }: { onShop: () => void; onCon
   const [hoveredGraha, setHoveredGraha] = useState<number | null>(null);
 
   return (
-    <section className="relative" style={{ background: "#0A0608", overflowX: "hidden", overflowY: "visible" }}>
+    <section className="relative" style={{ background: "#0A0608", overflow: "hidden" }}>
       <style>{`
         @keyframes orbitPlanet { from{transform:rotate(0deg) translateX(var(--r)) rotate(0deg)} to{transform:rotate(360deg) translateX(var(--r)) rotate(-360deg)} }
         @keyframes pulseSun { 0%,100%{box-shadow:0 0 60px 20px rgba(255,200,50,0.35),0 0 120px 40px rgba(255,150,0,0.15)} 50%{box-shadow:0 0 80px 30px rgba(255,200,50,0.5),0 0 160px 60px rgba(255,150,0,0.25)} }
@@ -79,8 +79,8 @@ export function NavagrahaHero({ onShop, onConsult }: { onShop: () => void; onCon
       </div>
 
       {/* Smooth gradient transition to next section */}
-      <div className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none z-20"
-        style={{ background: "linear-gradient(to bottom, transparent 0%, rgba(250,247,242,0.4) 60%, #FAF7F2 100%)" }} />
+      <div className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none z-20"
+        style={{ background: "linear-gradient(to bottom, transparent 0%, rgba(250,247,242,0.3) 40%, rgba(250,247,242,0.7) 70%, #FAF7F2 100%)" }} />
 
       {/* Solar system */}
       <div className="hidden lg:block absolute z-[2]" style={{ top: "50%", right: 0, transform: "translateY(-50%)", width: "52%" }}>
