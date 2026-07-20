@@ -47,7 +47,6 @@ export function VideoTestimonials() {
   const cards = getVisible();
 
   return (
-  return (
     <section className="py-12 px-0 overflow-hidden" style={{ background: "#0D0508" }}>
       <div className="text-center mb-8 px-6">
         <span className="text-xs tracking-[0.25em] uppercase font-medium mb-2 block" style={{ color: SAFFRON, fontFamily: SANS }}>Real Transformations</span>
