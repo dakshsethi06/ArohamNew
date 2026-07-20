@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { ChevronRight } from "lucide-react";
-import { GOLD, IVORY, SANS, SERIF } from "@/constants/theme";
+import { ChevronRight, Pickaxe, Hammer, PenTool, Flame, BadgeCheck } from "lucide-react";
+import { GOLD, IVORY, MAROON, SANS, SERIF } from "@/constants/theme";
 import { CRAFT_STEPS, CRAFT_IMAGES } from "@/constants/data";
 
 export function HowItsMade() {
@@ -19,10 +19,15 @@ export function HowItsMade() {
 
   const goToStep = (i: number) => { setStep(i); resetTimer(); };
   const s = CRAFT_STEPS[step];
+  const ICONS = [Pickaxe, Hammer, PenTool, Flame, BadgeCheck];
+  const ActiveIcon = ICONS[step];
 
   return (
     <section className="py-20 relative overflow-hidden" style={{ background: "#0D0508" }}>
-      <style>{`@keyframes fadeSlideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}`}</style>
+      <style>{`
+        @keyframes imageReveal { 0% { opacity: 0; filter: blur(12px); transform: scale(1.05); } 100% { opacity: 1; filter: blur(0px); transform: scale(1); } }
+        @keyframes textReveal { 0% { opacity: 0; transform: translateY(16px); filter: blur(4px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0px); } }
+      `}</style>
       <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: `radial-gradient(circle,${GOLD} 1px,transparent 1px)`, backgroundSize: "32px 32px" }} />
       <div className="max-w-6xl mx-auto px-6 lg:px-10 relative z-10">
         <div className="text-center mb-14">
@@ -42,14 +47,14 @@ export function HowItsMade() {
             </button>
           ))}
         </div>
-        <div key={step} className="grid lg:grid-cols-2 gap-10 items-center" style={{ animation: "fadeSlideIn 0.35s ease" }}>
-          <div className="relative rounded-3xl overflow-hidden" style={{ aspectRatio: "4/3" }}>
+        <div key={step} className="grid lg:grid-cols-2 gap-10 items-center">
+          <div className="relative rounded-3xl overflow-hidden" style={{ aspectRatio: "4/3", animation: "imageReveal 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards" }}>
             <img src={CRAFT_IMAGES[step]} alt={s.title} className="w-full h-full object-cover" style={{ filter: "brightness(0.7)" }} />
             <div className="absolute inset-0" style={{ background: "linear-gradient(to top right, rgba(10,5,8,0.85) 0%, transparent 60%)" }} />
             <div className="absolute top-5 left-5">
-              <div className="px-4 py-2 rounded-2xl flex items-center gap-2" style={{ background: "rgba(200,160,68,0.15)", border: "1px solid rgba(200,160,68,0.35)", backdropFilter: "blur(8px)" }}>
-                <span className="text-xl">{s.icon}</span>
-                <span className="text-xs font-bold tracking-widest" style={{ color: GOLD }}>STEP {step + 1} / {CRAFT_STEPS.length}</span>
+              <div className="px-3 py-1.5 rounded-full flex items-center gap-1.5" style={{ background: "rgba(200,160,68,0.15)", border: "1px solid rgba(200,160,68,0.35)", backdropFilter: "blur(8px)" }}>
+                <ActiveIcon size={14} strokeWidth={2.5} style={{ color: MAROON }} />
+                <span className="text-[10px] font-bold tracking-widest" style={{ color: MAROON }}>STEP {step + 1} / {CRAFT_STEPS.length}</span>
               </div>
             </div>
             <div className="absolute bottom-5 left-5 right-5">
@@ -57,9 +62,11 @@ export function HowItsMade() {
               <div className="text-xl font-semibold" style={{ fontFamily: SERIF, color: IVORY, lineHeight: 1.2 }}>{s.title}</div>
             </div>
           </div>
-          <div>
+          <div style={{ opacity: 0, animation: "textReveal 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.15s" }}>
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0" style={{ background: "rgba(200,160,68,0.1)", border: "1px solid rgba(200,160,68,0.2)" }}>{s.icon}</div>
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(200,160,68,0.1)", border: "1px solid rgba(200,160,68,0.2)" }}>
+                <ActiveIcon size={24} strokeWidth={2} style={{ color: GOLD }} />
+              </div>
               <div>
                 <div className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: GOLD }}>Step {step + 1} of {CRAFT_STEPS.length}</div>
                 <h3 style={{ fontFamily: SERIF, fontSize: "1.5rem", fontWeight: 500, color: IVORY, lineHeight: 1.2 }}>{s.title}</h3>

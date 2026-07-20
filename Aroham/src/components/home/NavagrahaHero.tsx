@@ -15,7 +15,7 @@ export function NavagrahaHero({ onShop, onConsult }: { onShop: () => void; onCon
   const [hoveredGraha, setHoveredGraha] = useState<number | null>(null);
 
   return (
-    <section className="relative" style={{ background: "#0A0608", overflowX: "hidden", overflowY: "visible" }}>
+    <section className="relative overflow-hidden" style={{ background: "#0A0608" }}>
       <style>{`
         @keyframes orbitPlanet { from{transform:rotate(0deg) translateX(var(--r)) rotate(0deg)} to{transform:rotate(360deg) translateX(var(--r)) rotate(-360deg)} }
         @keyframes pulseSun { 0%,100%{box-shadow:0 0 60px 20px rgba(255,200,50,0.35),0 0 120px 40px rgba(255,150,0,0.15)} 50%{box-shadow:0 0 80px 30px rgba(255,200,50,0.5),0 0 160px 60px rgba(255,150,0,0.25)} }

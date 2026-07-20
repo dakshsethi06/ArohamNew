@@ -66,7 +66,7 @@ export function CommunityComments({ products = [] }: { products?: ArohamProduct[
             )}
           </div>
         )}
-        <div className="flex gap-5 overflow-x-auto pb-3 -mx-6 lg:-mx-10 px-6 lg:px-10"
+        <div className="flex gap-5 overflow-x-auto pb-3 -mx-6 lg:-mx-10 px-6 lg:px-10 scroll-pl-6 lg:scroll-pl-10"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none", scrollSnapType: "x mandatory" }}>
           {COMMENTS_DATA.map((c, i) => (
             <div key={i} className="p-6 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-xl flex-shrink-0"

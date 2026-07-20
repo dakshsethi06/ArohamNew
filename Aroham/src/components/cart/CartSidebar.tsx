@@ -20,7 +20,7 @@ export function CartSidebar() {
     <div role="dialog" aria-modal="true" aria-label="Shopping cart" className="fixed inset-0 z-[60] flex justify-end">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ease-out" 
            style={{ opacity: mounted ? 1 : 0 }} onClick={closeCart} />
-      <div className="relative w-full max-w-md flex flex-col h-full shadow-2xl transition-transform duration-300 ease-out"
+      <div className="relative w-[85vw] max-w-md flex flex-col h-full shadow-2xl transition-transform duration-300 ease-out"
         style={{ background: "#FFFFFF", transform: mounted ? "translateX(0)" : "translateX(100%)" }}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5" style={{ borderBottom: `1px solid rgba(91,31,36,0.08)` }}>

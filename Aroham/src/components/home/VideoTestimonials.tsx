@@ -48,20 +48,22 @@ export function VideoTestimonials() {
     if (!el) return;
     let timer: ReturnType<typeof setTimeout>;
     const onScroll = () => {
+      const center = el.scrollLeft + el.clientWidth / 2;
+      let closest = 0, minDist = Infinity;
+      Array.from(el.children).forEach((child, ci) => {
+        const c = (child as HTMLElement).offsetLeft + (child as HTMLElement).offsetWidth / 2;
+        const dist = Math.abs(c - center);
+        if (dist < minDist) { minDist = dist; closest = ci; }
+      });
+      const realIdx = closest % n;
+      setActive(realIdx);
+      setPlaying(false);
+
       clearTimeout(timer);
       timer = setTimeout(() => {
-        const center = el.scrollLeft + el.clientWidth / 2;
-        let closest = 0, minDist = Infinity;
-        Array.from(el.children).forEach((child, ci) => {
-          const c = (child as HTMLElement).offsetLeft + (child as HTMLElement).offsetWidth / 2;
-          const dist = Math.abs(c - center);
-          if (dist < minDist) { minDist = dist; closest = ci; }
-        });
-        const realIdx = closest % n;
-        setActive(realIdx); setPlaying(false);
         if (closest < n) { scrollToIndex(n + realIdx, false); }
         else if (closest >= n * 2) { scrollToIndex(n + realIdx, false); }
-      }, 80);
+      }, 150);
     };
     el.addEventListener("scroll", onScroll, { passive: true });
     return () => { el.removeEventListener("scroll", onScroll); clearTimeout(timer); };
@@ -92,17 +94,18 @@ export function VideoTestimonials() {
           <ChevronRight size={18} />
         </button>
         <div ref={scrollRef}
-          className="reel-scroll flex gap-4 overflow-x-auto px-[max(2rem,calc(50vw-140px))]"
-          style={{ scrollSnapType: "x mandatory", paddingBottom: "4px" }}>
+          className="reel-scroll flex items-center gap-2 md:gap-4 overflow-x-auto px-[calc(50vw-110px)] lg:px-[calc(50vw-130px)]"
+          style={{ scrollSnapType: "x mandatory", paddingBottom: "20px", paddingTop: "20px" }}>
           {ALL_REELS.map((v, i) => {
             const isActive = (i % n) === active;
             return (
               <div key={i} onClick={() => scrollTo(i % n)}
-                className="flex-shrink-0 relative cursor-pointer transition-all duration-500"
-                style={{ width: isActive ? 260 : 200, height: isActive ? 460 : 355, borderRadius: 24, overflow: "hidden", scrollSnapAlign: "center",
-                  transform: isActive ? "scale(1)" : "scale(0.93)", opacity: isActive ? 1 : 0.6,
+                className="flex-shrink-0 relative cursor-pointer w-[220px] h-[390px] lg:w-[260px] lg:h-[460px]"
+                style={{
+                  borderRadius: 24, overflow: "hidden", scrollSnapAlign: "center",
+                  transform: isActive ? "scale(1)" : "scale(0.85)", opacity: isActive ? 1 : 0.4,
                   border: isActive ? `2px solid ${GOLD}` : "2px solid transparent",
-                  transition: "all 0.4s cubic-bezier(0.4,0,0.2,1)",
+                  transition: "all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)",
                   boxShadow: isActive ? `0 0 0 1px rgba(200,160,68,0.2), 0 24px 60px rgba(0,0,0,0.6)` : "none" }}>
                 <img src={v.thumb} alt={v.name} className="absolute inset-0 w-full h-full object-cover" />
                 <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom,rgba(0,0,0,0.1) 0%,transparent 30%,transparent 40%,rgba(0,0,0,0.85) 100%)" }} />
