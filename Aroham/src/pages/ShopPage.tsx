@@ -160,7 +160,7 @@ export function ShopPage() {
                         </div>
                       </div>
                       <div className="p-4">
-                        <h3 className="text-sm font-semibold mb-0.5 leading-snug min-h-[2.4rem] line-clamp-2 flex items-center" style={{ fontFamily: SERIF, color: MAROON }}>{p.name}</h3>
+                        <h3 className="text-sm font-semibold mb-1 leading-snug h-[2.8rem] overflow-hidden line-clamp-2" style={{ fontFamily: SERIF, color: MAROON }}>{p.name}</h3>
                         <p className="text-xs mb-2 truncate" style={{ color: "#7A6A58" }}>{p.subtitle}</p>
                         <div className="flex items-center gap-1 mb-2">
                           {Array.from({ length: 5 }).map((_, j) => <Star key={j} size={10} fill={j < Math.round(p.rating) ? GOLD : "none"} stroke={GOLD} strokeWidth={1.5} />)}

@@ -28,6 +28,8 @@ function CheckoutHeader() {
   );
 }
 
+import { getShiprocketDeliveryEstimate, ShippingEstimate } from "@/lib/shipping";
+
 export function ShippingPage() {
   const navigate = useNavigate();
   const { items, openCart } = useCart();
@@ -37,10 +39,31 @@ export function ShippingPage() {
   const [showForm, setShowForm] = useState(true);
   const [form, setForm] = useState({ firstName: "", lastName: "", phone: "", email: "", pin: "", house: "", street: "", landmark: "", city: "", state: "", addressType: "Home", saveAddress: true, sameBilling: true, specialRequest: "" });
   const [savingAddress, setSavingAddress] = useState(false);
+  const [estimates, setEstimates] = useState<Record<string, ShippingEstimate>>({});
   const set = (k: keyof typeof form) => (v: string | boolean) => setForm(p => ({ ...p, [k]: v }));
 
+  const fetchEstimate = async (pincode: string) => {
+    const pin = pincode.replace(/\D/g, "").slice(0, 6);
+    if (pin.length === 6 && !estimates[pin]) {
+      const est = await getShiprocketDeliveryEstimate(pin);
+      if (est) {
+        setEstimates(prev => ({ ...prev, [pin]: est }));
+      }
+    }
+  };
+
   // Save selected address to sessionStorage so PaymentPage can use it
-  const getSelectedAddressObj = () => savedAddresses.find(a => a.id === selectedAddr) || null;
+  const getSelectedAddressObj = () => {
+    const found = savedAddresses.find(a => a.id === selectedAddr) || null;
+    if (!found) return null;
+    const pin = String(found.pincode || found.pin || "").replace(/\D/g, "").slice(0, 6);
+    const est = estimates[pin];
+    return {
+      ...found,
+      courier: est?.courier || found.courier || "Shiprocket Express",
+      deliveryDate: est?.deliveryDate || found.deliveryDate || "3–5 business days"
+    };
+  };
 
   // Save new address to DB
   const handleSaveAddress = async () => {
@@ -75,6 +98,7 @@ export function ShippingPage() {
     const cleanVal = val.replace(/\D/g, "").slice(0, 6);
     setForm(prev => ({ ...prev, pin: cleanVal }));
     if (cleanVal.length === 6) {
+      fetchEstimate(cleanVal);
       try {
         const res = await fetch(`https://api.postalpincode.in/pincode/${cleanVal}`);
         const data = await res.json();
@@ -103,8 +127,11 @@ export function ShippingPage() {
             setSavedAddresses(data);
             const def = data.find((a: any) => a.is_default) || data[0];
             setSelectedAddr(def.id);
+            data.forEach((a: any) => {
+              const p = String(a.pincode || a.pin || "");
+              if (p) fetchEstimate(p);
+            });
           } else {
-            // No saved addresses — open the new address form automatically
             setSavedAddresses([]);
             setShowForm(true);
           }
@@ -114,7 +141,6 @@ export function ShippingPage() {
           setShowForm(true);
         });
     } else {
-      // Logged out — clear addresses
       setSavedAddresses([]);
       setSelectedAddr(null);
       setShowForm(true);
@@ -178,9 +204,20 @@ export function ShippingPage() {
                           <button className="px-2.5 py-1 rounded-lg text-[10px] font-medium hover:bg-red-50" style={{ color: "#C04040", border: "1px solid rgba(192,64,64,0.15)" }}>Delete</button>
                         </div>
                       </div>
-                      {sel && <div className="mt-3 pt-3 flex items-center gap-2" style={{ borderTop: "1px solid rgba(200,160,68,0.2)" }}>
-                        <Truck size={12} style={{ color: "#4A8A4A" }} /><span className="text-[10px] font-medium" style={{ color: "#4A8A4A" }}>Estimated delivery: 3–5 business days · Free Shipping</span>
-                      </div>}
+                      {sel && (() => {
+                        const pin = String(addr.pincode || addr.pin || "").replace(/\D/g, "").slice(0, 6);
+                        const est = estimates[pin];
+                        const dateStr = est?.deliveryDate || "3–5 business days";
+                        const courierStr = est?.courier || "Shiprocket Express";
+                        return (
+                          <div className="mt-3 pt-3 flex items-center gap-2" style={{ borderTop: "1px solid rgba(200,160,68,0.2)" }}>
+                            <Truck size={12} style={{ color: "#4A8A4A" }} />
+                            <span className="text-[10px] font-medium" style={{ color: "#4A8A4A" }}>
+                              Expected delivery by <strong>{dateStr}</strong> via <strong>{courierStr}</strong> · Free Shipping
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </div>
                   );
                 })}
@@ -204,6 +241,14 @@ export function ShippingPage() {
                     <FloatingInput label="PIN Code" value={form.pin} onChange={handlePinChange} required />
                     <FloatingInput label="House / Flat No." value={form.house} onChange={set("house") as (v: string) => void} required />
                   </div>
+                  {form.pin.length === 6 && estimates[form.pin] && (
+                    <div className="p-3 rounded-xl flex items-center gap-2" style={{ background: "rgba(74,138,74,0.08)", border: "1px solid rgba(74,138,74,0.2)" }}>
+                      <Truck size={14} style={{ color: "#4A8A4A" }} />
+                      <span className="text-xs font-semibold" style={{ color: "#4A8A4A" }}>
+                        Expected delivery by {estimates[form.pin].deliveryDate} via {estimates[form.pin].courier}
+                      </span>
+                    </div>
+                  )}
                   <FloatingInput label="Street Address" value={form.street} onChange={set("street") as (v: string) => void} required />
                   <FloatingInput label="Landmark (Optional)" value={form.landmark} onChange={set("landmark") as (v: string) => void} />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -234,14 +279,67 @@ export function ShippingPage() {
               </div>
             </div>
           </div>
-          <OrderSummaryCard cartItems={items} onBack={() => { navigate("/"); openCart(); }} onNext={() => {
-            const addr = getSelectedAddressObj();
-            if (!addr) {
-              alert("Please select or add a delivery address first.");
+          <OrderSummaryCard cartItems={items} onBack={() => { navigate("/"); openCart(); }} onNext={async () => {
+            const selected = getSelectedAddressObj();
+            const hasFilledForm = Boolean(form.firstName.trim() || form.phone.trim() || form.pin.trim() || form.house.trim() || form.city.trim());
+
+            // If user has filled out form or no saved address selected
+            if (showForm || !selected || hasFilledForm) {
+              if (!form.firstName.trim() || !form.phone.trim() || !form.pin.trim() || !form.house.trim() || !form.city.trim()) {
+                if (!selected) {
+                  alert("Please fill in all required delivery address fields:\n• First Name\n• Phone Number\n• House / Flat No.\n• PIN Code\n• City");
+                  setShowForm(true);
+                  return;
+                }
+              } else {
+                // Form is fully filled!
+                const newAddressObj = {
+                  id: Date.now(),
+                  full_name: `${form.firstName} ${form.lastName}`.trim(),
+                  name: `${form.firstName} ${form.lastName}`.trim(),
+                  phone: form.phone.replace(/\D/g, ""),
+                  email: form.email,
+                  address_line1: `${form.house}, ${form.street}${form.landmark ? ", " + form.landmark : ""}`.trim(),
+                  line1: `${form.house}, ${form.street}${form.landmark ? ", " + form.landmark : ""}`.trim(),
+                  city: form.city,
+                  state: form.state,
+                  pincode: form.pin,
+                  pin: form.pin,
+                  address_type: form.addressType,
+                };
+
+                if (isLoggedIn) {
+                  try {
+                    await api("/addresses", {
+                      method: "POST",
+                      body: JSON.stringify({
+                        name: newAddressObj.name,
+                        phone: newAddressObj.phone,
+                        email: newAddressObj.email,
+                        address: newAddressObj.address_line1,
+                        city: newAddressObj.city,
+                        pincode: newAddressObj.pincode,
+                        address_type: newAddressObj.address_type,
+                      })
+                    });
+                  } catch (e) {
+                    console.error("Address sync:", e);
+                  }
+                }
+
+                sessionStorage.setItem("aroham_shipping_addr", JSON.stringify(newAddressObj));
+                navigate("/checkout/payment");
+                return;
+              }
+            }
+
+            if (selected) {
+              sessionStorage.setItem("aroham_shipping_addr", JSON.stringify(selected));
+              navigate("/checkout/payment");
               return;
             }
-            sessionStorage.setItem("aroham_shipping_addr", JSON.stringify(addr));
-            navigate("/checkout/payment");
+
+            alert("Please fill in or select a delivery address.");
           }} nextLabel="Proceed to Payment" step={1} />
         </div>
       </div>

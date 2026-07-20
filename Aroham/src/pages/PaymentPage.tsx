@@ -67,6 +67,13 @@ export function PaymentPage() {
         try { return JSON.parse(sessionStorage.getItem("aroham_shipping_addr") || "null"); } catch { return null; }
       })();
 
+      if (!shippingAddr || (!shippingAddr.address_line1 && !shippingAddr.line1 && !shippingAddr.address)) {
+        alert("No delivery address selected. Please provide a delivery address first.");
+        setPlacing(false);
+        navigate("/checkout/shipping");
+        return;
+      }
+
       // Create Order on Backend — match exact backend contract
       const orderData = await api("/orders", {
         method: "POST",

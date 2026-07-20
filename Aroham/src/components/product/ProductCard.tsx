@@ -36,7 +36,7 @@ export function ProductCard({ product: p, onProductClick, onAddToCart, wishKey =
           )}
         </div>
         <div className="p-3">
-          <p className="text-xs font-semibold leading-tight mb-0.5 line-clamp-2 min-h-[2.1rem] flex items-center" style={{ fontFamily: SERIF, color: MAROON }}>{p.name}</p>
+          <p className="text-xs font-semibold leading-tight mb-1 h-[2.5rem] overflow-hidden line-clamp-2" style={{ fontFamily: SERIF, color: MAROON }}>{p.name}</p>
           <p className="text-[10px] mb-1.5 truncate" style={{ color: "#7A6A58" }}>{p.subtitle}</p>
           <div className="flex items-center gap-0.5 mb-2">
             {Array.from({ length: 5 }).map((_, j) => <Star key={j} size={9} fill={j < Math.round(p.rating) ? GOLD : "none"} stroke={GOLD} strokeWidth={1.5} />)}

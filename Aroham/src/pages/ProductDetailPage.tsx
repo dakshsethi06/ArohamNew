@@ -7,6 +7,7 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useProducts } from "@/hooks/useProducts";
 import { ArohamProduct } from "@/types/product";
+import { getShiprocketDeliveryEstimate } from "@/lib/shipping";
 
 const PROD_TABS = ["Description", "Benefits", "How to Use", "Temple Ritual", "Reviews"];
 const REVIEWS_DATA = [
@@ -73,66 +74,20 @@ export function ProductDetailPage() {
         console.error("Postal API error", e);
       }
 
-      const apiBase = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
-        ? "http://localhost:5000/api"
-        : (import.meta.env.VITE_API_BASE || "http://localhost:5000/api");
-
-      const shiprocketRes = await fetch(`${apiBase}/shiprocket/serviceability?delivery_pincode=${pin}`);
-      const shiprocketData = await shiprocketRes.json();
-      
-      if (shiprocketData.success && shiprocketData.data && shiprocketData.data.data) {
-        const sr = shiprocketData.data.data;
-        const companies = sr.available_courier_companies || [];
-        const firstCompany = companies[0] || {};
-        
-        let etd = firstCompany.etd;
-        let carrier = firstCompany.courier_name ? `Shiprocket (${firstCompany.courier_name})` : "Shiprocket Express";
-        let isCod = firstCompany.cod === 1;
-
-        if (!city && firstCompany.city) city = firstCompany.city;
-        if (!state && firstCompany.state) state = firstCompany.state;
-
-        let dateStr = "";
-        if (etd) {
-          const dateObj = new Date(etd);
-          dateStr = dateObj.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short" });
-        } else if (firstCompany.estimated_delivery_days) {
-          const days = parseInt(firstCompany.estimated_delivery_days, 10) || 3;
-          const date = new Date();
-          date.setDate(date.getDate() + days);
-          dateStr = date.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short" });
-        } else {
-          const date = new Date();
-          date.setDate(date.getDate() + 4);
-          dateStr = date.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short" });
-        }
-
-        setDeliveryResult({
-          city,
-          state,
-          date: dateStr,
-          cod: isCod,
-          carrier
-        });
-      } else {
-        const date = new Date();
-        date.setDate(date.getDate() + 4);
-        const dateStr = date.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short" });
-        setDeliveryResult({
-          city,
-          state,
-          date: dateStr,
-          cod: true,
-          fallback: true
-        });
-      }
-    } catch (e) {
-      const date = new Date();
-      date.setDate(date.getDate() + 4);
-      const dateStr = date.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short" });
+      const est = await getShiprocketDeliveryEstimate(pin);
       setDeliveryResult({
-        date: dateStr,
+        city: city || est.city || "",
+        state: state || est.state || "",
+        date: est.deliveryDate,
+        cod: est.codAvailable,
+        carrier: est.courier,
+      });
+    } catch (e) {
+      console.error("Pincode check error", e);
+      setDeliveryResult({
+        date: "3–5 business days",
         cod: true,
+        carrier: "Shiprocket Express",
         fallback: true
       });
     } finally {
