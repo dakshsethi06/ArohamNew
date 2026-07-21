@@ -55,7 +55,7 @@ export function CartSidebar() {
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold leading-snug mb-0.5" style={{ fontFamily: SERIF, color: MAROON }}>{p.name}</p>
                 <p className="text-[10px] mb-2" style={{ color: "#9A8A78" }}>{p.subtitle}</p>
-                <div className="flex items-center justify-between">
+                <div className="mt-2 flex items-center justify-between">
                   <div className="flex items-center rounded-full overflow-hidden" style={{ border: `1.5px solid rgba(91,31,36,0.12)` }}>
                     <button aria-label="Decrease quantity" onClick={() => updateQty(p.id, -1)} className="w-7 h-7 flex items-center justify-center hover:bg-black/5" style={{ color: MAROON }}><Minus size={11} /></button>
                     <span className="w-6 text-center text-xs font-semibold" style={{ color: MAROON }}>{qty}</span>
