@@ -87,13 +87,14 @@ export function ShippingPage() {
     };
   };
 
-  // Save new address to DB
+  // Save new address and proceed to payment
   const handleSaveAddress = async () => {
     const errors: Record<string, boolean> = {};
     if (!form.firstName.trim()) errors.firstName = true;
     if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 10) errors.phone = true;
     if (!form.pin.trim() || form.pin.replace(/\D/g, "").length !== 6) errors.pin = true;
     if (!form.house.trim()) errors.house = true;
+    if (!form.street.trim()) errors.street = true;
     if (!form.city.trim()) errors.city = true;
 
     if (Object.keys(errors).length > 0) {
@@ -102,6 +103,8 @@ export function ShippingPage() {
     }
 
     setSavingAddress(true);
+    const est = estimates[form.pin];
+
     try {
       const payload = {
         name: `${form.firstName} ${form.lastName}`.trim(),
@@ -114,23 +117,47 @@ export function ShippingPage() {
         address_type: form.addressType,
       };
 
+      let savedObj: any = null;
       if (editingAddrId) {
-        // Update existing address
         const result = await api(`/addresses/${editingAddrId}`, { method: "PUT", body: JSON.stringify(payload) });
-        const updatedAddr = result.data || result;
-        setSavedAddresses(prev => prev.map(a => a.id === editingAddrId ? { ...a, ...updatedAddr } : a));
+        savedObj = result.data || result;
+        setSavedAddresses(prev => prev.map(a => a.id === editingAddrId ? { ...a, ...savedObj } : a));
         setSelectedAddr(editingAddrId as number);
         setEditingAddrId(null);
       } else {
         const result = await api("/addresses", { method: "POST", body: JSON.stringify(payload) });
-        const newAddr = result.data || result;
-        setSavedAddresses(prev => [newAddr, ...prev]);
-        setSelectedAddr(newAddr.id);
+        savedObj = result.data || result;
+        setSavedAddresses(prev => [savedObj, ...prev]);
+        setSelectedAddr(savedObj.id);
       }
-      setShowForm(false);
-      setForm({ firstName: "", lastName: "", phone: user?.user_metadata?.phone || "", email: user?.email || "", pin: "", house: "", street: "", landmark: "", city: "", state: "", addressType: "Home", saveAddress: true, sameBilling: true, specialRequest: "" });
+
+      const finalAddrObj = {
+        ...savedObj,
+        courier: est?.courier || "Shiprocket Express",
+        deliveryDate: est?.deliveryDate || "3–5 business days",
+        specialRequest: form.specialRequest
+      };
+
+      sessionStorage.setItem("aroham_shipping_addr", JSON.stringify(finalAddrObj));
+      navigate("/checkout/payment");
     } catch (e: any) {
-      alert("Failed to save address: " + (e.message || "Please try again."));
+      console.error("Save address API error:", e);
+      // Fallback local save & navigate
+      const fallbackObj = {
+        id: Date.now(),
+        full_name: `${form.firstName} ${form.lastName}`.trim(),
+        phone: form.phone.replace(/\D/g, "").slice(-10),
+        email: form.email,
+        line1: `${form.house}, ${form.street}${form.landmark ? ", " + form.landmark : ""}`.trim(),
+        city: form.city,
+        state: form.state,
+        pin: form.pin,
+        courier: est?.courier || "Shiprocket Express",
+        deliveryDate: est?.deliveryDate || "3–5 business days",
+        specialRequest: form.specialRequest
+      };
+      sessionStorage.setItem("aroham_shipping_addr", JSON.stringify(fallbackObj));
+      navigate("/checkout/payment");
     } finally {
       setSavingAddress(false);
     }
@@ -363,7 +390,7 @@ export function ShippingPage() {
           <p className="text-sm" style={{ color: "#7A6A58" }}>Tell us where you'd like your sacred products delivered.</p>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-5 lg:px-10 py-8 lg:py-6 pb-12 lg:pb-6">
+      <div className="max-w-7xl mx-auto px-5 lg:px-10 py-8 lg:py-6 pb-40 lg:pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10 items-start">
           <div>
             {savedAddresses.length > 0 && !showForm && (
@@ -442,20 +469,22 @@ export function ShippingPage() {
                     <div style={{ border: fieldBorder("pin"), borderRadius: 16 }}><FloatingInput label="PIN Code *" value={form.pin} onChange={handlePinChange} required /></div>
                     <div style={{ border: fieldBorder("house"), borderRadius: 16 }}><FloatingInput label="House / Flat No. *" value={form.house} onChange={set("house") as (v: string) => void} required /></div>
                   </div>
-                  {form.pin.length === 6 && estimates[form.pin] && (
-                    <div className="p-3 rounded-xl flex items-center gap-2" style={{ background: "rgba(74,138,74,0.08)", border: "1px solid rgba(74,138,74,0.2)" }}>
-                      <Truck size={14} style={{ color: "#4A8A4A" }} />
-                      <span className="text-xs font-semibold" style={{ color: "#4A8A4A" }}>
-                        Expected delivery by {estimates[form.pin].deliveryDate} via {estimates[form.pin].courier}
-                      </span>
-                    </div>
-                  )}
-                  <FloatingInput label="Street Address *" value={form.street} onChange={set("street") as (v: string) => void} required />
+                  <div style={{ border: fieldBorder("street"), borderRadius: 16 }}>
+                    <FloatingInput label="Street Address *" value={form.street} onChange={set("street") as (v: string) => void} required />
+                  </div>
                   <FloatingInput label="Landmark (Optional)" value={form.landmark} onChange={set("landmark") as (v: string) => void} />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div style={{ border: fieldBorder("city"), borderRadius: 16 }}><FloatingInput label="City *" value={form.city} onChange={set("city") as (v: string) => void} required /></div>
                     <FloatingSelect label="State" options={INDIA_STATES} value={form.state} onChange={set("state") as (v: string) => void} />
                   </div>
+                  {form.pin.length === 6 && estimates[form.pin] && (
+                    <div className="p-3.5 rounded-2xl flex items-center gap-2.5 my-2" style={{ background: "rgba(74,138,74,0.08)", border: "1px solid rgba(74,138,74,0.2)" }}>
+                      <Truck size={15} style={{ color: "#4A8A4A", flexShrink: 0 }} />
+                      <span className="text-xs font-semibold" style={{ color: "#4A8A4A" }}>
+                        Expected delivery by <strong>{estimates[form.pin].deliveryDate}</strong> via <strong>{estimates[form.pin].courier}</strong> · Free Shipping
+                      </span>
+                    </div>
+                  )}
                   <button
                     onClick={handleSaveAddress}
                     disabled={savingAddress}
