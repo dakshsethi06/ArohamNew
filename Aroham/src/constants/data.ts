@@ -58,8 +58,8 @@ export const GRAHAS: Graha[] = [
   { name: "Guru", en: "Jupiter",  color: "#FFB347", size: 22, orbit: 205, speed: 22,   gem: "Yellow Sapphire", desc: "Wisdom, expansion, luck" },
   { name: "Shukra", en: "Venus",  color: "#FFB6C1", size: 18, orbit: 248, speed: 16,   gem: "Diamond",  desc: "Love, beauty, luxury" },
   { name: "Shani", en: "Saturn",  color: "#B8A090", size: 20, orbit: 295, speed: 30,   gem: "Blue Sapphire", desc: "Discipline, karma, justice" },
-  { name: "Rahu",                  color: "#6644AA", size: 15, orbit: 355, speed: 18,   gem: "Hessonite", desc: "Desire, illusion, foreign" },
-  { name: "Ketu",                  color: "#AA6644", size: 15, orbit: 355, speed: 20,   gem: "Cat's Eye", desc: "Liberation, mysticism" },
+  { name: "Rahu",                  color: "#6644AA", size: 15, orbit: 338, speed: 18,   gem: "Hessonite", desc: "Desire, illusion, foreign" },
+  { name: "Ketu",                  color: "#AA6644", size: 15, orbit: 375, speed: 20,   gem: "Cat's Eye", desc: "Liberation, mysticism" },
 ];
 
 export const CRAFT_STEPS = [

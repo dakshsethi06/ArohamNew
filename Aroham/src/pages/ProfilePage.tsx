@@ -77,9 +77,9 @@ export function ProfilePage() {
 
   const initEditForm = (p: any) => {
     setEditForm({
-      fullName: p?.full_name || user?.user_metadata?.full_name || "",
+      fullName: p?.full_name || user?.displayName || "",
       email: p?.email || user?.email || "",
-      phone: p?.phone || user?.user_metadata?.phone || "",
+      phone: p?.phone || user?.phoneNumber || "",
       gender: p?.gender || "Other",
       dob: p?.dob ? new Date(p.dob).toISOString().split("T")[0] : "",
       pobCity: p?.pob_city || ""
@@ -125,15 +125,15 @@ export function ProfilePage() {
 
   const handleLogout = () => { logout(); navigate("/"); };
 
-  const displayName = profile?.full_name || user?.user_metadata?.full_name || "Devotee";
+  const displayName = profile?.full_name || user?.displayName || "Devotee";
   const memberSince = profile?.created_at
     ? new Date(profile.created_at).getFullYear()
     : new Date().getFullYear();
 
   const profileFields = [
-    { label: "Name",   value: profile?.full_name || user?.user_metadata?.full_name || "—" },
+    { label: "Name",   value: profile?.full_name || user?.displayName || "—" },
     { label: "Email",  value: profile?.email || user?.email || "—" },
-    { label: "Phone",  value: profile?.phone || "—" },
+    { label: "Phone",  value: profile?.phone || user?.phoneNumber || "—" },
     { label: "Gender", value: profile?.gender || "—" },
     { label: "Date of Birth", value: profile?.dob ? new Date(profile.dob).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—" },
     { label: "City of Birth", value: profile?.pob_city || "—" },
@@ -257,7 +257,7 @@ export function ProfilePage() {
                         </button>
                       </Popover.Trigger>
                       <Popover.Portal>
-                        <Popover.Content align="start" sideOffset={4} className="z-[200] rounded-2xl shadow-2xl border p-4"
+                        <Popover.Content side="bottom" avoidCollisions={false} align="start" sideOffset={4} className="z-[200] rounded-2xl shadow-2xl border p-4"
                           style={{ background: "#FAF7F2", borderColor: "rgba(91,31,36,0.15)" }}>
                           <style>{`
                             .rdp { --rdp-cell-size: 36px; --rdp-accent-color: ${MAROON}; --rdp-background-color: rgba(91,31,36,0.1); font-family: ${SANS}; }
