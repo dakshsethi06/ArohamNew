@@ -59,11 +59,8 @@ export function AuthPage() {
   };
 
   const goTo = (s: AuthState) => {
-    setPanelVisible(false);
-    setTimeout(() => {
-      setAuthState(s);
-      setPanelVisible(true);
-    }, 220);
+    setAuthState(s);
+    setPanelVisible(true);
   };
 
   const formStyle = {

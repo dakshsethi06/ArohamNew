@@ -25,3 +25,15 @@ html {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
+
+/* GPU Hardware Acceleration & Smooth Tab Transitions */
+button, a, input, [role="button"] {
+  touch-action: manipulation;
+}
+
+/* Enable hardware acceleration on drawer dialogs & modals */
+[role="dialog"], .backdrop-blur-sm, [class*="transition-"] {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}

@@ -83,13 +83,14 @@ export function CartSidebar() {
               </div>
             </div>
             <button onClick={() => { 
-              if (!isLoggedIn) {
-                closeCart();
-                openAuth();
-              } else {
-                closeCart(); 
-                navigate("/checkout/shipping"); 
-              }
+              closeCart();
+              requestAnimationFrame(() => {
+                if (!isLoggedIn) {
+                  openAuth();
+                } else {
+                  navigate("/checkout/shipping"); 
+                }
+              });
             }}
               className="w-full py-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90 hover:shadow-lg"
               style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
