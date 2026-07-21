@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
 
 // Live Firebase configuration for Aroham (Corrected key with digit 0)
 const getEnv = (key: string, fallback: string) => {
@@ -18,6 +18,11 @@ const firebaseConfig = {
   measurementId: getEnv("VITE_FIREBASE_MEASUREMENT_ID", "G-W6YVDPCK9Y")
 };
 
-// Initialize Firebase App singleton
+// Initialize Firebase App singleton with local persistent login state
 export const firebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 export const firebaseAuth = getAuth(firebaseApp);
+
+// Enforce permanent local browser persistence until user explicitly clicks Logout
+setPersistence(firebaseAuth, browserLocalPersistence).catch(err => {
+  console.error("Firebase persistence error:", err);
+});

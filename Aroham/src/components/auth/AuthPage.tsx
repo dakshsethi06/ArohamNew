@@ -69,6 +69,8 @@ export function AuthPage() {
     transition: "opacity 0.25s ease,transform 0.25s ease"
   };
 
+  const [noAccountNotice, setNoAccountNotice] = useState(false);
+
   // Trigger Firebase Phone Auth SMS OTP
   const handleSendPhoneOtp = async (flow: "signin" | "signup") => {
     const phoneDigits = phone.replace(/\D/g, "");
@@ -79,16 +81,18 @@ export function AuthPage() {
 
     setLoading(true);
     setErrorMsg("");
+    setNoAccountNotice(false);
 
     let currentFlow = flow;
     if (flow === "signin") {
       try {
         const checkRes = await fetch(`${import.meta.env.VITE_API_BASE || "http://localhost:5000/api"}/auth/email-by-phone?phone=${encodeURIComponent(phoneDigits)}`);
         if (checkRes.status === 404) {
-          // Account does not exist yet! Auto-redirect to Create Account flow!
+          // Account does not exist yet! Show popup alert and redirect to Create Account!
           currentFlow = "signup";
           setActiveTab("signup");
           setAgreed(true);
+          setNoAccountNotice(true);
         }
       } catch (e) {}
     }
@@ -160,7 +164,7 @@ export function AuthPage() {
         // Go to Next Page asking for Name and Email!
         goTo("profile-setup");
       } else {
-        // Sign In Flow: Direct to Dashboard / Success
+        // Sign In Flow: Direct to Dashboard automatically!
         handleAuthSuccess();
       }
     } catch (e: any) {
@@ -189,7 +193,7 @@ export function AuthPage() {
         await updateProfile(firebaseAuth.currentUser, { displayName: name });
       }
 
-      // Sync account to backend database
+      // Sync account to backend database (Save to Supabase DB)
       await api("/auth/signup", {
         method: "POST",
         body: JSON.stringify({
@@ -200,8 +204,8 @@ export function AuthPage() {
       }).catch(() => {});
 
       setLoading(false);
-      goTo("success");
-      setTimeout(() => handleAuthSuccess(), 1400);
+      // Automatically navigate straight to Dashboard without extra continue screens!
+      handleAuthSuccess();
     } catch (e: any) {
       setLoading(false);
       setErrorMsg(e.message || "Failed to complete profile.");
@@ -238,6 +242,14 @@ export function AuthPage() {
         <h2 className="mb-1" style={{ fontFamily: SERIF, fontSize: "1.75rem", fontWeight: 500, color: MAROON }}>Begin Your Sacred Journey</h2>
         <p className="text-sm" style={{ color: "#7A6A58" }}>Enter your mobile number to create your Aroham account.</p>
       </div>
+      {noAccountNotice && (
+        <div className="p-3.5 rounded-2xl flex items-center gap-2.5" style={{ background: "rgba(200,160,68,0.12)", border: "1px solid rgba(200,160,68,0.3)" }}>
+          <span className="text-base">ℹ️</span>
+          <p className="text-xs font-semibold" style={{ color: "#8B6914" }}>
+            No account exists with this mobile number. We've redirected you to <strong>Create Account</strong>!
+          </p>
+        </div>
+      )}
       {errorMsg && <p className="text-sm text-red-500 font-semibold">{errorMsg}</p>}
       <AuthInput label="Mobile Number" type="tel" value={phone} onChange={v => setPhone(v.replace(/\D/g, "").slice(0, 10))} />
       <button onClick={() => setAgreed(a => !a)} className="flex items-start gap-3 text-sm text-left w-full cursor-pointer" style={{ color: "#5A4A3A" }}>
