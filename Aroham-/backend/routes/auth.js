@@ -8,19 +8,19 @@ router.get("/email-by-phone", async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("users")
-      .select("email")
+      .select("email, full_name")
       .eq("phone", phone.trim())
       .maybeSingle();
 
     if (error) throw error;
     if (!data) return res.status(404).json({ error: "No account found with this phone number" });
-    res.json({ email: data.email });
+    res.json({ email: data.email, fullName: data.full_name });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-// POST /api/auth/signup - Email & password signup
+// POST /api/auth/signup - Phone & Firebase OTP signup
 router.post("/signup", async (req, res) => {
   const {
     email, password, fullName, phone, otp,
@@ -28,52 +28,51 @@ router.post("/signup", async (req, res) => {
   } = req.body;
 
   try {
-    if (otp !== "1234") {
-      return res.status(400).json({ error: "Invalid OTP. Please enter 1234." });
-    }
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return res.status(400).json({ error: "Please enter a valid email address" });
-    }
     if (!phone || !/^\d{10}$/.test(phone.trim())) {
       return res.status(400).json({ error: "Phone number must be exactly 10 digits" });
     }
-    if (!password || password.length < 8 || !/[a-zA-Z]/.test(password) || !/\d/.test(password)) {
-      return res.status(400).json({ error: "Password must be at least 8 characters and contain at least one letter and one number" });
+    const finalEmail = email || `${phone.trim()}@aroham.in`;
+    const userPass = password || `ArohamPass${phone.trim()}!`;
+
+    // Check if user already exists in public users table
+    const { data: existingProfile } = await supabase
+      .from("users")
+      .select("*")
+      .eq("phone", phone.trim())
+      .maybeSingle();
+
+    if (existingProfile) {
+      // Update existing profile details
+      const { data: updated, error: updateErr } = await supabase
+        .from("users")
+        .update({
+          full_name: fullName || existingProfile.full_name,
+          email: finalEmail
+        })
+        .eq("id", existingProfile.id)
+        .select()
+        .single();
+
+      if (updateErr) throw updateErr;
+      return res.json({ success: true, message: "Profile updated successfully", user: updated });
     }
 
-    // Create user in Supabase auth using email + password (marks email_confirm: true to bypass verification)
+    // Create user in Supabase auth
     let userId;
     const { data, error: authErr } = await supabase.auth.admin.createUser({
-      email,
-      password,
+      email: finalEmail,
+      password: userPass,
       email_confirm: true,
-      user_metadata: { full_name: fullName, phone }
+      user_metadata: { full_name: fullName, phone: phone.trim() }
     });
 
     if (authErr) {
       if (authErr.message.includes("already registered") || authErr.message.includes("already exists")) {
-        // Self-healing: Find user by email in auth
-        const { data: listData, error: listErr } = await supabase.auth.admin.listUsers();
+        const { data: listData } = await supabase.auth.admin.listUsers();
         const users = listData?.users || [];
-        const existingAuthUser = users.find(u => u.email === email);
+        const existingAuthUser = users.find(u => u.email === finalEmail || u.phone === phone.trim());
         if (existingAuthUser) {
-          // Check if profile exists in public users table
-          const { data: existingProfile } = await supabase
-            .from("users")
-            .select("id")
-            .eq("id", existingAuthUser.id)
-            .maybeSingle();
-
-          if (!existingProfile) {
-            // Profile is missing! Update the auth user credentials and insert profile
-            await supabase.auth.admin.updateUserById(existingAuthUser.id, {
-              password,
-              user_metadata: { full_name: fullName, phone }
-            });
-            userId = existingAuthUser.id;
-          } else {
-            return res.status(400).json({ error: "A user with this email address has already been registered" });
-          }
+          userId = existingAuthUser.id;
         } else {
           throw authErr;
         }
@@ -84,14 +83,14 @@ router.post("/signup", async (req, res) => {
       userId = data.user.id;
     }
 
-    // Insert user details into public users table (satisfy gender/dob not-null constraints)
-    const { error: profErr } = await supabase
+    // Insert profile in public users table
+    const { data: insertedUser, error: profErr } = await supabase
       .from("users")
-      .insert({
+      .upsert({
         id: userId,
-        full_name: fullName,
-        phone,
-        email,
+        full_name: fullName || "Devotee",
+        phone: phone.trim(),
+        email: finalEmail,
         gender: gender || "Other",
         dob: dob || new Date().toISOString().split("T")[0],
         tob: tob || null,
@@ -99,10 +98,12 @@ router.post("/signup", async (req, res) => {
         pob_state: pobState || null,
         pob_country: pobCountry || null,
         address: address || null
-      });
+      })
+      .select()
+      .single();
 
     if (profErr) throw profErr;
-    res.json({ success: true, message: "Account created successfully" });
+    res.json({ success: true, message: "Account created successfully", user: insertedUser });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -158,4 +159,3 @@ router.post("/profile", requireAuth, async (req, res) => {
 });
 
 module.exports = router;
-
