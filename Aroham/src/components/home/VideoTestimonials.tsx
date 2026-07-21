@@ -82,7 +82,7 @@ export function VideoTestimonials() {
             const zIndex = 10 - absOff;
 
             return (
-              <div key={v.name}
+              <div key={`${realIdx}-${offset}`}
                 className="absolute"
                 style={{
                   width: w, height: h, borderRadius: 24, overflow: "hidden",

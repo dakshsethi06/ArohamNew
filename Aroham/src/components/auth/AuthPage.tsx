@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { X, Star, CheckCircle, Shield, Flame, Award, Package, ArrowRight, User as UserIcon, Mail } from "lucide-react";
+import { X, Star, CheckCircle, Shield, Flame, Award, Package, ArrowRight, User as UserIcon, Mail, Calendar, ChevronDown } from "lucide-react";
 import { MAROON, GOLD, SAFFRON, IVORY, SANS, SERIF } from "@/constants/theme";
 import { AuthInput } from "./AuthInput";
 import { OtpBoxes } from "./OtpBoxes";
@@ -9,6 +9,10 @@ import { useAuth } from "@/context/AuthContext";
 import { firebaseAuth } from "@/lib/firebase";
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, updateProfile } from "firebase/auth";
 import { api } from "@/lib/api";
+import * as Select from "@radix-ui/react-select";
+import * as Popover from "@radix-ui/react-popover";
+import { DayPicker } from "react-day-picker";
+import "react-day-picker/dist/style.css";
 
 declare global {
   interface Window {
@@ -163,13 +167,30 @@ export function AuthPage() {
         }
       }
 
-      setLoading(false);
-      if (activeTab === "signup") {
-        // Go to Next Page asking for Name and Email!
-        goTo("profile-setup");
-      } else {
+      // Check if user already has a profile (existing user vs new signup)
+      if (activeTab === "signin") {
         // Sign In Flow: Direct to Dashboard automatically!
+        setLoading(false);
         handleAuthSuccess();
+      } else {
+        // Sign Up Flow: Check if profile already exists
+        try {
+          const profileCheck = await api("/auth/profile").catch(() => null);
+
+          if (profileCheck && profileCheck.full_name) {
+            // User already has a complete profile, skip profile setup
+            setLoading(false);
+            handleAuthSuccess();
+          } else {
+            // New user, go to profile setup
+            setLoading(false);
+            goTo("profile-setup");
+          }
+        } catch {
+          // If check fails, assume new user and show profile setup
+          setLoading(false);
+          goTo("profile-setup");
+        }
       }
     } catch (e: any) {
       setLoading(false);
@@ -325,26 +346,56 @@ export function AuthPage() {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-semibold mb-1.5" style={{ color: "#7A6A58" }}>Date of Birth</label>
-            <input
-              type="date"
-              value={dob}
-              onChange={e => setDob(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-all focus:ring-2"
-              style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON, fontFamily: SANS }}
-            />
+            <Popover.Root>
+              <Popover.Trigger asChild>
+                <button className="w-full px-4 py-2.5 rounded-xl text-sm text-left flex items-center justify-between transition-all focus:ring-2 focus:ring-offset-1"
+                  style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: dob ? MAROON : "#9A8A78", fontFamily: SANS, outline: "none" }}>
+                  {dob ? new Date(dob).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "Select date"}
+                  <Calendar size={14} style={{ color: GOLD }} />
+                </button>
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Content align="start" sideOffset={4} className="z-[200] rounded-2xl shadow-2xl border p-4"
+                  style={{ background: "#FAF7F2", borderColor: "rgba(91,31,36,0.15)" }}>
+                  <style>{`
+                    .rdp { --rdp-cell-size: 36px; --rdp-accent-color: ${MAROON}; --rdp-background-color: rgba(91,31,36,0.1); font-family: ${SANS}; }
+                    .rdp-caption { color: ${MAROON}; font-weight: 600; }
+                    .rdp-nav_button { color: ${MAROON}; }
+                    .rdp-day_selected { background: ${MAROON} !important; color: ${IVORY} !important; font-weight: 600; }
+                    .rdp-day:hover:not(.rdp-day_selected) { background: rgba(91,31,36,0.08); }
+                  `}</style>
+                  <DayPicker mode="single" selected={dob ? new Date(dob) : undefined}
+                    onSelect={(date) => { if (date) setDob(date.toISOString().split("T")[0]); }}
+                    defaultMonth={dob ? new Date(dob) : new Date(2000, 0)}
+                    fromYear={1950} toYear={new Date().getFullYear()} captionLayout="dropdown" />
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
           </div>
           <div>
             <label className="block text-xs font-semibold mb-1.5" style={{ color: "#7A6A58" }}>Gender</label>
-            <select
-              value={gender}
-              onChange={e => setGender(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-all focus:ring-2"
-              style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON, fontFamily: SANS }}
-            >
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-            </select>
+            <Select.Root value={gender} onValueChange={setGender}>
+              <Select.Trigger asChild>
+                <button className="w-full px-4 py-2.5 rounded-xl text-sm text-left flex items-center justify-between transition-all focus:ring-2 focus:ring-offset-1"
+                  style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON, fontFamily: SANS, outline: "none" }}>
+                  <Select.Value />
+                  <ChevronDown size={14} style={{ color: GOLD }} />
+                </button>
+              </Select.Trigger>
+              <Select.Portal>
+                <Select.Content position="popper" align="start" sideOffset={4} className="z-[200] rounded-xl shadow-2xl border overflow-hidden"
+                  style={{ background: "#FAF7F2", borderColor: "rgba(91,31,36,0.15)", minWidth: "var(--radix-select-trigger-width)" }}>
+                  <Select.Viewport>
+                    {["Male", "Female", "Other"].map(opt => (
+                      <Select.Item key={opt} value={opt} className="px-4 py-2.5 text-sm cursor-pointer outline-none transition-colors data-[highlighted]:bg-black/5"
+                        style={{ color: MAROON, fontFamily: SANS }}>
+                        <Select.ItemText>{opt}</Select.ItemText>
+                      </Select.Item>
+                    ))}
+                  </Select.Viewport>
+                </Select.Content>
+              </Select.Portal>
+            </Select.Root>
           </div>
         </div>
       </div>

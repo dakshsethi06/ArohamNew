@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { ChevronLeft, User, Package, Truck, CheckCircle, Edit2, Save, X } from "lucide-react";
+import { ChevronLeft, User, Package, Truck, CheckCircle, Edit2, Save, X, Calendar, ChevronDown } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
+import * as Select from "@radix-ui/react-select";
+import * as Popover from "@radix-ui/react-popover";
+import { DayPicker } from "react-day-picker";
+import "react-day-picker/dist/style.css";
 
 const ORDER_STEPS = [
   { label: "Ordered", icon: "✓" },
@@ -216,17 +220,56 @@ export function ProfilePage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold mb-1" style={{ color: "#7A6A58" }}>Gender</label>
-                    <select value={editForm.gender} onChange={e => setEditForm(p => ({ ...p, gender: e.target.value }))}
-                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON }}>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Other">Other</option>
-                    </select>
+                    <Select.Root value={editForm.gender} onValueChange={v => setEditForm(p => ({ ...p, gender: v }))}>
+                      <Select.Trigger asChild>
+                        <button className="w-full px-3 py-2.5 rounded-xl text-sm text-left flex items-center justify-between transition-all focus:ring-2 focus:ring-offset-1"
+                          style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON, fontFamily: SANS, outline: "none" }}>
+                          <Select.Value />
+                          <ChevronDown size={14} style={{ color: GOLD }} />
+                        </button>
+                      </Select.Trigger>
+                      <Select.Portal>
+                        <Select.Content position="popper" align="start" sideOffset={4} className="z-[200] rounded-xl shadow-2xl border overflow-hidden"
+                          style={{ background: "#FAF7F2", borderColor: "rgba(91,31,36,0.15)", minWidth: "var(--radix-select-trigger-width)" }}>
+                          <Select.Viewport>
+                            {["Male", "Female", "Other"].map(opt => (
+                              <Select.Item key={opt} value={opt} className="px-4 py-2.5 text-sm cursor-pointer outline-none transition-colors data-[highlighted]:bg-black/5"
+                                style={{ color: MAROON, fontFamily: SANS }}>
+                                <Select.ItemText>{opt}</Select.ItemText>
+                              </Select.Item>
+                            ))}
+                          </Select.Viewport>
+                        </Select.Content>
+                      </Select.Portal>
+                    </Select.Root>
                   </div>
                   <div>
                     <label className="block text-xs font-semibold mb-1" style={{ color: "#7A6A58" }}>Date of Birth</label>
-                    <input type="date" value={editForm.dob} onChange={e => setEditForm(p => ({ ...p, dob: e.target.value }))}
-                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON }} />
+                    <Popover.Root>
+                      <Popover.Trigger asChild>
+                        <button className="w-full px-3 py-2.5 rounded-xl text-sm text-left flex items-center justify-between transition-all focus:ring-2 focus:ring-offset-1"
+                          style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: editForm.dob ? MAROON : "#9A8A78", fontFamily: SANS, outline: "none" }}>
+                          {editForm.dob ? new Date(editForm.dob).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "Select date"}
+                          <Calendar size={14} style={{ color: GOLD }} />
+                        </button>
+                      </Popover.Trigger>
+                      <Popover.Portal>
+                        <Popover.Content align="start" sideOffset={4} className="z-[200] rounded-2xl shadow-2xl border p-4"
+                          style={{ background: "#FAF7F2", borderColor: "rgba(91,31,36,0.15)" }}>
+                          <style>{`
+                            .rdp { --rdp-cell-size: 36px; --rdp-accent-color: ${MAROON}; --rdp-background-color: rgba(91,31,36,0.1); font-family: ${SANS}; }
+                            .rdp-caption { color: ${MAROON}; font-weight: 600; }
+                            .rdp-nav_button { color: ${MAROON}; }
+                            .rdp-day_selected { background: ${MAROON} !important; color: ${IVORY} !important; font-weight: 600; }
+                            .rdp-day:hover:not(.rdp-day_selected) { background: rgba(91,31,36,0.08); }
+                          `}</style>
+                          <DayPicker mode="single" selected={editForm.dob ? new Date(editForm.dob) : undefined}
+                            onSelect={(date) => { if (date) setEditForm(p => ({ ...p, dob: date.toISOString().split("T")[0] })); }}
+                            defaultMonth={editForm.dob ? new Date(editForm.dob) : new Date(2000, 0)}
+                            fromYear={1950} toYear={new Date().getFullYear()} captionLayout="dropdown" />
+                        </Popover.Content>
+                      </Popover.Portal>
+                    </Popover.Root>
                   </div>
                 </div>
                 <div>

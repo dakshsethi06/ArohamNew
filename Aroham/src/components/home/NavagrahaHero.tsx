@@ -86,7 +86,7 @@ export function NavagrahaHero({ onShop, onConsult }: { onShop: () => void; onCon
             <div className="absolute z-10 rounded-full flex flex-col items-center justify-center cursor-default group"
               style={{ width: Math.round(GRAHAS[0].size * S * 1.4), height: Math.round(GRAHAS[0].size * S * 1.4),
                 background: "radial-gradient(circle,#FFF8E1,#FFD700,#FF8C00)", animation: "pulseSun 3s ease-in-out infinite",
-                top: "50%", left: "13%", transform: "translate(-50%,-50%)" }}>
+                top: "50%", left: "44%", transform: "translate(-50%,-50%)" }}>
               <span style={{ fontSize: 14 }}>☀️</span>
               <span className="text-[7px] font-bold" style={{ color: "#5B3000" }}>Surya</span>
               <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-40 p-3 rounded-2xl opacity-0 group-hover:opacity-100 pointer-events-none z-50"

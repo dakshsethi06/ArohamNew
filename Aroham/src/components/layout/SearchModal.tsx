@@ -33,13 +33,12 @@ export function SearchModal({ isOpen, onClose, query, setQuery, solid }: SearchM
 
   return (
     <>
-      <div className="fixed inset-0 z-[90]" onClick={onClose} />
-      <div className="absolute top-[75px] lg:top-[90px] right-6 lg:right-10 w-[calc(100vw-48px)] lg:w-[500px] z-[100] flex flex-col rounded-2xl shadow-2xl overflow-hidden border transition-all"
-           style={{ 
-             background: solid ? "rgba(255,255,255,0.98)" : "rgba(15,10,12,0.98)", 
-             backdropFilter: "blur(16px)", 
-             borderColor: solid ? "rgba(91,31,36,0.15)" : "rgba(200,160,68,0.2)", 
-             boxShadow: "0 10px 40px rgba(0,0,0,0.15)" 
+      <div className="absolute top-[75px] lg:top-[90px] right-6 lg:right-10 w-[calc(100vw-48px)] lg:w-[360px] z-[100] flex flex-col rounded-2xl shadow-2xl overflow-hidden border transition-all"
+           style={{
+             background: solid ? "rgba(255,255,255,0.98)" : "rgba(15,10,12,0.98)",
+             backdropFilter: "blur(16px)",
+             borderColor: solid ? "rgba(91,31,36,0.15)" : "rgba(200,160,68,0.2)",
+             boxShadow: "0 10px 40px rgba(0,0,0,0.15)"
            }}>
 
         {/* Results */}
@@ -63,7 +62,7 @@ export function SearchModal({ isOpen, onClose, query, setQuery, solid }: SearchM
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-sm truncate" style={{ color: solid ? MAROON : IVORY, fontFamily: SERIF }}>{product.name}</h3>
-                    <div className="font-medium text-xs mt-0.5" style={{ color: solid ? "#7A6A58" : GOLD, fontFamily: SANS }}>₹{product.price.toLocaleString()}</div>
+                    <div className="font-medium text-xs mt-0.5" style={{ color: solid ? "#7A6A58" : GOLD, fontFamily: SANS }}>₹{(product.price / 100).toLocaleString()}</div>
                   </div>
                 </div>
               ))}

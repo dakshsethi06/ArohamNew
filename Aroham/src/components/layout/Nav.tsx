@@ -60,8 +60,9 @@ export function Nav() {
         </div>
         <div className="hidden lg:flex items-center gap-4 transition-all duration-300">
           <div className="flex items-center transition-all duration-500 ease-out overflow-hidden rounded-full"
-               style={{ 
-                 width: isSearchOpen ? '400px' : '36px',
+               style={{
+                 width: isSearchOpen ? '360px' : '36px',
+                 maxWidth: isSearchOpen ? '360px' : '36px',
                  background: isSearchOpen ? (solid ? "rgba(255,255,255,0.95)" : "rgba(15,10,12,0.95)") : "transparent",
                  border: isSearchOpen ? `1px solid ${solid ? 'rgba(91,31,36,0.15)' : 'rgba(200,160,68,0.3)'}` : 'transparent'
                }}>
