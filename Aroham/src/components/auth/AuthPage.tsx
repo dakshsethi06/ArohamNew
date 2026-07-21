@@ -188,7 +188,7 @@ export function AuthPage() {
       setErrorMsg("Please enter your full name.");
       return;
     }
-    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       setErrorMsg("Please enter a valid email address.");
       return;
     }
@@ -439,75 +439,7 @@ export function AuthPage() {
 
       <div className="space-y-4">
         <AuthInput label="Full Name" value={name} onChange={setName} />
-        <AuthInput label="Email Address" type="email" value={email} onChange={setEmail} />
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold mb-2" style={{ color: "#7A6A58" }}>Date of Birth</label>
-            <Popover.Root>
-              <Popover.Trigger asChild>
-                <button className="w-full px-4 py-3 rounded-xl text-sm text-left flex items-center justify-between transition-all hover:border-maroon/30 focus:ring-2 focus:ring-offset-1"
-                  style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: dob ? MAROON : "#9A8A78", fontFamily: SANS, outline: "none" }}>
-                  {dob ? (() => {
-                    const [y, m, d] = dob.split("-").map(Number);
-                    return new Date(y, m - 1, d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
-                  })() : "Select date"}
-                  <Calendar size={16} style={{ color: GOLD }} />
-                </button>
-              </Popover.Trigger>
-              <Popover.Portal>
-                <Popover.Content side="bottom" avoidCollisions={false} align="start" sideOffset={8} className="z-[200] rounded-2xl shadow-2xl border p-4"
-                  style={{ background: "#FAF7F2", borderColor: "rgba(91,31,36,0.15)" }}>
-                  <style>{`
-                    .rdp { --rdp-cell-size: 36px; --rdp-accent-color: ${MAROON}; --rdp-background-color: rgba(91,31,36,0.1); font-family: ${SANS}; }
-                    .rdp-caption { color: ${MAROON}; font-weight: 600; }
-                    .rdp-nav_button { color: ${MAROON}; }
-                    .rdp-day_selected { background: ${MAROON} !important; color: ${IVORY} !important; font-weight: 600; }
-                    .rdp-day:hover:not(.rdp-day_selected) { background: rgba(91,31,36,0.08); }
-                    .rdp-day_today:not(.rdp-day_selected) { font-weight: inherit; border: none; outline: none; }
-                    .rdp-day:focus { outline: none !important; border: none !important; background: transparent; }
-                  `}</style>
-                  <DayPicker mode="single" selected={dob ? (() => { const [y, m, d] = dob.split("-").map(Number); return new Date(y, m - 1, d); })() : undefined}
-                    onSelect={(date) => {
-                      if (date) {
-                        const y = date.getFullYear();
-                        const m = String(date.getMonth() + 1).padStart(2, '0');
-                        const d = String(date.getDate()).padStart(2, '0');
-                        setDob(`${y}-${m}-${d}`);
-                      }
-                    }}
-                    defaultMonth={dob ? (() => { const [y, m, d] = dob.split("-").map(Number); return new Date(y, m - 1, d); })() : new Date(2000, 0)}
-                    fromYear={1950} toYear={new Date().getFullYear()} captionLayout="dropdown" />
-                </Popover.Content>
-              </Popover.Portal>
-            </Popover.Root>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold mb-2" style={{ color: "#7A6A58" }}>Gender</label>
-            <Select.Root value={gender} onValueChange={setGender}>
-              <Select.Trigger asChild>
-                <button className="w-full px-4 py-3 rounded-xl text-sm text-left flex items-center justify-between transition-all hover:border-maroon/30 focus:ring-2 focus:ring-offset-1"
-                  style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON, fontFamily: SANS, outline: "none" }}>
-                  <Select.Value />
-                  <ChevronDown size={16} style={{ color: GOLD }} />
-                </button>
-              </Select.Trigger>
-              <Select.Portal>
-                <Select.Content position="popper" align="center" sideOffset={8} className="z-[200] rounded-xl shadow-2xl border overflow-hidden"
-                  style={{ background: "#FAF7F2", borderColor: "rgba(91,31,36,0.15)", width: "var(--radix-select-trigger-width)" }}>
-                  <Select.Viewport>
-                    {["Male", "Female", "Other"].map(opt => (
-                      <Select.Item key={opt} value={opt} className="px-4 py-3 text-sm cursor-pointer outline-none transition-colors data-[highlighted]:bg-black/5"
-                        style={{ color: MAROON, fontFamily: SANS }}>
-                        <Select.ItemText>{opt}</Select.ItemText>
-                      </Select.Item>
-                    ))}
-                  </Select.Viewport>
-                </Select.Content>
-              </Select.Portal>
-            </Select.Root>
-          </div>
-        </div>
+        <AuthInput label="Email Address (Optional)" type="email" value={email} onChange={setEmail} />
       </div>
 
       <button
