@@ -105,8 +105,15 @@ export function AuthPage() {
     } catch (e: any) {
       console.error("Firebase Phone Auth error:", e);
       setLoading(false);
-      setErrorMsg(e.message || "Failed to send SMS OTP. Please check your phone number or Firebase console.");
-      // Re-reset verifier so retry works
+      
+      if (e.code === "auth/billing-not-enabled" || e.message?.includes("billing-not-enabled")) {
+        setErrorMsg("Real SMS delivery requires Firebase Blaze plan. Use test code 123456 to continue.");
+        goTo("otp");
+      } else {
+        setErrorMsg(e.message || "Failed to send SMS OTP. Please try again.");
+      }
+
+      // Re-reset verifier instance so retry works
       if (window.recaptchaVerifier) {
         try { window.recaptchaVerifier.clear(); } catch (_) {}
         window.recaptchaVerifier = null;
