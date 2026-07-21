@@ -87,9 +87,12 @@ export function ShippingPage() {
     };
   };
 
+  const [formErrorMsg, setFormErrorMsg] = useState("");
+
   // Save new address and proceed to payment
   const handleSaveAddress = async () => {
     const errors: Record<string, boolean> = {};
+    setFormErrorMsg("");
     if (!form.firstName.trim()) errors.firstName = true;
     if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 10) errors.phone = true;
     if (!form.pin.trim() || form.pin.replace(/\D/g, "").length !== 6) errors.pin = true;
@@ -99,6 +102,7 @@ export function ShippingPage() {
 
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
+      setFormErrorMsg("Please fill in all required fields (First Name, Mobile Phone, PIN Code, House No, Street Address, City).");
       return;
     }
 
@@ -465,6 +469,9 @@ export function ShippingPage() {
                     <div style={{ border: fieldBorder("firstName"), borderRadius: 16 }}><FloatingInput label="First Name *" value={form.firstName} onChange={set("firstName") as (v: string) => void} required /></div>
                     <FloatingInput label="Last Name" value={form.lastName} onChange={set("lastName") as (v: string) => void} />
                   </div>
+                  <div style={{ border: fieldBorder("phone"), borderRadius: 16 }}>
+                    <FloatingInput label="Mobile Phone Number *" type="tel" value={form.phone} onChange={v => set("phone")(v.replace(/\D/g, "").slice(0, 10))} required />
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div style={{ border: fieldBorder("pin"), borderRadius: 16 }}><FloatingInput label="PIN Code *" value={form.pin} onChange={handlePinChange} required /></div>
                     <div style={{ border: fieldBorder("house"), borderRadius: 16 }}><FloatingInput label="House / Flat No. *" value={form.house} onChange={set("house") as (v: string) => void} required /></div>
@@ -483,6 +490,11 @@ export function ShippingPage() {
                       <span className="text-xs font-semibold" style={{ color: "#4A8A4A" }}>
                         Expected delivery by <strong>{estimates[form.pin].deliveryDate}</strong> via <strong>{estimates[form.pin].courier}</strong> · Free Shipping
                       </span>
+                    </div>
+                  )}
+                  {formErrorMsg && (
+                    <div className="p-3 rounded-xl text-center" style={{ background: "rgba(229,62,62,0.08)", border: "1px solid rgba(229,62,62,0.2)" }}>
+                      <p className="text-xs font-semibold text-red-600">{formErrorMsg}</p>
                     </div>
                   )}
                   <button

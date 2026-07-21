@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { ChevronLeft, User, Package, Truck, CheckCircle } from "lucide-react";
+import { ChevronLeft, User, Package, Truck, CheckCircle, Edit2, Save, X } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
@@ -32,6 +32,19 @@ export function ProfilePage() {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [expandedOrders, setExpandedOrders] = useState<Record<string, boolean>>({});
 
+  // Edit Profile Form state
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [editForm, setEditForm] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    gender: "Other",
+    dob: "",
+    pobCity: ""
+  });
+
   const toggleOrder = (id: string) => {
     setExpandedOrders(prev => ({ ...prev, [id]: !prev[id] }));
   };
@@ -40,17 +53,34 @@ export function ProfilePage() {
   useEffect(() => {
     const cachedProfile = sessionStorage.getItem("aroham_user_profile");
     if (cachedProfile) {
-      try { setProfile(JSON.parse(cachedProfile)); setLoadingProfile(false); } catch (e) {}
+      try {
+        const parsed = JSON.parse(cachedProfile);
+        setProfile(parsed);
+        initEditForm(parsed);
+        setLoadingProfile(false);
+      } catch (e) {}
     }
     
     api("/auth/profile")
       .then(data => {
         setProfile(data);
+        initEditForm(data);
         sessionStorage.setItem("aroham_user_profile", JSON.stringify(data));
       })
       .catch(console.error)
       .finally(() => setLoadingProfile(false));
   }, []);
+
+  const initEditForm = (p: any) => {
+    setEditForm({
+      fullName: p?.full_name || user?.user_metadata?.full_name || "",
+      email: p?.email || user?.email || "",
+      phone: p?.phone || user?.user_metadata?.phone || "",
+      gender: p?.gender || "Other",
+      dob: p?.dob ? new Date(p.dob).toISOString().split("T")[0] : "",
+      pobCity: p?.pob_city || ""
+    });
+  };
 
   // Fetch real orders from DB — only show CONFIRMED/paid orders
   useEffect(() => {
@@ -59,7 +89,6 @@ export function ProfilePage() {
       api("/orders")
         .then(data => {
           const all = Array.isArray(data) ? data : [];
-          // Filter out PENDING/FAILED orders — only show confirmed/paid
           const confirmedOrders = all.filter(o => 
             o.status === "CONFIRMED" || o.status === "Delivered" || o.status === "SHIPPED" || o.status === "Processing"
           );
@@ -69,6 +98,26 @@ export function ProfilePage() {
         .finally(() => setLoadingOrders(false));
     }
   }, [activeTab]);
+
+  const handleSaveProfile = async () => {
+    setSaving(true);
+    setSaveSuccess(false);
+    try {
+      const updated = await api("/auth/profile", {
+        method: "POST",
+        body: JSON.stringify(editForm)
+      });
+      setProfile(updated);
+      sessionStorage.setItem("aroham_user_profile", JSON.stringify(updated));
+      setSaveSuccess(true);
+      setIsEditing(false);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (e: any) {
+      alert("Failed to save profile: " + (e.message || "Please try again."));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleLogout = () => { logout(); navigate("/"); };
 
@@ -94,7 +143,7 @@ export function ProfilePage() {
         </button>
 
         {/* Profile Hero */}
-        <div className="rounded-3xl p-8 mb-5 text-center" style={{ background: `linear-gradient(160deg,${MAROON} 0%,#3A1015 100%)`, boxShadow: "0 20px 50px rgba(91,31,36,0.2)" }}>
+        <div className="rounded-3xl p-8 mb-5 text-center relative overflow-hidden" style={{ background: `linear-gradient(160deg,${MAROON} 0%,#3A1015 100%)`, boxShadow: "0 20px 50px rgba(91,31,36,0.2)" }}>
           <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "rgba(200,160,68,0.15)", border: "2px solid rgba(200,160,68,0.3)" }}>
             <User size={32} style={{ color: GOLD }} />
           </div>
@@ -103,6 +152,13 @@ export function ProfilePage() {
           </h2>
           <p style={{ color: "rgba(250,247,242,0.5)", fontSize: 13, fontFamily: SANS }}>Member since {memberSince}</p>
         </div>
+
+        {saveSuccess && (
+          <div className="mb-4 p-4 rounded-2xl flex items-center justify-center gap-2" style={{ background: "rgba(74,138,74,0.1)", border: "1px solid rgba(74,138,74,0.3)", color: "#2E6B2E" }}>
+            <CheckCircle size={18} />
+            <span className="text-sm font-semibold">Profile updated successfully!</span>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex p-1 rounded-2xl mb-5" style={{ background: "rgba(91,31,36,0.06)" }}>
@@ -118,17 +174,77 @@ export function ProfilePage() {
         {/* Profile Tab */}
         {activeTab === "profile" && (
           <>
-            <div className="rounded-2xl overflow-hidden mb-4" style={{ border: "1px solid rgba(91,31,36,0.1)" }}>
-              {profileFields.map(({ label, value }, i, arr) => (
-                <div key={label} className="flex items-center justify-between px-5 py-4"
-                  style={{ background: "#fff", borderBottom: i < arr.length - 1 ? "1px solid rgba(91,31,36,0.07)" : "none" }}>
-                  <span className="text-sm" style={{ color: "#9A8A78", fontFamily: SANS }}>{label}</span>
-                  <span className="text-sm font-medium" style={{ color: value === "—" ? "#ccc" : MAROON, fontFamily: SANS }}>{value}</span>
+            {!isEditing ? (
+              <div className="rounded-2xl overflow-hidden mb-4" style={{ border: "1px solid rgba(91,31,36,0.1)", background: "#fff" }}>
+                <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(91,31,36,0.08)" }}>
+                  <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9A8A78" }}>Personal Details</span>
+                  <button onClick={() => { initEditForm(profile); setIsEditing(true); }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all hover:shadow-sm"
+                    style={{ background: "rgba(200,160,68,0.12)", color: "#8B6914", border: "1px solid rgba(200,160,68,0.25)" }}>
+                    <Edit2 size={12} /> Edit Profile
+                  </button>
                 </div>
-              ))}
-            </div>
+                {profileFields.map(({ label, value }, i, arr) => (
+                  <div key={label} className="flex items-center justify-between px-5 py-4"
+                    style={{ borderBottom: i < arr.length - 1 ? "1px solid rgba(91,31,36,0.07)" : "none" }}>
+                    <span className="text-sm" style={{ color: "#9A8A78", fontFamily: SANS }}>{label}</span>
+                    <span className="text-sm font-medium" style={{ color: value === "—" ? "#ccc" : MAROON, fontFamily: SANS }}>{value}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-2xl p-6 mb-4 space-y-4" style={{ background: "#fff", border: "1px solid rgba(91,31,36,0.12)", boxShadow: "0 4px 20px rgba(91,31,36,0.05)" }}>
+                <div className="flex items-center justify-between pb-3" style={{ borderBottom: "1px solid rgba(91,31,36,0.08)" }}>
+                  <h3 className="text-base font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Edit Your Profile</h3>
+                  <button onClick={() => setIsEditing(false)} className="p-1 rounded-full hover:bg-black/5" style={{ color: MAROON }}><X size={18} /></button>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1" style={{ color: "#7A6A58" }}>Full Name</label>
+                  <input type="text" value={editForm.fullName} onChange={e => setEditForm(p => ({ ...p, fullName: e.target.value }))}
+                    className="w-full px-4 py-2.5 rounded-xl text-sm outline-none" style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON }} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1" style={{ color: "#7A6A58" }}>Email Address</label>
+                  <input type="email" value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))}
+                    className="w-full px-4 py-2.5 rounded-xl text-sm outline-none" style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON }} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1" style={{ color: "#7A6A58" }}>Phone Number</label>
+                  <input type="tel" value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }))}
+                    className="w-full px-4 py-2.5 rounded-xl text-sm outline-none" style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON }} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold mb-1" style={{ color: "#7A6A58" }}>Gender</label>
+                    <select value={editForm.gender} onChange={e => setEditForm(p => ({ ...p, gender: e.target.value }))}
+                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON }}>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold mb-1" style={{ color: "#7A6A58" }}>Date of Birth</label>
+                    <input type="date" value={editForm.dob} onChange={e => setEditForm(p => ({ ...p, dob: e.target.value }))}
+                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON }} />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1" style={{ color: "#7A6A58" }}>City of Birth</label>
+                  <input type="text" value={editForm.pobCity} onChange={e => setEditForm(p => ({ ...p, pobCity: e.target.value }))}
+                    className="w-full px-4 py-2.5 rounded-xl text-sm outline-none" style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON }} />
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <button onClick={() => setIsEditing(false)} className="flex-1 py-3 rounded-xl text-xs font-semibold" style={{ background: "rgba(91,31,36,0.07)", color: MAROON }}>Cancel</button>
+                  <button onClick={handleSaveProfile} disabled={saving} className="flex-1 py-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
+                    {saving ? "Saving…" : <><Save size={14} /> Save Profile</>}
+                  </button>
+                </div>
+              </div>
+            )}
+
             <button onClick={handleLogout}
-              className="w-full py-3 rounded-2xl text-sm font-semibold transition-all hover:opacity-90"
+              className="w-full py-3 rounded-2xl text-sm font-semibold transition-all hover:opacity-90 mt-2"
               style={{ background: "rgba(91,31,36,0.07)", color: MAROON, border: "1px solid rgba(91,31,36,0.12)" }}>
               Sign Out
             </button>
@@ -148,141 +264,45 @@ export function ProfilePage() {
               <div className="text-center py-12 rounded-2xl" style={{ background: "#fff", border: "1px solid rgba(91,31,36,0.08)" }}>
                 <p className="text-2xl mb-2">📦</p>
                 <p className="text-sm font-semibold mb-1" style={{ fontFamily: SERIF, color: MAROON }}>No orders yet</p>
-                <p className="text-xs mb-4" style={{ color: "#9A8A78" }}>Your sacred orders will appear here.</p>
-                <button onClick={() => navigate("/shop")} className="px-5 py-2 rounded-full text-sm font-medium" style={{ background: MAROON, color: IVORY }}>
-                  Shop Now
-                </button>
+                <p className="text-xs" style={{ color: "#7A6A58" }}>Your purchased sacred items will appear here</p>
               </div>
             )}
             {orders.map(order => {
-              const isExpanded = !!expandedOrders[order.id];
               const itemsList = order.order_items || order.items || [];
-              const currentStep = getOrderStep(order.status, order.awb_code);
-              
-              // Calculate estimated delivery (4 days from order date)
-              const orderDate = new Date(order.created_at);
-              const estDelivery = new Date(orderDate);
-              estDelivery.setDate(estDelivery.getDate() + 4);
-              const estDeliveryStr = estDelivery.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
-
+              const isExpanded = expandedOrders[order.id];
+              const stepIdx = getOrderStep(order.status, order.awb_code);
               return (
-                <div key={order.id} className="rounded-2xl overflow-hidden transition-all duration-300" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.09)", boxShadow: "0 2px 16px rgba(91,31,36,0.05)" }}>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 px-5 py-4 cursor-pointer hover:bg-amber-50/20" onClick={() => toggleOrder(order.id)}>
-                    <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-amber-50 flex items-center justify-center text-xl">📦</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <span className="text-xs font-bold tracking-wide" style={{ color: MAROON, fontFamily: SANS }}>Order #{order.id.substring(0, 8)}...</span>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold"
-                          style={{ background: order.status === "CONFIRMED" || order.status === "Delivered" ? "rgba(74,138,74,0.1)" : "rgba(200,160,68,0.15)", color: order.status === "CONFIRMED" || order.status === "Delivered" ? "#2E8B57" : "#8B6914" }}>
-                          {order.status}
-                        </span>
-                      </div>
-                      <p className="text-sm font-medium truncate mb-1" style={{ fontFamily: SERIF, color: "#2A1A12" }}>
-                        {itemsList.length ? `${itemsList.length} item${itemsList.length > 1 ? "s" : ""}` : "Order placed"}
-                      </p>
-                      <p className="text-xs" style={{ color: "#9A8A78" }}>{new Date(order.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</p>
+                <div key={order.id} className="rounded-2xl overflow-hidden transition-all" style={{ background: "#fff", border: "1px solid rgba(91,31,36,0.08)" }}>
+                  <div className="p-4 flex items-center justify-between cursor-pointer" onClick={() => toggleOrder(order.id)}>
+                    <div>
+                      <p className="text-xs font-semibold" style={{ color: MAROON }}>Order #{order.id}</p>
+                      <p className="text-[10px]" style={{ color: "#9A8A78" }}>{new Date(order.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</p>
                     </div>
-                    <div className="sm:text-right flex-shrink-0 flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2">
-                      <div>
-                        <p className="text-base font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>
-                          ₹{((order.amount || 0) / 100).toLocaleString("en-IN")}
-                        </p>
-                      </div>
-                      <button className="text-[11px] font-semibold hover:opacity-70 transition-opacity" style={{ color: GOLD }}>
-                        {isExpanded ? "Hide Details ↑" : "View Details →"}
-                      </button>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{(order.total_amount / 100).toLocaleString("en-IN")}</p>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold" style={{ background: "rgba(74,138,74,0.12)", color: "#2E6B2E" }}>{order.status || "CONFIRMED"}</span>
                     </div>
                   </div>
-
                   {isExpanded && (
-                    <div className="px-5 pb-5 pt-2 border-t" style={{ borderColor: "rgba(91,31,36,0.06)", background: "#FAF9F6" }}>
-                      <div className="space-y-4">
-                        {/* Order tracking stepper */}
-                        <div className="p-4 rounded-2xl" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)" }}>
-                          <h4 className="text-xs font-semibold mb-3" style={{ color: MAROON }}>Order Status</h4>
-                          <div className="flex items-center justify-between mb-2">
-                            {ORDER_STEPS.map((step, i) => {
-                              const reached = i <= currentStep;
-                              const active = i === currentStep;
-                              return (
-                                <div key={step.label} className="flex flex-col items-center flex-1">
-                                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs mb-1"
-                                    style={{
-                                      background: reached ? (active ? `linear-gradient(135deg,${GOLD},#E8B84B)` : "rgba(74,138,74,0.15)") : "rgba(91,31,36,0.06)",
-                                      border: reached ? `2px solid ${active ? GOLD : "#4A8A4A"}` : "2px solid rgba(91,31,36,0.1)",
-                                      color: reached ? (active ? "#1A0D0E" : "#4A8A4A") : "#9A8A78",
-                                      boxShadow: active ? "0 0 12px rgba(200,160,68,0.4)" : "none"
-                                    }}>
-                                    {reached ? (i < currentStep ? <CheckCircle size={14} /> : step.icon) : step.icon}
-                                  </div>
-                                  <span className="text-[9px] font-semibold text-center" style={{ color: reached ? MAROON : "#9A8A78" }}>{step.label}</span>
-                                </div>
-                              );
-                            })}
+                    <div className="px-4 pb-4 pt-2 border-t border-black/5 space-y-3">
+                      <div className="flex justify-between items-center text-xs">
+                        {ORDER_STEPS.map((s, idx) => (
+                          <div key={s.label} className="text-center">
+                            <div className="w-6 h-6 rounded-full flex items-center justify-center mx-auto mb-1 text-[10px]"
+                              style={{ background: idx <= stepIdx ? MAROON : "#eee", color: idx <= stepIdx ? IVORY : "#999" }}>
+                              {s.icon}
+                            </div>
+                            <span style={{ fontSize: 9, color: idx <= stepIdx ? MAROON : "#999" }}>{s.label}</span>
                           </div>
-                          {/* Progress bar */}
-                          <div className="flex gap-1 mt-1">
-                            {ORDER_STEPS.slice(0, -1).map((_, i) => (
-                              <div key={i} className="flex-1 h-1 rounded-full" style={{ background: i < currentStep ? "#4A8A4A" : "rgba(91,31,36,0.08)" }} />
-                            ))}
+                        ))}
+                      </div>
+                      <div className="space-y-2">
+                        {itemsList.map((it: any, i: number) => (
+                          <div key={i} className="flex justify-between items-center text-xs">
+                            <span>{it.product_name || "Sacred Item"} x{it.quantity}</span>
+                            <span className="font-semibold">₹{((it.unit_price * it.quantity) / 100).toLocaleString("en-IN")}</span>
                           </div>
-                          <div className="mt-3 flex items-center gap-2">
-                            <Truck size={12} style={{ color: "#4A8A4A" }} />
-                            <span className="text-[10px] font-medium" style={{ color: "#4A8A4A" }}>
-                              Expected delivery by <strong>{estDeliveryStr}</strong> · Free Shipping
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Render items */}
-                        <div>
-                          <h4 className="text-xs font-semibold mb-2" style={{ color: MAROON, fontFamily: SANS }}>Items in Order</h4>
-                          <div className="space-y-2">
-                            {itemsList.map((item: any, idx: number) => (
-                              <div key={idx} className="flex justify-between items-center text-xs p-2.5 rounded-lg bg-white border border-gray-100">
-                                <div>
-                                  <p className="font-semibold" style={{ color: MAROON }}>{item.name}</p>
-                                  <p className="text-gray-400">Qty: {item.qty}</p>
-                                </div>
-                                <span className="font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>
-                                  ₹{((item.price * item.qty) / 100).toLocaleString("en-IN")}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Render shipping address */}
-                        {order.address && (
-                          <div className="text-xs p-3 rounded-lg bg-white border border-gray-100">
-                            <h4 className="font-semibold mb-1" style={{ color: MAROON }}>Shipping Address</h4>
-                            <p style={{ color: "#7A6A58" }}>{order.address.name}</p>
-                            <p style={{ color: "#7A6A58" }}>{order.address.address || `${order.address.house}, ${order.address.street}`}</p>
-                            <p style={{ color: "#7A6A58" }}>{order.address.city}, {order.address.state} - {order.address.pincode}</p>
-                            <p style={{ color: "#7A6A58" }}>Phone: {order.address.phone}</p>
-                          </div>
-                        )}
-
-                        {/* Track order button — user-friendly */}
-                        <div className="pt-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (order.awb_code) {
-                                window.open(`https://shiprocket.co/tracking/${order.awb_code}`, "_blank");
-                              }
-                            }}
-                            className="w-full px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-95"
-                            style={{
-                              background: order.awb_code ? `linear-gradient(135deg,${MAROON},#7A2A30)` : "rgba(91,31,36,0.06)",
-                              color: order.awb_code ? IVORY : MAROON,
-                              border: order.awb_code ? "none" : "1px solid rgba(91,31,36,0.12)"
-                            }}
-                          >
-                            <Package size={14} />
-                            {order.awb_code ? "Track Your Order" : "Order is being prepared"}
-                          </button>
-                        </div>
+                        ))}
                       </div>
                     </div>
                   )}
