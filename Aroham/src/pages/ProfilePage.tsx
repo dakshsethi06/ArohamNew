@@ -77,9 +77,9 @@ export function ProfilePage() {
 
   const initEditForm = (p: any) => {
     setEditForm({
-      fullName: p?.full_name || user?.displayName || "",
+      fullName: p?.full_name || user?.user_metadata?.full_name || "",
       email: p?.email || user?.email || "",
-      phone: p?.phone || user?.phoneNumber || "",
+      phone: p?.phone || user?.user_metadata?.phone || "",
       gender: p?.gender || "Other",
       dob: p?.dob ? new Date(p.dob).toISOString().split("T")[0] : "",
       pobCity: p?.pob_city || ""
@@ -90,16 +90,33 @@ export function ProfilePage() {
   useEffect(() => {
     if (activeTab === "orders") {
       setLoadingOrders(true);
-      api("/orders")
-        .then(data => {
-          const all = Array.isArray(data) ? data : [];
-          const confirmedOrders = all.filter(o => 
-            o.status === "CONFIRMED" || o.status === "Delivered" || o.status === "SHIPPED" || o.status === "Processing"
-          );
-          setOrders(confirmedOrders);
-        })
-        .catch(console.error)
-        .finally(() => setLoadingOrders(false));
+      // Since backend is disconnected, fetch the latest local order from sessionStorage
+      const localOrderId = sessionStorage.getItem("aroham_last_order_id");
+      const localItemsStr = sessionStorage.getItem("aroham_last_order_items");
+      const localTotalStr = sessionStorage.getItem("aroham_order_total");
+      
+      let mockOrders: any[] = [];
+      if (localOrderId && localItemsStr) {
+        try {
+          const parsedItems = JSON.parse(localItemsStr);
+          mockOrders.push({
+            id: localOrderId,
+            created_at: new Date().toISOString(),
+            status: "Processing",
+            total_amount: parseFloat(localTotalStr || "0") * 100, // component divides by 100
+            items: parsedItems.map((i: any) => ({
+              product_name: i.product?.name || "Sacred Item",
+              quantity: i.qty || 1,
+              unit_price: (i.product?.price || 0) * 100
+            }))
+          });
+        } catch (e) {
+          console.error("Failed to parse local order items", e);
+        }
+      }
+      
+      setOrders(mockOrders);
+      setLoadingOrders(false);
     }
   }, [activeTab]);
 
@@ -125,15 +142,15 @@ export function ProfilePage() {
 
   const handleLogout = () => { logout(); navigate("/"); };
 
-  const displayName = profile?.full_name || user?.displayName || "Devotee";
+  const displayName = profile?.full_name || user?.user_metadata?.full_name || "Devotee";
   const memberSince = profile?.created_at
     ? new Date(profile.created_at).getFullYear()
     : new Date().getFullYear();
 
   const profileFields = [
-    { label: "Name",   value: profile?.full_name || user?.displayName || "—" },
+    { label: "Name",   value: profile?.full_name || user?.user_metadata?.full_name || "—" },
     { label: "Email",  value: profile?.email || user?.email || "—" },
-    { label: "Phone",  value: profile?.phone || user?.phoneNumber || "—" },
+    { label: "Phone",  value: profile?.phone || user?.user_metadata?.phone || "—" },
     { label: "Gender", value: profile?.gender || "—" },
     { label: "Date of Birth", value: profile?.dob ? new Date(profile.dob).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—" },
     { label: "City of Birth", value: profile?.pob_city || "—" },
