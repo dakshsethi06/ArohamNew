@@ -79,13 +79,28 @@ export function AuthPage() {
       setErrorMsg("Please enter a valid 10-digit mobile number.");
       return;
     }
-    if (flow === "signup" && !agreed) {
-      setErrorMsg("Please agree to the Terms & Privacy Policy.");
-      return;
-    }
 
     setLoading(true);
     setErrorMsg("");
+
+    let currentFlow = flow;
+    if (flow === "signin") {
+      try {
+        const checkRes = await fetch(`${import.meta.env.VITE_API_BASE || "http://localhost:5000/api"}/auth/email-by-phone?phone=${encodeURIComponent(phoneDigits)}`);
+        if (checkRes.status === 404) {
+          // Account does not exist yet! Auto-redirect to Create Account flow!
+          currentFlow = "signup";
+          setActiveTab("signup");
+          setAgreed(true);
+        }
+      } catch (e) {}
+    }
+
+    if (currentFlow === "signup" && !agreed) {
+      setLoading(false);
+      setErrorMsg("Please agree to the Terms & Privacy Policy.");
+      return;
+    }
 
     try {
       const formattedPhone = `+91${phoneDigits}`;
