@@ -89,11 +89,15 @@ export function AuthPage() {
 
     try {
       const formattedPhone = `+91${phoneDigits}`;
-      if (!window.recaptchaVerifier) {
-        window.recaptchaVerifier = new RecaptchaVerifier(firebaseAuth, "recaptcha-container", {
-          size: "invisible"
-        });
+      if (window.recaptchaVerifier) {
+        try { window.recaptchaVerifier.clear(); } catch (_) {}
+        window.recaptchaVerifier = null;
+        const el = document.getElementById("recaptcha-container");
+        if (el) el.innerHTML = "";
       }
+      window.recaptchaVerifier = new RecaptchaVerifier(firebaseAuth, "recaptcha-container", {
+        size: "invisible"
+      });
       const confirmation = await signInWithPhoneNumber(firebaseAuth, formattedPhone, window.recaptchaVerifier);
       setConfirmationResult(confirmation);
       setLoading(false);
