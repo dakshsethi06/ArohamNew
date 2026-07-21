@@ -11,9 +11,10 @@ interface SearchModalProps {
   query: string;
   setQuery: (q: string) => void;
   solid: boolean;
+  isMobile: boolean;
 }
 
-export function SearchModal({ isOpen, onClose, query, setQuery, solid }: SearchModalProps) {
+export function SearchModal({ isOpen, onClose, query, setQuery, solid, isMobile }: SearchModalProps) {
   const { products } = useProducts();
   const navigate = useNavigate();
   useEffect(() => {
@@ -33,7 +34,7 @@ export function SearchModal({ isOpen, onClose, query, setQuery, solid }: SearchM
 
   return (
     <>
-      <div className="absolute top-[75px] lg:top-[90px] right-6 lg:right-10 w-[calc(100vw-48px)] lg:w-[360px] z-[100] flex flex-col rounded-2xl shadow-2xl overflow-hidden border transition-all"
+      <div className={`absolute right-0 z-[100] flex flex-col rounded-2xl shadow-2xl overflow-hidden border transition-all ${isMobile ? 'top-[calc(100%+8px)] w-[calc(100vw-140px)]' : 'top-[calc(100%+16px)] w-[280px]'}`}
            style={{
              background: solid ? "rgba(255,255,255,0.98)" : "rgba(15,10,12,0.98)",
              backdropFilter: "blur(16px)",

@@ -59,13 +59,14 @@ export function Nav() {
           ))}
         </div>
         <div className="hidden lg:flex items-center gap-4 transition-all duration-300">
-          <div className="flex items-center transition-all duration-500 ease-out overflow-hidden rounded-full"
-               style={{
-                 width: isSearchOpen ? '360px' : '36px',
-                 maxWidth: isSearchOpen ? '360px' : '36px',
-                 background: isSearchOpen ? (solid ? "rgba(255,255,255,0.95)" : "rgba(15,10,12,0.95)") : "transparent",
-                 border: isSearchOpen ? `1px solid ${solid ? 'rgba(91,31,36,0.15)' : 'rgba(200,160,68,0.3)'}` : 'transparent'
-               }}>
+          <div className="relative">
+            <div className="flex items-center transition-all duration-500 ease-out overflow-hidden rounded-full"
+                 style={{
+                   width: isSearchOpen ? '280px' : '36px',
+                   maxWidth: isSearchOpen ? '280px' : '36px',
+                   background: isSearchOpen ? (solid ? "rgba(255,255,255,0.95)" : "rgba(15,10,12,0.95)") : "transparent",
+                   border: isSearchOpen ? `1px solid ${solid ? 'rgba(91,31,36,0.15)' : 'rgba(200,160,68,0.3)'}` : 'transparent'
+                 }}>
             {isSearchOpen ? (
               <>
                 <Search size={16} className="ml-3 flex-shrink-0" style={{ color: solid ? MAROON : GOLD }} />
@@ -80,6 +81,11 @@ export function Nav() {
             ) : (
               <button aria-label="Search" onClick={() => setIsSearchOpen(true)} className="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-black/5" style={{ color: solid ? MAROON : IVORY }}><Search size={18} strokeWidth={1.5} /></button>
             )}
+            </div>
+            {/* Mount Search Modal specifically for Desktop inside this relative wrapper */}
+            <div className="hidden lg:block">
+              <SearchModal isOpen={isSearchOpen} onClose={() => { setIsSearchOpen(false); setQuery(""); }} query={query} setQuery={setQuery} solid={solid} isMobile={false} />
+            </div>
           </div>
           <button aria-label="Wishlist" className="p-2 rounded-full transition-colors hover:bg-black/5" style={{ color: solid ? MAROON : IVORY }}><Heart size={18} strokeWidth={1.5} /></button>
           <button aria-label="Open cart" onClick={openCart} className="relative p-2 rounded-full transition-colors hover:bg-black/5" style={{ color: solid ? MAROON : IVORY }}>
@@ -97,12 +103,13 @@ export function Nav() {
           )}
         </div>
         <div className="lg:hidden flex items-center gap-3 transition-all duration-300" style={{ color: solid ? MAROON : IVORY }}>
-          <div className="flex items-center transition-all duration-500 ease-out overflow-hidden rounded-full"
-               style={{ 
-                 width: isSearchOpen ? 'calc(100vw - 120px)' : '28px',
-                 background: isSearchOpen ? (solid ? "rgba(255,255,255,0.95)" : "rgba(15,10,12,0.95)") : "transparent",
-                 border: isSearchOpen ? `1px solid ${solid ? 'rgba(91,31,36,0.15)' : 'rgba(200,160,68,0.3)'}` : 'transparent'
-               }}>
+          <div className="relative w-full flex justify-end">
+            <div className="flex items-center transition-all duration-500 ease-out overflow-hidden rounded-full"
+                 style={{ 
+                   width: isSearchOpen ? 'calc(100vw - 140px)' : '28px',
+                   background: isSearchOpen ? (solid ? "rgba(255,255,255,0.95)" : "rgba(15,10,12,0.95)") : "transparent",
+                   border: isSearchOpen ? `1px solid ${solid ? 'rgba(91,31,36,0.15)' : 'rgba(200,160,68,0.3)'}` : 'transparent'
+                 }}>
              {isSearchOpen ? (
                 <>
                   <Search size={14} className="ml-3 flex-shrink-0" style={{ color: solid ? MAROON : GOLD }} />
@@ -117,6 +124,11 @@ export function Nav() {
              ) : (
                 <button aria-label="Search" onClick={() => setIsSearchOpen(true)} className="p-1"><Search size={20} strokeWidth={1.5} /></button>
              )}
+            </div>
+            {/* Mount Search Modal specifically for Mobile inside this relative wrapper */}
+            <div className="lg:hidden block">
+              <SearchModal isOpen={isSearchOpen} onClose={() => { setIsSearchOpen(false); setQuery(""); }} query={query} setQuery={setQuery} solid={solid} isMobile={true} />
+            </div>
           </div>
           <button aria-label="Open cart" onClick={openCart} className="relative p-1 flex-shrink-0">
             <ShoppingCart size={20} strokeWidth={1.5} />
@@ -138,7 +150,6 @@ export function Nav() {
           )}
         </div>
       </div>
-      <SearchModal isOpen={isSearchOpen} onClose={() => { setIsSearchOpen(false); setQuery(""); }} query={query} setQuery={setQuery} solid={solid} />
     </nav>
   );
 }

@@ -1,6 +1,8 @@
 /* Prevent horizontal overflow on mobile */
-html, body {
+html, body, #root {
   overflow-x: hidden;
+  width: 100%;
+  position: relative;
   -webkit-overflow-scrolling: touch;
 }
 

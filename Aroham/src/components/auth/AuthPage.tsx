@@ -383,8 +383,8 @@ export function AuthPage() {
                 </button>
               </Select.Trigger>
               <Select.Portal>
-                <Select.Content position="popper" align="start" sideOffset={4} className="z-[200] rounded-xl shadow-2xl border overflow-hidden"
-                  style={{ background: "#FAF7F2", borderColor: "rgba(91,31,36,0.15)", minWidth: "var(--radix-select-trigger-width)" }}>
+                <Select.Content position="popper" align="center" sideOffset={4} className="z-[200] rounded-xl shadow-2xl border overflow-hidden"
+                  style={{ background: "#FAF7F2", borderColor: "rgba(91,31,36,0.15)", width: "var(--radix-select-trigger-width)" }}>
                   <Select.Viewport>
                     {["Male", "Female", "Other"].map(opt => (
                       <Select.Item key={opt} value={opt} className="px-4 py-2.5 text-sm cursor-pointer outline-none transition-colors data-[highlighted]:bg-black/5"
