@@ -50,7 +50,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     toastTimer.current = setTimeout(() => setToast(null), 2200);
   };
   const [showCart, setShowCart] = useState(false);
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, cartSynced } = useAuth();
 
   // Track previous login state to detect logout
   const prevIsLoggedIn = useRef<boolean | null>(null);
@@ -62,7 +62,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (justLoggedOut) isLoggingOut.current = true;
     prevIsLoggedIn.current = isLoggedIn;
 
-    if (isLoggedIn) {
+    if (isLoggedIn && cartSynced) {
+      // Only fetch from backend after local cart has been synced
       api("/cart").then(data => {
         // Assume backend returns array of cart items mapping to our structure
         if (Array.isArray(data)) {
@@ -99,14 +100,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem("aroham_cart");
       localStorage.removeItem("aroham_buy_now_intent");
       setTimeout(() => { isLoggingOut.current = false; }, 100);
-    } else {
+    } else if (!isLoggedIn) {
       // Guest session — load from localStorage
       const local = localStorage.getItem("aroham_cart");
       if (local) {
         try { setItems(JSON.parse(local)); } catch (e) { }
       }
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, cartSynced]);
 
   // Save to LocalStorage if not logged in
   useEffect(() => {

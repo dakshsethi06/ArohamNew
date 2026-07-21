@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { Lock, ChevronLeft, ChevronRight, ShieldCheck } from "lucide-react";
+import { Lock, ChevronLeft, ChevronRight, ShieldCheck, Tag, ChevronDown } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
 import { CheckoutProgress } from "@/components/checkout/CheckoutProgress";
 import { useCart } from "@/context/CartContext";
@@ -36,9 +36,13 @@ function CheckoutHeader() {
 
 export function PaymentPage() {
   const navigate = useNavigate();
-  const { items, clearCart } = useCart();
+  const { items, clearCart, subtotal, discount, total, appliedCoupon, applyCoupon, removeCoupon } = useCart();
   const { user } = useAuth();
   const [placing, setPlacing] = useState(false);
+  const [couponInput, setCouponInput] = useState("");
+  const [couponMsg, setCouponMsg] = useState<{ success: boolean; message: string } | null>(null);
+  const [showCouponCelebration, setShowCouponCelebration] = useState(false);
+  const [showMobileItems, setShowMobileItems] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -52,17 +56,43 @@ export function PaymentPage() {
     }
   }, [navigate]);
 
-  const subtotal = items.reduce((s, i) => s + i.product.price * i.qty, 0);
-  const total = subtotal + Math.round(subtotal * 0.05);
+  // Cache total in session so confirmation page doesn't flash ₹0
+  useEffect(() => {
+    if (total > 0) {
+      sessionStorage.setItem("aroham_order_total", String(total));
+    }
+  }, [total]);
 
-  const loadRazorpayScript = () => {
+  const handleApplyCoupon = () => {
+    if (!couponInput.trim()) return;
+    const res = applyCoupon(couponInput);
+    setCouponMsg(res);
+    if (res.success) {
+      setCouponInput("");
+      setShowCouponCelebration(true);
+      setTimeout(() => setShowCouponCelebration(false), 4000);
+    }
+  };
+
+  const loadRazorpayScript = (): Promise<boolean> => {
     return new Promise((resolve) => {
       if (window.Razorpay) { resolve(true); return; }
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
+      let attempts = 0;
+      const tryLoad = () => {
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.onload = () => resolve(true);
+        script.onerror = () => {
+          attempts++;
+          if (attempts < 3) {
+            setTimeout(tryLoad, 1000);
+          } else {
+            resolve(false);
+          }
+        };
+        document.body.appendChild(script);
+      };
+      tryLoad();
     });
   };
 
@@ -72,7 +102,7 @@ export function PaymentPage() {
     setPlacing(true);
     try {
       const isLoaded = await loadRazorpayScript();
-      if (!isLoaded) { alert("Failed to load Razorpay. Please check your connection."); setPlacing(false); return; }
+      if (!isLoaded) { alert("Failed to load payment gateway. Please check your internet connection and try again."); setPlacing(false); return; }
 
       // Read shipping address saved by ShippingPage
       const shippingAddr = (() => {
@@ -86,7 +116,7 @@ export function PaymentPage() {
         return;
       }
 
-      // Create Order on Backend — match exact backend contract
+      // Create Order on Backend
       const orderData = await api("/orders", {
         method: "POST",
         body: JSON.stringify({
@@ -99,6 +129,11 @@ export function PaymentPage() {
       const rzpKey = orderData.keyId || RAZORPAY_KEY_ID;
       const rzpOrderId = orderData.razorpayOrderId;
       const internalOrderId = orderData.orderId;
+
+      // Format phone properly for Razorpay — ensure full 10-digit with +91
+      const rawPhone = String(user?.user_metadata?.phone || "").replace(/\D/g, "");
+      const cleanPhone = rawPhone.length > 10 ? rawPhone.slice(-10) : rawPhone;
+      const fullContact = cleanPhone.length === 10 ? `+91${cleanPhone}` : cleanPhone;
 
       const options = {
         key: rzpKey,
@@ -121,8 +156,9 @@ export function PaymentPage() {
             });
             await clearCart();
             sessionStorage.removeItem("aroham_shipping_addr");
-            // Store order ID for confirmation page
+            // Store order ID and total for confirmation page
             sessionStorage.setItem("aroham_last_order_id", String(internalOrderId));
+            sessionStorage.setItem("aroham_order_total", String(total));
             navigate("/checkout/confirm");
           } catch (e: any) {
             alert("Payment verification failed: " + e.message);
@@ -131,7 +167,7 @@ export function PaymentPage() {
         prefill: {
           name: user?.user_metadata?.full_name || "Customer",
           email: user?.email || "",
-          contact: user?.user_metadata?.phone || ""
+          contact: fullContact
         },
         notes: { items_count: items.length },
         theme: { color: MAROON },
@@ -148,7 +184,12 @@ export function PaymentPage() {
       rzp.open();
 
     } catch (e: any) {
-      alert("Error initiating payment: " + e.message);
+      const errorMsg = e.message || "Something went wrong";
+      if (errorMsg.includes("Network") || errorMsg.includes("fetch")) {
+        alert("Network error. Please check your internet connection and try again.");
+      } else {
+        alert("Error initiating payment: " + errorMsg);
+      }
       setPlacing(false);
     }
   };
@@ -156,6 +197,16 @@ export function PaymentPage() {
   return (
     <div className="w-full overflow-x-hidden" style={{ background: "#FAF7F2", minHeight: "100vh", fontFamily: SANS }}>
       <CheckoutHeader />
+      {/* Coupon celebration overlay */}
+      {showCouponCelebration && (
+        <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-20 pointer-events-none">
+          <div className="px-6 py-4 rounded-2xl shadow-2xl pointer-events-auto" style={{ background: "linear-gradient(135deg,#2E8B57,#4ACA6A)", color: "#FFFFFF", animation: "slideDown 0.4s ease" }}>
+            <style>{`@keyframes slideDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}`}</style>
+            <p className="text-lg font-bold text-center">🎉 Yay! Coupon Applied!</p>
+            <p className="text-sm text-center mt-1">You saved ₹{discount.toLocaleString("en-IN")} on this order!</p>
+          </div>
+        </div>
+      )}
       {/* Page header */}
       <div className="pt-3 pb-5 lg:pt-2 lg:pb-4 relative overflow-hidden" style={{ background: "linear-gradient(135deg,#F5EDE0,#FAF7F2,#F0E8D8)" }}>
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `repeating-linear-gradient(0deg,${MAROON} 0,${MAROON} 1px,transparent 1px,transparent 48px),repeating-linear-gradient(90deg,${MAROON} 0,${MAROON} 1px,transparent 1px,transparent 48px)` }} />
@@ -180,6 +231,58 @@ export function PaymentPage() {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10 items-start">
           {/* Left — Pay via Razorpay card */}
           <div className="space-y-4">
+            {/* Coupon Code Section — now on Payment page */}
+            <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
+              <div className="px-4 sm:px-6 pt-5 pb-3" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
+                <div className="flex items-center gap-2">
+                  <Tag size={14} style={{ color: GOLD }} />
+                  <h2 className="text-base font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Promo Code / Coupon</h2>
+                </div>
+              </div>
+              <div className="px-4 sm:px-6 py-4">
+                {appliedCoupon ? (
+                  <div className="p-3 rounded-2xl" style={{ background: "rgba(74,138,74,0.08)", border: "1px solid rgba(74,138,74,0.25)" }}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold px-3 py-1 rounded-lg" style={{ background: "rgba(74,138,74,0.15)", color: "#2E8B57" }}>{appliedCoupon.code}</span>
+                        <div>
+                          <p className="text-xs font-semibold" style={{ color: "#2E8B57" }}>🎉 {appliedCoupon.label}</p>
+                          <p className="text-[10px]" style={{ color: "#4A8A4A" }}>You're saving ₹{discount.toLocaleString("en-IN")}!</p>
+                        </div>
+                      </div>
+                      <button onClick={() => { removeCoupon(); setCouponMsg(null); setShowCouponCelebration(false); }} className="text-xs font-semibold px-3 py-1.5 hover:bg-red-50 rounded-lg flex-shrink-0" style={{ color: "#C04040" }}>Remove</button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={couponInput}
+                        onChange={e => { setCouponInput(e.target.value); setCouponMsg(null); }}
+                        placeholder="Coupon code (e.g. AROHAM10)"
+                        className="flex-1 min-w-0 px-3 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm outline-none uppercase font-semibold truncate"
+                        style={{ border: "1.5px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON }}
+                        onKeyDown={e => { if (e.key === "Enter") handleApplyCoupon(); }}
+                      />
+                      <button
+                        onClick={handleApplyCoupon}
+                        className="px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold uppercase transition-all active:scale-95 flex-shrink-0"
+                        style={{ background: MAROON, color: IVORY }}
+                      >
+                        Apply
+                      </button>
+                    </div>
+                    {couponMsg && (
+                      <p className={`text-xs font-medium mt-2 ${couponMsg.success ? "text-emerald-600" : "text-red-500"}`}>
+                        {couponMsg.success ? "✓ " : "✕ "}{couponMsg.message}
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+
             {/* Razorpay pay card */}
             <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
               <div className="px-6 pt-6 pb-4" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
@@ -238,12 +341,33 @@ export function PaymentPage() {
             </div>
           </div>
 
-          {/* Right sidebar – order summary */}
+          {/* Right sidebar – order summary / payment breakdown */}
           <div className="lg:sticky lg:top-24">
             <CheckoutProgress step={2} />
             <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 4px 30px rgba(91,31,36,0.07)" }}>
               <div className="px-6 pt-6 pb-4 lg:pt-4 lg:pb-3" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}><h2 className="text-lg font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Order Summary</h2></div>
-              <div className="px-6 py-4 lg:py-3 space-y-3 lg:space-y-2" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
+              
+              {/* Mobile: collapsible items */}
+              <div className="lg:hidden px-6 py-3" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
+                <button onClick={() => setShowMobileItems(!showMobileItems)} className="w-full flex items-center justify-between text-sm" style={{ color: MAROON }}>
+                  <span className="font-medium">{items.length} item{items.length !== 1 ? "s" : ""}</span>
+                  <ChevronDown size={16} style={{ transform: showMobileItems ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.2s" }} />
+                </button>
+                {showMobileItems && (
+                  <div className="mt-3 space-y-2">
+                    {items.map(({ product: p, qty }) => (
+                      <div key={p.id} className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-amber-50"><img src={p.img} alt={p.name} className="w-full h-full object-cover" /></div>
+                        <div className="flex-1 min-w-0"><p className="text-xs font-semibold truncate" style={{ fontFamily: SERIF, color: MAROON }}>{p.name}</p><p className="text-[10px]" style={{ color: "#9A8A78" }}>Qty: {qty}</p></div>
+                        <span className="text-xs font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{(p.price * qty).toLocaleString("en-IN")}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Desktop: always show items */}
+              <div className="hidden lg:block px-6 py-3 space-y-2" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
                 {items.map(({ product: p, qty }) => (
                   <div key={p.id} className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-amber-50"><img src={p.img} alt={p.name} className="w-full h-full object-cover" /></div>
@@ -252,10 +376,15 @@ export function PaymentPage() {
                   </div>
                 ))}
               </div>
+
+              {/* Payment breakdown — always visible */}
               <div className="px-6 py-5 lg:py-3 space-y-3 lg:space-y-2">
-                 {[["Subtotal", `₹${subtotal.toLocaleString("en-IN")}`], ["Shipping", "FREE", true], ["GST (5%)", `₹${Math.round(subtotal * 0.05).toLocaleString("en-IN")}`]].map(([l, v, g]) => (
-                  <div key={l as string} className="flex justify-between text-sm"><span style={{ color: "#7A6A58" }}>{l as string}</span><span style={{ color: g ? "#4A8A4A" : MAROON, fontFamily: PRICE_FONT, fontWeight: 600 }}>{v as string}</span></div>
-                ))}
+                <div className="flex justify-between text-sm"><span style={{ color: "#7A6A58" }}>Subtotal</span><span style={{ color: MAROON, fontFamily: PRICE_FONT, fontWeight: 600 }}>₹{subtotal.toLocaleString("en-IN")}</span></div>
+                {appliedCoupon && discount > 0 && (
+                  <div className="flex justify-between text-sm"><span style={{ color: "#2E8B57" }}>Discount ({appliedCoupon.code})</span><span style={{ color: "#2E8B57", fontFamily: PRICE_FONT, fontWeight: 600 }}>−₹{discount.toLocaleString("en-IN")}</span></div>
+                )}
+                <div className="flex justify-between text-sm"><span style={{ color: "#7A6A58" }}>Shipping</span><span style={{ color: "#4A8A4A", fontFamily: PRICE_FONT, fontWeight: 600 }}>FREE</span></div>
+                <div className="flex justify-between text-sm"><span style={{ color: "#7A6A58" }}>GST (5%)</span><span style={{ color: MAROON, fontFamily: PRICE_FONT, fontWeight: 600 }}>₹{Math.round(Math.max(0, subtotal - discount) * 0.05).toLocaleString("en-IN")}</span></div>
                 <div className="h-px" style={{ background: `linear-gradient(90deg,transparent,rgba(200,160,68,0.3),transparent)` }} />
                 <div className="flex justify-between items-baseline"><span className="text-sm font-semibold" style={{ color: MAROON }}>Grand Total</span><span className="text-2xl font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{total.toLocaleString("en-IN")}</span></div>
               </div>
@@ -266,8 +395,6 @@ export function PaymentPage() {
           </div>
         </div>
       </div>
-
-
     </div>
   );
 }

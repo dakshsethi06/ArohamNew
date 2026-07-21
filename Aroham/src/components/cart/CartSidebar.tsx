@@ -1,16 +1,13 @@
-import { useState } from "react";
 import { useNavigate } from "react-router";
-import { X, ChevronLeft, Minus, Plus, Trash2, Lock, Tag } from "lucide-react";
+import { X, ChevronLeft, Minus, Plus, Trash2, Lock } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 
 export function CartSidebar() {
   const navigate = useNavigate();
-  const { items, closeCart, removeFromCart, updateQty, subtotal, discount, total, appliedCoupon, applyCoupon, removeCoupon } = useCart();
+  const { items, closeCart, removeFromCart, updateQty, subtotal } = useCart();
   const { isLoggedIn, openAuth } = useAuth();
-  const [inputCode, setInputCode] = useState("");
-  const [msg, setMsg] = useState<{ success: boolean; message: string } | null>(null);
 
   return (
     <div role="dialog" aria-modal="true" aria-label="Shopping cart" className="fixed inset-0 z-[60] flex justify-end">
@@ -66,51 +63,9 @@ export function CartSidebar() {
         {/* Footer */}
         {items.length > 0 && (
           <div className="px-6 py-5" style={{ borderTop: `1px solid rgba(91,31,36,0.08)` }}>
-            {/* Coupon Code Section */}
-            <div className="mb-4 p-3 rounded-2xl" style={{ background: "rgba(200,160,68,0.05)", border: "1px dashed rgba(200,160,68,0.3)" }}>
-              <div className="flex items-center gap-1.5 mb-2 text-xs font-semibold" style={{ color: MAROON }}>
-                <Tag size={13} style={{ color: GOLD }} />
-                <span>Apply Coupon Code</span>
-              </div>
-              {appliedCoupon ? (
-                <div className="flex items-center justify-between p-2 rounded-xl" style={{ background: "#FFFFFF", border: "1px solid rgba(74,138,74,0.3)" }}>
-                  <div>
-                    <span className="text-xs font-bold px-2 py-0.5 rounded" style={{ background: "rgba(74,138,74,0.1)", color: "#4A8A4A" }}>{appliedCoupon.code}</span>
-                    <p className="text-[10px] mt-0.5" style={{ color: "#7A6A58" }}>{appliedCoupon.label}</p>
-                  </div>
-                  <button onClick={() => { removeCoupon(); setMsg(null); }} className="text-xs font-semibold px-2 py-1 hover:bg-red-50 rounded" style={{ color: "#C04040" }}>✕ Remove</button>
-                </div>
-              ) : (
-                <>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={inputCode}
-                      onChange={e => { setInputCode(e.target.value); setMsg(null); }}
-                      placeholder="Enter code (e.g. AROHAM10)"
-                      className="flex-1 px-3 py-1.5 rounded-xl text-xs outline-none uppercase font-semibold"
-                      style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FFFFFF", color: MAROON }}
-                    />
-                    <button
-                      onClick={() => {
-                        if (!inputCode.trim()) return;
-                        const res = applyCoupon(inputCode);
-                        setMsg(res);
-                        if (res.success) setInputCode("");
-                      }}
-                      className="px-4 py-1.5 rounded-xl text-xs font-bold uppercase transition-all active:scale-95"
-                      style={{ background: MAROON, color: IVORY }}
-                    >
-                      Apply
-                    </button>
-                  </div>
-                  {msg && (
-                    <p className={`text-[10px] font-medium mt-1.5 ${msg.success ? "text-emerald-600" : "text-red-500"}`}>
-                      {msg.success ? "✓ " : "✕ "}{msg.message}
-                    </p>
-                  )}
-                </>
-              )}
+            {/* Coupon hint */}
+            <div className="mb-3 px-3 py-2 rounded-xl text-center" style={{ background: "rgba(200,160,68,0.06)", border: "1px dashed rgba(200,160,68,0.25)" }}>
+              <p className="text-[11px] font-medium" style={{ color: "#8B6914" }}>🏷️ Have a coupon? Apply at checkout ✨</p>
             </div>
 
             <div className="space-y-2 mb-4">
@@ -118,24 +73,13 @@ export function CartSidebar() {
                 <span>Subtotal</span>
                 <span style={{ color: MAROON, fontWeight: 600 }}>₹{subtotal.toLocaleString("en-IN")}</span>
               </div>
-              {appliedCoupon && discount > 0 && (
-                <div className="flex justify-between text-xs" style={{ color: "#4A8A4A" }}>
-                  <span>Coupon Discount ({appliedCoupon.code})</span>
-                  <span className="font-semibold">−₹{discount.toLocaleString("en-IN")}</span>
-                </div>
-              )}
               <div className="flex justify-between text-xs" style={{ color: "#7A6A58" }}>
                 <span>Shipping</span>
                 <span style={{ color: "#4A8A4A", fontWeight: 600 }}>FREE</span>
               </div>
-              <div className="flex justify-between text-xs" style={{ color: "#7A6A58" }}>
-                <span>GST (5%)</span>
-                <span style={{ color: MAROON, fontWeight: 600 }}>₹{Math.round(Math.max(0, subtotal - discount) * 0.05).toLocaleString("en-IN")}</span>
-              </div>
-
               <div className="flex justify-between text-sm font-semibold pt-2" style={{ borderTop: `1px solid rgba(91,31,36,0.08)`, color: MAROON }}>
-                <span>Grand Total</span>
-                <span style={{ fontFamily: PRICE_FONT, fontSize: "1.1rem" }}>₹{total.toLocaleString("en-IN")}</span>
+                <span>Subtotal</span>
+                <span style={{ fontFamily: PRICE_FONT, fontSize: "1.1rem" }}>₹{subtotal.toLocaleString("en-IN")}</span>
               </div>
             </div>
             <button onClick={() => { 

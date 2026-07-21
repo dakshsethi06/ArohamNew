@@ -1,9 +1,23 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { ChevronLeft, User, Edit2, Check } from "lucide-react";
+import { ChevronLeft, User, Package, Truck, CheckCircle } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
+
+const ORDER_STEPS = [
+  { label: "Ordered", icon: "✓" },
+  { label: "Processing", icon: "🪔" },
+  { label: "Shipped", icon: "🚚" },
+  { label: "Delivered", icon: "🏠" },
+];
+
+function getOrderStep(status: string, awbCode?: string) {
+  if (status === "Delivered" || status === "DELIVERED") return 3;
+  if (awbCode || status === "SHIPPED" || status === "Shipped") return 2;
+  if (status === "CONFIRMED" || status === "Processing") return 1;
+  return 0; // Ordered
+}
 
 export function ProfilePage() {
   const navigate = useNavigate();
@@ -38,12 +52,19 @@ export function ProfilePage() {
       .finally(() => setLoadingProfile(false));
   }, []);
 
-  // Fetch real orders from DB
+  // Fetch real orders from DB — only show CONFIRMED/paid orders
   useEffect(() => {
     if (activeTab === "orders") {
       setLoadingOrders(true);
       api("/orders")
-        .then(data => setOrders(Array.isArray(data) ? data : []))
+        .then(data => {
+          const all = Array.isArray(data) ? data : [];
+          // Filter out PENDING/FAILED orders — only show confirmed/paid
+          const confirmedOrders = all.filter(o => 
+            o.status === "CONFIRMED" || o.status === "Delivered" || o.status === "SHIPPED" || o.status === "Processing"
+          );
+          setOrders(confirmedOrders);
+        })
         .catch(console.error)
         .finally(() => setLoadingOrders(false));
     }
@@ -54,7 +75,7 @@ export function ProfilePage() {
   const displayName = profile?.full_name || user?.user_metadata?.full_name || "Devotee";
   const memberSince = profile?.created_at
     ? new Date(profile.created_at).getFullYear()
-    : new Date(user?.created_at || Date.now()).getFullYear();
+    : new Date().getFullYear();
 
   const profileFields = [
     { label: "Name",   value: profile?.full_name || user?.user_metadata?.full_name || "—" },
@@ -136,6 +157,14 @@ export function ProfilePage() {
             {orders.map(order => {
               const isExpanded = !!expandedOrders[order.id];
               const itemsList = order.order_items || order.items || [];
+              const currentStep = getOrderStep(order.status, order.awb_code);
+              
+              // Calculate estimated delivery (4 days from order date)
+              const orderDate = new Date(order.created_at);
+              const estDelivery = new Date(orderDate);
+              estDelivery.setDate(estDelivery.getDate() + 4);
+              const estDeliveryStr = estDelivery.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+
               return (
                 <div key={order.id} className="rounded-2xl overflow-hidden transition-all duration-300" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.09)", boxShadow: "0 2px 16px rgba(91,31,36,0.05)" }}>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4 px-5 py-4 cursor-pointer hover:bg-amber-50/20" onClick={() => toggleOrder(order.id)}>
@@ -168,6 +197,43 @@ export function ProfilePage() {
                   {isExpanded && (
                     <div className="px-5 pb-5 pt-2 border-t" style={{ borderColor: "rgba(91,31,36,0.06)", background: "#FAF9F6" }}>
                       <div className="space-y-4">
+                        {/* Order tracking stepper */}
+                        <div className="p-4 rounded-2xl" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)" }}>
+                          <h4 className="text-xs font-semibold mb-3" style={{ color: MAROON }}>Order Status</h4>
+                          <div className="flex items-center justify-between mb-2">
+                            {ORDER_STEPS.map((step, i) => {
+                              const reached = i <= currentStep;
+                              const active = i === currentStep;
+                              return (
+                                <div key={step.label} className="flex flex-col items-center flex-1">
+                                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs mb-1"
+                                    style={{
+                                      background: reached ? (active ? `linear-gradient(135deg,${GOLD},#E8B84B)` : "rgba(74,138,74,0.15)") : "rgba(91,31,36,0.06)",
+                                      border: reached ? `2px solid ${active ? GOLD : "#4A8A4A"}` : "2px solid rgba(91,31,36,0.1)",
+                                      color: reached ? (active ? "#1A0D0E" : "#4A8A4A") : "#9A8A78",
+                                      boxShadow: active ? "0 0 12px rgba(200,160,68,0.4)" : "none"
+                                    }}>
+                                    {reached ? (i < currentStep ? <CheckCircle size={14} /> : step.icon) : step.icon}
+                                  </div>
+                                  <span className="text-[9px] font-semibold text-center" style={{ color: reached ? MAROON : "#9A8A78" }}>{step.label}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          {/* Progress bar */}
+                          <div className="flex gap-1 mt-1">
+                            {ORDER_STEPS.slice(0, -1).map((_, i) => (
+                              <div key={i} className="flex-1 h-1 rounded-full" style={{ background: i < currentStep ? "#4A8A4A" : "rgba(91,31,36,0.08)" }} />
+                            ))}
+                          </div>
+                          <div className="mt-3 flex items-center gap-2">
+                            <Truck size={12} style={{ color: "#4A8A4A" }} />
+                            <span className="text-[10px] font-medium" style={{ color: "#4A8A4A" }}>
+                              Expected delivery by <strong>{estDeliveryStr}</strong> · Free Shipping
+                            </span>
+                          </div>
+                        </div>
+
                         {/* Render items */}
                         <div>
                           <h4 className="text-xs font-semibold mb-2" style={{ color: MAROON, fontFamily: SANS }}>Items in Order</h4>
@@ -197,31 +263,24 @@ export function ProfilePage() {
                           </div>
                         )}
 
-                        {/* Tracking details */}
-                        <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                          <div>
-                            <p className="text-[10px] tracking-wider uppercase font-semibold" style={{ color: "#9A8A78" }}>Shipment Tracking</p>
-                            <p className="text-xs font-semibold" style={{ color: MAROON }}>
-                              {order.awb_code ? `AWB: ${order.awb_code}` : "Status: Awaiting Dispatch"}
-                            </p>
-                          </div>
+                        {/* Track order button — user-friendly */}
+                        <div className="pt-2">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               if (order.awb_code) {
                                 window.open(`https://shiprocket.co/tracking/${order.awb_code}`, "_blank");
-                              } else {
-                                alert("Shipment is being prepared. Once dispatched, a Shiprocket tracking link will activate here.");
                               }
                             }}
-                            className="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all hover:opacity-90 active:scale-95"
+                            className="w-full px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-95"
                             style={{
                               background: order.awb_code ? `linear-gradient(135deg,${MAROON},#7A2A30)` : "rgba(91,31,36,0.06)",
-                              color: order.awb_code ? IVORY : "#9A8A78",
+                              color: order.awb_code ? IVORY : MAROON,
                               border: order.awb_code ? "none" : "1px solid rgba(91,31,36,0.12)"
                             }}
                           >
-                            🚚 Track Order via Shiprocket
+                            <Package size={14} />
+                            {order.awb_code ? "Track Your Order" : "Order is being prepared"}
                           </button>
                         </div>
                       </div>

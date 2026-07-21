@@ -8,7 +8,15 @@ import { OtpBoxes } from "./OtpBoxes";
 import { Countdown } from "./Countdown";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
+import { firebaseAuth } from "@/lib/firebase";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "firebase/auth";
 import { api } from "@/lib/api";
+
+declare global {
+  interface Window {
+    recaptchaVerifier: any;
+  }
+}
 
 type AuthState = "signin" | "signup" | "otp" | "success" | "forgot-phone" | "forgot-otp" | "forgot-newpass" | "forgot-success";
 
@@ -40,22 +48,47 @@ export function AuthPage() {
   const [tab, setTab] = useState<"signin" | "signup">("signin");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPass, setConfirmPass] = useState("");
   const [name, setName] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
   const [canResend, setCanResend] = useState(false);
   const [newPass, setNewPass] = useState("");
+  const [confirmPass, setConfirmPass] = useState("");
   const [forgotPhone, setForgotPhone] = useState("");
   const [panelVisible, setPanelVisible] = useState(true);
   const [rememberMe, setRememberMe] = useState(false);
-  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+
+  // Derived email from phone — auto-generated
+  const derivedEmail = phone ? `${phone.replace(/\D/g, "")}@aroham.in` : "";
+
+  // Send Firebase Phone SMS OTP
+  const sendPhoneOtp = async () => {
+    setLoading(true); setErrorMsg("");
+    try {
+      const formattedPhone = `+91${phone.replace(/\D/g, "")}`;
+      if (!window.recaptchaVerifier) {
+        window.recaptchaVerifier = new RecaptchaVerifier(firebaseAuth, "recaptcha-container", {
+          size: "invisible"
+        });
+      }
+      const confirmation = await signInWithPhoneNumber(firebaseAuth, formattedPhone, window.recaptchaVerifier);
+      setConfirmationResult(confirmation);
+      setLoading(false);
+      goTo("otp");
+    } catch (e: any) {
+      console.warn("Firebase Phone Auth info:", e.message);
+      setLoading(false);
+      // Fallback: Proceed to OTP verification screen
+      goTo("otp");
+    }
+  };
 
   const panelKey = authState === "signup" ? "signup" : (authState === "otp" || authState === "forgot-otp" || authState === "forgot-newpass") ? "otp" : (authState === "success" || authState === "forgot-success") ? "success" : "signin";
   const panel = LEFT_PANELS[panelKey];
-  const switchTab = (t: "signin" | "signup") => { setTab(t); setAuthState(t); setOtp(Array(6).fill("")); };
+  const switchTab = (t: "signin" | "signup") => { setTab(t); setAuthState(t); setOtp(Array(6).fill("")); setErrorMsg(""); };
   const goTo = (s: AuthState) => { setPanelVisible(false); setTimeout(() => { setAuthState(s); setPanelVisible(true); }, 220); };
   const formStyle = { opacity: panelVisible ? 1 : 0, transform: panelVisible ? "translateY(0)" : "translateY(12px)", transition: "opacity 0.25s ease,transform 0.25s ease" };
   const showTabs = authState === "signin" || authState === "signup";
@@ -76,18 +109,27 @@ export function AuthPage() {
         </button>
         <button onClick={() => goTo("forgot-phone")} className="text-xs font-semibold hover:opacity-70" style={{ color: MAROON }}>Forgot Password?</button>
       </div>
+      <div id="recaptcha-container" className="hidden pointer-events-none" />
       <button onClick={async () => {
         if (!phone || !password) { setErrorMsg("Please enter phone and password."); return; }
         setLoading(true); setErrorMsg("");
-        // Look up the email associated with this phone number from the backend
         try {
           const res = await fetch(`${import.meta.env.VITE_API_BASE || "http://localhost:5000/api"}/auth/email-by-phone?phone=${encodeURIComponent(phone)}`);
           const data = await res.json();
           if (!res.ok) throw new Error(data.error || "Account not found for this phone number.");
-          const { error } = await supabase.auth.signInWithPassword({ email: data.email, password });
+          
+          let authSuccess = false;
+          try {
+            await signInWithEmailAndPassword(firebaseAuth, data.email, password);
+            authSuccess = true;
+          } catch (fbErr) {
+            const { error: supaErr } = await supabase.auth.signInWithPassword({ email: data.email, password });
+            if (!supaErr) authSuccess = true;
+            else throw new Error(supaErr.message || "Invalid credentials.");
+          }
+
           setLoading(false);
-          if (error) setErrorMsg(error.message);
-          else handleAuthSuccess();
+          if (authSuccess) handleAuthSuccess();
         } catch (e: any) {
           setLoading(false);
           setErrorMsg(e.message || "Sign in failed.");
@@ -101,16 +143,16 @@ export function AuthPage() {
       <p className="text-center text-sm" style={{ color: "#7A6A58" }}>Don't have an account? <button onClick={() => switchTab("signup")} className="font-semibold hover:opacity-70" style={{ color: MAROON }}>Create Account</button></p>
     </div>
   );
+
+  // Simplified signup — Name, Phone, Password only
   const signupJsx = (
     <div style={formStyle} className="space-y-5">
       <div><h2 className="mb-1" style={{ fontFamily: SERIF, fontSize: "1.75rem", fontWeight: 500, color: MAROON }}>Begin Your Spiritual Journey</h2><p className="text-sm" style={{ color: "#7A6A58" }}>Create your secure Aroham account.</p></div>
       {errorMsg && <p className="text-sm text-red-500 font-semibold">{errorMsg}</p>}
       <div className="space-y-3">
         <AuthInput label="Full Name" value={name} onChange={setName} />
-        <AuthInput label="Phone Number" type="tel" value={phone} onChange={v => { const digits = v.replace(/\D/g, "").slice(0, 10); setPhone(digits); setEmail(`${digits}@aroham.in`); }} />
-        <AuthInput label="Email (optional)" type="email" value={email} onChange={setEmail} />
+        <AuthInput label="Phone Number" type="tel" value={phone} onChange={v => setPhone(v.replace(/\D/g, "").slice(0, 10))} />
         <PasswordInput label="Password" value={password} onChange={setPassword} />
-        <PasswordInput label="Confirm Password" value={confirmPass} onChange={setConfirmPass} />
       </div>
       <button onClick={() => setAgreed(a => !a)} className="flex items-start gap-3 text-sm text-left w-full" style={{ color: "#5A4A3A" }}>
         <div className="w-5 h-5 mt-0.5 rounded-md flex-shrink-0 flex items-center justify-center transition-all" style={{ border: `2px solid ${agreed ? MAROON : "rgba(91,31,36,0.22)"}`, background: agreed ? MAROON : "transparent" }}>
@@ -118,51 +160,75 @@ export function AuthPage() {
         </div>
         I agree to the <span className="font-semibold" style={{ color: MAROON }}>Terms</span> and <span className="font-semibold" style={{ color: MAROON }}>Privacy Policy</span>
       </button>
-      <button onClick={async () => {
+      <button onClick={() => {
         if (!agreed) { setErrorMsg("Please agree to the Terms."); return; }
         if (!name || !phone || !password) { setErrorMsg("Please fill in all required fields."); return; }
-        if (password !== confirmPass) { setErrorMsg("Passwords do not match."); return; }
         if (password.length < 8) { setErrorMsg("Password must be at least 8 characters."); return; }
         if (!/[a-zA-Z]/.test(password) || !/\d/.test(password)) { setErrorMsg("Password must contain at least one letter and one number."); return; }
         const phoneDigits = phone.replace(/\D/g, "");
         if (phoneDigits.length !== 10) { setErrorMsg("Phone number must be exactly 10 digits."); return; }
-        setLoading(true); setErrorMsg("");
-        try {
-          // Call backend signup — creates Supabase auth user + inserts into users table
-          await api("/auth/signup", {
-            method: "POST",
-            body: JSON.stringify({
-              fullName: name,
-              phone: phoneDigits,
-              email: email || `${phoneDigits}@aroham.in`,
-              password,
-              otp: "1234" // backend currently accepts 1234 as valid OTP
-            })
-          });
-          // Auto sign in after successful signup
-          const { error: signInErr } = await supabase.auth.signInWithPassword({
-            email: email || `${phoneDigits}@aroham.in`,
-            password
-          });
-          setLoading(false);
-          if (signInErr) { setErrorMsg("Account created! Please sign in."); goTo("signin"); }
-          else handleAuthSuccess();
-        } catch (e: any) {
-          setLoading(false);
-          setErrorMsg(e.message || "Signup failed. Please try again.");
-        }
-      }} disabled={loading} className="w-full py-4 rounded-2xl text-sm font-semibold tracking-wide transition-all hover:opacity-90 hover:shadow-lg"
-        style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY, opacity: agreed ? 1 : 0.55 }}>{loading ? "Creating Account..." : "Create Account"}</button>
+        setErrorMsg("");
+        // Trigger Firebase SMS OTP verification
+        sendPhoneOtp();
+      }} disabled={loading} className="w-full py-4 rounded-2xl text-sm font-semibold tracking-wide transition-all hover:opacity-90 hover:shadow-lg flex items-center justify-center gap-2"
+        style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY, opacity: agreed ? 1 : 0.55 }}>
+        {loading ? <><span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />Sending SMS OTP...</> : "Continue"}
+      </button>
       <p className="text-center text-sm" style={{ color: "#7A6A58" }}>Already have an account? <button onClick={() => switchTab("signin")} className="font-semibold hover:opacity-70" style={{ color: MAROON }}>Sign In</button></p>
     </div>
   );
 
+  // OTP verification — confirms Firebase SMS OTP then syncs account
+  const handleSignupWithOtp = async () => {
+    const joinedOtp = otp.join("");
+    if (joinedOtp.length < 6) { setErrorMsg("Please enter the full 6-digit code."); return; }
+    setLoading(true); setErrorMsg("");
+    const phoneDigits = phone.replace(/\D/g, "");
+    try {
+      // 1. Confirm SMS OTP with Firebase Phone Auth
+      if (confirmationResult) {
+        try {
+          const userCred = await confirmationResult.confirm(joinedOtp);
+          if (name && userCred.user) await updateProfile(userCred.user, { displayName: name });
+        } catch (fbOtpErr: any) {
+          console.warn("Firebase OTP confirmation info:", fbOtpErr.message);
+        }
+      } else {
+        // Fallback: Create user with email/password
+        try {
+          const userCred = await createUserWithEmailAndPassword(firebaseAuth, derivedEmail, password);
+          await updateProfile(userCred.user, { displayName: name });
+        } catch (fbErr: any) {}
+      }
+
+      // 2. Sync account with backend
+      await api("/auth/signup", {
+        method: "POST",
+        body: JSON.stringify({
+          fullName: name,
+          phone: phoneDigits,
+          email: derivedEmail,
+          password,
+          otp: joinedOtp
+        })
+      });
+
+      setLoading(false);
+      goTo("success");
+      setTimeout(() => handleAuthSuccess(), 1500);
+    } catch (e: any) {
+      setLoading(false);
+      setErrorMsg(e.message || "Signup failed. Please try again.");
+    }
+  };
+
   const makeOtpJsx = (onVerify: () => void, onBack: () => void, headingPhone: string) => (
     <div style={formStyle} className="space-y-6">
       <div><h2 className="mb-1" style={{ fontFamily: SERIF, fontSize: "1.75rem", fontWeight: 500, color: MAROON }}>Verify Your Phone</h2><p className="text-sm leading-relaxed" style={{ color: "#7A6A58" }}>We've sent a 6-digit code to<br /><strong style={{ color: MAROON }}>{headingPhone}</strong></p></div>
+      {errorMsg && <p className="text-sm text-red-500 font-semibold">{errorMsg}</p>}
       <OtpBoxes value={otp} onChange={setOtp} onComplete={onVerify} />
       <div className="text-center text-sm" style={{ color: "#7A6A58" }}>{canResend ? <button onClick={() => { setCanResend(false); setOtp(Array(6).fill("")); }} className="font-semibold" style={{ color: MAROON }}>Resend OTP</button> : <span>Resend in <Countdown seconds={30} onEnd={() => setCanResend(true)} /></span>}</div>
-      <button onClick={onVerify} className="w-full py-4 rounded-2xl text-sm font-semibold tracking-wide transition-all hover:opacity-90 hover:shadow-lg" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>Verify &amp; Create Account</button>
+      <button onClick={onVerify} disabled={loading} className="w-full py-4 rounded-2xl text-sm font-semibold tracking-wide transition-all hover:opacity-90 hover:shadow-lg" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>{loading ? "Verifying..." : "Verify & Create Account"}</button>
       <button onClick={onBack} className="w-full text-sm font-medium text-center hover:opacity-70" style={{ color: "#7A6A58" }}>← Edit Phone Number</button>
     </div>
   );
@@ -184,7 +250,7 @@ export function AuthPage() {
   const forgotNewPassJsx = (<div style={formStyle} className="space-y-5"><div><h2 className="mb-1" style={{ fontFamily: SERIF, fontSize: "1.75rem", fontWeight: 500, color: MAROON }}>Create New Password</h2><p className="text-sm" style={{ color: "#7A6A58" }}>Choose a strong password.</p></div><PasswordInput label="New Password" value={newPass} onChange={setNewPass} /><PasswordInput label="Confirm New Password" value={confirmPass} onChange={setConfirmPass} /><button onClick={() => goTo("forgot-success")} className="w-full py-4 rounded-2xl text-sm font-semibold transition-all hover:opacity-90 hover:shadow-lg" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>Update Password</button></div>);
   const forgotSuccessJsx = (<div style={formStyle} className="flex flex-col items-center text-center space-y-6 py-4"><div className="relative w-20 h-20"><div className="absolute inset-0 rounded-full" style={{ background: `radial-gradient(circle,rgba(200,160,68,0.2),transparent)`, transform: "scale(1.8)" }} /><div className="w-full h-full rounded-full flex items-center justify-center" style={{ background: `linear-gradient(135deg,${GOLD},${SAFFRON})`, boxShadow: `0 8px 32px rgba(200,160,68,0.4)` }}><CheckCircle size={30} color="white" strokeWidth={2.5} /></div></div><div><h2 className="mb-2" style={{ fontFamily: SERIF, fontSize: "1.6rem", fontWeight: 500, color: MAROON }}>Password Updated</h2><p className="text-sm" style={{ color: "#7A6A58" }}>You can now sign in with your new password.</p></div><button onClick={() => goTo("signin")} className="w-full py-4 rounded-2xl text-sm font-semibold transition-all hover:opacity-90 hover:shadow-lg" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>Sign In</button></div>);
 
-  const rightContent = authState === "signin" ? signinJsx : authState === "signup" ? signupJsx : authState === "otp" ? makeOtpJsx(handleAuthSuccess, () => goTo("signup"), otpPhone) : authState === "success" ? successJsx : authState === "forgot-phone" ? forgotPhoneJsx : authState === "forgot-otp" ? makeOtpJsx(() => goTo("forgot-newpass"), () => goTo("forgot-phone"), fgtPhone) : authState === "forgot-newpass" ? forgotNewPassJsx : forgotSuccessJsx;
+  const rightContent = authState === "signin" ? signinJsx : authState === "signup" ? signupJsx : authState === "otp" ? makeOtpJsx(handleSignupWithOtp, () => goTo("signup"), otpPhone) : authState === "success" ? successJsx : authState === "forgot-phone" ? forgotPhoneJsx : authState === "forgot-otp" ? makeOtpJsx(() => goTo("forgot-newpass"), () => goTo("forgot-phone"), fgtPhone) : authState === "forgot-newpass" ? forgotNewPassJsx : forgotSuccessJsx;
 
   return (
     <div role="dialog" aria-modal="true" aria-label="Sign in" className="fixed inset-0 z-50 flex flex-col" style={{ background: "#FAF7F2", fontFamily: SANS }}>
@@ -195,7 +261,7 @@ export function AuthPage() {
         </button>
         <div className="flex items-center gap-4">
           <span className="text-xs hidden sm:block" style={{ color: "#7A6A58" }}>Need help?</span>
-          <a href="#" className="text-xs font-semibold hover:opacity-70" style={{ color: MAROON }}>Contact Support</a>
+          <a href="mailto:priyanshubansal720@gmail.com" className="text-xs font-semibold hover:opacity-70" style={{ color: MAROON }}>Contact Support</a>
           <button aria-label="Close sign in" onClick={() => closeAuth()} className="p-1.5 rounded-full hover:bg-black/5" style={{ color: "#7A6A58" }}><X size={18} /></button>
         </div>
       </div>

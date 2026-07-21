@@ -17,11 +17,11 @@ export function VideoTestimonials() {
   const prev = useCallback(() => goTo(active - 1), [active, goTo]);
   const next = useCallback(() => goTo(active + 1), [active, goTo]);
 
-  // Auto-rotate every 3s
+  // Auto-rotate every 4s
   useEffect(() => {
     timerRef.current = setInterval(() => {
       setActive(a => (a + 1) % n);
-    }, 3000);
+    }, 4000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [n]);
 
@@ -31,7 +31,7 @@ export function VideoTestimonials() {
     dir === "prev" ? prev() : next();
     timerRef.current = setInterval(() => {
       setActive(a => (a + 1) % n);
-    }, 3000);
+    }, 4000);
   };
 
   // Build visible cards: show 5 cards centered on active
@@ -86,12 +86,12 @@ export function VideoTestimonials() {
                 className="absolute"
                 style={{
                   width: w, height: h, borderRadius: 24, overflow: "hidden",
-                  transform: `translateX(${translateX}px) scale(${scale})`,
+                  transform: `translateX(${translateX}px) translateZ(0) scale(${scale})`,
                   opacity,
                   zIndex,
                   border: isCenter ? `2px solid ${GOLD}` : "2px solid transparent",
                   boxShadow: isCenter ? `0 0 0 1px rgba(200,160,68,0.2), 0 20px 50px rgba(0,0,0,0.6)` : "none",
-                  transition: "transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s ease, border 0.4s ease",
+                  transition: "transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease, border 0.5s ease",
                   willChange: "transform, opacity",
                   cursor: "pointer",
                 }}

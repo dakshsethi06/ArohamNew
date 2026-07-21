@@ -50,10 +50,11 @@ function Confetti() {
 
 export function ConfirmationPage() {
   const navigate = useNavigate();
-  const [visible, setVisible] = useState(false);
-  const [timelineReached, setTimelineReached] = useState(1);
+  const [visible, setVisible] = useState(true);
+  const [timelineReached, setTimelineReached] = useState(2);
   const [orderItems, setOrderItems] = useState<{ id: number; name: string; img: string; price: number; qty: number }[]>([]);
-  const [totalAmount, setTotalAmount] = useState<number>(0);
+  const cachedTotal = sessionStorage.getItem("aroham_order_total");
+  const [totalAmount, setTotalAmount] = useState<number>(cachedTotal ? parseFloat(cachedTotal) : 0);
   const [loading, setLoading] = useState(true);
 
   const orderId = sessionStorage.getItem("aroham_last_order_id") || "—";
@@ -75,20 +76,22 @@ export function ConfirmationPage() {
     if (orderId && orderId !== "—") {
       Promise.all([api("/orders"), api("/products")])
         .then(([orders, products]: [any[], any[]]) => {
-          const found = orders.find(o => o.id === orderId);
-          if (found) {
-            const mappedItems = (found.order_items || []).map((oi: any) => {
-              const matchedProduct = products.find(p => p.id === oi.product_id);
-              return {
-                id: oi.product_id,
-                name: oi.name,
-                img: matchedProduct?.img || matchedProduct?.image || "📿",
-                price: (oi.price || 0) / 100,
-                qty: oi.qty || 1
-              };
-            });
-            setOrderItems(mappedItems);
-            setTotalAmount((found.amount || 0) / 100);
+          if (Array.isArray(orders)) {
+            const found = orders.find(o => String(o.id) === String(orderId));
+            if (found) {
+              const mappedItems = (found.order_items || []).map((oi: any) => {
+                const matchedProduct = (products || []).find((p: any) => String(p.id) === String(oi.product_id));
+                return {
+                  id: oi.product_id,
+                  name: oi.name,
+                  img: matchedProduct?.img || matchedProduct?.image || "📿",
+                  price: (oi.price || 0) / 100,
+                  qty: oi.qty || 1
+                };
+              });
+              setOrderItems(mappedItems);
+              if (found.amount) setTotalAmount((found.amount || 0) / 100);
+            }
           }
           setLoading(false);
         })

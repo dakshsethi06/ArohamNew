@@ -151,8 +151,8 @@ export function WhyAroham() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
-              { icon: Mail,          label: "Email Us",  sub: CONTACT_INFO.email,        href: CONTACT_INFO.emailMailto, green: false, target: "_self" },
-              { icon: Phone,         label: "Call Us",   sub: CONTACT_INFO.phoneDisplay, href: CONTACT_INFO.phoneTel,     green: false, target: "_self" },
+              { icon: Mail,          label: "Email Us",  sub: CONTACT_INFO.email,        href: CONTACT_INFO.emailMailto, green: false, target: undefined },
+              { icon: Phone,         label: "Call Us",   sub: CONTACT_INFO.phoneDisplay, href: CONTACT_INFO.phoneTel,     green: false, target: undefined },
               { icon: MessageCircle, label: "WhatsApp",  sub: "Chat instantly",          href: CONTACT_INFO.whatsappUrl,   green: true,  target: "_blank" },
             ].map(({ icon: Ic, label, sub, href, green, target }) => (
               <a key={label} href={href} target={target} rel="noopener noreferrer" className="flex items-center gap-4 px-5 py-4 rounded-2xl cursor-pointer transition-all duration-200 hover:brightness-110 active:scale-98"
