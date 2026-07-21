@@ -98,7 +98,7 @@ export function NavagrahaHero({ onShop, onConsult }: { onShop: () => void; onCon
             </div>
             {/* Orbiting planets */}
             {GRAHAS.slice(1).map((g, i) => {
-              const orbitSize = Math.round(((g.orbit * 2) + g.size) * S);
+              const orbitSize = Math.round(g.orbit * 2 * S);
               const pSize = Math.round(g.size * S * 0.9);
               const orbitR = Math.round(g.orbit * S);
               const gi = i + 1;
