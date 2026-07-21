@@ -168,14 +168,22 @@ export function PaymentPage() {
               })
             }).catch(() => {});
 
-            await clearCart();
+            sessionStorage.setItem("aroham_last_order_items", JSON.stringify(items));
             sessionStorage.removeItem("aroham_shipping_addr");
             sessionStorage.setItem("aroham_last_order_id", String(internalOrderId));
             sessionStorage.setItem("aroham_order_total", String(total));
+            
+            // Defer clearing the cart slightly to avoid the cart counter jumping to 0 
+            // while the Razorpay success animation/navigation is still happening
+            setTimeout(() => {
+              clearCart();
+            }, 500);
+
             navigate("/checkout/confirm");
           } catch (e: any) {
             console.error("Verification error:", e);
-            await clearCart();
+            sessionStorage.setItem("aroham_last_order_items", JSON.stringify(items));
+            setTimeout(() => clearCart(), 500);
             navigate("/checkout/confirm");
           }
         },

@@ -74,31 +74,26 @@ export function ConfirmationPage() {
     const t2 = setTimeout(() => setTimelineReached(2), 1200);
 
     if (orderId && orderId !== "—") {
-      Promise.all([api("/orders"), api("/products")])
-        .then(([orders, products]: [any[], any[]]) => {
-          if (Array.isArray(orders)) {
-            const found = orders.find(o => String(o.id) === String(orderId));
-            if (found) {
-              const mappedItems = (found.order_items || []).map((oi: any) => {
-                const matchedProduct = (products || []).find((p: any) => String(p.id) === String(oi.product_id));
-                return {
-                  id: oi.product_id,
-                  name: oi.name,
-                  img: matchedProduct?.img || matchedProduct?.image || "📿",
-                  price: (oi.price || 0) / 100,
-                  qty: oi.qty || 1
-                };
-              });
-              setOrderItems(mappedItems);
-              if (found.amount) setTotalAmount((found.amount || 0) / 100);
-            }
+      // Try to load items from the session storage saved by PaymentPage
+      try {
+        const savedItems = sessionStorage.getItem("aroham_last_order_items");
+        if (savedItems) {
+          const parsed = JSON.parse(savedItems);
+          if (Array.isArray(parsed)) {
+            const mappedItems = parsed.map((item: any) => ({
+              id: item.product?.id || Date.now(),
+              name: item.product?.name || "Sacred Item",
+              img: item.product?.img || "📿",
+              price: item.product?.price || 0,
+              qty: item.qty || 1
+            }));
+            setOrderItems(mappedItems);
           }
-          setLoading(false);
-        })
-        .catch(err => {
-          console.error("Failed to load confirmation details:", err);
-          setLoading(false);
-        });
+        }
+      } catch (e) {
+        console.error("Failed to load local order items", e);
+      }
+      setLoading(false);
     } else {
       setLoading(false);
     }
