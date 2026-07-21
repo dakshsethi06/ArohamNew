@@ -6,7 +6,8 @@ import { AuthInput } from "./AuthInput";
 import { OtpBoxes } from "./OtpBoxes";
 import { Countdown } from "./Countdown";
 import { useAuth } from "@/context/AuthContext";
-import { firebaseAuth } from "@/lib/firebase";
+import { firebaseAuth, db } from "@/lib/firebase";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, updateProfile } from "firebase/auth";
 import { api } from "@/lib/api";
 import * as Select from "@radix-ui/react-select";
@@ -173,16 +174,20 @@ export function AuthPage() {
         setLoading(false);
         handleAuthSuccess();
       } else {
-        // Sign Up Flow: Check if profile already exists
+        // Sign Up Flow: Check if profile already exists in Firestore
         try {
-          const profileCheck = await api("/auth/profile").catch(() => null);
-
-          if (profileCheck && profileCheck.full_name) {
-            // User already has a complete profile, skip profile setup
-            setLoading(false);
-            handleAuthSuccess();
+          if (firebaseAuth.currentUser) {
+            const userDoc = await getDoc(doc(db, "users", firebaseAuth.currentUser.uid));
+            if (userDoc.exists() && userDoc.data().fullName) {
+              // User already has a complete profile, skip profile setup
+              setLoading(false);
+              handleAuthSuccess();
+            } else {
+              // New user, go to profile setup
+              setLoading(false);
+              goTo("profile-setup");
+            }
           } else {
-            // New user, go to profile setup
             setLoading(false);
             goTo("profile-setup");
           }
@@ -218,20 +223,20 @@ export function AuthPage() {
         await updateProfile(firebaseAuth.currentUser, { displayName: name });
       }
 
-      // Sync account to backend database (Save to Supabase DB)
-      await api("/auth/signup", {
-        method: "POST",
-        body: JSON.stringify({
+      // Sync account to backend database (Save to Firestore DB)
+      if (firebaseAuth.currentUser) {
+        const userRef = doc(db, "users", firebaseAuth.currentUser.uid);
+        await setDoc(userRef, {
           fullName: name.trim(),
           phone: phone.replace(/\D/g, ""),
           email: email.trim(),
           dob: dob || null,
-          gender: gender
-        })
-      }).catch(() => {});
+          gender: gender,
+          createdAt: serverTimestamp()
+        }, { merge: true });
+      }
 
       setLoading(false);
-      // Automatically navigate straight to Dashboard without extra continue screens!
       handleAuthSuccess();
     } catch (e: any) {
       setLoading(false);
@@ -350,7 +355,10 @@ export function AuthPage() {
               <Popover.Trigger asChild>
                 <button className="w-full px-4 py-2.5 rounded-xl text-sm text-left flex items-center justify-between transition-all focus:ring-2 focus:ring-offset-1"
                   style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: dob ? MAROON : "#9A8A78", fontFamily: SANS, outline: "none" }}>
-                  {dob ? new Date(dob).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "Select date"}
+                  {dob ? (() => {
+                    const [y, m, d] = dob.split("-").map(Number);
+                    return new Date(y, m - 1, d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+                  })() : "Select date"}
                   <Calendar size={14} style={{ color: GOLD }} />
                 </button>
               </Popover.Trigger>
@@ -363,10 +371,19 @@ export function AuthPage() {
                     .rdp-nav_button { color: ${MAROON}; }
                     .rdp-day_selected { background: ${MAROON} !important; color: ${IVORY} !important; font-weight: 600; }
                     .rdp-day:hover:not(.rdp-day_selected) { background: rgba(91,31,36,0.08); }
+                    .rdp-day_today:not(.rdp-day_selected) { font-weight: inherit; border: none; outline: none; }
+                    .rdp-day:focus { outline: none !important; border: none !important; background: transparent; }
                   `}</style>
-                  <DayPicker mode="single" selected={dob ? new Date(dob) : undefined}
-                    onSelect={(date) => { if (date) setDob(date.toISOString().split("T")[0]); }}
-                    defaultMonth={dob ? new Date(dob) : new Date(2000, 0)}
+                  <DayPicker mode="single" selected={dob ? (() => { const [y, m, d] = dob.split("-").map(Number); return new Date(y, m - 1, d); })() : undefined}
+                    onSelect={(date) => { 
+                      if (date) {
+                        const y = date.getFullYear();
+                        const m = String(date.getMonth() + 1).padStart(2, '0');
+                        const d = String(date.getDate()).padStart(2, '0');
+                        setDob(`${y}-${m}-${d}`); 
+                      }
+                    }}
+                    defaultMonth={dob ? (() => { const [y, m, d] = dob.split("-").map(Number); return new Date(y, m - 1, d); })() : new Date(2000, 0)}
                     fromYear={1950} toYear={new Date().getFullYear()} captionLayout="dropdown" />
                 </Popover.Content>
               </Popover.Portal>

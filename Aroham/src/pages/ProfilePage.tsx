@@ -249,7 +249,10 @@ export function ProfilePage() {
                       <Popover.Trigger asChild>
                         <button className="w-full px-3 py-2.5 rounded-xl text-sm text-left flex items-center justify-between transition-all focus:ring-2 focus:ring-offset-1"
                           style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: editForm.dob ? MAROON : "#9A8A78", fontFamily: SANS, outline: "none" }}>
-                          {editForm.dob ? new Date(editForm.dob).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "Select date"}
+                          {editForm.dob ? (() => {
+                            const [y, m, d] = editForm.dob.split("-").map(Number);
+                            return new Date(y, m - 1, d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+                          })() : "Select date"}
                           <Calendar size={14} style={{ color: GOLD }} />
                         </button>
                       </Popover.Trigger>
@@ -262,10 +265,19 @@ export function ProfilePage() {
                             .rdp-nav_button { color: ${MAROON}; }
                             .rdp-day_selected { background: ${MAROON} !important; color: ${IVORY} !important; font-weight: 600; }
                             .rdp-day:hover:not(.rdp-day_selected) { background: rgba(91,31,36,0.08); }
+                            .rdp-day_today:not(.rdp-day_selected) { font-weight: inherit; border: none; outline: none; }
+                            .rdp-day:focus { outline: none !important; border: none !important; background: transparent; }
                           `}</style>
-                          <DayPicker mode="single" selected={editForm.dob ? new Date(editForm.dob) : undefined}
-                            onSelect={(date) => { if (date) setEditForm(p => ({ ...p, dob: date.toISOString().split("T")[0] })); }}
-                            defaultMonth={editForm.dob ? new Date(editForm.dob) : new Date(2000, 0)}
+                          <DayPicker mode="single" selected={editForm.dob ? (() => { const [y, m, d] = editForm.dob.split("-").map(Number); return new Date(y, m - 1, d); })() : undefined}
+                            onSelect={(date) => { 
+                              if (date) {
+                                const y = date.getFullYear();
+                                const m = String(date.getMonth() + 1).padStart(2, '0');
+                                const d = String(date.getDate()).padStart(2, '0');
+                                setEditForm(p => ({ ...p, dob: `${y}-${m}-${d}` })); 
+                              }
+                            }}
+                            defaultMonth={editForm.dob ? (() => { const [y, m, d] = editForm.dob.split("-").map(Number); return new Date(y, m - 1, d); })() : new Date(2000, 0)}
                             fromYear={1950} toYear={new Date().getFullYear()} captionLayout="dropdown" />
                         </Popover.Content>
                       </Popover.Portal>
