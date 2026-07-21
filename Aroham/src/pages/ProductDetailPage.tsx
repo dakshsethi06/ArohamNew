@@ -7,6 +7,7 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useProducts } from "@/hooks/useProducts";
 import { ArohamProduct } from "@/types/product";
+import { DEFAULT_PRODUCTS } from "@/constants/products";
 import { getShiprocketDeliveryEstimate } from "@/lib/shipping";
 
 const PROD_TABS = ["Description", "Benefits", "How to Use", "Temple Ritual", "Reviews"];
@@ -26,13 +27,12 @@ export function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    if (!productsLoading) {
-      const found = products.find(p => p.slug === slug);
+    if (slug) {
+      const found = products.find(p => p.slug === slug) || DEFAULT_PRODUCTS.find(p => p.slug === slug);
       if (found) setProduct(found);
       setLoading(false);
     }
-  }, [slug, products, productsLoading]);
+  }, [slug, products]);
 
   const [tab, setTab] = useState(0);
   const [qty, setQty] = useState(1);
