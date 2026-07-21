@@ -84,6 +84,7 @@ export function AuthPage() {
     setNoAccountNotice(false);
 
     let currentFlow = flow;
+    let isAgreed = agreed;
     if (flow === "signin") {
       try {
         const checkRes = await fetch(`${import.meta.env.VITE_API_BASE || "http://localhost:5000/api"}/auth/email-by-phone?phone=${encodeURIComponent(phoneDigits)}`);
@@ -92,12 +93,13 @@ export function AuthPage() {
           currentFlow = "signup";
           setActiveTab("signup");
           setAgreed(true);
+          isAgreed = true;
           setNoAccountNotice(true);
         }
       } catch (e) {}
     }
 
-    if (currentFlow === "signup" && !agreed) {
+    if (flow === "signup" && !isAgreed) {
       setLoading(false);
       setErrorMsg("Please agree to the Terms & Privacy Policy.");
       return;
