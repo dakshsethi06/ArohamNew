@@ -356,19 +356,30 @@ export function ProfilePage() {
                     </div>
                   </div>
                   {isExpanded && (
-                    <div className="px-4 pb-4 pt-2 border-t border-black/5 space-y-3">
-                      <div className="flex justify-between items-center text-xs">
-                        {ORDER_STEPS.map((s, idx) => (
-                          <div key={s.label} className="text-center">
-                            <div className="w-6 h-6 rounded-full flex items-center justify-center mx-auto mb-1 text-[10px]"
-                              style={{ background: idx <= stepIdx ? MAROON : "#eee", color: idx <= stepIdx ? IVORY : "#999" }}>
-                              {s.icon}
+                    <div className="px-4 pb-4 pt-2 border-t border-black/5 space-y-4">
+                      {/* Timeline */}
+                      <div className="relative pt-2">
+                        {/* Background line */}
+                        <div className="absolute top-[18px] left-[12%] right-[12%] h-[2px] bg-[#eee] z-0" />
+                        {/* Progress line */}
+                        <div className="absolute top-[18px] left-[12%] h-[2px] z-0 transition-all duration-500" 
+                             style={{ width: `${(stepIdx / (ORDER_STEPS.length - 1)) * 76}%`, background: MAROON }} />
+                        
+                        <div className="flex justify-between items-center text-xs relative z-10">
+                          {ORDER_STEPS.map((s, idx) => (
+                            <div key={s.label} className="text-center flex-1 flex flex-col items-center">
+                              <div className="w-6 h-6 rounded-full flex items-center justify-center mb-1 text-[10px] transition-colors"
+                                style={{ background: idx <= stepIdx ? MAROON : "#eee", color: idx <= stepIdx ? IVORY : "#999" }}>
+                                {s.icon}
+                              </div>
+                              <span style={{ fontSize: 9, color: idx <= stepIdx ? MAROON : "#999", fontWeight: idx <= stepIdx ? 600 : 400 }}>{s.label}</span>
                             </div>
-                            <span style={{ fontSize: 9, color: idx <= stepIdx ? MAROON : "#999" }}>{s.label}</span>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
-                      <div className="space-y-2">
+
+                      {/* Items */}
+                      <div className="space-y-2 pt-2 border-t border-black/5">
                         {itemsList.map((it: any, i: number) => (
                           <div key={i} className="flex justify-between items-center text-xs">
                             <span>{it.product_name || "Sacred Item"} x{it.quantity}</span>
@@ -376,6 +387,18 @@ export function ProfilePage() {
                           </div>
                         ))}
                       </div>
+
+                      {/* Cancel Button */}
+                      {stepIdx <= 1 && (
+                        <div className="pt-2 flex justify-end">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); alert("Order cancellation requested. Support will contact you shortly."); }}
+                            className="text-[10px] font-semibold px-4 py-1.5 rounded-full transition-colors border"
+                            style={{ borderColor: "rgba(220,38,38,0.3)", color: "#DC2626", background: "rgba(220,38,38,0.05)" }}>
+                            Cancel Order
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
