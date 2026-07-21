@@ -4,26 +4,53 @@ import { CartItem } from "@/types/cart";
 import { useAuth } from "./AuthContext";
 import { api } from "@/lib/api";
 
+export interface AppliedCoupon {
+  code: string;
+  type: "percent" | "flat";
+  value: number;
+  label: string;
+}
+
+export const VALID_COUPONS: Record<string, { type: "percent" | "flat"; value: number; label: string }> = {
+  AROHAM10: { type: "percent", value: 10, label: "10% OFF sacred items" },
+  SACRED15: { type: "percent", value: 15, label: "15% OFF sacred items" },
+  FIRST100: { type: "flat", value: 100, label: "₹100 Instant Discount" },
+  DIVINE20: { type: "percent", value: 20, label: "20% OFF divine discount" },
+};
+
 interface CartContextValue {
   items: CartItem[];
   cartCount: number;
   subtotal: number;
+  discount: number;
   total: number;
+  appliedCoupon: AppliedCoupon | null;
+  applyCoupon: (code: string) => { success: boolean; message: string };
+  removeCoupon: () => void;
   showCart: boolean;
   openCart: () => void;
   closeCart: () => void;
-  addToCart: (product: ArohamProduct, qty?: number) => void;
+  addToCart: (product: ArohamProduct, qty?: number, openSidebar?: boolean) => void;
   removeFromCart: (id: number) => void;
   updateQty: (id: number, delta: number) => void;
   clearCart: () => void;
+  toast: string | null;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showToast = (productName: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast(productName);
+    toastTimer.current = setTimeout(() => setToast(null), 2200);
+  };
   const [showCart, setShowCart] = useState(false);
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, cartSynced } = useAuth();
 
   // Track previous login state to detect logout
   const prevIsLoggedIn = useRef<boolean | null>(null);
@@ -33,83 +60,54 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const justLoggedOut = prevIsLoggedIn.current === true && !isLoggedIn;
     if (justLoggedOut) isLoggingOut.current = true;
-    
-    // Check if we just logged in
-    const justLoggedIn = prevIsLoggedIn.current === false && isLoggedIn;
     prevIsLoggedIn.current = isLoggedIn;
 
-    if (isLoggedIn) {
-      const fetchCart = () => {
-        api("/cart").then(data => {
-          if (Array.isArray(data)) {
-            setItems(data.map((item: any) => {
-              const p = item.product || item;
-              return {
-                product: {
-                  id: p.id || p.product_id || item.product_id || item.id,
-                  name: p.name || "Product",
-                  price: p.price || 0,
-                  slug: p.slug || "",
-                  subtitle: p.subtitle || "",
-                  category: p.category || "",
-                  purpose: p.purpose || "",
-                  original: p.original || p.original_price || p.price || 0,
-                  rating: p.rating || 5,
-                  reviews: p.reviews || 0,
-                  img: p.img || "",
-                  badges: p.badges || [],
-                  shortDesc: p.shortDesc || p.short_desc || "",
-                  benefits: p.benefits || [],
-                  size: p.size || "",
-                  material: p.material || "",
-                  useFor: p.useFor || p.use_for || []
-                },
-                qty: item.qty || item.quantity || 1
-              };
-            }));
-          }
-        }).catch(e => console.error("Error fetching cart:", e));
-      };
-
-      if (justLoggedIn) {
-        // Sync local guest cart to backend before fetching
-        const local = localStorage.getItem("aroham_cart");
-        let localItems: CartItem[] = [];
-        if (local) {
-          try { localItems = JSON.parse(local); } catch (e) { }
+    if (isLoggedIn && cartSynced) {
+      // Only fetch from backend after local cart has been synced
+      api("/cart").then(data => {
+        // Assume backend returns array of cart items mapping to our structure
+        if (Array.isArray(data)) {
+          setItems(data.map((item: any) => {
+            const p = item.product || item;
+            return {
+              product: {
+                id: p.id || p.product_id || item.product_id || item.id,
+                name: p.name || "Product",
+                price: p.price || 0,
+                slug: p.slug || "",
+                subtitle: p.subtitle || "",
+                category: p.category || "",
+                purpose: p.purpose || "",
+                original: p.original || p.original_price || p.price || 0,
+                rating: p.rating || 5,
+                reviews: p.reviews || 0,
+                img: p.img || "",
+                badges: p.badges || [],
+                shortDesc: p.shortDesc || p.short_desc || "",
+                benefits: p.benefits || [],
+                size: p.size || "",
+                material: p.material || "",
+                useFor: p.useFor || p.use_for || []
+              },
+              qty: item.qty || item.quantity || 1
+            };
+          }));
         }
-        
-        if (localItems.length > 0) {
-          // Push each local item to the backend sequentially, then fetch
-          Promise.all(localItems.map(item => 
-            api("/cart", {
-              method: "POST",
-              body: JSON.stringify({ productId: item.product.id, qty: item.qty })
-            }).catch(e => console.error("Error syncing local item", e))
-          )).then(() => {
-            localStorage.removeItem("aroham_cart");
-            fetchCart();
-          });
-        } else {
-          fetchCart();
-        }
-      } else {
-        fetchCart();
-      }
+      }).catch(e => console.error("Error fetching cart:", e));
     } else if (justLoggedOut) {
       // User just logged out — clear cart and localStorage
       setItems([]);
       localStorage.removeItem("aroham_cart");
       localStorage.removeItem("aroham_buy_now_intent");
       setTimeout(() => { isLoggingOut.current = false; }, 100);
-    } else {
+    } else if (!isLoggedIn) {
       // Guest session — load from localStorage
       const local = localStorage.getItem("aroham_cart");
       if (local) {
         try { setItems(JSON.parse(local)); } catch (e) { }
       }
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, cartSynced]);
 
   // Save to LocalStorage if not logged in
   useEffect(() => {
@@ -118,17 +116,64 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [items, isLoggedIn]);
 
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(() => {
+    try {
+      const saved = sessionStorage.getItem("aroham_applied_coupon");
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
   const cartCount = items.reduce((s, i) => s + i.qty, 0);
   const subtotal = items.reduce((s, i) => s + i.product.price * i.qty, 0);
-  const total = subtotal + 99 + Math.round(subtotal * 0.05);
 
-  const addToCart = async (product: ArohamProduct, qty: number = 1) => {
+  let discount = 0;
+  if (appliedCoupon && subtotal > 0) {
+    if (appliedCoupon.type === "percent") {
+      discount = Math.round((subtotal * appliedCoupon.value) / 100);
+    } else {
+      discount = Math.min(subtotal, appliedCoupon.value);
+    }
+  }
+
+  const taxableAmount = Math.max(0, subtotal - discount);
+  const gst = Math.round(taxableAmount * 0.05);
+  const total = taxableAmount + gst;
+
+  const applyCoupon = (code: string) => {
+    const cleanCode = code.trim().toUpperCase();
+    const found = VALID_COUPONS[cleanCode];
+    if (!found) {
+      return { success: false, message: "Invalid coupon code. Try AROHAM10 or FIRST100" };
+    }
+    const coupon: AppliedCoupon = {
+      code: cleanCode,
+      type: found.type,
+      value: found.value,
+      label: found.label
+    };
+    setAppliedCoupon(coupon);
+    sessionStorage.setItem("aroham_applied_coupon", JSON.stringify(coupon));
+    return { success: true, message: `Coupon ${cleanCode} applied!` };
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    sessionStorage.removeItem("aroham_applied_coupon");
+  };
+
+  const addToCart = async (product: ArohamProduct, qty: number = 1, openSidebar: boolean = false) => {
     setItems(prev => {
       const existing = prev.find(i => i.product.id === product.id);
       if (existing) return prev.map(i => i.product.id === product.id ? { ...i, qty: i.qty + qty } : i);
       return [...prev, { product, qty }];
     });
-    setShowCart(true);
+    if (openSidebar) {
+      setShowCart(true);
+    } else {
+      showToast(product.name);
+    }
 
     if (isLoggedIn) {
       await api("/cart", {
@@ -176,11 +221,49 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   return (
     <CartContext.Provider value={{
-      items, cartCount, subtotal, total,
+      items, cartCount, subtotal, discount, total,
+      appliedCoupon, applyCoupon, removeCoupon,
       showCart, openCart: () => setShowCart(true), closeCart: () => setShowCart(false),
-      addToCart, removeFromCart, updateQty, clearCart,
+      addToCart, removeFromCart, updateQty, clearCart, toast,
     }}>
       {children}
+      {/* Add-to-cart toast */}
+      <div
+        style={{
+          position: "fixed",
+          top: 24,
+          left: "50%",
+          transform: `translateX(-50%) translateY(${toast ? "0" : "-120%"})`,
+          opacity: toast ? 1 : 0,
+          transition: "all 0.35s cubic-bezier(0.4,0,0.2,1)",
+          zIndex: 9999,
+          pointerEvents: "none",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "12px 20px",
+            borderRadius: 16,
+            background: "rgba(91,31,36,0.95)",
+            backdropFilter: "blur(12px)",
+            boxShadow: "0 8px 32px rgba(91,31,36,0.3), 0 2px 8px rgba(0,0,0,0.1)",
+            color: "#FAF7F2",
+            fontFamily: "'Space Grotesk', sans-serif",
+            fontSize: 13,
+            fontWeight: 600,
+            whiteSpace: "nowrap",
+            maxWidth: "90vw",
+          }}
+        >
+          <span style={{ fontSize: 18 }}>✓</span>
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+            {toast} added to cart
+          </span>
+        </div>
+      </div>
     </CartContext.Provider>
   );
 }

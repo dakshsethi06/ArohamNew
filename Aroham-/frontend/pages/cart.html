@@ -22,6 +22,7 @@
       <a href="../index.html#products">Combos</a>
       <a href="../index.html#products">About</a>
       <a href="../index.html#products">Blog</a>
+      <a href="promocodes.html">Offers</a>
       <a href="profile.html" id="profile-nav-link" class="hidden">Profile</a>
       <a href="orders.html" id="orders-nav-link" class="hidden">Orders</a>
       <a href="chat.html" id="chat-nav-link" class="hidden">Consult Astrologer</a>
@@ -237,8 +238,23 @@
           <div style="display:flex; justify-content:space-between;"><span>Temple Consecration</span><span style="font-weight:500;">₹99</span></div>
           <div style="display:flex; justify-content:space-between;"><span>Shipping</span><span id="summary-shipping" style="font-weight:500; color:#2E7D32;">Free</span></div>
           <div style="display:flex; justify-content:space-between;"><span>GST (5%)</span><span id="summary-gst" style="font-weight:500;">₹0</span></div>
-          <div style="color:var(--marigold-deep); font-weight:600; font-size:0.85rem; cursor:pointer; display:flex; align-items:center; gap:4px; margin: 4px 0;">
-            🏷️ <span>Apply coupon or promo code</span>
+
+          <!-- Promo code section -->
+          <div id="promo-section" style="margin: 6px 0; display: flex; flex-direction: column; gap: 8px;">
+            <div id="promo-input-container" style="display: flex; gap: 8px; align-items: center;">
+              <input type="text" id="promo-input" placeholder="Promo Code" style="flex: 1; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 0.85rem; text-transform: uppercase; font-family: inherit; font-weight: 500;" />
+              <button type="button" id="btn-apply-promo" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.8rem; border-radius: 8px; font-weight: 600;" onclick="applyPromoFromInput()">Apply</button>
+            </div>
+            <div id="promo-badge-container" class="hidden" style="display: flex; align-items: center; justify-content: space-between; background: rgba(46, 125, 50, 0.08); border: 1px dashed #2E7D32; border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; color: #2E7D32;">
+              <span style="font-weight: 600; display: flex; align-items: center; gap: 6px;">🏷️ <span id="applied-promo-code">WELCOME10</span> applied!</span>
+              <button type="button" onclick="removePromoCode()" style="background: none; border: none; color: #d32f2f; cursor: pointer; font-size: 1.1rem; font-weight: 700; padding: 0 4px; line-height: 1;">&times;</button>
+            </div>
+            <a href="promocodes.html" style="font-size: 0.78rem; color: var(--marigold-deep); font-weight: 600; text-decoration: underline; display: inline-block;">View available offers &rarr;</a>
+          </div>
+
+          <div id="discount-row" class="hidden" style="display:flex; justify-content:space-between; color: #2E7D32; font-weight: 600;">
+            <span>Promo Discount</span>
+            <span id="summary-discount">-₹0</span>
           </div>
           <div style="display:flex; justify-content:space-between; border-top:1px solid var(--line); padding-top:16px; font-size:1.15rem; font-weight:700; color:var(--maroon);">
             <span>Grand Total</span>
@@ -350,6 +366,7 @@
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>

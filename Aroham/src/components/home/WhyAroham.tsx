@@ -1,5 +1,6 @@
 import { Flame, Gem, Star, Shield, Package, Award, Mail, Phone, MessageCircle } from "lucide-react";
 import { MAROON, GOLD, SAFFRON, IVORY, SANS, SERIF } from "@/constants/theme";
+import { CONTACT_INFO } from "@/constants/contact";
 import { pyramidImg, baglaImg, navratnaImg, gemstonImg, yantraPlateImg, pendantSilImg } from "@/constants/data";
 
 const WHY_ITEMS = [
@@ -150,18 +151,18 @@ export function WhyAroham() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
-              { icon: Mail,          label: "Email Us",  sub: "hello@aroham.in",   green: false },
-              { icon: Phone,         label: "Call Us",   sub: "+91 98765 43210",   green: false },
-              { icon: MessageCircle, label: "WhatsApp",  sub: "Chat instantly",    green: true  },
-            ].map(({ icon: Ic, label, sub, green }) => (
-              <div key={label} className="flex items-center gap-4 px-5 py-4 rounded-2xl cursor-pointer transition-all duration-200 hover:brightness-110"
+              { icon: Mail,          label: "Email Us",  sub: CONTACT_INFO.email,        href: CONTACT_INFO.emailMailto, green: false, target: undefined },
+              { icon: Phone,         label: "Call Us",   sub: CONTACT_INFO.phoneDisplay, href: CONTACT_INFO.phoneTel,     green: false, target: undefined },
+              { icon: MessageCircle, label: "WhatsApp",  sub: "Chat instantly",          href: CONTACT_INFO.whatsappUrl,   green: true,  target: "_blank" },
+            ].map(({ icon: Ic, label, sub, href, green, target }) => (
+              <a key={label} href={href} target={target} rel="noopener noreferrer" className="flex items-center gap-4 px-5 py-4 rounded-2xl cursor-pointer transition-all duration-200 hover:brightness-110 active:scale-98"
                 style={{ background: green ? "rgba(74,183,95,0.85)" : "rgba(250,247,242,0.06)", border: green ? "none" : "1px solid rgba(250,247,242,0.08)" }}>
                 <Ic size={18} style={{ color: green ? "#fff" : GOLD, flexShrink: 0 }} />
                 <div>
                   <div className="text-sm font-bold" style={{ color: green ? "#fff" : IVORY, fontFamily: SANS }}>{label}</div>
                   <div className="text-[11px]" style={{ color: green ? "rgba(255,255,255,0.75)" : "rgba(250,247,242,0.4)", fontFamily: SANS }}>{sub}</div>
                 </div>
-              </div>
+              </a>
             ))}
           </div>
         </div>

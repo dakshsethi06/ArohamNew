@@ -1,15 +1,17 @@
 require('dotenv').config();
-const ApiClient = require('./services/shiprocket/lib/api-client');
+const ShiprocketService = require('./services/shiprocket/ShiprocketService');
+
 async function run() {
   try {
     const email = process.env.SHIPROCKET_EMAIL;
     const password = process.env.SHIPROCKET_PASSWORD;
-    console.log("Using email:", email);
-    const client = new ApiClient(email, password);
-    const token = await client.login();
-    console.log("SUCCESS! Got token:", token.substring(0, 15) + "...");
+    console.log("Testing Shiprocket Serviceability for email:", email);
+    
+    const service = new ShiprocketService(email, password);
+    const result = await service.checkServiceability("110001", "400001", 0.5, 1);
+    console.log("SERVICEABILITY RESULT:", JSON.stringify(result, null, 2).slice(0, 500));
   } catch (e) {
-    console.error("FAILED TO LOGIN:", e.message);
+    console.error("SERVICEABILITY TEST FAILED:", e.message);
   }
 }
 run();

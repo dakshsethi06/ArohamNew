@@ -21,7 +21,7 @@ router.get("/", requireAuth, async (req, res) => {
 
 // POST /api/addresses - Save a shipping address
 router.post("/", requireAuth, async (req, res) => {
-  const { name, phone, email, address, city, state, pincode } = req.body;
+  const { name, phone, email, address, city, state, pincode, address_type } = req.body;
   if (!phone || !/^\d{10}$/.test(phone.trim())) {
     return res.status(400).json({ error: "Phone number must be exactly 10 digits" });
   }
@@ -35,7 +35,6 @@ router.post("/", requireAuth, async (req, res) => {
       .eq("phone", phone)
       .eq("address", address)
       .eq("city", city)
-      .eq("state", state)
       .eq("pincode", pincode)
       .maybeSingle();
 
@@ -46,12 +45,47 @@ router.post("/", requireAuth, async (req, res) => {
 
     const { data, error } = await supabase
       .from("addresses")
-      .insert({ user_id: req.user.id, name, phone, email, address, city, state, pincode })
+      .insert({ user_id: req.user.id, name, phone, email, address, city, state, pincode, address_type })
       .select()
       .single();
 
     if (error) throw error;
     res.json({ success: true, data });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// PUT /api/addresses/:id - Update an existing address
+router.put("/:id", requireAuth, async (req, res) => {
+  const { name, phone, email, address, city, state, pincode, address_type } = req.body;
+  try {
+    const { data, error } = await supabase
+      .from("addresses")
+      .update({ name, phone, email, address, city, state, pincode, address_type })
+      .eq("id", req.params.id)
+      .eq("user_id", req.user.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json({ success: true, data });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// DELETE /api/addresses/:id - Delete a saved address
+router.delete("/:id", requireAuth, async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from("addresses")
+      .delete()
+      .eq("id", req.params.id)
+      .eq("user_id", req.user.id);
+
+    if (error) throw error;
+    res.json({ success: true, message: "Address deleted" });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

@@ -2,8 +2,63 @@
 // "3. ORDER PROCESSING": order (PENDING) → order items → reserve stock → payment record
 const supabase = require("../config/supabase");
 
-async function createPendingOrder(userId, products, address) {
-  const amount = products.reduce((s, p) => s + p.subtotal, 0);
+const PROMO_CODES = [
+  {
+    code: "AROHAM10",
+    type: "percentage",
+    value: 10,
+    description: "Get 10% off on all sacred items."
+  },
+  {
+    code: "DEVOTION20",
+    type: "percentage",
+    value: 20,
+    minPurchase: 300000, // ₹3,000 in paise
+    description: "Get 20% off on orders above ₹3,000."
+  },
+  {
+    code: "FESTIVE500",
+    type: "flat",
+    value: 50000, // ₹500 in paise
+    minPurchase: 250000, // ₹2,500 in paise
+    description: "Flat ₹500 off on orders above ₹2,500."
+  },
+  {
+    code: "FREEENERGIZATION",
+    type: "flat",
+    value: 9900, // ₹99 in paise (saves temple consecration fee)
+    description: "Free Temple Consecration (Save ₹99)."
+  },
+  {
+    code: "FIRST300",
+    type: "flat",
+    value: 30000, // ₹300 in paise
+    description: "Flat ₹300 off on your first order."
+  }
+];
+
+async function createPendingOrder(userId, products, address, promoCode) {
+  const subtotal = products.reduce((s, p) => s + p.subtotal, 0);
+  let discount = 0;
+
+  if (promoCode) {
+    const promo = PROMO_CODES.find(p => p.code.toUpperCase() === promoCode.toUpperCase());
+    if (promo) {
+      let valid = true;
+      if (promo.minPurchase && subtotal < promo.minPurchase) {
+        valid = false;
+      }
+      if (valid) {
+        if (promo.type === "percentage") {
+          discount = Math.floor(subtotal * (promo.value / 100));
+        } else if (promo.type === "flat") {
+          discount = Math.min(subtotal, promo.value);
+        }
+      }
+    }
+  }
+
+  const amount = Math.max(0, subtotal - discount);
 
   // 1. Order record (status: PENDING) → ORDERS TABLE
   const { data: order, error: oErr } = await supabase

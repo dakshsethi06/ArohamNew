@@ -6,7 +6,7 @@ import { HexPrismCarousel } from "./HexPrismCarousel";
 export function ShopConsultCards({ products, onShop, onProductClick }: { products: ArohamProduct[]; onShop: () => void; onProductClick?: (p: ArohamProduct) => void }) {
   const displayProducts = products.length >= 3 ? products.slice(0, 3) : [];
   return (
-    <section className="py-20 px-6 lg:px-10" style={{ background: "#FAF7F2" }}>
+    <section className="py-10 lg:py-20 px-4 sm:px-6 lg:px-10" style={{ background: "#FAF7F2" }}>
       <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-6">
         {/* Shop card */}
         <div className="rounded-3xl overflow-hidden group transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl h-full"

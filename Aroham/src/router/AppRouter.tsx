@@ -28,7 +28,6 @@ function MainLayout() {
   const { showAuth } = useAuth();
   return (
     <>
-      <ScrollToTop />
       <Nav />
       {showCart && <CartSidebar />}
       {showAuth && <AuthPage />}
@@ -42,6 +41,7 @@ function MainLayout() {
 export function AppRouter() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route element={<MainLayout />}>
           <Route path="/" element={<HomePage />} />

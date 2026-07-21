@@ -120,13 +120,13 @@ function ChartTooltipContent({
   labelKey,
 }: React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
   React.ComponentProps<"div"> & {
-    payload?: any[];
-    label?: any;
     hideLabel?: boolean;
     hideIndicator?: boolean;
     indicator?: "line" | "dot" | "dashed";
     nameKey?: string;
     labelKey?: string;
+    payload?: any;
+    label?: any;
   }) {
   const { config } = useChart();
 
@@ -260,7 +260,7 @@ function ChartLegendContent({
   nameKey,
 }: React.ComponentProps<"div"> & {
     payload?: any[];
-    verticalAlign?: "top" | "bottom" | "middle";
+    verticalAlign?: string;
     hideIcon?: boolean;
     nameKey?: string;
   }) {

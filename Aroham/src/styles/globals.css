@@ -1,0 +1,39 @@
+/* Prevent horizontal overflow on mobile */
+html, body {
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Mobile responsive utilities */
+@media (max-width: 768px) {
+  /* Fix iOS auto-zoom on input focus */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Hide scrollbars on horizontal scroll containers */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* GPU Hardware Acceleration & Smooth Tab Transitions */
+button, a, input, [role="button"] {
+  touch-action: manipulation;
+}
+
+/* Enable hardware acceleration on drawer dialogs & modals */
+[role="dialog"], .backdrop-blur-sm, [class*="transition-"] {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}

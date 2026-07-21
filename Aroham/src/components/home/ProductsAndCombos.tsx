@@ -25,12 +25,12 @@ export function ProductsAndCombos({ products, onProductClick, onAddCombo: _onAdd
   ];
 
   return (
-    <section className="py-20 px-6 lg:px-10" style={{ background: "#FAF7F2" }}>
-      <div className="max-w-7xl mx-auto space-y-16">
+    <section className="py-10 lg:py-20 px-4 sm:px-6 lg:px-10" style={{ background: "#FAF7F2" }}>
+      <div className="max-w-7xl mx-auto space-y-8 lg:space-y-12">
         {shelves.map(([title, eyebrow, badge, products, eyebrowColor], si) => (
           <div key={title}>
-            {si > 0 && <div className="h-px mb-16" style={{ background: "linear-gradient(90deg,transparent,rgba(91,31,36,0.1),transparent)" }} />}
-            <div className="flex items-end justify-between gap-4 mb-8">
+            {si > 0 && <div className="h-px mb-6 lg:mb-10" style={{ background: "linear-gradient(90deg,transparent,rgba(91,31,36,0.1),transparent)" }} />}
+            <div className="flex items-end justify-between gap-4 mb-4 lg:mb-8">
               <div>
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="text-xs tracking-[0.18em] uppercase font-medium" style={{ color: eyebrowColor, fontFamily: SANS }}>{eyebrow}</span>
@@ -49,9 +49,9 @@ export function ProductsAndCombos({ products, onProductClick, onAddCombo: _onAdd
                   onProductClick={onProductClick} onAddToCart={onAddToCart} />
               ))}
             </div>
-            <div className="flex md:hidden gap-3 overflow-x-auto pb-2 -mx-6 px-6" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
+            <div className="flex md:hidden gap-3 overflow-x-auto pb-2 -mx-6 px-6 items-stretch" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
               {products.map((p, pi) => (
-                <div key={`${si}-${pi}-m`} style={{ minWidth: "52vw", maxWidth: "52vw", flexShrink: 0 }}>
+                <div key={`${si}-${pi}-m`} className="flex flex-col h-full" style={{ minWidth: "68vw", maxWidth: "68vw", flexShrink: 0 }}>
                   <ProductCard product={p} wishKey={`${si}-m-${p.id}`}
                     wished={!!wish[`${si}-m-${p.id}`]} onToggleWish={toggleWish}
                     onProductClick={onProductClick} onAddToCart={onAddToCart} />

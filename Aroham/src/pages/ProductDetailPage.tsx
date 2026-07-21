@@ -1,11 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router";
 import { Star, ShoppingCart, Share2, Heart, ChevronRight, Sparkles, Flame, Gem, Award, Shield, Package, Truck, CheckCircle, Mail, Phone, ChevronDown } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
+import { CONTACT_INFO } from "@/constants/contact";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useProducts } from "@/hooks/useProducts";
 import { ArohamProduct } from "@/types/product";
+import { DEFAULT_PRODUCTS } from "@/constants/products";
+import { getShiprocketDeliveryEstimate } from "@/lib/shipping";
 
 const PROD_TABS = ["Description", "Benefits", "How to Use", "Temple Ritual", "Reviews"];
 const REVIEWS_DATA = [
@@ -24,18 +27,77 @@ export function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    if (!productsLoading) {
-      const found = products.find(p => p.slug === slug);
+    if (slug) {
+      const found = products.find(p => p.slug === slug) || DEFAULT_PRODUCTS.find(p => p.slug === slug);
       if (found) setProduct(found);
       setLoading(false);
     }
-  }, [slug, products, productsLoading]);
+  }, [slug, products]);
 
   const [tab, setTab] = useState(0);
   const [qty, setQty] = useState(1);
   const [selectedImg, setSelectedImg] = useState(0);
   const [contactOpen, setContactOpen] = useState(false);
+  const [showSticky, setShowSticky] = useState(false);
+  const mainButtonsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = mainButtonsRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      setShowSticky(!entry.isIntersecting);
+    }, { threshold: 0.1 });
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [product, loading]);
+
+  const [pin, setPin] = useState("");
+  const [checking, setChecking] = useState(false);
+  const [deliveryResult, setDeliveryResult] = useState<{ city?: string; state?: string; date?: string; cod?: boolean; error?: string; fallback?: boolean; carrier?: string } | null>(null);
+
+  const checkDelivery = async () => {
+    if (pin.length !== 6 || !/^\d+$/.test(pin)) {
+      setDeliveryResult({ error: "Please enter a valid 6-digit pincode." });
+      return;
+    }
+    setChecking(true);
+    setDeliveryResult(null);
+    try {
+      let city = "";
+      let state = "";
+      try {
+        const locRes = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+        const locData = await locRes.json();
+        if (locData && locData[0] && locData[0].Status === "Success") {
+          const postOffice = locData[0].PostOffice[0];
+          city = postOffice.District;
+          state = postOffice.State;
+        }
+      } catch (e) {
+        console.error("Postal API error", e);
+      }
+
+      const est = await getShiprocketDeliveryEstimate(pin);
+      setDeliveryResult({
+        city: city || est.city || "",
+        state: state || est.state || "",
+        date: est.deliveryDate,
+        cod: est.codAvailable,
+        carrier: est.courier,
+      });
+    } catch (e) {
+      console.error("Pincode check error", e);
+      setDeliveryResult({
+        date: "3–5 business days",
+        cod: true,
+        carrier: "Shiprocket Express",
+        fallback: true
+      });
+    } finally {
+      setChecking(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -80,7 +142,7 @@ export function ProductDetailPage() {
         ))}
       </div>
     </div>,
-    <div className="grid sm:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {product?.benefits?.map(b => (
         <div key={b} className="flex items-start gap-3 p-4 rounded-2xl" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.07)" }}>
           <div className="w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center" style={{ background: "rgba(200,160,68,0.1)" }}><Sparkles size={14} style={{ color: GOLD }} /></div>
@@ -154,15 +216,16 @@ export function ProductDetailPage() {
   return (
     <div className="w-full overflow-x-hidden" style={{ background: "#FAF7F2", minHeight: "100vh", fontFamily: SANS }}>
       <div className="pt-24 pb-0 px-5 lg:px-10">
-        <div className="max-w-7xl mx-auto flex items-center gap-2 text-xs mb-6" style={{ color: "#9A8A78" }}>
-          <button onClick={() => navigate("/")} className="hover:underline" style={{ color: MAROON }}>Home</button>
-          <ChevronRight size={12} />
-          <button onClick={() => navigate("/shop")} className="hover:underline" style={{ color: MAROON }}>Shop</button>
-          <ChevronRight size={12} /><span>{product.name}</span>
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center gap-2 text-xs mb-6" style={{ color: "#9A8A78" }}>
+          <button onClick={() => navigate("/")} className="hover:underline whitespace-nowrap" style={{ color: MAROON }}>Home</button>
+          <ChevronRight size={12} className="flex-shrink-0" />
+          <button onClick={() => navigate("/shop")} className="hover:underline whitespace-nowrap" style={{ color: MAROON }}>Shop</button>
+          <ChevronRight size={12} className="flex-shrink-0" />
+          <span>{product.name}</span>
         </div>
       </div>
       <div className="px-5 lg:px-10 pb-10">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-[48%_32%_20%] gap-8">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[48%_32%_20%] gap-6 lg:gap-8">
           {/* Gallery */}
           <div>
             <div className="rounded-3xl overflow-hidden aspect-square bg-amber-50 mb-3 relative group" style={{ boxShadow: "0 8px 40px rgba(91,31,36,0.1)" }}>
@@ -191,16 +254,18 @@ export function ProductDetailPage() {
             <h1 className="mb-1" style={{ fontFamily: SERIF, fontSize: "clamp(1.5rem,3vw,2.25rem)", fontWeight: 500, color: MAROON, lineHeight: 1.15 }}>{product.name}</h1>
             <p className="text-sm mb-3" style={{ color: GOLD, fontFamily: SANS, fontWeight: 600 }}>{product.subtitle}</p>
             <p className="text-sm leading-relaxed mb-4" style={{ color: "#5A4A3A" }}>{product.shortDesc}</p>
-            <div className="flex items-center gap-3 mb-5">
-              <div className="flex">{Array.from({ length: 5 }).map((_, j) => <Star key={j} size={14} fill={j < Math.round(product.rating) ? GOLD : "none"} stroke={GOLD} strokeWidth={1.5} />)}</div>
-              <span className="text-sm font-medium" style={{ color: MAROON }}>{product.rating}</span>
-              <span className="text-xs" style={{ color: "#9A8A78" }}>({product.reviews} reviews)</span>
-              <span className="text-xs" style={{ color: "#4A8A4A" }}>· 120+ bought this month</span>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-5">
+              <div className="flex items-center gap-3">
+                <div className="flex">{Array.from({ length: 5 }).map((_, j) => <Star key={j} size={14} fill={j < Math.round(product.rating) ? GOLD : "none"} stroke={GOLD} strokeWidth={1.5} />)}</div>
+                <span className="text-sm font-medium" style={{ color: MAROON }}>{product.rating}</span>
+                <span className="text-xs whitespace-nowrap" style={{ color: "#9A8A78" }}>({product.reviews} reviews)</span>
+              </div>
+              <span className="text-xs whitespace-nowrap" style={{ color: "#4A8A4A" }}>· 120+ bought this month</span>
             </div>
-            <div className="flex items-baseline gap-3 mb-1">
+            <div className="flex flex-wrap items-baseline gap-3 mb-1">
               <span className="text-3xl font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{product.price.toLocaleString("en-IN")}</span>
-              <span className="text-base line-through" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{product.original.toLocaleString("en-IN")}</span>
-              <span className="text-sm font-bold" style={{ color: "#4A8A4A" }}>{Math.round((1 - product.price / product.original) * 100)}% off</span>
+              <span className="text-base line-through" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{Math.round(product.original).toLocaleString("en-IN")}</span>
+              <span className="text-sm font-bold whitespace-nowrap" style={{ color: "#4A8A4A" }}>{Math.round((1 - product.price / product.original) * 100)}% off</span>
             </div>
             <p className="text-[11px] mb-5" style={{ color: "#9A8A78" }}>Inclusive of GST · Free shipping · Temple energized</p>
             <div className="flex items-center gap-3 mb-4">
@@ -211,7 +276,7 @@ export function ProductDetailPage() {
               </div>
               <span className="text-xs" style={{ color: "#4A8A4A" }}>✓ In Stock</span>
             </div>
-            <div className="space-y-3 mb-5">
+            <div ref={mainButtonsRef} className="space-y-3 mb-5">
               <button onClick={() => addToCart(product, qty)}
                 className="w-full py-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90 hover:shadow-lg"
                 style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
@@ -220,15 +285,67 @@ export function ProductDetailPage() {
               <button
                 onClick={async () => { 
                   await addToCart(product, qty); 
-                  if (!isLoggedIn) openAuth();
-                  else navigate("/checkout/shipping"); 
+                  navigate("/checkout/shipping");
+                  window.scrollTo({ top: 0, behavior: "instant" });
                 }}
                 className="w-full py-3.5 rounded-2xl text-sm font-semibold border transition-all hover:bg-amber-50 flex items-center justify-center gap-2"
                 style={{ borderColor: GOLD, color: MAROON }}>⚡ Buy Now
               </button>
 
             </div>
-            <div className="grid grid-cols-5 gap-2">
+
+            {/* Myntra-style Delivery & Pincode Checker */}
+            <div className="rounded-2xl p-4 mb-6" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 12px rgba(91,31,36,0.03)" }}>
+              <div className="flex items-center gap-2 mb-3">
+                <Truck size={16} style={{ color: GOLD }} />
+                <span className="text-xs font-bold uppercase tracking-wider" style={{ color: MAROON }}>Delivery Options</span>
+              </div>
+              <div className="flex gap-2 mb-3">
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={pin}
+                  onChange={e => setPin(e.target.value.replace(/\D/g, ""))}
+                  placeholder="Enter 6-digit Pincode"
+                  className="flex-1 min-w-0 px-3 py-2.5 rounded-xl text-sm outline-none transition-all"
+                  style={{ border: "1.5px solid rgba(91,31,36,0.12)", background: "#FAF7F2", color: "#222222", fontFamily: SANS }}
+                />
+                <button
+                  onClick={checkDelivery}
+                  disabled={checking}
+                  className="flex-shrink-0 px-3 py-2.5 rounded-xl text-xs font-bold uppercase whitespace-nowrap transition-all active:scale-95"
+                  style={{ background: MAROON, color: IVORY }}
+                >
+                  {checking ? "Checking..." : "Check"}
+                </button>
+              </div>
+              {deliveryResult && (
+                <div className="mt-3 space-y-2 text-xs transition-opacity duration-300">
+                  {deliveryResult.error ? (
+                    <p className="text-red-500 font-semibold">✕ {deliveryResult.error}</p>
+                  ) : (
+                    <>
+                      <p className="font-semibold text-emerald-600 flex items-center gap-1.5">
+                        <span>✓</span> Estimated delivery: {deliveryResult.date}
+                      </p>
+                      {deliveryResult.city && (
+                        <p style={{ color: "#7A6A58" }}>
+                          Delivered to: <strong style={{ color: MAROON }}>{deliveryResult.city}, {deliveryResult.state}</strong>
+                        </p>
+                      )}
+                      <p style={{ color: "#7A6A58" }}>
+                        🚚 Shipping Partner: <strong style={{ color: MAROON }}>{deliveryResult.carrier || "Shiprocket Express"}</strong>
+                      </p>
+                      <p style={{ color: "#7A6A58" }}>
+                        💵 Cash on Delivery (COD) <strong className={deliveryResult.cod ? "text-emerald-600" : "text-red-500"}>{deliveryResult.cod ? "Available" : "Not Available"}</strong>
+                      </p>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
               {[{ icon: Flame, l: "Temple Energized" }, { icon: Gem, l: "100% Authentic" }, { icon: Award, l: "Handcrafted" }, { icon: Shield, l: "Secure Pay" }, { icon: Package, l: "Easy Returns" }].map(({ icon: Icon, l }) => (
                 <div key={l} className="flex flex-col items-center gap-1 text-center">
                   <Icon size={16} style={{ color: GOLD }} strokeWidth={1.5} />
@@ -259,8 +376,8 @@ export function ProductDetailPage() {
               <p className="text-xs font-semibold mb-1" style={{ fontFamily: SERIF, color: MAROON }}>Need Guidance?</p>
               <p className="text-[10px] mb-3" style={{ color: "#7A6A58" }}>Talk to our Vastu Expert to confirm this is the right remedy for you.</p>
               <div className="flex gap-2">
-                <button className="flex-1 py-2 rounded-xl text-[10px] font-semibold flex items-center justify-center gap-1" style={{ background: "#25D366", color: "white" }}>💬 WhatsApp</button>
-                <button className="flex-1 py-2 rounded-xl text-[10px] font-semibold border" style={{ borderColor: "rgba(91,31,36,0.2)", color: MAROON }}>📞 Call</button>
+                <a href={CONTACT_INFO.whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex-1 py-2 rounded-xl text-[10px] font-semibold flex items-center justify-center gap-1 transition-opacity hover:opacity-90" style={{ background: "#25D366", color: "white" }}>💬 WhatsApp</a>
+                <a href={CONTACT_INFO.phoneTel} className="flex-1 py-2 rounded-xl text-[10px] font-semibold border flex items-center justify-center gap-1 transition-colors hover:bg-amber-50" style={{ borderColor: "rgba(91,31,36,0.2)", color: MAROON }}>📞 Call</a>
               </div>
             </div>
           </div>
@@ -306,14 +423,14 @@ export function ProductDetailPage() {
                 </div>
               </button>
               {contactOpen && (
-                <div className="mt-6 grid sm:grid-cols-3 gap-3">
-                  <a href="mailto:hello@aroham.in" className="flex items-center gap-3 p-4 rounded-2xl transition-all hover:scale-105" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
-                    <Mail size={20} style={{ color: GOLD }} /><div><div className="text-sm font-semibold" style={{ color: IVORY }}>Email Us</div><div className="text-[11px]" style={{ color: "rgba(250,247,242,0.6)" }}>hello@aroham.in</div></div>
+                <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <a href={CONTACT_INFO.emailMailto} className="flex items-center gap-3 p-4 rounded-2xl transition-all hover:scale-105" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
+                    <Mail size={20} style={{ color: GOLD }} /><div><div className="text-sm font-semibold" style={{ color: IVORY }}>Email Us</div><div className="text-[11px]" style={{ color: "rgba(250,247,242,0.6)" }}>{CONTACT_INFO.email}</div></div>
                   </a>
-                  <a href="tel:+919876543210" className="flex items-center gap-3 p-4 rounded-2xl transition-all hover:scale-105" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
-                    <Phone size={20} style={{ color: GOLD }} /><div><div className="text-sm font-semibold" style={{ color: IVORY }}>Call Us</div><div className="text-[11px]" style={{ color: "rgba(250,247,242,0.6)" }}>+91 98765 43210</div></div>
+                  <a href={CONTACT_INFO.phoneTel} className="flex items-center gap-3 p-4 rounded-2xl transition-all hover:scale-105" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
+                    <Phone size={20} style={{ color: GOLD }} /><div><div className="text-sm font-semibold" style={{ color: IVORY }}>Call Us</div><div className="text-[11px]" style={{ color: "rgba(250,247,242,0.6)" }}>{CONTACT_INFO.phoneDisplay}</div></div>
                   </a>
-                  <a href="https://wa.me/919876543210" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 rounded-2xl transition-all hover:scale-105" style={{ background: "#25D366", border: "1px solid rgba(255,255,255,0.15)" }}>
+                  <a href={CONTACT_INFO.whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 rounded-2xl transition-all hover:scale-105" style={{ background: "#25D366", border: "1px solid rgba(255,255,255,0.15)" }}>
                     <span className="text-xl">💬</span><div><div className="text-sm font-semibold" style={{ color: "white" }}>WhatsApp</div><div className="text-[11px]" style={{ color: "rgba(255,255,255,0.8)" }}>Chat instantly</div></div>
                   </a>
                 </div>
@@ -323,34 +440,32 @@ export function ProductDetailPage() {
         </div>
       </div>
       {/* Mobile sticky bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 px-4 py-3"
-        style={{ background: "rgba(250,247,242,0.97)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(91,31,36,0.1)", boxShadow: "0 -4px 24px rgba(91,31,36,0.08)" }}>
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex flex-col flex-shrink-0">
-            <span className="text-[10px] uppercase tracking-wider font-semibold mb-0.5" style={{ color: GOLD }}>Total Price</span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-lg font-bold leading-none" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{product.price.toLocaleString("en-IN")}</span>
-              <span className="text-[10px] line-through" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{product.original.toLocaleString("en-IN")}</span>
-            </div>
-          </div>
-          <div className="flex gap-2 flex-1 justify-end max-w-[200px]">
-            <button onClick={() => addToCart(product, qty)}
-              className="w-12 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors bg-white shadow-sm"
-              style={{ border: `1.5px solid ${GOLD}`, color: MAROON }}
-              aria-label="Add to cart">
-              <ShoppingCart size={18} strokeWidth={2} />
-            </button>
-            <button
-              onClick={async () => { 
-                await addToCart(product, qty); 
-                if (!isLoggedIn) openAuth();
-                else navigate("/checkout/shipping"); 
-              }}
-              className="flex-1 h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 shadow-md"
-              style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
-              ⚡ Buy
-            </button>
-          </div>
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 px-5 py-4 transition-transform duration-300"
+        style={{
+          background: "rgba(250,247,242,0.97)",
+          backdropFilter: "blur(12px)",
+          borderTop: "1px solid rgba(91,31,36,0.1)",
+          boxShadow: "0 -4px 24px rgba(91,31,36,0.08)",
+          transform: showSticky ? "translateY(0)" : "translateY(100%)"
+        }}>
+        <div className="flex items-center gap-3 mb-2">
+          <span className="text-lg font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{product.price.toLocaleString("en-IN")}</span>
+          <span className="text-xs line-through" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{Math.round(product.original).toLocaleString("en-IN")}</span>
+        </div>
+        <div className="flex gap-3">
+          <button onClick={() => addToCart(product, qty)}
+            className="flex-1 py-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2"
+            style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
+            <ShoppingCart size={14} /> Add to Cart
+          </button>
+          <button
+            onClick={async () => {
+              await addToCart(product, qty);
+              navigate("/checkout/shipping");
+              window.scrollTo({ top: 0, behavior: "instant" });
+            }}
+            className="px-5 py-4 rounded-2xl text-sm font-semibold border"
+            style={{ borderColor: GOLD, color: MAROON }}>⚡ Buy</button>
         </div>
       </div>
     </div>

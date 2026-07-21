@@ -15,7 +15,7 @@ export function NavagrahaHero({ onShop, onConsult }: { onShop: () => void; onCon
   const [hoveredGraha, setHoveredGraha] = useState<number | null>(null);
 
   return (
-    <section className="relative overflow-hidden" style={{ background: "#0A0608" }}>
+    <section className="relative" style={{ background: "#0A0608", overflow: "hidden" }}>
       <style>{`
         @keyframes orbitPlanet { from{transform:rotate(0deg) translateX(var(--r)) rotate(0deg)} to{transform:rotate(360deg) translateX(var(--r)) rotate(-360deg)} }
         @keyframes pulseSun { 0%,100%{box-shadow:0 0 60px 20px rgba(255,200,50,0.35),0 0 120px 40px rgba(255,150,0,0.15)} 50%{box-shadow:0 0 80px 30px rgba(255,200,50,0.5),0 0 160px 60px rgba(255,150,0,0.25)} }
@@ -39,8 +39,8 @@ export function NavagrahaHero({ onShop, onConsult }: { onShop: () => void; onCon
       <div className="absolute pointer-events-none" style={{ left: "-10%", bottom: "-5%", width: "55%", height: "50%", background: "radial-gradient(ellipse at 25% 90%, rgba(91,31,24,0.4) 0%, transparent 65%)", filter: "blur(55px)" }} />
       <div className="absolute pointer-events-none" style={{ right: "-5%", top: "0%", width: "50%", height: "100%", background: "radial-gradient(ellipse at 80% 50%, rgba(80,30,10,0.12) 0%, transparent 70%)", filter: "blur(30px)" }} />
 
-      <div className="relative z-10 flex flex-col lg:flex-row w-full lg:min-h-screen">
-        <div className="w-full lg:w-[55%] flex-shrink-0 flex flex-col justify-start lg:justify-center text-center lg:text-left px-6 lg:pl-16 xl:pl-24 lg:pr-14 pt-24 lg:pt-0 pb-12 lg:pb-0">
+      <div className="relative z-20 flex flex-col lg:flex-row w-full min-h-[100dvh]">
+        <div className="w-full lg:w-[55%] flex-shrink-0 flex flex-col justify-center text-center lg:text-left px-6 lg:pl-16 xl:pl-24 lg:pr-14 pt-20 pb-14 lg:pt-0 lg:pb-0 flex-1">
           <div className="flex items-center justify-center lg:justify-start gap-2.5 mb-5">
             <div className="w-1.5 h-1.5 rounded-full" style={{ background: SAFFRON }} />
             <span className="text-[11px] tracking-[0.28em] uppercase font-semibold" style={{ color: SAFFRON, fontFamily: "'Space Grotesk',sans-serif" }}>Vedic Astrology &amp; Vastu</span>
@@ -52,7 +52,7 @@ export function NavagrahaHero({ onShop, onConsult }: { onShop: () => void; onCon
           <p className="text-sm mb-7 max-w-sm mx-auto lg:mx-0" style={{ color: "rgba(250,247,242,0.55)", fontFamily: "'Space Grotesk', sans-serif", fontWeight: 400, lineHeight: 1.7 }}>
             Authentic Vedic products &amp; expert consultations to align your life with cosmic energy. Temple energized. Astrologer recommended.
           </p>
-          <div className="flex gap-3 justify-center lg:justify-start mb-8">
+          <div className="flex flex-wrap gap-3 justify-center lg:justify-start mb-8">
             <button onClick={onShop} className="flex items-center gap-2 px-7 py-3.5 rounded-full text-sm font-semibold tracking-wide transition-all hover:scale-105 hover:shadow-2xl whitespace-nowrap"
               style={{ background: `linear-gradient(135deg,${SAFFRON},${GOLD})`, color: "#1A0D0E", fontFamily: "'Space Grotesk',sans-serif", boxShadow: `0 4px 20px rgba(231,139,47,0.35)` }}>
               🛍 Shop Now
@@ -78,7 +78,7 @@ export function NavagrahaHero({ onShop, onConsult }: { onShop: () => void; onCon
         <div className="hidden lg:flex flex-1" aria-hidden />
       </div>
 
-      {/* Solar system */}
+      {/* Solar system (Desktop only) */}
       <div className="hidden lg:block absolute z-[2]" style={{ top: "50%", right: 0, transform: "translateY(-50%)", width: "52%" }}>
         <div className="flex items-center justify-center" style={{ transform: "translateX(12%)" }}>
           <div className="relative flex items-center justify-center" style={{ width: Math.round(460 * S), height: Math.round(460 * S) }}>
@@ -103,7 +103,7 @@ export function NavagrahaHero({ onShop, onConsult }: { onShop: () => void; onCon
               const orbitR = Math.round(g.orbit * S);
               const gi = i + 1;
               return (
-                <div key={g.name} className="absolute mx-[-150px] my-[0px]"
+                <div key={g.name} className="absolute my-0"
                   style={{ width: orbitSize, height: orbitSize, top: "50%", left: "44%", transform: "translate(-50%,-50%)" }}>
                   <div className="absolute group"
                     style={{ top: "50%", left: "50%", ["--r" as string]: `${orbitR}px`,

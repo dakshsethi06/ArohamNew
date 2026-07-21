@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router";
-import { useState, useEffect } from "react";
 import { X, ChevronLeft, Minus, Plus, Trash2, Lock } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
 import { useCart } from "@/context/CartContext";
@@ -7,24 +6,22 @@ import { useAuth } from "@/context/AuthContext";
 
 export function CartSidebar() {
   const navigate = useNavigate();
-  const { items, closeCart, removeFromCart, updateQty } = useCart();
+  const { items, closeCart, removeFromCart, updateQty, subtotal } = useCart();
   const { isLoggedIn, openAuth } = useAuth();
-  const [mounted, setMounted] = useState(false);
-  
-  useEffect(() => { setMounted(true); }, []);
-  
-  const subtotal = items.reduce((s, i) => s + i.product.price * i.qty, 0);
-  const total = subtotal + 99 + Math.round(subtotal * 0.05);
 
   return (
     <div role="dialog" aria-modal="true" aria-label="Shopping cart" className="fixed inset-0 z-[60] flex justify-end">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ease-out" 
-           style={{ opacity: mounted ? 1 : 0 }} onClick={closeCart} />
-      <div className="relative w-[85vw] max-w-md flex flex-col h-full shadow-2xl transition-transform duration-300 ease-out"
-        style={{ background: "#FFFFFF", transform: mounted ? "translateX(0)" : "translateX(100%)" }}>
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={closeCart} />
+      <div className="relative w-full max-w-md flex flex-col h-full shadow-2xl"
+        style={{ background: "#FFFFFF", transform: "translateX(0)", transition: "transform 0.3s ease" }}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5" style={{ borderBottom: `1px solid rgba(91,31,36,0.08)` }}>
           <div className="flex items-center gap-3">
+            <button onClick={() => { closeCart(); navigate("/"); }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all hover:shadow-sm active:scale-95"
+              style={{ background: "rgba(91,31,36,0.07)", color: MAROON, border: `1px solid rgba(91,31,36,0.12)` }}>
+              <ChevronLeft size={13} /> Home
+            </button>
             <div>
               <h2 className="text-lg font-semibold leading-tight" style={{ fontFamily: SERIF, color: MAROON }}>Your Cart</h2>
               <p className="text-xs" style={{ color: "#9A8A78" }}>{items.length} item{items.length !== 1 ? "s" : ""}</p>
@@ -39,7 +36,7 @@ export function CartSidebar() {
               <div className="text-5xl mb-4">🪷</div>
               <p className="text-sm font-semibold mb-1" style={{ fontFamily: SERIF, color: MAROON }}>Your cart is peaceful</p>
               <p className="text-xs" style={{ color: "#7A6A58" }}>Add sacred products to begin your journey</p>
-              <button onClick={() => { closeCart(); navigate("/shop"); }} className="mt-4 px-6 py-2.5 rounded-full text-sm font-medium" style={{ background: MAROON, color: IVORY }}>Explore Products</button>
+              <button onClick={closeCart} className="mt-4 px-6 py-2.5 rounded-full text-sm font-medium" style={{ background: MAROON, color: IVORY }}>Explore Products</button>
             </div>
           ) : items.map(({ product: p, qty }) => (
             <div key={p.id} className="flex gap-3 p-4 rounded-2xl" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.07)" }}>
@@ -63,33 +60,37 @@ export function CartSidebar() {
           ))}
         </div>
         {/* Footer */}
+        {/* Footer */}
         {items.length > 0 && (
           <div className="px-6 py-5" style={{ borderTop: `1px solid rgba(91,31,36,0.08)` }}>
+            {/* Coupon hint */}
+            <div className="mb-3 px-3 py-2 rounded-xl text-center" style={{ background: "rgba(200,160,68,0.06)", border: "1px dashed rgba(200,160,68,0.25)" }}>
+              <p className="text-[11px] font-medium" style={{ color: "#8B6914" }}>🏷️ Have a coupon? Apply at checkout ✨</p>
+            </div>
+
             <div className="space-y-2 mb-4">
-              {[
-                { label: "Subtotal", value: `₹${subtotal.toLocaleString("en-IN")}`, green: false },
-                { label: "Temple Energization", value: "₹99", green: false },
-                { label: "Shipping", value: "FREE", green: true },
-                { label: "GST (5%)", value: `₹${Math.round(subtotal * 0.05).toLocaleString("en-IN")}`, green: false },
-              ].map(({ label, value, green }) => (
-                <div key={label} className="flex justify-between text-xs" style={{ color: "#7A6A58" }}>
-                  <span>{label}</span>
-                  <span style={{ color: green ? "#4A8A4A" : MAROON, fontWeight: 600 }}>{value}</span>
-                </div>
-              ))}
+              <div className="flex justify-between text-xs" style={{ color: "#7A6A58" }}>
+                <span>Subtotal</span>
+                <span style={{ color: MAROON, fontWeight: 600 }}>₹{subtotal.toLocaleString("en-IN")}</span>
+              </div>
+              <div className="flex justify-between text-xs" style={{ color: "#7A6A58" }}>
+                <span>Shipping</span>
+                <span style={{ color: "#4A8A4A", fontWeight: 600 }}>FREE</span>
+              </div>
               <div className="flex justify-between text-sm font-semibold pt-2" style={{ borderTop: `1px solid rgba(91,31,36,0.08)`, color: MAROON }}>
-                <span>Grand Total</span>
-                <span style={{ fontFamily: PRICE_FONT, fontSize: "1.1rem" }}>₹{total.toLocaleString("en-IN")}</span>
+                <span>Subtotal</span>
+                <span style={{ fontFamily: PRICE_FONT, fontSize: "1.1rem" }}>₹{subtotal.toLocaleString("en-IN")}</span>
               </div>
             </div>
             <button onClick={() => { 
-              if (!isLoggedIn) {
-                closeCart();
-                openAuth();
-              } else {
-                closeCart(); 
-                navigate("/checkout/shipping"); 
-              }
+              closeCart();
+              requestAnimationFrame(() => {
+                if (!isLoggedIn) {
+                  openAuth();
+                } else {
+                  navigate("/checkout/shipping"); 
+                }
+              });
             }}
               className="w-full py-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90 hover:shadow-lg"
               style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
