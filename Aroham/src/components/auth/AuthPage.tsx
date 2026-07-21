@@ -400,27 +400,29 @@ export function AuthPage() {
         {/* Right Form Container */}
         <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 sm:px-12 md:px-16 py-8 overflow-y-auto">
           <div className="max-w-md mx-auto w-full">
-            {/* Signin / Signup Tabs */}
+            {/* Signin / Signup Tabs Redesign */}
             {(authState === "signin" || authState === "signup") && (
-              <div className="flex p-1.5 rounded-2xl mb-8" style={{ background: "rgba(91,31,36,0.06)" }}>
+              <div className="flex p-1.5 rounded-2xl mb-8 relative transition-all duration-300" style={{ background: "rgba(91,31,36,0.06)", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "inset 0 1px 3px rgba(0,0,0,0.03)" }}>
                 <button
                   onClick={() => switchTab("signin")}
-                  className="flex-1 py-3 text-sm font-medium rounded-xl transition-all"
+                  className="flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-300 active:scale-[0.98]"
                   style={{
-                    background: activeTab === "signin" ? MAROON : "transparent",
+                    background: activeTab === "signin" ? `linear-gradient(135deg,${MAROON},#7A2A30)` : "transparent",
                     color: activeTab === "signin" ? IVORY : "#7A6A58",
-                    fontFamily: SANS
+                    fontFamily: SANS,
+                    boxShadow: activeTab === "signin" ? "0 4px 14px rgba(91,31,36,0.25)" : "none"
                   }}
                 >
                   Sign In
                 </button>
                 <button
                   onClick={() => switchTab("signup")}
-                  className="flex-1 py-3 text-sm font-medium rounded-xl transition-all"
+                  className="flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-300 active:scale-[0.98]"
                   style={{
-                    background: activeTab === "signup" ? MAROON : "transparent",
+                    background: activeTab === "signup" ? `linear-gradient(135deg,${MAROON},#7A2A30)` : "transparent",
                     color: activeTab === "signup" ? IVORY : "#7A6A58",
-                    fontFamily: SANS
+                    fontFamily: SANS,
+                    boxShadow: activeTab === "signup" ? "0 4px 14px rgba(91,31,36,0.25)" : "none"
                   }}
                 >
                   Create Account
