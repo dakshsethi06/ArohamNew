@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { firebaseAuth, db } from "@/lib/firebase";
 import { supabase } from "@/lib/supabase";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { doc, getDoc, setDoc, serverTimestamp, collection, query, where, getDocs } from "firebase/firestore";
 import * as Select from "@radix-ui/react-select";
 import * as Popover from "@radix-ui/react-popover";
 import { DayPicker } from "react-day-picker";
@@ -166,18 +167,27 @@ export function AuthPage() {
 
       const phoneDigits = phone.replace(/\D/g, "");
 
-      const { data, error } = await supabase.from('users').select('*').eq('phone', phoneDigits).single();
-      if (data && !error) {
+      try {
+        const q = query(collection(db, "users"), where("phone", "==", phoneDigits));
+        const snapshot = await getDocs(q);
+        
+        if (!snapshot.empty) {
+          const userDoc = snapshot.docs[0];
+          const data = userDoc.data();
+          setLoading(false);
+          login({
+            id: userDoc.id,
+            email: data.email,
+            user_metadata: { full_name: data.fullName || data.full_name, phone: data.phone }
+          });
+          handleAuthSuccess();
+        } else {
+          setLoading(false);
+          goTo("profile-setup");
+        }
+      } catch (err) {
         setLoading(false);
-        login({
-          id: data.id,
-          email: data.email,
-          user_metadata: { full_name: data.full_name || data.fullName, phone: data.phone }
-        });
-        handleAuthSuccess();
-      } else {
-        setLoading(false);
-        goTo("profile-setup");
+        setErrorMsg("Failed to connect to database. Please try again.");
       }
     }, 800);
   };
@@ -200,17 +210,12 @@ export function AuthPage() {
       const newUserId = crypto.randomUUID();
       const phoneDigits = phone.replace(/\D/g, "");
 
-      const { data, error } = await supabase.from('users').upsert({
-        id: newUserId,
-        full_name: name.trim(),
+      await setDoc(doc(db, "users", newUserId), {
+        fullName: name.trim(),
         email: email.trim() || null,
         phone: phoneDigits,
-        gender: gender || "Other",
-        dob: dob || "2000-01-01",
-        created_at: new Date().toISOString()
-      }).select().single();
-
-      if (error) throw error;
+        createdAt: serverTimestamp()
+      }, { merge: true });
 
       setLoading(false);
       login({
