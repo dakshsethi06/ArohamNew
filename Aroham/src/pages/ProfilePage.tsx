@@ -8,6 +8,8 @@ import * as Select from "@radix-ui/react-select";
 import * as Popover from "@radix-ui/react-popover";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
+import { db } from "@/lib/firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 const ORDER_STEPS = [
   { label: "Ordered", icon: "✓" },
@@ -65,15 +67,22 @@ export function ProfilePage() {
       } catch (e) {}
     }
     
-    api("/auth/profile")
-      .then(data => {
-        setProfile(data);
-        initEditForm(data);
-        sessionStorage.setItem("aroham_user_profile", JSON.stringify(data));
-      })
-      .catch(console.error)
-      .finally(() => setLoadingProfile(false));
-  }, []);
+    if (user?.id) {
+      getDoc(doc(db, "users", user.id))
+        .then(docSnap => {
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            setProfile(data);
+            initEditForm(data);
+            sessionStorage.setItem("aroham_user_profile", JSON.stringify(data));
+          }
+        })
+        .catch(console.error)
+        .finally(() => setLoadingProfile(false));
+    } else {
+      setLoadingProfile(false);
+    }
+  }, [user?.id]);
 
   const initEditForm = (p: any) => {
     setEditForm({
@@ -121,10 +130,10 @@ export function ProfilePage() {
   }, [activeTab]);
 
   const handleSaveProfile = async () => {
+    if (!user?.id) return;
     setSaving(true);
     setSaveSuccess(false);
     try {
-      // Mock saving to backend since it's disconnected
       const updated = {
         full_name: editForm.fullName,
         email: editForm.email,
@@ -132,10 +141,11 @@ export function ProfilePage() {
         gender: editForm.gender,
         dob: editForm.dob,
         pob_city: editForm.pobCity,
+        updated_at: new Date().toISOString(),
         created_at: profile?.created_at || new Date().toISOString()
       };
       
-      await new Promise(r => setTimeout(r, 600)); // simulate network
+      await setDoc(doc(db, "users", user.id), updated, { merge: true });
 
       setProfile(updated);
       sessionStorage.setItem("aroham_user_profile", JSON.stringify(updated));
