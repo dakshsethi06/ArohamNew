@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { BrowserRouter, Routes, Route, Outlet, useLocation } from "react-router";
+import { BrowserRouter, Routes, Route, Outlet, useLocation, Navigate } from "react-router";
 import { Nav } from "@/components/layout/Nav";
 import { Footer } from "@/components/layout/Footer";
 import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
@@ -38,6 +38,18 @@ function MainLayout() {
   );
 }
 
+function ProtectedRoute() {
+  const { isLoggedIn, openAuth } = useAuth();
+
+  if (!isLoggedIn) {
+    // If not logged in, immediately redirect to home and pop open the auth modal
+    setTimeout(() => openAuth(), 0);
+    return <Navigate to="/" replace />;
+  }
+
+  return <Outlet />;
+}
+
 export function AppRouter() {
   return (
     <BrowserRouter>
@@ -48,11 +60,18 @@ export function AppRouter() {
           <Route path="/shop" element={<ShopPage />} />
           <Route path="/shop/:slug" element={<ProductDetailPage />} />
           <Route path="/consult" element={<ConsultPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          
+          <Route element={<ProtectedRoute />}>
+            <Route path="/profile" element={<ProfilePage />} />
+          </Route>
         </Route>
-        <Route path="/checkout/shipping" element={<ShippingPage />} />
-        <Route path="/checkout/payment" element={<PaymentPage />} />
-        <Route path="/checkout/confirm" element={<ConfirmationPage />} />
+        
+        <Route element={<ProtectedRoute />}>
+          <Route path="/checkout/shipping" element={<ShippingPage />} />
+          <Route path="/checkout/payment" element={<PaymentPage />} />
+          <Route path="/checkout/confirm" element={<ConfirmationPage />} />
+        </Route>
+        
         <Route path="/astrologer" element={<AstrologerDashboard />} />
       </Routes>
     </BrowserRouter>
