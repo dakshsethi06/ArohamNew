@@ -26,16 +26,11 @@ export function CartSidebar() {
   return (
     <div role="dialog" aria-modal="true" aria-label="Shopping cart" className="fixed inset-0 z-[60] flex justify-end">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300" style={{ opacity: isVisible ? 1 : 0 }} onClick={handleClose} />
-      <div className="relative w-full max-w-md flex flex-col h-full shadow-2xl transition-transform duration-300 ease-out"
+      <div className="relative w-[75vw] sm:w-[400px] flex flex-col h-full shadow-2xl transition-transform duration-300 ease-out"
         style={{ background: "#FFFFFF", transform: isVisible ? "translateX(0)" : "translateX(100%)" }}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5" style={{ borderBottom: `1px solid rgba(91,31,36,0.08)` }}>
           <div className="flex items-center gap-3">
-            <button onClick={() => { handleClose(); navigate("/"); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all hover:shadow-sm active:scale-95"
-              style={{ background: "rgba(91,31,36,0.07)", color: MAROON, border: `1px solid rgba(91,31,36,0.12)` }}>
-              <ChevronLeft size={13} /> Home
-            </button>
             <div>
               <h2 className="text-lg font-semibold leading-tight" style={{ fontFamily: SERIF, color: MAROON }}>Your Cart</h2>
               <p className="text-xs" style={{ color: "#9A8A78" }}>{items.length} item{items.length !== 1 ? "s" : ""}</p>
