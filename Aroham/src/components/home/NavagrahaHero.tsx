@@ -103,9 +103,11 @@ export function NavagrahaHero({ onShop, onConsult }: { onShop: () => void; onCon
               const orbitR = Math.round(g.orbit * S);
               const gi = i + 1;
               return (
-                <div key={g.name} className="absolute my-0"
-                  style={{ width: orbitSize, height: orbitSize, top: "50%", left: "44%", transform: "translate(-50%,-50%)" }}>
-                  <div className="absolute group"
+                <div key={g.name} className="absolute"
+                  style={{ width: orbitSize, height: orbitSize, top: "50%", left: "44%", transform: "translate(-50%,-50%)", pointerEvents: "none" }}>
+                  {/* Orbital path ring */}
+                  <div className="absolute inset-0 rounded-full" style={{ border: "1px solid rgba(200,160,68,0.08)" }} />
+                  <div className="absolute group pointer-events-auto"
                     style={{ top: "50%", left: "50%", ["--r" as string]: `${orbitR}px`,
                       animation: `orbitPlanet ${g.speed}s linear infinite`, animationDelay: `-${i * 1.5}s`,
                       marginTop: `-${pSize / 2}px`, marginLeft: `-${pSize / 2}px`, cursor: "default",

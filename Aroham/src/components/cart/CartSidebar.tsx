@@ -3,21 +3,35 @@ import { X, ChevronLeft, Minus, Plus, Trash2, Lock } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { useEffect, useState } from "react";
 
 export function CartSidebar() {
   const navigate = useNavigate();
   const { items, closeCart, removeFromCart, updateQty, subtotal } = useCart();
   const { isLoggedIn, openAuth } = useAuth();
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    // Trigger slide-in animation after mount
+    requestAnimationFrame(() => {
+      setIsVisible(true);
+    });
+  }, []);
+
+  const handleClose = () => {
+    setIsVisible(false);
+    setTimeout(closeCart, 300); // Wait for animation to complete
+  };
 
   return (
     <div role="dialog" aria-modal="true" aria-label="Shopping cart" className="fixed inset-0 z-[60] flex justify-end">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={closeCart} />
-      <div className="relative w-full max-w-md flex flex-col h-full shadow-2xl"
-        style={{ background: "#FFFFFF", transform: "translateX(0)", transition: "transform 0.3s ease" }}>
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300" style={{ opacity: isVisible ? 1 : 0 }} onClick={handleClose} />
+      <div className="relative w-full max-w-md flex flex-col h-full shadow-2xl transition-transform duration-300 ease-out"
+        style={{ background: "#FFFFFF", transform: isVisible ? "translateX(0)" : "translateX(100%)" }}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5" style={{ borderBottom: `1px solid rgba(91,31,36,0.08)` }}>
           <div className="flex items-center gap-3">
-            <button onClick={() => { closeCart(); navigate("/"); }}
+            <button onClick={() => { handleClose(); navigate("/"); }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all hover:shadow-sm active:scale-95"
               style={{ background: "rgba(91,31,36,0.07)", color: MAROON, border: `1px solid rgba(91,31,36,0.12)` }}>
               <ChevronLeft size={13} /> Home
@@ -27,7 +41,7 @@ export function CartSidebar() {
               <p className="text-xs" style={{ color: "#9A8A78" }}>{items.length} item{items.length !== 1 ? "s" : ""}</p>
             </div>
           </div>
-          <button aria-label="Close cart" onClick={closeCart} className="p-2 rounded-full hover:bg-black/5 transition-colors" style={{ color: MAROON }}><X size={20} /></button>
+          <button aria-label="Close cart" onClick={handleClose} className="p-2 rounded-full hover:bg-black/5 transition-colors" style={{ color: MAROON }}><X size={20} /></button>
         </div>
         {/* Items */}
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
@@ -36,7 +50,7 @@ export function CartSidebar() {
               <div className="text-5xl mb-4">🪷</div>
               <p className="text-sm font-semibold mb-1" style={{ fontFamily: SERIF, color: MAROON }}>Your cart is peaceful</p>
               <p className="text-xs" style={{ color: "#7A6A58" }}>Add sacred products to begin your journey</p>
-              <button onClick={closeCart} className="mt-4 px-6 py-2.5 rounded-full text-sm font-medium" style={{ background: MAROON, color: IVORY }}>Explore Products</button>
+              <button onClick={() => { handleClose(); navigate("/shop"); }} className="mt-4 px-6 py-2.5 rounded-full text-sm font-medium" style={{ background: MAROON, color: IVORY }}>Explore Products</button>
             </div>
           ) : items.map(({ product: p, qty }) => (
             <div key={p.id} className="flex gap-3 p-4 rounded-2xl" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.07)" }}>
@@ -82,13 +96,13 @@ export function CartSidebar() {
                 <span style={{ fontFamily: PRICE_FONT, fontSize: "1.1rem" }}>₹{subtotal.toLocaleString("en-IN")}</span>
               </div>
             </div>
-            <button onClick={() => { 
-              closeCart();
+            <button onClick={() => {
+              handleClose();
               requestAnimationFrame(() => {
                 if (!isLoggedIn) {
                   openAuth();
                 } else {
-                  navigate("/checkout/shipping"); 
+                  navigate("/checkout/shipping");
                 }
               });
             }}
@@ -96,7 +110,7 @@ export function CartSidebar() {
               style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
               <Lock size={14} /> Proceed to Checkout
             </button>
-            <button onClick={closeCart} className="w-full py-3 text-sm font-medium text-center mt-2 hover:opacity-70 transition-opacity" style={{ color: MAROON }}>
+            <button onClick={handleClose} className="w-full py-3 text-sm font-medium text-center mt-2 hover:opacity-70 transition-opacity" style={{ color: MAROON }}>
               Back
             </button>
           </div>

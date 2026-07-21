@@ -78,7 +78,7 @@ export function VideoTestimonials() {
             const h = isCenter ? 420 : 340;
             const scale = isCenter ? 1 : 0.88;
             const opacity = isCenter ? 1 : absOff === 1 ? 0.6 : 0.2;
-            const translateX = offset * 210;
+            const translateX = offset * 280;
             const zIndex = 10 - absOff;
 
             return (

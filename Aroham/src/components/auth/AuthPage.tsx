@@ -40,6 +40,8 @@ export function AuthPage() {
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [dob, setDob] = useState("");
+  const [gender, setGender] = useState("Other");
   const [agreed, setAgreed] = useState(false);
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
   const [canResend, setCanResend] = useState(false);
@@ -175,7 +177,7 @@ export function AuthPage() {
     }
   };
 
-  // Complete Profile Setup handler (Name + Email page)
+  // Complete Profile Setup handler (Name + Email + DOB + Gender page)
   const handleCompleteProfile = async () => {
     if (!name.trim()) {
       setErrorMsg("Please enter your full name.");
@@ -201,7 +203,9 @@ export function AuthPage() {
         body: JSON.stringify({
           fullName: name.trim(),
           phone: phone.replace(/\D/g, ""),
-          email: email.trim()
+          email: email.trim(),
+          dob: dob || null,
+          gender: gender
         })
       }).catch(() => {});
 
@@ -307,17 +311,42 @@ export function AuthPage() {
     </div>
   );
 
-  // 4. Next Page: Profile Setup JSX (Name + Email only)
+  // 4. Next Page: Profile Setup JSX (Name + Email + DOB + Gender)
   const profileSetupJsx = (
     <div style={formStyle} className="space-y-5">
       <div>
         <h2 className="mb-1" style={{ fontFamily: SERIF, fontSize: "1.75rem", fontWeight: 500, color: MAROON }}>Complete Your Profile</h2>
-        <p className="text-sm" style={{ color: "#7A6A58" }}>Please enter your name and email to set up your account.</p>
+        <p className="text-sm" style={{ color: "#7A6A58" }}>Please enter your details to set up your account.</p>
       </div>
       {errorMsg && <p className="text-sm text-red-500 font-semibold">{errorMsg}</p>}
       <div className="space-y-3">
         <AuthInput label="Full Name" value={name} onChange={setName} />
         <AuthInput label="Email Address" type="email" value={email} onChange={setEmail} />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: "#7A6A58" }}>Date of Birth</label>
+            <input
+              type="date"
+              value={dob}
+              onChange={e => setDob(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-all focus:ring-2"
+              style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON, fontFamily: SANS }}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: "#7A6A58" }}>Gender</label>
+            <select
+              value={gender}
+              onChange={e => setGender(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-all focus:ring-2"
+              style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON, fontFamily: SANS }}
+            >
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
       </div>
       <button
         onClick={handleCompleteProfile}

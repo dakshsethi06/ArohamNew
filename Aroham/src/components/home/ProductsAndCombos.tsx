@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import { ChevronRight } from "lucide-react";
 import { MAROON, SAFFRON, GOLD, IVORY, SANS, SERIF } from "@/constants/theme";
 
@@ -11,6 +12,7 @@ export function ProductsAndCombos({ products, onProductClick, onAddCombo: _onAdd
   onAddCombo: (name: string) => void;
   onAddToCart: (p: ArohamProduct) => void;
 }) {
+  const navigate = useNavigate();
   const [wish, setWish] = useState<Record<string, boolean>>({});
   const toggleWish = (key: string, e: React.MouseEvent) => { e.stopPropagation(); setWish(w => ({ ...w, [key]: !w[key] })); };
 
@@ -38,19 +40,19 @@ export function ProductsAndCombos({ products, onProductClick, onAddCombo: _onAdd
                 </div>
                 <h2 style={{ fontFamily: SERIF, fontSize: "clamp(1.6rem,3.5vw,2.5rem)", fontWeight: 500, color: MAROON, lineHeight: 1.15 }}>{title}</h2>
               </div>
-              <button className="flex items-center gap-1 text-sm font-medium whitespace-nowrap transition-opacity hover:opacity-60" style={{ color: MAROON }}>
+              <button onClick={() => navigate("/shop")} className="flex items-center gap-1 text-sm font-medium whitespace-nowrap transition-opacity hover:opacity-60" style={{ color: MAROON }}>
                 View all <ChevronRight size={14} />
               </button>
             </div>
             <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-6 gap-4">
-              {products.map((p, pi) => (
+              {products.slice(0, 6).map((p, pi) => (
                 <ProductCard key={`${si}-${pi}`} product={p} wishKey={`${si}-${p.id}`}
                   wished={!!wish[`${si}-${p.id}`]} onToggleWish={toggleWish}
                   onProductClick={onProductClick} onAddToCart={onAddToCart} />
               ))}
             </div>
             <div className="flex md:hidden gap-3 overflow-x-auto pb-2 -mx-6 px-6 items-stretch" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
-              {products.map((p, pi) => (
+              {products.slice(0, 6).map((p, pi) => (
                 <div key={`${si}-${pi}-m`} className="flex flex-col h-full" style={{ minWidth: "68vw", maxWidth: "68vw", flexShrink: 0 }}>
                   <ProductCard product={p} wishKey={`${si}-m-${p.id}`}
                     wished={!!wish[`${si}-m-${p.id}`]} onToggleWish={toggleWish}
