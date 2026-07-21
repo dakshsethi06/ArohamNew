@@ -363,7 +363,7 @@ export function AuthPage() {
                 </button>
               </Popover.Trigger>
               <Popover.Portal>
-                <Popover.Content align="start" sideOffset={4} className="z-[200] rounded-2xl shadow-2xl border p-4"
+                <Popover.Content side="bottom" avoidCollisions={false} align="start" sideOffset={4} className="z-[200] rounded-2xl shadow-2xl border p-4"
                   style={{ background: "#FAF7F2", borderColor: "rgba(91,31,36,0.15)" }}>
                   <style>{`
                     .rdp { --rdp-cell-size: 36px; --rdp-accent-color: ${MAROON}; --rdp-background-color: rgba(91,31,36,0.1); font-family: ${SANS}; }

@@ -124,10 +124,19 @@ export function ProfilePage() {
     setSaving(true);
     setSaveSuccess(false);
     try {
-      const updated = await api("/auth/profile", {
-        method: "POST",
-        body: JSON.stringify(editForm)
-      });
+      // Mock saving to backend since it's disconnected
+      const updated = {
+        full_name: editForm.fullName,
+        email: editForm.email,
+        phone: editForm.phone,
+        gender: editForm.gender,
+        dob: editForm.dob,
+        pob_city: editForm.pobCity,
+        created_at: profile?.created_at || new Date().toISOString()
+      };
+      
+      await new Promise(r => setTimeout(r, 600)); // simulate network
+
       setProfile(updated);
       sessionStorage.setItem("aroham_user_profile", JSON.stringify(updated));
       setSaveSuccess(true);
