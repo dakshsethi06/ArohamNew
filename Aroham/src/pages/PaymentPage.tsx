@@ -234,9 +234,6 @@ export function PaymentPage() {
           </div>
           <div className="flex items-center gap-3 mb-1">
             <h1 style={{ fontFamily: SERIF, fontSize: "clamp(1.75rem,4vw,2.5rem)", fontWeight: 500, color: MAROON, lineHeight: 1.1 }}>Secure Payment</h1>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full" style={{ background: "rgba(200,160,68,0.12)", border: "1px solid rgba(200,160,68,0.25)" }}>
-              <Lock size={11} style={{ color: GOLD }} /><span className="text-[10px] font-semibold" style={{ color: "#8B6914" }}>256-bit SSL</span>
-            </div>
           </div>
           <p className="text-sm" style={{ color: "#7A6A58" }}>Complete your sacred purchase securely via Razorpay.</p>
         </div>
