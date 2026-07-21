@@ -62,59 +62,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (justLoggedOut) isLoggingOut.current = true;
     prevIsLoggedIn.current = isLoggedIn;
 
-    if (isLoggedIn && cartSynced) {
-      // Only fetch from backend after local cart has been synced
-      api("/cart").then(data => {
-        // Assume backend returns array of cart items mapping to our structure
-        if (Array.isArray(data)) {
-          setItems(data.map((item: any) => {
-            const p = item.product || item;
-            return {
-              product: {
-                id: p.id || p.product_id || item.product_id || item.id,
-                name: p.name || "Product",
-                price: p.price || 0,
-                slug: p.slug || "",
-                subtitle: p.subtitle || "",
-                category: p.category || "",
-                purpose: p.purpose || "",
-                original: p.original || p.original_price || p.price || 0,
-                rating: p.rating || 5,
-                reviews: p.reviews || 0,
-                img: p.img || "",
-                badges: p.badges || [],
-                shortDesc: p.shortDesc || p.short_desc || "",
-                benefits: p.benefits || [],
-                size: p.size || "",
-                material: p.material || "",
-                useFor: p.useFor || p.use_for || []
-              },
-              qty: item.qty || item.quantity || 1
-            };
-          }));
-        }
-      }).catch(e => console.error("Error fetching cart:", e));
-    } else if (justLoggedOut) {
+    if (justLoggedOut) {
       // User just logged out — clear cart and localStorage
       setItems([]);
       localStorage.removeItem("aroham_cart");
       localStorage.removeItem("aroham_buy_now_intent");
       setTimeout(() => { isLoggingOut.current = false; }, 100);
-    } else if (!isLoggedIn) {
-      // Guest session — load from localStorage
+    } else {
+      // Load from localStorage for all users (guests and logged in)
       const local = localStorage.getItem("aroham_cart");
       if (local) {
         try { setItems(JSON.parse(local)); } catch (e) { }
       }
     }
-  }, [isLoggedIn, cartSynced]);
+  }, [isLoggedIn]);
 
-  // Save to LocalStorage if not logged in
   useEffect(() => {
-    if (!isLoggedIn && !isLoggingOut.current) {
+    if (!isLoggingOut.current) {
       localStorage.setItem("aroham_cart", JSON.stringify(items));
     }
-  }, [items, isLoggedIn]);
+  }, [items]);
 
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(() => {
     try {

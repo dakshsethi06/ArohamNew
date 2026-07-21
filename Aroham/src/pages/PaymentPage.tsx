@@ -341,19 +341,6 @@ export function PaymentPage() {
               </div>
             </div>
 
-            {/* Trust badges */}
-            <div className="rounded-3xl p-6" style={{ background: "linear-gradient(135deg,#FAF0D8,#FAF7F2)", border: "1px solid rgba(200,160,68,0.22)" }}>
-              <div className="flex items-center gap-2 mb-4"><ShieldCheck size={14} style={{ color: GOLD }} /><span className="text-sm font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>100% Secure Checkout</span></div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
-                {[{ i: "🔒", l: "SSL Encrypted", s: "256-bit" }, { i: "🛡", l: "PCI DSS", s: "Compliant" }, { i: "💳", l: "Razorpay", s: "Secured" }, { i: "🚫", l: "No Data", s: "Stored" }].map(({ i, l, s }) => (
-                  <div key={l} className="flex flex-col items-center text-center gap-1 p-3 rounded-2xl" style={{ background: "rgba(255,255,255,0.7)" }}>
-                    <span className="text-xl">{i}</span>
-                    <span className="text-[10px] font-semibold" style={{ color: MAROON }}>{l}</span>
-                    <span className="text-[9px]" style={{ color: "#9A8A78" }}>{s}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* Right sidebar – order summary / payment breakdown */}
@@ -405,6 +392,20 @@ export function PaymentPage() {
               </div>
               <div className="px-6 pb-6 lg:pb-4">
                 <button onClick={() => navigate("/checkout/shipping")} className="w-full py-3 rounded-2xl text-sm font-medium border transition-all hover:bg-amber-50" style={{ borderColor: "rgba(91,31,36,0.2)", color: MAROON }}>← Back to Address</button>
+              </div>
+            </div>
+
+            {/* Trust badges (Moved to bottom of sidebar) */}
+            <div className="mt-6 rounded-3xl p-6" style={{ background: "linear-gradient(135deg,#FAF0D8,#FAF7F2)", border: "1px solid rgba(200,160,68,0.22)" }}>
+              <div className="flex items-center gap-2 mb-4"><ShieldCheck size={14} style={{ color: GOLD }} /><span className="text-sm font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>100% Secure Checkout</span></div>
+              <div className="grid grid-cols-2 sm:grid-cols-2 gap-2.5 sm:gap-3">
+                {[{ i: "🔒", l: "SSL Encrypted", s: "256-bit" }, { i: "🛡", l: "PCI DSS", s: "Compliant" }, { i: "💳", l: "Razorpay", s: "Secured" }, { i: "🚫", l: "No Data", s: "Stored" }].map(({ i, l, s }) => (
+                  <div key={l} className="flex flex-col items-center text-center gap-1 p-3 rounded-2xl" style={{ background: "rgba(255,255,255,0.7)" }}>
+                    <span className="text-xl">{i}</span>
+                    <span className="text-[10px] font-semibold" style={{ color: MAROON }}>{l}</span>
+                    <span className="text-[9px]" style={{ color: "#9A8A78" }}>{s}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
