@@ -8,8 +8,7 @@ import * as Select from "@radix-ui/react-select";
 import * as Popover from "@radix-ui/react-popover";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
-import { db } from "@/lib/firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { supabase } from "@/lib/supabase";
 
 const ORDER_STEPS = [
   { label: "Ordered", icon: "✓" },
@@ -68,10 +67,9 @@ export function ProfilePage() {
     }
     
     if (user?.id) {
-      getDoc(doc(db, "users", user.id))
-        .then(docSnap => {
-          if (docSnap.exists()) {
-            const data = docSnap.data();
+      supabase.from("users").select("*").eq("id", user.id).single()
+        .then(({ data, error }) => {
+          if (data && !error) {
             setProfile(data);
             initEditForm(data);
             sessionStorage.setItem("aroham_user_profile", JSON.stringify(data));
@@ -86,12 +84,12 @@ export function ProfilePage() {
 
   const initEditForm = (p: any) => {
     setEditForm({
-      fullName: p?.full_name || user?.user_metadata?.full_name || "",
+      fullName: p?.full_name || p?.fullName || user?.user_metadata?.full_name || "",
       email: p?.email || user?.email || "",
       phone: p?.phone || user?.user_metadata?.phone || "",
       gender: p?.gender || "Other",
       dob: p?.dob ? new Date(p.dob).toISOString().split("T")[0] : "",
-      pobCity: p?.pob_city || ""
+      pobCity: p?.pob_city || p?.pobCity || ""
     });
   };
 
@@ -135,6 +133,7 @@ export function ProfilePage() {
     setSaveSuccess(false);
     try {
       const updated = {
+        id: user.id,
         full_name: editForm.fullName,
         email: editForm.email,
         phone: editForm.phone,
@@ -145,7 +144,8 @@ export function ProfilePage() {
         created_at: profile?.created_at || new Date().toISOString()
       };
       
-      await setDoc(doc(db, "users", user.id), updated, { merge: true });
+      const { error } = await supabase.from("users").upsert(updated);
+      if (error) throw error;
 
       setProfile(updated);
       sessionStorage.setItem("aroham_user_profile", JSON.stringify(updated));
@@ -161,18 +161,18 @@ export function ProfilePage() {
 
   const handleLogout = () => { logout(); navigate("/"); };
 
-  const displayName = profile?.full_name || user?.user_metadata?.full_name || "Devotee";
+  const displayName = profile?.full_name || profile?.fullName || user?.user_metadata?.full_name || "Devotee";
   const memberSince = profile?.created_at
     ? new Date(profile.created_at).getFullYear()
     : new Date().getFullYear();
 
   const profileFields = [
-    { label: "Name",   value: profile?.full_name || user?.user_metadata?.full_name || "—" },
+    { label: "Name",   value: profile?.full_name || profile?.fullName || user?.user_metadata?.full_name || "—" },
     { label: "Email",  value: profile?.email || user?.email || "—" },
     { label: "Phone",  value: profile?.phone || user?.user_metadata?.phone || "—" },
     { label: "Gender", value: profile?.gender || "—" },
     { label: "Date of Birth", value: profile?.dob ? new Date(profile.dob).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—" },
-    { label: "City of Birth", value: profile?.pob_city || "—" },
+    { label: "City of Birth", value: profile?.pob_city || profile?.pobCity || "—" },
   ];
 
   return (

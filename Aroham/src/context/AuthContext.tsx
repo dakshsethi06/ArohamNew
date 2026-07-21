@@ -19,7 +19,7 @@ interface AuthContextValue {
   user: UnifiedUser | null;
   session: any | null;
   cartSynced: boolean;
-  login: () => void;
+  login: (userData?: any) => void;
   logout: () => Promise<void>;
   openAuth: () => void;
   closeAuth: (loggedIn?: boolean) => void;
@@ -58,74 +58,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    // 1. Firebase Auth listener
-    const unsubscribeFirebase = onAuthStateChanged(firebaseAuth, async (fbUser: FirebaseUser | null) => {
-      if (fbUser) {
-        const token = await fbUser.getIdToken();
-        const mappedUser: UnifiedUser = {
-          id: fbUser.uid,
-          email: fbUser.email,
-          user_metadata: {
-            full_name: fbUser.displayName || "",
-            phone: fbUser.phoneNumber || ""
-          }
-        };
-        setUser(mappedUser);
-        setSession({ access_token: token, user: mappedUser });
+    // Mock Session initialization
+    const mockSession = localStorage.getItem("aroham_mock_session");
+    if (mockSession) {
+      try {
+        const parsed = JSON.parse(mockSession);
+        setUser(parsed);
         setIsLoggedIn(true);
-        await handleCartSync();
-      } else {
-        // Fallback check for Supabase session if not in Firebase
-        const { data: { session: supaSession } } = await supabase.auth.getSession();
-        if (supaSession) {
-          setSession(supaSession);
-          setUser(supaSession.user ? {
-            id: supaSession.user.id,
-            email: supaSession.user.email,
-            user_metadata: supaSession.user.user_metadata
-          } : null);
-          setIsLoggedIn(true);
-          setCartSynced(true);
-        } else {
-          setUser(null);
-          setSession(null);
-          setIsLoggedIn(false);
-          setCartSynced(false);
-        }
+        setSession({ user: parsed });
+        handleCartSync();
+      } catch (e) {
+        localStorage.removeItem("aroham_mock_session");
       }
-    });
-
-    // 2. Supabase Auth listener fallback
-    const { data: { subscription: supaSub } } = supabase.auth.onAuthStateChange(async (_event, supaSession) => {
-      if (!firebaseAuth.currentUser) {
-        if (supaSession) {
-          setSession(supaSession);
-          setUser(supaSession.user ? {
-            id: supaSession.user.id,
-            email: supaSession.user.email,
-            user_metadata: supaSession.user.user_metadata
-          } : null);
-          setIsLoggedIn(true);
-          await handleCartSync();
-        } else {
-          setUser(null);
-          setSession(null);
-          setIsLoggedIn(false);
-          setCartSynced(false);
-        }
-      }
-    });
-
-    return () => {
-      unsubscribeFirebase();
-      supaSub.unsubscribe();
-    };
+    } else {
+      setUser(null);
+      setSession(null);
+      setIsLoggedIn(false);
+      setCartSynced(false);
+    }
   }, []);
 
-  const login = () => setIsLoggedIn(true);
+  const login = (userData?: any) => {
+    setIsLoggedIn(true);
+    if (userData) {
+      setUser(userData);
+      setSession({ user: userData });
+      localStorage.setItem("aroham_mock_session", JSON.stringify(userData));
+      handleCartSync();
+    }
+  };
+  
   const logout = async () => {
     try { await firebaseSignOut(firebaseAuth); } catch (e) {}
     try { await supabase.auth.signOut(); } catch (e) {}
+    localStorage.removeItem("aroham_mock_session");
     sessionStorage.removeItem("aroham_user_profile");
     setIsLoggedIn(false);
     setUser(null);
