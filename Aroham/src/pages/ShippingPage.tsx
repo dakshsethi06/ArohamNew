@@ -69,6 +69,7 @@ export function ShippingPage() {
         if (Array.isArray(parsedList) && parsedList.length > 0) {
           setSavedAddresses(parsedList);
           setSelectedAddr(parsedList[0].id);
+          setShowForm(false);
         }
       }
     } catch (e) {}
@@ -458,70 +459,98 @@ export function ShippingPage() {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10 items-start">
           <div>
             {savedAddresses.length > 0 && !showForm && (
-            <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
-              <div className="px-4 sm:px-6 pt-5 pb-4 flex items-center justify-between gap-2" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
-                <h2 className="text-base sm:text-lg font-semibold leading-tight" style={{ fontFamily: SERIF, color: MAROON }}>Saved Addresses</h2>
-                <button onClick={() => { setEditingAddrId(null); setShowForm(true); }} className="text-[11px] sm:text-xs font-semibold px-3 py-1.5 sm:px-4 sm:py-2 rounded-full transition-all hover:opacity-80 flex-shrink-0" style={{ background: "rgba(91,31,36,0.07)", color: MAROON }}>+ New Address</button>
-              </div>
+              <div className="space-y-4">
+                <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
+                  <div className="px-4 sm:px-6 pt-5 pb-4 flex items-center justify-between gap-2" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
+                    <h2 className="text-base sm:text-lg font-semibold leading-tight" style={{ fontFamily: SERIF, color: MAROON }}>Select Delivery Address</h2>
+                    <button onClick={() => { setEditingAddrId(null); setShowForm(true); }} className="text-[11px] sm:text-xs font-bold px-3.5 py-2 rounded-full transition-all hover:opacity-90 flex-shrink-0" style={{ background: "rgba(91,31,36,0.08)", color: MAROON }}>+ Add New Address</button>
+                  </div>
 
-              <div className="p-4 sm:p-6 space-y-3">
-                {savedAddresses.map(addr => {
-                  const sel = selectedAddr === addr.id;
-                  const addrLine = [addr.line1 || addr.address_line1 || addr.address, addr.city, addr.state].filter(Boolean).join(", ");
-                  return (
-                    <div key={addr.id} onClick={() => setSelectedAddr(addr.id)}
-                      className="group relative p-4 sm:p-5 rounded-2xl cursor-pointer transition-all duration-200 overflow-hidden"
-                      style={{ border: `1.5px solid ${sel ? GOLD : "rgba(91,31,36,0.1)"}`, background: sel ? "rgba(200,160,68,0.05)" : "#FAFAF8", boxShadow: sel ? `0 0 0 3px rgba(200,160,68,0.1)` : "none" }}>
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-start gap-2.5 flex-1 min-w-0">
-                          <div className="mt-0.5 w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center transition-colors" style={{ border: `2px solid ${sel ? GOLD : "rgba(91,31,36,0.25)"}`, background: sel ? GOLD : "transparent" }}>
-                            {sel && <div className="w-2 h-2 rounded-full bg-white" />}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <span className="text-sm font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>{addr.address_type || addr.type || "Home"}</span>
-                              {(addr.is_default || addr.isDefault) && <span className="px-2 py-0.5 rounded-full text-[9px] font-bold" style={{ background: "rgba(200,160,68,0.15)", color: "#8B6914" }}>DEFAULT</span>}
+                  <div className="p-4 sm:p-6 space-y-3">
+                    {savedAddresses.map(addr => {
+                      const sel = selectedAddr === addr.id;
+                      const addrLine = [addr.line1 || addr.address_line1 || addr.address, addr.city, addr.state].filter(Boolean).join(", ");
+                      return (
+                        <div key={addr.id} onClick={() => setSelectedAddr(addr.id)}
+                          className="group relative p-4 sm:p-5 rounded-2xl cursor-pointer transition-all duration-200 overflow-hidden"
+                          style={{ border: `1.5px solid ${sel ? GOLD : "rgba(91,31,36,0.1)"}`, background: sel ? "rgba(200,160,68,0.05)" : "#FAFAF8", boxShadow: sel ? `0 0 0 3px rgba(200,160,68,0.1)` : "none" }}>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-start gap-2.5 flex-1 min-w-0">
+                              <div className="mt-0.5 w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center transition-colors" style={{ border: `2px solid ${sel ? GOLD : "rgba(91,31,36,0.25)"}`, background: sel ? GOLD : "transparent" }}>
+                                {sel && <div className="w-2 h-2 rounded-full bg-white" />}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                  <span className="text-sm font-bold uppercase tracking-wider" style={{ fontFamily: SANS, color: MAROON }}>{addr.address_type || addr.type || "Home"}</span>
+                                  {(addr.is_default || addr.isDefault) && <span className="px-2 py-0.5 rounded-full text-[9px] font-bold" style={{ background: "rgba(200,160,68,0.15)", color: "#8B6914" }}>DEFAULT</span>}
+                                </div>
+                                <p className="text-xs font-semibold mb-0.5 truncate" style={{ color: "#3A2A1A" }}>{addr.full_name || addr.name} · {addr.phone}</p>
+                                <p className="text-xs leading-relaxed break-words" style={{ color: "#7A6A58" }}>{addrLine} – {addr.pincode || addr.pin}</p>
+                              </div>
                             </div>
-                            <p className="text-xs font-medium mb-0.5 truncate" style={{ color: "#3A2A1A" }}>{addr.full_name || addr.name} · {addr.phone}</p>
-                            <p className="text-xs leading-relaxed break-words" style={{ color: "#7A6A58" }}>{addrLine} – {addr.pincode || addr.pin}</p>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              <button onClick={(e) => { e.stopPropagation(); handleEditAddress(addr); }} className="px-2.5 py-1 rounded-lg text-[11px] font-semibold hover:bg-amber-50 flex items-center gap-1" style={{ color: MAROON, border: "1px solid rgba(91,31,36,0.15)" }}>
+                                <Edit2 size={11} /> <span className="hidden sm:inline">Edit</span>
+                              </button>
+                              <button onClick={(e) => { e.stopPropagation(); handleDeleteAddress(addr.id); }} className="px-2.5 py-1 rounded-lg text-[11px] font-semibold hover:bg-red-50 flex items-center gap-1" style={{ color: "#C04040", border: "1px solid rgba(192,64,64,0.15)" }}>
+                                <Trash2 size={11} /> <span className="hidden sm:inline">Delete</span>
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          <button onClick={(e) => { e.stopPropagation(); handleEditAddress(addr); }} className="px-2 py-1 rounded-lg text-[10px] font-medium hover:bg-amber-50 flex items-center gap-1" style={{ color: MAROON, border: "1px solid rgba(91,31,36,0.12)" }}>
-                            <Edit2 size={10} /> <span className="hidden sm:inline">Edit</span>
-                          </button>
-                          <button onClick={(e) => { e.stopPropagation(); handleDeleteAddress(addr.id); }} className="px-2 py-1 rounded-lg text-[10px] font-medium hover:bg-red-50 flex items-center gap-1" style={{ color: "#C04040", border: "1px solid rgba(192,64,64,0.15)" }}>
-                            <Trash2 size={10} /> <span className="hidden sm:inline">Delete</span>
-                          </button>
-                        </div>
-                      </div>
-                      {sel && (() => {
-                        const pin = String(addr.pincode || addr.pin || "").replace(/\D/g, "").slice(0, 6);
-                        const est = estimates[pin];
-                        const dateStr = est?.deliveryDate || "3–5 business days";
-                        const courierStr = est?.courier || "Shiprocket Express";
-                        return (
-                          <div className="mt-3 pt-3 flex items-center gap-2" style={{ borderTop: "1px solid rgba(200,160,68,0.2)" }}>
-                            <Truck size={12} style={{ color: "#4A8A4A", flexShrink: 0 }} />
-                            <span className="text-[10px] font-medium leading-tight" style={{ color: "#4A8A4A" }}>
-                              Expected delivery by <strong>{dateStr}</strong> · Free Shipping
-                            </span>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-            )}
-            {(showForm || savedAddresses.length === 0) && (
 
+                          {sel && (() => {
+                            const pin = String(addr.pincode || addr.pin || "").replace(/\D/g, "").slice(0, 6);
+                            const est = estimates[pin];
+                            const dateStr = est?.deliveryDate || "3–5 business days";
+                            return (
+                              <div className="mt-4 pt-3 flex flex-col gap-3" style={{ borderTop: "1px solid rgba(200,160,68,0.2)" }}>
+                                <div className="flex items-center gap-2">
+                                  <Truck size={14} style={{ color: "#4A8A4A", flexShrink: 0 }} />
+                                  <span className="text-xs font-semibold" style={{ color: "#4A8A4A" }}>
+                                    Expected delivery by <strong>{dateStr}</strong> · Free Shipping
+                                  </span>
+                                </div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const finalObj = {
+                                      ...addr,
+                                      deliveryDate: dateStr,
+                                      specialRequest: form.specialRequest
+                                    };
+                                    sessionStorage.setItem("aroham_shipping_addr", JSON.stringify(finalObj));
+                                    navigate("/checkout/payment");
+                                  }}
+                                  className="w-full py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all hover:opacity-90 shadow-md"
+                                  style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}
+                                >
+                                  <CheckCircle size={15} /> Deliver to this Address
+                                </button>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => { setEditingAddrId(null); setShowForm(true); }}
+                  className="w-full p-4 rounded-3xl border-2 border-dashed flex items-center justify-center gap-2 text-xs font-bold transition-all hover:bg-black/5"
+                  style={{ borderColor: "rgba(91,31,36,0.2)", color: MAROON, background: "#FFFFFF" }}
+                >
+                  + Add New Address
+                </button>
+              </div>
+            )}
+
+            {(showForm || savedAddresses.length === 0) && (
               <div className="rounded-3xl overflow-hidden mt-4" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
                 <div className="px-6 pt-6 pb-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
                   <h2 className="text-lg font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>{editingAddrId ? "Edit Address" : "New Address"}</h2>
                   {savedAddresses.length > 0 && (
-                    <button onClick={() => { setShowForm(false); setEditingAddrId(null); }} className="text-xs font-semibold px-4 py-2 rounded-full transition-all hover:opacity-80" style={{ background: "rgba(91,31,36,0.07)", color: MAROON }}>Cancel</button>
+                    <button onClick={() => { setShowForm(false); setEditingAddrId(null); }} className="text-xs font-semibold px-4 py-2 rounded-full transition-all hover:opacity-80" style={{ background: "rgba(91,31,36,0.07)", color: MAROON }}>← Back to Saved Addresses</button>
                   )}
                 </div>
                 <div className="p-6 space-y-4">
