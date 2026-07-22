@@ -25,16 +25,24 @@ export function ProductDetailPage() {
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { isLoggedIn, openAuth } = useAuth();
   const { products, loading: productsLoading } = useProducts();
-  const [product, setProduct] = useState<ArohamProduct | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [product, setProduct] = useState<ArohamProduct | null>(() => {
+    return DEFAULT_PRODUCTS.find(p => p.slug === slug) || null;
+  });
+  const [loading, setLoading] = useState<boolean>(() => {
+    return !DEFAULT_PRODUCTS.some(p => p.slug === slug);
+  });
 
   useEffect(() => {
     if (slug) {
       const found = products.find(p => p.slug === slug) || DEFAULT_PRODUCTS.find(p => p.slug === slug);
-      if (found) setProduct(found);
-      setLoading(false);
+      if (found) {
+        setProduct(found);
+        setLoading(false);
+      } else if (!productsLoading) {
+        setLoading(false);
+      }
     }
-  }, [slug, products]);
+  }, [slug, products, productsLoading]);
 
   const [tab, setTab] = useState(0);
   const [qty, setQty] = useState(1);

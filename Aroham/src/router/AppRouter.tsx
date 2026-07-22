@@ -29,46 +29,19 @@ function ScrollManager() {
   const location = useLocation();
   const navType = useNavigationType();
 
-  // Disable native browser scroll restoration so it doesn't fight us
+  // Enable native browser scroll restoration for smooth gesture navigation on mobile
   useEffect(() => {
     if ("scrollRestoration" in window.history) {
-      window.history.scrollRestoration = "manual";
+      window.history.scrollRestoration = "auto";
     }
   }, []);
 
-  // Save scroll position for the current location
+  // Reset scroll on forward navigation only
   useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    const handleScroll = () => {
-      if (timeoutId) return;
-      timeoutId = setTimeout(() => {
-        sessionStorage.setItem(`scroll-${location.key}`, window.scrollY.toString());
-        timeoutId = null;
-      }, 100);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [location.key]);
-
-  // Restore or reset scroll on route change
-  useEffect(() => {
-    if (navType === "POP") {
-      const saved = sessionStorage.getItem(`scroll-${location.key}`);
-      if (saved) {
-        // Slight delay ensures the DOM has rendered the new page's height
-        // before we attempt to scroll, preventing it from hitting the bottom and bouncing.
-        setTimeout(() => {
-          window.scrollTo({ top: parseInt(saved, 10), behavior: "instant" });
-        }, 50);
-      }
-    } else {
+    if (navType !== "POP") {
       window.scrollTo({ top: 0, behavior: "instant" });
     }
-  }, [location.key, navType]);
+  }, [location.pathname, navType]);
 
   return null;
 }
