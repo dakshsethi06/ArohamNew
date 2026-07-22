@@ -11,38 +11,38 @@ export function ShopConsultCards({ products, onShop, onProductClick }: { product
         {/* Shop card */}
         <div className="rounded-3xl overflow-hidden group transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl h-full"
           style={{ background: `linear-gradient(160deg,${MAROON} 0%,#5C1B23 100%)`, boxShadow: "0 20px 50px rgba(92,27,35,0.35)" }}>
-          <div className="p-6 sm:p-8 flex flex-col gap-4 sm:gap-5 relative h-full">
+          <div className="p-8 flex flex-col gap-5 relative h-full">
             <div className="absolute inset-0 opacity-5" style={{ backgroundImage: `radial-gradient(circle,${GOLD} 1px,transparent 1px)`, backgroundSize: "24px 24px" }} />
             <div className="flex-1 relative z-10" />
             <div className="relative z-10">
               <h2 style={{ fontFamily: SERIF, fontSize: "clamp(2rem,3.5vw,2.6rem)", fontWeight: 700, color: IVORY, lineHeight: 1.1, marginBottom: 8 }}>Sacred Store</h2>
               <p className="text-sm leading-relaxed" style={{ color: GOLD, maxWidth: 480 }}>Yantras, Rudraksha, Crystals, Pendants &amp; complete Vastu remedies — all temple energized.</p>
             </div>
-            <div className="grid grid-cols-3 gap-2 sm:gap-3 relative z-10">
+            <div className="grid grid-cols-3 gap-3 relative z-10">
               {displayProducts.map(p => (
                 <div key={p.id} className="rounded-xl overflow-hidden" style={{ aspectRatio: "1/0.92", width: "100%", background: "rgba(28,18,10,0.6)" }}>
                   <img src={p.img} alt={p.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500" />
                 </div>
               ))}
             </div>
-            <div className="relative z-10 grid grid-cols-2 gap-x-2 sm:gap-x-4 gap-y-0" style={{ borderTop: "1px solid rgba(200,160,68,0.12)" }}>
+            <div className="relative z-10 grid grid-cols-2 gap-x-4 gap-y-0" style={{ borderTop: "1px solid rgba(200,160,68,0.12)" }}>
               {[
                 { icon: <Flame size={13} />, label: "Temple Energized" },
                 { icon: <CheckCircle size={13} />, label: "Certified Authentic" },
                 { icon: <Truck size={13} />, label: "Free Shipping" },
                 { icon: <Shield size={13} />, label: "COD Available" },
               ].map(({ icon, label }) => (
-                <div key={label} className="flex items-center gap-1.5 sm:gap-2.5 py-2 sm:py-2.5 min-w-0" style={{ borderBottom: "1px solid rgba(200,160,68,0.08)" }}>
+                <div key={label} className="flex items-center gap-2.5 py-2.5" style={{ borderBottom: "1px solid rgba(200,160,68,0.08)" }}>
                   <span style={{ color: GOLD, flexShrink: 0 }}>{icon}</span>
-                  <span className="truncate text-[10px] sm:text-[11px]" style={{ color: "rgba(217,195,171,0.6)", fontFamily: SANS, letterSpacing: "0.02em" }}>{label}</span>
+                  <span style={{ fontSize: 11, color: "rgba(217,195,171,0.6)", fontFamily: SANS, letterSpacing: "0.02em" }}>{label}</span>
                 </div>
               ))}
             </div>
-            <div className="relative z-10 flex items-center gap-2 text-xs sm:text-sm" style={{ color: "rgba(217,195,171,0.8)" }}>
+            <div className="relative z-10 flex items-center gap-2 text-sm" style={{ color: "rgba(217,195,171,0.8)" }}>
               <span style={{ color: GOLD, letterSpacing: 2 }}>★★★★★</span>
               <strong style={{ color: IVORY }}>4.8</strong>
               <span className="w-1 h-1 rounded-full inline-block" style={{ background: "rgba(217,195,171,0.5)" }} />
-              <span className="truncate">12,000+ devotees served</span>
+              <span>12,000+ devotees served</span>
             </div>
             <div className="flex-1 relative z-10" />
             <button onClick={onShop}
@@ -54,7 +54,7 @@ export function ShopConsultCards({ products, onShop, onProductClick }: { product
         </div>
         {/* Consult / carousel card */}
         <div className="rounded-3xl" onClick={e => e.stopPropagation()} style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 4px 30px rgba(91,31,36,0.06)", minHeight: 280 }}>
-          <div className="rounded-3xl overflow-hidden p-6 pb-10 flex flex-col h-full relative" style={{ background: `linear-gradient(135deg,#0D0508,#1A0D10)` }}>
+          <div className="rounded-3xl p-6 pb-10 flex flex-col h-full relative" style={{ background: `linear-gradient(135deg,#0D0508,#1A0D10)` }}>
             <div className="flex items-center gap-2 mb-3">
               <span className="text-xs tracking-widest uppercase font-semibold" style={{ color: GOLD, fontFamily: SANS }}>Sacred Collection</span>
             </div>
