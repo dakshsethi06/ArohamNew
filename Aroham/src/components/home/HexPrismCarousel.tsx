@@ -15,9 +15,9 @@ export function HexPrismCarousel({ products, onProductClick }: { products: Aroha
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const baseW = isMobile ? 100 : 150;
-  const baseH = isMobile ? 140 : 200;
-  const baseTz = isMobile ? 100 : 190;
+  const baseW = isMobile ? 120 : 150;
+  const baseH = isMobile ? 160 : 200;
+  const baseTz = isMobile ? 130 : 190;
   const activeScale = 1.35;
   const SMOOTH_EASE = "0.7s cubic-bezier(0.25, 1, 0.5, 1)";
 
