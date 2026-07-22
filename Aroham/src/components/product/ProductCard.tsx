@@ -46,8 +46,8 @@ export function ProductCard({ product: p, onProductClick, onAddToCart, wishKey =
           </div>
         </div>
       </div>
-      <div className="p-3.5 pt-2 flex items-center justify-between gap-2 border-t border-black/[0.04]">
-        <div className="flex flex-col min-w-0">
+      <div className="p-3 pt-2 flex flex-col gap-2 border-t border-black/[0.04]">
+        <div className="flex items-baseline justify-between gap-1 flex-wrap">
           <div className="flex items-baseline gap-1.5 min-w-0">
             <span className="text-sm font-bold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{p.price.toLocaleString("en-IN")}</span>
             {p.original > p.price && (
@@ -63,7 +63,7 @@ export function ProductCard({ product: p, onProductClick, onAddToCart, wishKey =
         {onAddToCart && (
           <button aria-label={`Add ${p.name} to cart`}
             onClick={e => { e.stopPropagation(); onAddToCart(p); }}
-            className="flex-shrink-0 px-3.5 py-1.5 rounded-xl flex items-center justify-center text-xs font-bold tracking-wide transition-all hover:opacity-90 active:scale-95 shadow-sm uppercase"
+            className="w-full py-2 rounded-xl flex items-center justify-center text-[11px] font-bold tracking-wide transition-all hover:opacity-90 active:scale-95 shadow-sm uppercase mt-0.5"
             style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY, border: "none", cursor: "pointer", fontFamily: SANS }}>
             <span>Add to Cart</span>
           </button>
