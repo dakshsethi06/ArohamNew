@@ -810,10 +810,14 @@ export function AuthPage() {
 
       {/* Top Bar */}
       <div className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0 relative z-50 shadow-sm" style={{ borderColor: "rgba(91,31,36,0.3)", background: "rgba(250,247,242,0.95)", backdropFilter: "blur(12px)" }}>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-sm" style={{ background: `linear-gradient(135deg,${SAFFRON},${GOLD})`, color: "#1A0D0E" }}>ॐ</div>
+        <Link
+          to="/"
+          onClick={() => closeAuth()}
+          className="flex items-center gap-2 group cursor-pointer transition-transform hover:opacity-90"
+        >
+          <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-sm transition-transform group-hover:scale-105" style={{ background: `linear-gradient(135deg,${SAFFRON},${GOLD})`, color: "#1A0D0E" }}>ॐ</div>
           <span className="font-semibold text-lg" style={{ fontFamily: SERIF, color: MAROON }}>Aroham</span>
-        </div>
+        </Link>
         <button onClick={() => closeAuth()} className="p-2 rounded-full hover:bg-black/5 text-gray-500 transition-colors" aria-label="Close">
           <X size={20} />
         </button>
