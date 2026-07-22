@@ -340,87 +340,78 @@ export function PaymentPage() {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 sm:gap-10 items-start">
           {/* Left — Pay via Razorpay card */}
           <div className="space-y-4">
-            {/* Coupon Code Section — now on Payment page */}
-            <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
-              <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
-                <div className="flex items-center gap-2">
-                  <Tag size={14} style={{ color: GOLD }} />
-                  <h2 className="text-sm sm:text-base font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Promo Code / Coupon</h2>
-                </div>
-              </div>
-              <div className="px-4 sm:px-6 py-4">
-                {appliedCoupon ? (
-                  <div className="p-3 rounded-2xl" style={{ background: "rgba(74,138,74,0.08)", border: "1px solid rgba(74,138,74,0.25)" }}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold px-3 py-1 rounded-lg" style={{ background: "rgba(74,138,74,0.15)", color: "#2E8B57" }}>{appliedCoupon.code}</span>
-                        <div>
-                          <p className="text-xs font-semibold" style={{ color: "#2E8B57" }}>🎉 {appliedCoupon.label}</p>
-                          <p className="text-[10px]" style={{ color: "#4A8A4A" }}>You're saving ₹{discount.toLocaleString("en-IN")}!</p>
-                        </div>
-                      </div>
-                      <button onClick={() => { removeCoupon(); setCouponMsg(null); setShowCouponCelebration(false); }} className="text-xs font-semibold px-3 py-1.5 hover:bg-red-50 rounded-lg flex-shrink-0" style={{ color: "#C04040" }}>Remove</button>
-                    </div>
+            {/* Ultra-compact Coupon Bar */}
+            <div className="rounded-2xl p-3 sm:p-4" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 12px rgba(91,31,36,0.04)" }}>
+              {appliedCoupon ? (
+                <div className="flex items-center justify-between gap-2 p-2 rounded-xl" style={{ background: "rgba(74,138,74,0.08)", border: "1px solid rgba(74,138,74,0.2)" }}>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 flex-shrink-0">{appliedCoupon.code}</span>
+                    <span className="text-xs font-medium text-emerald-700 truncate">🎉 {appliedCoupon.label} (−₹{discount})</span>
                   </div>
-                ) : (
-                  <>
-                    <div className="flex gap-2 items-center">
-                      <input
-                        type="text"
-                        value={couponInput}
-                        onChange={e => { setCouponInput(e.target.value); setCouponMsg(null); }}
-                        placeholder="Coupon code (e.g. AROHAM10)"
-                        className="flex-1 min-w-0 px-3 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm outline-none uppercase font-semibold truncate"
-                        style={{ border: "1.5px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON }}
-                        onKeyDown={e => { if (e.key === "Enter") handleApplyCoupon(); }}
-                      />
-                      <button
-                        onClick={handleApplyCoupon}
-                        className="px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold uppercase transition-all active:scale-95 flex-shrink-0"
-                        style={{ background: MAROON, color: IVORY }}
-                      >
-                        Apply
-                      </button>
+                  <button onClick={() => { removeCoupon(); setCouponMsg(null); setShowCouponCelebration(false); }} className="text-xs font-semibold px-2 py-1 text-red-600 hover:bg-red-50 rounded flex-shrink-0">Remove</button>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 flex-shrink-0 text-xs font-semibold" style={{ color: MAROON }}>
+                      <Tag size={13} style={{ color: GOLD }} />
+                      <span className="hidden sm:inline">Coupon:</span>
                     </div>
-                    {couponMsg && (
-                      <p className={`text-xs font-medium mt-2 ${couponMsg.success ? "text-emerald-600" : "text-red-500"}`}>
-                        {couponMsg.success ? "✓ " : "✕ "}{couponMsg.message}
-                      </p>
-                    )}
-                  </>
-                )}
-              </div>
+                    <input
+                      type="text"
+                      value={couponInput}
+                      onChange={e => { setCouponInput(e.target.value); setCouponMsg(null); }}
+                      placeholder="Coupon code (e.g. AROHAM10)"
+                      className="flex-1 min-w-0 px-3 py-2 rounded-xl text-xs outline-none uppercase font-semibold truncate"
+                      style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON }}
+                      onKeyDown={e => { if (e.key === "Enter") handleApplyCoupon(); }}
+                    />
+                    <button
+                      onClick={handleApplyCoupon}
+                      className="px-3.5 py-2 rounded-xl text-xs font-bold uppercase transition-all active:scale-95 flex-shrink-0"
+                      style={{ background: MAROON, color: IVORY }}
+                    >
+                      Apply
+                    </button>
+                  </div>
+                  {couponMsg && (
+                    <p className={`text-[11px] font-medium mt-1.5 ${couponMsg.success ? "text-emerald-600" : "text-red-500"}`}>
+                      {couponMsg.success ? "✓ " : "✕ "}{couponMsg.message}
+                    </p>
+                  )}
+                </>
+              )}
             </div>
 
             {/* Online Payment Card (Razorpay) */}
             <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
-              <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
-                <h2 className="text-base sm:text-lg font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Payment Details</h2>
+              <div className="px-4 sm:px-6 pt-3.5 sm:pt-4 pb-2.5" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
+                <h2 className="text-base font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Payment Details</h2>
               </div>
-              <div className="p-5 sm:p-8 flex flex-col items-center text-center gap-5 sm:gap-6">
+              <div className="p-4 sm:p-6 flex flex-col items-center text-center gap-3.5 sm:gap-5">
                 {/* Razorpay brand */}
-                <div className="flex flex-col items-center gap-3">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center shadow-lg" style={{ background: "linear-gradient(135deg,#072654,#3395FF)" }}>
-                    <span className="text-white font-black text-xl sm:text-2xl" style={{ fontFamily: "sans-serif" }}>R</span>
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shadow-md" style={{ background: "linear-gradient(135deg,#072654,#3395FF)" }}>
+                    <span className="text-white font-black text-lg sm:text-xl" style={{ fontFamily: "sans-serif" }}>R</span>
                   </div>
                   <div>
-                    <p className="text-sm sm:text-base font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Pay Securely with Razorpay</p>
-                    <p className="text-[11px] sm:text-xs mt-1" style={{ color: "#9A8A78" }}>UPI · Cards · Net Banking · Wallets · EMI</p>
+                    <p className="text-sm font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Pay Securely with Razorpay</p>
+                    <p className="text-[10px] sm:text-xs mt-0.5" style={{ color: "#9A8A78" }}>UPI · Cards · Net Banking · Wallets · EMI</p>
                   </div>
                 </div>
 
                 {/* Total amount */}
-                <div className="w-full rounded-2xl py-3.5 sm:py-4 px-4 sm:px-6" style={{ background: "linear-gradient(135deg,#FAF0D8,#FAF7F2)", border: "1px solid rgba(200,160,68,0.22)" }}>
-                  <p className="text-xs mb-0.5" style={{ color: "#9A8A78" }}>Total Amount</p>
+                <div className="w-full rounded-2xl py-3 px-4 sm:px-6" style={{ background: "linear-gradient(135deg,#FAF0D8,#FAF7F2)", border: "1px solid rgba(200,160,68,0.22)" }}>
+                  <p className="text-[11px] mb-0.5" style={{ color: "#9A8A78" }}>Total Amount</p>
                   <p className="text-2xl sm:text-3xl font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{total.toLocaleString("en-IN")}</p>
-                  <p className="text-[11px] sm:text-xs mt-1" style={{ color: "#4A8A4A" }}>Includes free shipping + GST</p>
+                  <p className="text-[10px] sm:text-xs mt-0.5" style={{ color: "#4A8A4A" }}>Includes free shipping + GST</p>
                 </div>
 
                 {/* Pay button */}
                 <button
                   onClick={handlePay}
                   disabled={placing || items.length === 0}
-                  className="w-full py-3.5 sm:py-4 rounded-2xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2.5 transition-all hover:opacity-90 hover:shadow-xl disabled:opacity-60"
+                  className="w-full py-3.5 rounded-2xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2.5 transition-all hover:opacity-90 hover:shadow-xl disabled:opacity-60"
                   style={{ background: `linear-gradient(135deg,#072654,#3395FF)`, color: "#FFFFFF" }}
                 >
                   {placing
@@ -429,7 +420,7 @@ export function PaymentPage() {
                   }
                 </button>
 
-                <p className="text-[10px] sm:text-[11px]" style={{ color: "#B0A090" }}>
+                <p className="text-[10px]" style={{ color: "#B0A090" }}>
                   By proceeding, you agree to our Terms & Conditions. Your payment is processed securely by Razorpay.
                 </p>
               </div>
