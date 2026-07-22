@@ -24,15 +24,6 @@ export function Footer() {
             </div>
             <p className="text-sm mb-4 leading-relaxed hidden lg:block" style={{ color: "rgba(250,247,242,0.5)" }}>India's most trusted premium platform for authentic Vedic products and spiritual guidance.</p>
             <p className="text-xs mb-4 leading-relaxed lg:hidden" style={{ color: "rgba(250,247,242,0.4)" }}>Authentic Vedic products & spiritual guidance.</p>
-            <div className="flex gap-3">
-              {SOCIAL_LINKS.map(({ Icon, label, href }) => (
-                <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
-                  className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors"
-                  style={{ border: "1px solid rgba(255,255,255,0.1)" }}>
-                  <Icon size={14} style={{ color: "rgba(250,247,242,0.5)" }} />
-                </a>
-              ))}
-            </div>
           </div>
           {[
             { title: "Products", links: [{ label: "Yantras", href: "/shop?category=Yantra" }, { label: "Pendants", href: "/shop?category=Pendant" }, { label: "Crystals", href: "/shop?category=Crystals" }, { label: "Rudraksha", href: "/shop?category=Rudraksha" }, { label: "Combo Kits", href: "/shop?title=Combo%20Deals" }] },
