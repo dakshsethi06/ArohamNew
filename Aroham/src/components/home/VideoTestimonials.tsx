@@ -120,57 +120,37 @@ export function VideoTestimonials() {
         </button>
 
         <div ref={scrollRef}
-          className="reel-scroll flex items-center gap-4 overflow-x-auto px-[max(2rem,calc(50vw-140px))]"
-          style={{ scrollSnapType: "x mandatory", paddingBottom: "4px", minHeight: isMobile ? 484 : 464, perspective: 1200, WebkitMaskImage: isMobile ? "none" : "linear-gradient(to right, transparent, black 15%, black 85%, transparent)", maskImage: isMobile ? "none" : "linear-gradient(to right, transparent, black 15%, black 85%, transparent)" }}>
+          className="reel-scroll flex items-center gap-5 overflow-x-auto px-6 sm:px-12 lg:px-20"
+          style={{ scrollSnapType: "x mandatory", paddingBottom: "12px", minHeight: isMobile ? 440 : 470 }}>
           {ALL_REELS.map((v, i) => {
             const isActive = (i % n) === active;
-            let diff = i - centerIndex;
-            
-            let rotY = 0;
-            let sc = 1;
-            let op = 1;
-            
-            if (isMobile) {
-              if (diff === 0) { sc = 1; op = 1; }
-              else { sc = 0.95; op = 0.4; }
-            } else {
-              if (diff === 0) {
-                rotY = 0; sc = 1; op = 1;
-              } else if (diff === -1) {
-                rotY = 22; sc = 0.93; op = 0.6;
-              } else if (diff === 1) {
-                rotY = -22; sc = 0.93; op = 0.6;
-              } else if (diff <= -2) {
-                rotY = 40; sc = 0.85; op = 0.2;
-              } else if (diff >= 2) {
-                rotY = -40; sc = 0.85; op = 0.2;
-              }
-            }
-
-            const mobileWidth = isActive ? 300 : 280;
-            const mobileHeight = isActive ? 480 : 450;
-            const desktopWidth = isActive ? 260 : 200;
-            const desktopHeight = isActive ? 460 : 355;
 
             return (
               <div key={i} onClick={() => scrollTo(i % n)}
-                className="flex-shrink-0 relative cursor-pointer transition-all duration-500"
-                style={{ width: isMobile ? mobileWidth : desktopWidth, height: isMobile ? mobileHeight : desktopHeight, borderRadius: 24, overflow: "hidden", scrollSnapAlign: "center",
-                  transform: isMobile ? `scale(${sc})` : `perspective(1000px) rotateY(${rotY}deg) scale(${sc})`, opacity: op,
-                  border: isActive ? `2px solid ${GOLD}` : "2px solid transparent",
-                  transition: "transform 0.3s ease, opacity 0.3s ease",
-                  boxShadow: isActive ? `0 0 0 1px rgba(200,160,68,0.2), 0 24px 60px rgba(0,0,0,0.6)` : "none" }}>
+                className="flex-shrink-0 relative cursor-pointer transition-all duration-300 rounded-3xl overflow-hidden"
+                style={{
+                  width: isMobile ? 260 : 280,
+                  height: isMobile ? 410 : 440,
+                  scrollSnapAlign: "center",
+                  border: isActive ? `2px solid ${GOLD}` : "1px solid rgba(200,160,68,0.18)",
+                  boxShadow: isActive
+                    ? `0 0 30px rgba(200,160,68,0.35), 0 20px 50px rgba(0,0,0,0.85)`
+                    : "0 8px 24px rgba(0,0,0,0.5)",
+                  transform: isActive ? "scale(1.03)" : "scale(0.96)",
+                  opacity: isActive ? 1 : 0.7
+                }}
+              >
                 <img src={v.thumb} alt={v.name} className="absolute inset-0 w-full h-full object-cover" />
-                <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom,rgba(0,0,0,0.1) 0%,transparent 30%,transparent 40%,rgba(0,0,0,0.85) 100%)" }} />
-                <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-                  <div className="flex gap-1.5">
-                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold" style={{ background: "rgba(200,160,68,0.9)", color: "#1A0D0E" }}>✓ Verified</span>
-                  </div>
-                  <div className="flex">{Array.from({ length: v.rating }).map((_, j) => <Star key={j} size={9} fill={GOLD} stroke="none" />)}</div>
+                <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom,rgba(0,0,0,0.12) 0%,transparent 30%,transparent 40%,rgba(0,0,0,0.88) 100%)" }} />
+                <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between">
+                  <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold" style={{ background: "rgba(200,160,68,0.95)", color: "#1A0D0E" }}>✓ Verified</span>
+                  <div className="flex gap-0.5">{Array.from({ length: v.rating }).map((_, j) => <Star key={j} size={10} fill={GOLD} stroke="none" />)}</div>
                 </div>
 
                 <div className="absolute bottom-0 left-0 right-0 p-4">
-                  {isActive && <p className="text-[11px] leading-relaxed mb-3 italic" style={{ color: "rgba(250,247,242,0.85)", fontFamily: SANS }}>"{v.review.slice(0, 90)}{v.review.length > 90 ? "…" : ""}"</p>}
+                  <p className="text-[11px] leading-relaxed mb-3 italic" style={{ color: "rgba(250,247,242,0.9)", fontFamily: SANS }}>
+                    "{v.review.slice(0, 90)}{v.review.length > 90 ? "…" : ""}"
+                  </p>
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style={{ background: v.bg, color: GOLD, fontFamily: SERIF }}>{v.init}</div>
                     <div className="min-w-0">
@@ -178,7 +158,7 @@ export function VideoTestimonials() {
                       <div className="text-[10px]" style={{ color: "rgba(250,247,242,0.55)" }}>{v.city}</div>
                     </div>
                   </div>
-                  {isActive && <div className="mt-2 text-[9px] px-2 py-1 rounded-full inline-block" style={{ background: "rgba(200,160,68,0.12)", border: "1px solid rgba(200,160,68,0.2)", color: GOLD }}>{v.product}</div>}
+                  <div className="mt-2 text-[9px] px-2.5 py-1 rounded-full inline-block" style={{ background: "rgba(200,160,68,0.15)", border: "1px solid rgba(200,160,68,0.25)", color: GOLD }}>📦 {v.product}</div>
                 </div>
               </div>
             );
