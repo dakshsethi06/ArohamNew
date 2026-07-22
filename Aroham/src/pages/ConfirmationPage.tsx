@@ -116,9 +116,9 @@ export function ConfirmationPage() {
   }
 
   return (
-    <div className="w-full overflow-x-hidden" style={{ background: "#FAF7F2", minHeight: "100vh", fontFamily: SANS, position: "relative" }}>
+    <div className="w-full overflow-x-hidden pt-16 sm:pt-20" style={{ background: "#FAF7F2", minHeight: "100vh", fontFamily: SANS, position: "relative" }}>
       <Confetti />
-      <div className="relative overflow-hidden pt-20 sm:pt-24 pb-8 sm:pb-12 px-4 sm:px-6 lg:px-10 text-center" style={{ background: `linear-gradient(160deg,#FAF0D8,#FAF7F2,#F0E8D8)` }}>
+      <div className="relative overflow-hidden pt-4 sm:pt-8 pb-6 sm:pb-10 px-4 sm:px-6 lg:px-10 text-center" style={{ background: `linear-gradient(160deg,#FAF0D8,#FAF7F2,#F0E8D8)` }}>
         <div className="relative max-w-7xl mx-auto">
           <div className="relative mx-auto mb-4 sm:mb-6 flex items-center justify-center transition-all duration-700"
             style={{ width: 80, height: 80, opacity: visible ? 1 : 0, transform: visible ? "scale(1)" : "scale(0.6)" }}>

@@ -136,11 +136,23 @@ export function AuthPage() {
 
     if (activeTab === "signup") {
       let existingUser: any = null;
+      const cleanEmail = email.trim().toLowerCase();
 
-      // 1. Check Local Storage
-      const localCached = localStorage.getItem(`aroham_registered_user_phone_${phoneDigits}`);
-      if (localCached) {
-        try { existingUser = JSON.parse(localCached); } catch (e) {}
+      // 1. Check Email in Local Storage
+      if (cleanEmail) {
+        try {
+          const allUsers = JSON.parse(localStorage.getItem("aroham_registered_users") || "[]");
+          const found = allUsers.find((u: any) => u.email && u.email.trim().toLowerCase() === cleanEmail);
+          if (found) existingUser = found;
+        } catch (e) {}
+      }
+
+      // 2. Check Phone in Local Storage
+      if (!existingUser) {
+        const localCached = localStorage.getItem(`aroham_registered_user_phone_${phoneDigits}`);
+        if (localCached) {
+          try { existingUser = JSON.parse(localCached); } catch (e) {}
+        }
       }
 
       if (!existingUser) {
@@ -151,32 +163,50 @@ export function AuthPage() {
         } catch (e) {}
       }
 
-      // 2. Check Firestore
+      // 3. Check Firestore for Email or Phone
       if (!existingUser) {
         try {
-          const q = query(collection(db, "users"), where("phone", "in", [phoneDigits, `+91${phoneDigits}`, `91${phoneDigits}`]));
-          const snapshot = await getDocs(q);
-          if (!snapshot.empty) {
-            existingUser = snapshot.docs[0].data();
+          if (cleanEmail) {
+            const qEmail = query(collection(db, "users"), where("email", "==", cleanEmail));
+            const snapEmail = await getDocs(qEmail);
+            if (!snapEmail.empty) {
+              existingUser = snapEmail.docs[0].data();
+            }
+          }
+          if (!existingUser) {
+            const qPhone = query(collection(db, "users"), where("phone", "in", [phoneDigits, `+91${phoneDigits}`, `91${phoneDigits}`]));
+            const snapPhone = await getDocs(qPhone);
+            if (!snapPhone.empty) {
+              existingUser = snapPhone.docs[0].data();
+            }
           }
         } catch (e) {}
       }
 
-      // 3. Check Supabase
+      // 4. Check Supabase for Email or Phone
       if (!existingUser) {
         try {
-          const { data } = await supabase.from('users').select('*').or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`).maybeSingle();
-          if (data) existingUser = data;
+          if (cleanEmail) {
+            const { data: emailData } = await supabase.from('users').select('*').eq('email', cleanEmail).maybeSingle();
+            if (emailData) existingUser = emailData;
+          }
+          if (!existingUser) {
+            const { data: phoneData } = await supabase.from('users').select('*').or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`).maybeSingle();
+            if (phoneData) existingUser = phoneData;
+          }
         } catch (e) {}
       }
 
       if (existingUser) {
         setLoading(false);
-        setErrorMsg("User already exists. Redirecting to Sign In...");
+        const reason = (existingUser.email && existingUser.email.trim().toLowerCase() === cleanEmail)
+          ? "An account with this email address already exists. Redirecting to Sign In..."
+          : "User already exists with this mobile number. Redirecting to Sign In...";
+        setErrorMsg(reason);
         setTimeout(() => {
           switchTab("signin");
-          setErrorMsg("User already exists. Please sign in.");
-        }, 1000);
+          setErrorMsg(reason.includes("email") ? "Email address already registered. Please sign in." : "User already exists. Please sign in.");
+        }, 1200);
         return;
       }
     }
