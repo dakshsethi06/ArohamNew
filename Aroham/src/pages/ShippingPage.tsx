@@ -626,7 +626,19 @@ export function ShippingPage() {
                         />
                       </div>
                     </div>
-                    <FloatingInput label="Email Address (Optional)" type="email" value={form.email} onChange={set("email") as (v: string) => void} />
+                    <div>
+                      <label className="block text-xs font-semibold mb-1" style={{ color: MAROON, fontFamily: SANS }}>Email Address (Optional)</label>
+                      <div className="rounded-2xl overflow-hidden" style={{ background: "#FFFFFF", border: fieldBorder("email") || "1.5px solid rgba(91,31,36,0.14)" }}>
+                        <input
+                          type="email"
+                          placeholder="name@example.com"
+                          value={form.email}
+                          onChange={e => (set("email") as (v: string) => void)(e.target.value)}
+                          className="w-full px-4 py-3 text-sm bg-transparent outline-none font-medium"
+                          style={{ color: MAROON, fontFamily: SANS }}
+                        />
+                      </div>
+                    </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div style={{ border: fieldBorder("pin"), borderRadius: 16 }}><FloatingInput label="PIN Code" value={form.pin} onChange={handlePinChange} required /></div>
