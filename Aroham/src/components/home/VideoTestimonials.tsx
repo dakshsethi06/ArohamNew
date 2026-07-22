@@ -175,25 +175,7 @@ export function VideoTestimonials() {
                   </div>
                   <div className="flex">{Array.from({ length: v.rating }).map((_, j) => <Star key={j} size={9} fill={GOLD} stroke="none" />)}</div>
                 </div>
-                {isActive && (
-                  <button onClick={e => { e.stopPropagation(); setPlaying(p => !p); }}
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-110"
-                    style={{ background: playing ? "rgba(200,160,68,0.9)" : "rgba(255,255,255,0.15)", backdropFilter: "blur(6px)", border: `1.5px solid ${playing ? GOLD : "rgba(255,255,255,0.35)"}`, animation: !playing ? "reelPulse 2s ease-in-out infinite" : "none" }}>
-                    {playing
-                      ? <div className="flex gap-1"><div className="w-1 h-5 rounded-full" style={{ background: MAROON }} /><div className="w-1 h-5 rounded-full" style={{ background: MAROON }} /></div>
-                      : <div className="ml-1" style={{ width: 0, height: 0, borderTop: "8px solid transparent", borderBottom: "8px solid transparent", borderLeft: "14px solid white" }} />}
-                  </button>
-                )}
-                {isActive && playing && (
-                  <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(10,5,8,0.7)" }}>
-                    <div className="text-center">
-                      <div className="text-4xl mb-2">🎬</div>
-                      <p className="text-xs" style={{ color: "rgba(250,247,242,0.7)", fontFamily: SANS }}>Now playing…</p>
-                      <p className="text-[10px] mt-1" style={{ color: GOLD, fontFamily: SANS }}>{v.duration}</p>
-                    </div>
-                  </div>
-                )}
-                <div className="absolute top-3 right-3 px-2 py-0.5 rounded text-[9px] font-bold" style={{ background: "rgba(0,0,0,0.6)", color: "white", display: isActive ? "none" : "block" }}>▶ {v.duration}</div>
+                {/* Pure static image card - video controls removed as requested */}
                 <div className="absolute bottom-0 left-0 right-0 p-4">
                   {isActive && <p className="text-[11px] leading-relaxed mb-3 italic" style={{ color: "rgba(250,247,242,0.85)", fontFamily: SANS }}>"{v.review.slice(0, 90)}{v.review.length > 90 ? "…" : ""}"</p>}
                   <div className="flex items-center gap-2.5">
