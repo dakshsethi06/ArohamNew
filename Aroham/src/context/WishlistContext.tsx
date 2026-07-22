@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { ArohamProduct } from "@/types/product";
+import { supabase } from "@/lib/supabase";
 
 interface WishlistContextValue {
   wishlist: ArohamProduct[];
@@ -24,6 +25,23 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       localStorage.setItem("aroham_wishlist", JSON.stringify(wishlist));
+    } catch (e) {}
+
+    // Persist wishlist items to Supabase DB if user is logged in
+    try {
+      const cachedUser = localStorage.getItem("aroham_user_profile");
+      if (cachedUser) {
+        const u = JSON.parse(cachedUser);
+        if (u?.id && wishlist.length > 0) {
+          Promise.resolve(
+            supabase.from("user_wishlists").upsert({
+              user_id: u.id,
+              items: wishlist,
+              updated_at: new Date().toISOString()
+            })
+          ).catch(() => {});
+        }
+      }
     } catch (e) {}
   }, [wishlist]);
 

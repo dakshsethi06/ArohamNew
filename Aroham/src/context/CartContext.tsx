@@ -3,6 +3,7 @@ import { ArohamProduct } from "@/types/product";
 import { CartItem } from "@/types/cart";
 import { useAuth } from "./AuthContext";
 import { api } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 
 export interface AppliedCoupon {
   code: string;
@@ -92,6 +93,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("aroham_cart", JSON.stringify(items));
       if (user?.id) {
         localStorage.setItem(`aroham_user_cart_${user.id}`, JSON.stringify(items));
+        // Non-blocking sync to Supabase user_carts DB
+        Promise.resolve(
+          supabase.from("user_carts").upsert({
+            user_id: user.id,
+            items: items,
+            updated_at: new Date().toISOString()
+          })
+        ).catch(() => {});
       }
     }
   }, [items, user?.id]);
