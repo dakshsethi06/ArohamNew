@@ -99,7 +99,7 @@ export function Nav() {
                 <SearchModal isOpen={isSearchOpen} onClose={() => { setIsSearchOpen(false); setQuery(""); }} query={query} setQuery={setQuery} solid={solid} isMobile={false} />
               </div>
             </div>
-            <button aria-label="Wishlist" onClick={() => navigate(isLoggedIn ? "/profile?tab=wishlist" : "/shop")} className="p-2 rounded-full transition-colors hover:bg-black/5" style={{ color: solid ? MAROON : IVORY }}><Heart size={18} strokeWidth={1.5} /></button>
+            <button aria-label="Wishlist" onClick={() => navigate("/shop")} className="p-2 rounded-full transition-colors hover:bg-black/5" style={{ color: solid ? MAROON : IVORY }}><Heart size={18} strokeWidth={1.5} /></button>
             <button aria-label="Open cart" onClick={openCart} className="relative p-2 rounded-full transition-colors hover:bg-black/5" style={{ color: solid ? MAROON : IVORY }}>
               <ShoppingCart size={18} strokeWidth={1.5} />
               {cartCount > 0 && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-white text-[10px] flex items-center justify-center font-semibold" style={{ background: GOLD }}>{cartCount}</span>}
@@ -143,7 +143,7 @@ export function Nav() {
                 <SearchModal isOpen={isSearchOpen} onClose={() => { setIsSearchOpen(false); setQuery(""); }} query={query} setQuery={setQuery} solid={solid} isMobile={true} />
               </div>
             </div>
-            <button aria-label="Wishlist" onClick={() => navigate(isLoggedIn ? "/profile?tab=wishlist" : "/shop")} className="p-1 flex-shrink-0">
+            <button aria-label="Wishlist" onClick={() => navigate("/shop")} className="p-1 flex-shrink-0">
               <Heart size={20} strokeWidth={1.5} />
             </button>
             <button aria-label="Open cart" onClick={openCart} className="relative p-1 flex-shrink-0">
@@ -163,7 +163,7 @@ export function Nav() {
             {navLinks.map(([l, fn]) => (
               <button key={l} onClick={() => { fn(); setOpen(false); }} className="py-2 text-sm font-medium border-b text-left" style={{ color: MAROON, borderColor: "rgba(91,31,36,0.08)" }}>{l}</button>
             ))}
-            <button onClick={() => { navigate(isLoggedIn ? "/profile?tab=wishlist" : "/shop"); setOpen(false); }} className="py-2 text-sm font-medium border-b text-left flex items-center justify-between" style={{ color: MAROON, borderColor: "rgba(91,31,36,0.08)" }}>
+            <button onClick={() => { navigate("/shop"); setOpen(false); }} className="py-2 text-sm font-medium border-b text-left flex items-center justify-between" style={{ color: MAROON, borderColor: "rgba(91,31,36,0.08)" }}>
               <span>Wishlist</span>
               <Heart size={16} />
             </button>

@@ -63,7 +63,7 @@ export function SearchModal({ isOpen, onClose, query, setQuery, solid, isMobile 
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-sm truncate" style={{ color: solid ? MAROON : IVORY, fontFamily: SERIF }}>{product.name}</h3>
-                    <div className="font-medium text-xs mt-0.5" style={{ color: solid ? "#7A6A58" : GOLD, fontFamily: SANS }}>₹{(product.price / 100).toLocaleString()}</div>
+                    <div className="font-medium text-xs mt-0.5" style={{ color: solid ? "#7A6A58" : GOLD, fontFamily: SANS }}>₹{product.price.toLocaleString("en-IN")}</div>
                   </div>
                 </div>
               ))}
