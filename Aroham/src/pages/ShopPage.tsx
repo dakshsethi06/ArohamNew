@@ -296,14 +296,16 @@ export function ShopPage() {
                         </div>
 
                         {/* Price & Add to Cart button */}
-                        <div className="pt-2 sm:pt-0 flex flex-wrap items-center justify-between gap-1.5 border-t sm:border-t-0 border-black/[0.05]">
-                          <div className="flex items-baseline gap-1">
-                            <span className="text-sm sm:text-base font-bold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{p.price.toLocaleString("en-IN")}</span>
-                            {p.original > p.price && (
-                              <>
+                        <div className="pt-2 sm:pt-0 flex items-end justify-between gap-2 border-t sm:border-t-0 border-black/[0.05]">
+                          <div className="flex flex-col min-w-0">
+                            <div className="flex items-baseline gap-1.5">
+                              <span className="text-sm sm:text-base font-bold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{p.price.toLocaleString("en-IN")}</span>
+                              {p.original > p.price && (
                                 <span className="text-[10px] sm:text-xs line-through opacity-70" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{p.original.toLocaleString("en-IN")}</span>
-                                <span className="text-[9px] font-bold" style={{ color: "#2E7D32" }}>{discountPct}% OFF</span>
-                              </>
+                              )}
+                            </div>
+                            {p.original > p.price && (
+                              <span className="text-[10px] font-bold" style={{ color: "#2E7D32" }}>{discountPct}% OFF</span>
                             )}
                           </div>
 
@@ -326,7 +328,7 @@ export function ShopPage() {
                                 slug: p.slug
                               });
                             }}
-                            className="px-3 py-1.5 rounded-xl text-[10px] sm:text-xs font-bold tracking-wide transition-all hover:opacity-90 active:scale-95 flex items-center justify-center gap-1 shadow-sm uppercase ml-auto sm:ml-0"
+                            className="flex-shrink-0 px-3 py-1.5 rounded-xl text-[10px] sm:text-xs font-bold tracking-wide transition-all hover:opacity-90 active:scale-95 flex items-center justify-center gap-1 shadow-sm uppercase"
                             style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}
                           >
                             <ShoppingCart size={12} />

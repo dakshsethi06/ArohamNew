@@ -47,16 +47,23 @@ export function ProductCard({ product: p, onProductClick, onAddToCart, wishKey =
         </div>
       </div>
       <div className="p-3.5 pt-2 flex items-center justify-between gap-2 border-t border-black/[0.04]">
-        <div className="flex items-baseline gap-1.5 min-w-0">
-          <span className="text-sm font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{p.price.toLocaleString("en-IN")}</span>
+        <div className="flex flex-col min-w-0">
+          <div className="flex items-baseline gap-1.5 min-w-0">
+            <span className="text-sm font-bold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{p.price.toLocaleString("en-IN")}</span>
+            {p.original > p.price && (
+              <span className="text-[10px] line-through opacity-70" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{p.original.toLocaleString("en-IN")}</span>
+            )}
+          </div>
           {p.original > p.price && (
-            <span className="text-[10px] line-through opacity-70" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{p.original.toLocaleString("en-IN")}</span>
+            <span className="text-[10px] font-bold" style={{ color: "#2E7D32" }}>
+              {Math.round((1 - p.price / p.original) * 100)}% OFF
+            </span>
           )}
         </div>
         {onAddToCart && (
           <button aria-label={`Add ${p.name} to cart`}
             onClick={e => { e.stopPropagation(); onAddToCart(p); }}
-            className="flex-shrink-0 px-3 py-1.5 rounded-xl flex items-center justify-center gap-1.5 text-xs font-semibold tracking-wide transition-all hover:opacity-90 hover:scale-105 active:scale-95 shadow-sm"
+            className="flex-shrink-0 px-3 py-1.5 rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold tracking-wide transition-all hover:opacity-90 hover:scale-105 active:scale-95 shadow-sm uppercase"
             style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY, border: "none", cursor: "pointer", fontFamily: SANS }}>
             <ShoppingCart size={13} style={{ color: IVORY }} />
             <span>Add to Cart</span>
