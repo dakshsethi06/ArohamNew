@@ -97,39 +97,16 @@ export function AuthPage() {
     if (activeTab === "signin") {
       let existingUser: any = null;
 
-      // 1. Check Supabase DB First
+      // Check Supabase DB ONLY as the single source of truth
       try {
         const { data } = await supabase.from('users').select('*').or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`).maybeSingle();
-        if (data) existingUser = data;
+        if (data && (data.phone || data.id)) {
+          existingUser = data;
+        }
       } catch (e) {}
 
-      // 2. Check Firestore DB
       if (!existingUser) {
-        try {
-          const q = query(collection(db, "users"), where("phone", "in", [phoneDigits, `+91${phoneDigits}`, `91${phoneDigits}`]));
-          const snapshot = await getDocs(q);
-          if (!snapshot.empty) {
-            existingUser = snapshot.docs[0].data();
-          }
-        } catch (e) {}
-      }
-
-      // 3. Fallback to Local Storage only if DB check fails due to offline
-      if (!existingUser) {
-        const localCached = localStorage.getItem(`aroham_registered_user_phone_${phoneDigits}`);
-        if (localCached) {
-          try {
-            const parsed = JSON.parse(localCached);
-            // Verify if local user has an actual valid profile
-            if (parsed && (parsed.id || parsed.full_name || parsed.name)) {
-              existingUser = parsed;
-            }
-          } catch (e) {}
-        }
-      }
-
-      if (!existingUser) {
-        // Clear any leftover stale local storage keys for this phone
+        // Purge any stale local storage cache for this phone
         localStorage.removeItem(`aroham_registered_user_phone_${phoneDigits}`);
         setLoading(false);
         setErrorMsg("Mobile number not registered. Redirecting to Create Account...");
