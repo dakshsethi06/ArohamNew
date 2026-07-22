@@ -40,7 +40,7 @@ export function ProductsAndCombos({ products, onProductClick, onAddCombo: _onAdd
                 </div>
                 <h2 style={{ fontFamily: SERIF, fontSize: "clamp(1.6rem,3.5vw,2.5rem)", fontWeight: 500, color: MAROON, lineHeight: 1.15 }}>{title}</h2>
               </div>
-              <button onClick={() => navigate("/shop")} className="flex items-center gap-1 text-sm font-medium whitespace-nowrap transition-opacity hover:opacity-60" style={{ color: MAROON }}>
+              <button onClick={() => navigate(`/shop?title=${encodeURIComponent(title as string)}`)} className="flex items-center gap-1 text-sm font-medium whitespace-nowrap transition-opacity hover:opacity-60" style={{ color: MAROON }}>
                 View all <ChevronRight size={14} />
               </button>
             </div>

@@ -37,7 +37,6 @@ export function ProductDetailPage() {
   const [tab, setTab] = useState(0);
   const [qty, setQty] = useState(1);
   const [selectedImg, setSelectedImg] = useState(0);
-  const [contactOpen, setContactOpen] = useState(false);
   const [showSticky, setShowSticky] = useState(false);
   const mainButtonsRef = useRef<HTMLDivElement>(null);
 
@@ -130,10 +129,10 @@ export function ProductDetailPage() {
         crafted according to ancient Shilpa Shastra principles and energized through traditional temple rituals.
         Each piece carries the accumulated wisdom of centuries of Jyotish practice.
       </p>
-      <p className="text-sm leading-relaxed" style={{ color: "#5A4A3A" }}>
+      <p className="text-sm leading-relaxed md:text-base md:leading-relaxed" style={{ color: "#5A4A3A" }}>
         {product.shortDesc} The geometric precision in its construction aligns with cosmic frequencies that Vedic tradition identifies as channels for specific divine energies.
       </p>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
         {[["Material", product.material], ["Size", product.size], ["Category", product.category], ["Purpose", product.purpose]].map(([k, v]) => (
           <div key={k} className="p-3 rounded-xl" style={{ background: "rgba(200,160,68,0.06)", border: "1px solid rgba(200,160,68,0.15)" }}>
             <div className="text-[10px] font-bold uppercase tracking-wide mb-0.5" style={{ color: GOLD }}>{k}</div>
@@ -142,7 +141,7 @@ export function ProductDetailPage() {
         ))}
       </div>
     </div>,
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {product?.benefits?.map(b => (
         <div key={b} className="flex items-start gap-3 p-4 rounded-2xl" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.07)" }}>
           <div className="w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center" style={{ background: "rgba(200,160,68,0.1)" }}><Sparkles size={14} style={{ color: GOLD }} /></div>
@@ -153,7 +152,7 @@ export function ProductDetailPage() {
         </div>
       ))}
     </div>,
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-4xl">
       {["Unbox carefully and keep in a clean place", "Cleanse with Gangajal or incense smoke", "Place in the recommended direction (usually East/Northeast)", "Offer a flower, light a diya, and chant the associated mantra", "Experience the positive energy over 40 days of regular worship"].map((step, i) => (
         <div key={i} className="flex gap-4">
           <div className="flex flex-col items-center">
@@ -164,7 +163,7 @@ export function ProductDetailPage() {
         </div>
       ))}
     </div>,
-    <div className="space-y-5">
+    <div className="space-y-5 max-w-4xl">
       <div className="p-5 rounded-2xl" style={{ background: `linear-gradient(135deg,#FAF0D8,#FAF7F2)`, border: "1px solid rgba(200,160,68,0.2)" }}>
         <h4 className="font-semibold mb-2" style={{ fontFamily: SERIF, color: MAROON }}>Pran Pratishtha Ceremony</h4>
         <p className="text-sm leading-relaxed" style={{ color: "#5A4A3A" }}>Before reaching you, every {product.name} undergoes a complete Pran Pratishtha — a sacred consecration ritual performed by certified Vedic pandits. The ceremony includes 108 rounds of mantra chanting, ritual bathing with Panchamrit, and invocation of the presiding deity.</p>
@@ -176,7 +175,7 @@ export function ProductDetailPage() {
         </div>
       ))}
     </div>,
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-4xl">
       <div className="flex items-center gap-6 p-5 rounded-2xl" style={{ background: "rgba(200,160,68,0.06)", border: "1px solid rgba(200,160,68,0.15)" }}>
         <div className="text-center">
           <div className="text-4xl font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>{product.rating}</div>
@@ -248,9 +247,7 @@ export function ProductDetailPage() {
           </div>
           {/* Product story */}
           <div>
-            <div className="flex flex-wrap gap-2 mb-4">
-              {product.badges.map(b => <span key={b} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: "rgba(91,31,36,0.08)", color: MAROON }}>{b}</span>)}
-            </div>
+
             <h1 className="mb-1" style={{ fontFamily: SERIF, fontSize: "clamp(1.5rem,3vw,2.25rem)", fontWeight: 500, color: MAROON, lineHeight: 1.15 }}>{product.name}</h1>
             <p className="text-sm mb-3" style={{ color: GOLD, fontFamily: SANS, fontWeight: 600 }}>{product.subtitle}</p>
             <p className="text-sm leading-relaxed mb-4" style={{ color: "#5A4A3A" }}>{product.shortDesc}</p>
@@ -396,15 +393,14 @@ export function ProductDetailPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-10 flex gap-0">
           {PROD_TABS.map((t, i) => (
             <button key={t} onClick={() => setTab(i)}
-              className="px-5 py-4 text-sm font-medium whitespace-nowrap border-b-2 transition-all"
-              style={{ borderColor: tab === i ? MAROON : "transparent", color: tab === i ? MAROON : "#7A6A58" }}>
+              className={`px-5 py-4 text-sm font-medium whitespace-nowrap border-b-2 transition-all ${tab === i ? "border-b-[#5B1F24] text-[#5B1F24]" : "border-b-transparent text-[#7A6A58]"}`}>
               {t}
             </button>
           ))}
         </div>
       </div>
       <div className="max-w-7xl mx-auto px-6 lg:px-10 py-12">
-        <div className="max-w-3xl">{tabContent[tab]}</div>
+        <div className="w-full min-h-[350px]">{tabContent[tab]}</div>
       </div>
       {/* Contact section */}
       <div className="px-6 lg:px-10 pb-16">
@@ -412,29 +408,24 @@ export function ProductDetailPage() {
           <div className="rounded-3xl overflow-hidden" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, position: "relative" }}>
             <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: `radial-gradient(circle,${GOLD} 1px,transparent 1px)`, backgroundSize: "24px 24px" }} />
             <div className="relative px-8 py-10">
-              <button onClick={() => setContactOpen(o => !o)} className="w-full text-left">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <span className="text-xs tracking-widest uppercase font-medium block mb-3" style={{ color: "rgba(200,160,68,0.8)" }}>Expert Guidance</span>
-                    <h3 className="mb-2 text-2xl font-semibold" style={{ fontFamily: SERIF, color: IVORY, lineHeight: 1.2 }}>Confused? Let Us Help You Choose.</h3>
-                    <p className="text-sm" style={{ color: "rgba(250,247,242,0.65)" }}>Our Vedic experts will personally guide you to the right remedy for your specific situation.</p>
-                  </div>
-                  <ChevronDown size={24} style={{ color: "rgba(250,247,242,0.5)", transform: contactOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s", flexShrink: 0 }} />
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <span className="text-xs tracking-widest uppercase font-medium block mb-3" style={{ color: "rgba(200,160,68,0.8)" }}>Expert Guidance</span>
+                  <h3 className="mb-2 text-2xl font-semibold" style={{ fontFamily: SERIF, color: IVORY, lineHeight: 1.2 }}>Confused? Let Us Help You Choose.</h3>
+                  <p className="text-sm" style={{ color: "rgba(250,247,242,0.65)" }}>Our Vedic experts will personally guide you to the right remedy for your specific situation.</p>
                 </div>
-              </button>
-              {contactOpen && (
-                <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <a href={CONTACT_INFO.emailMailto} className="flex items-center gap-3 p-4 rounded-2xl transition-all hover:scale-105" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
-                    <Mail size={20} style={{ color: GOLD }} /><div><div className="text-sm font-semibold" style={{ color: IVORY }}>Email Us</div><div className="text-[11px]" style={{ color: "rgba(250,247,242,0.6)" }}>{CONTACT_INFO.email}</div></div>
-                  </a>
-                  <a href={CONTACT_INFO.phoneTel} className="flex items-center gap-3 p-4 rounded-2xl transition-all hover:scale-105" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
-                    <Phone size={20} style={{ color: GOLD }} /><div><div className="text-sm font-semibold" style={{ color: IVORY }}>Call Us</div><div className="text-[11px]" style={{ color: "rgba(250,247,242,0.6)" }}>{CONTACT_INFO.phoneDisplay}</div></div>
-                  </a>
-                  <a href={CONTACT_INFO.whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 rounded-2xl transition-all hover:scale-105" style={{ background: "#25D366", border: "1px solid rgba(255,255,255,0.15)" }}>
-                    <span className="text-xl">💬</span><div><div className="text-sm font-semibold" style={{ color: "white" }}>WhatsApp</div><div className="text-[11px]" style={{ color: "rgba(255,255,255,0.8)" }}>Chat instantly</div></div>
-                  </a>
-                </div>
-              )}
+              </div>
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <a href={CONTACT_INFO.emailMailto} className="flex items-center gap-3 p-4 rounded-2xl transition-all hover:scale-105" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
+                  <Mail size={20} style={{ color: GOLD }} /><div><div className="text-sm font-semibold" style={{ color: IVORY }}>Email Us</div><div className="text-[11px]" style={{ color: "rgba(250,247,242,0.6)" }}>{CONTACT_INFO.email}</div></div>
+                </a>
+                <a href={CONTACT_INFO.phoneTel} className="flex items-center gap-3 p-4 rounded-2xl transition-all hover:scale-105" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
+                  <Phone size={20} style={{ color: GOLD }} /><div><div className="text-sm font-semibold" style={{ color: IVORY }}>Call Us</div><div className="text-[11px]" style={{ color: "rgba(250,247,242,0.6)" }}>{CONTACT_INFO.phoneDisplay}</div></div>
+                </a>
+                <a href={CONTACT_INFO.whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 rounded-2xl transition-all hover:scale-105" style={{ background: "#25D366", border: "1px solid rgba(255,255,255,0.15)" }}>
+                  <span className="text-xl">💬</span><div><div className="text-sm font-semibold" style={{ color: "white" }}>WhatsApp</div><div className="text-[11px]" style={{ color: "rgba(255,255,255,0.8)" }}>Chat instantly</div></div>
+                </a>
+              </div>
             </div>
           </div>
         </div>

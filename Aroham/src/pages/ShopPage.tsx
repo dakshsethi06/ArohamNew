@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { Star, Heart, Eye, Filter, X, CheckCircle, ChevronRight } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
 import { CATEGORIES, PURPOSES, PRICE_RANGES } from "@/constants/data";
@@ -8,18 +8,37 @@ import { ArohamProduct } from "@/types/product";
 
 export function ShopPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initTitle = searchParams.get("title") || "";
+  
   const [cats, setCats] = useState<string[]>([]);
   const [prps, setPrps] = useState<string[]>([]);
+  const [cols, setCols] = useState<string[]>(["Discount Zone", "Trending Products", "Combos & Kits"].includes(initTitle) ? [initTitle] : []);
   const [priceIdx, setPriceIdx] = useState<number | null>(null);
   const [sort, setSort] = useState("popular");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [wish, setWish] = useState<Record<number, boolean>>({});
 
+  let displayTitle = "Sacred Products";
+  if (cols.length === 1) displayTitle = cols[0];
+  else if (cats.length === 1 && prps.length === 0) displayTitle = cats[0];
+  else if (prps.length === 1 && cats.length === 0) displayTitle = prps[0];
+  else if (cats.length > 1 || prps.length > 1) displayTitle = "Filtered Products";
+
+  const isCustom = displayTitle !== "Sacred Products";
+
   const { products } = useProducts();
 
   const filtered = products.filter(p => {
-    if (cats.length && !cats.includes(p.category)) return false;
-    if (prps.length && !prps.includes(p.purpose)) return false;
+    if (cats.length && p.category && !cats.includes(p.category)) return false;
+    if (prps.length && p.purpose && !prps.includes(p.purpose)) return false;
+    if (cols.length) {
+      let matchesCol = false;
+      if (cols.includes("Discount Zone") && p.original && p.original > p.price) matchesCol = true;
+      if (cols.includes("Trending Products") && (p.rating || 0) >= 4.8) matchesCol = true;
+      if (cols.includes("Combos & Kits") && p.name.includes("Kit")) matchesCol = true;
+      if (!matchesCol) return false;
+    }
     if (priceIdx !== null) { const r = PRICE_RANGES[priceIdx]; if (p.price < r.min || p.price > r.max) return false; }
     return true;
   }).sort((a, b) => {
@@ -31,7 +50,8 @@ export function ShopPage() {
 
   const toggleCat = (c: string) => setCats(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]);
   const togglePrp = (p: string) => setPrps(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
-  const clearAll = () => { setCats([]); setPrps([]); setPriceIdx(null); };
+  const toggleCol = (c: string) => setCols(prev => prev[0] === c ? [] : [c]);
+  const clearAll = () => { setCats([]); setPrps([]); setCols([]); setPriceIdx(null); };
 
   const FilterPanel = () => (
     <div className="space-y-7">
@@ -80,7 +100,22 @@ export function ShopPage() {
           ))}
         </div>
       </div>
-      {(cats.length || prps.length || priceIdx !== null) && (
+      <div className="h-px" style={{ background: "rgba(91,31,36,0.08)" }} />
+      <div>
+        <h3 className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: MAROON }}>Collections</h3>
+        <div className="space-y-2.5">
+          {["Trending Products", "Discount Zone", "Combos & Kits"].map(c => (
+            <button key={c} onClick={() => toggleCol(c)} className="flex items-center gap-3 w-full text-left">
+              <div className="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center transition-all"
+                style={{ border: `2px solid ${cols.includes(c) ? GOLD : "rgba(91,31,36,0.2)"}`, background: cols.includes(c) ? GOLD : "transparent" }}>
+                {cols.includes(c) && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+              </div>
+              <span className="text-sm" style={{ color: cols.includes(c) ? MAROON : "#5A4A3A" }}>{c}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      {(cats.length > 0 || prps.length > 0 || cols.length > 0 || priceIdx !== null) && (
         <button onClick={clearAll} className="w-full py-2 rounded-xl text-xs font-semibold border transition-all hover:bg-red-50"
           style={{ borderColor: "rgba(200,0,0,0.2)", color: "#C04040" }}>Clear All Filters</button>
       )}
@@ -94,16 +129,20 @@ export function ShopPage() {
           <div className="flex items-center gap-2 mb-3 text-xs" style={{ color: "#9A8A78" }}>
             <button onClick={() => navigate("/")} className="hover:underline" style={{ color: MAROON }}>Home</button>
             <ChevronRight size={12} /><span>Shop</span>
+            {isCustom && <><ChevronRight size={12} /><span style={{ color: MAROON }}>{displayTitle}</span></>}
           </div>
-          <h1 style={{ fontFamily: SERIF, fontSize: "clamp(1.75rem,4vw,3rem)", fontWeight: 500, color: MAROON }}>Sacred Products</h1>
-          <p className="text-sm mt-1" style={{ color: "#7A6A58" }}>Temple-energized, handcrafted, expert-recommended</p>
+          <h1 style={{ fontFamily: SERIF, fontSize: "clamp(1.75rem,4vw,3rem)", fontWeight: 500, color: MAROON }}>{displayTitle}</h1>
+          <p className="text-sm mt-1" style={{ color: "#7A6A58" }}>
+            {isCustom ? `Explore our finest selection of ${displayTitle.toLowerCase()} items` : "Temple-energized, handcrafted, expert-recommended"}
+          </p>
         </div>
       </div>
       <div className="max-w-7xl mx-auto px-6 lg:px-10 py-8">
-        {(cats.length || prps.length || priceIdx !== null) && (
+        {(cats.length > 0 || prps.length > 0 || cols.length > 0 || priceIdx !== null) && (
           <div className="flex flex-wrap gap-2 mb-6">
             {cats.map(c => <span key={c} className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium" style={{ background: "rgba(91,31,36,0.08)", color: MAROON }}>{c}<button onClick={() => toggleCat(c)} className="ml-1"><X size={10} /></button></span>)}
             {prps.map(p => <span key={p} className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium" style={{ background: "rgba(91,31,36,0.08)", color: MAROON }}>{p}<button onClick={() => togglePrp(p)} className="ml-1"><X size={10} /></button></span>)}
+            {cols.map(c => <span key={c} className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium" style={{ background: "rgba(91,31,36,0.08)", color: MAROON }}>{c}<button onClick={() => toggleCol(c)} className="ml-1"><X size={10} /></button></span>)}
             {priceIdx !== null && <span className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium" style={{ background: "rgba(91,31,36,0.08)", color: MAROON }}>{PRICE_RANGES[priceIdx].label}<button onClick={() => setPriceIdx(null)} className="ml-1"><X size={10} /></button></span>}
           </div>
         )}
@@ -147,7 +186,7 @@ export function ShopPage() {
                       <div className="relative overflow-hidden aspect-square bg-amber-50">
                         <img src={p.img} alt={`${p.name} - ${p.subtitle}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                         <div className="absolute top-3 left-3 flex flex-col gap-1">
-                          {p.badges.map(b => <span key={b} className="px-2 py-0.5 rounded-full text-[9px] font-bold" style={{ background: "rgba(91,31,36,0.88)", color: GOLD }}>{b}</span>)}
+                          {p.price > 1000 && p.badges.slice(0, 1).map(b => <span key={b} className="px-2 py-0.5 rounded-full text-[9px] font-bold" style={{ background: "rgba(91,31,36,0.88)", color: GOLD }}>{b}</span>)}
                         </div>
                         <button aria-label="Add to wishlist" onClick={e => { e.stopPropagation(); setWish(w => ({ ...w, [p.id]: !w[p.id] })); }}
                           className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.9)" }}>
