@@ -2,7 +2,7 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
-// Live Firebase configuration for Aroham (Corrected key with digit 0)
+// Live Firebase configuration for Aroham (Project: aroham-ccfab)
 const getEnv = (key: string, fallback: string) => {
   const val = import.meta.env[key];
   if (!val || typeof val !== "string") return fallback.trim();
@@ -10,13 +10,13 @@ const getEnv = (key: string, fallback: string) => {
 };
 
 const firebaseConfig = {
-  apiKey: getEnv("VITE_FIREBASE_API_KEY", "AIzaSyDm11Yrv-OKg68atLeq_ir30vm1Ozat4zs"),
-  authDomain: getEnv("VITE_FIREBASE_AUTH_DOMAIN", "aroham-8397b.firebaseapp.com"),
-  projectId: getEnv("VITE_FIREBASE_PROJECT_ID", "aroham-8397b"),
-  storageBucket: getEnv("VITE_FIREBASE_STORAGE_BUCKET", "aroham-8397b.firebasestorage.app"),
-  messagingSenderId: getEnv("VITE_FIREBASE_MESSAGING_SENDER_ID", "836817413216"),
-  appId: getEnv("VITE_FIREBASE_APP_ID", "1:836817413216:web:17668c6b8350d537248f05"),
-  measurementId: getEnv("VITE_FIREBASE_MEASUREMENT_ID", "G-W6YVDPCK9Y")
+  apiKey: getEnv("VITE_FIREBASE_API_KEY", "AIzaSyDVVTIaMxp7wvFXpwEnKflPw2AqaqgrZWQ"),
+  authDomain: getEnv("VITE_FIREBASE_AUTH_DOMAIN", "aroham-ccfab.firebaseapp.com"),
+  projectId: getEnv("VITE_FIREBASE_PROJECT_ID", "aroham-ccfab"),
+  storageBucket: getEnv("VITE_FIREBASE_STORAGE_BUCKET", "aroham-ccfab.firebasestorage.app"),
+  messagingSenderId: getEnv("VITE_FIREBASE_MESSAGING_SENDER_ID", "713205974438"),
+  appId: getEnv("VITE_FIREBASE_APP_ID", "1:713205974438:web:98503678415d7fb2f9bb67"),
+  measurementId: getEnv("VITE_FIREBASE_MEASUREMENT_ID", "G-RQBH4MTD6Q")
 };
 
 // Initialize Firebase App singleton with local persistent login state
