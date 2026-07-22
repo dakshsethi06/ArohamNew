@@ -192,10 +192,10 @@ export function VideoTestimonials() {
           })}
         </div>
         <div className="flex justify-center gap-2 mt-6">
-          {ALL_REELS.map((_, i) => (
-            <button key={i} onClick={() => scrollTo(i)}
+          {BASE_REELS.map((_, i) => (
+            <button key={i} onClick={() => scrollTo(i)} aria-label={`Go to slide ${i + 1}`}
               className="rounded-full transition-all duration-300"
-              style={{ width: active === i ? 20 : 6, height: 6, background: active === i ? GOLD : "rgba(200,160,68,0.25)" }} />
+              style={{ width: active === i ? 24 : 6, height: 6, background: active === i ? GOLD : "rgba(200,160,68,0.25)" }} />
           ))}
         </div>
       </div>
