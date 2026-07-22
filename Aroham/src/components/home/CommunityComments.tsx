@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Star } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF } from "@/constants/theme";
 import { COMMENTS_DATA } from "@/constants/data";
 import { ArohamProduct } from "@/types/product";
@@ -13,6 +13,8 @@ export function CommunityComments({ products = [] }: { products?: ArohamProduct[
   const [review, setReview] = useState({ name: "", rating: 5, text: "", product: "" });
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Custom user-submitted reviews list + default comments
   const [customReviews, setCustomReviews] = useState<any[]>(() => {
@@ -63,6 +65,30 @@ export function CommunityComments({ products = [] }: { products?: ArohamProduct[
 
   const allReviews = [...customReviews, ...COMMENTS_DATA];
 
+  // Auto-slide carousel gently
+  useEffect(() => {
+    if (isPaused || showForm) return;
+    const interval = setInterval(() => {
+      if (!scrollRef.current) return;
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      if (scrollLeft + clientWidth >= scrollWidth - 15) {
+        scrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        scrollRef.current.scrollBy({ left: 320, behavior: "smooth" });
+      }
+    }, 4500);
+
+    return () => clearInterval(interval);
+  }, [isPaused, showForm, allReviews.length]);
+
+  const scrollByAmount = (direction: "left" | "right") => {
+    if (!scrollRef.current) return;
+    scrollRef.current.scrollBy({
+      left: direction === "left" ? -340 : 340,
+      behavior: "smooth"
+    });
+  };
+
   const handleSubmitReview = async () => {
     if (!review.name.trim() || !review.text.trim()) {
       alert("Please fill in your name and review text.");
@@ -102,12 +128,22 @@ export function CommunityComments({ products = [] }: { products?: ArohamProduct[
       localStorage.setItem("aroham_custom_reviews", JSON.stringify(updatedList));
 
       setSubmitted(true);
+      setTimeout(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
+        }
+      }, 150);
     } catch (e: any) {
       console.error("Error saving review: ", e);
       const updatedList = [newRev, ...customReviews];
       setCustomReviews(updatedList);
       localStorage.setItem("aroham_custom_reviews", JSON.stringify(updatedList));
       setSubmitted(true);
+      setTimeout(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
+        }
+      }, 150);
     } finally {
       setIsSubmitting(false);
     }
@@ -122,18 +158,39 @@ export function CommunityComments({ products = [] }: { products?: ArohamProduct[
             <h2 style={{ fontFamily: SERIF, fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 500, color: MAROON }}>What Our Community Says</h2>
             <p className="text-sm mt-1" style={{ color: "#7A6A58" }}>{allReviews.length} verified reviews · 4.8 average rating</p>
           </div>
-          <button onClick={() => {
-              setShowForm(s => !s);
-              if (submitted) {
-                setSubmitted(false);
-                setReview({ name: "", rating: 5, text: "", product: "" });
-              }
-            }}
-            className="flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-semibold transition-all hover:opacity-80 self-start"
-            style={{ background: MAROON, color: IVORY }}>
-            ✍ Write a Review
-          </button>
+          <div className="flex items-center gap-3 self-start">
+            <div className="hidden sm:flex items-center gap-2">
+              <button
+                onClick={() => scrollByAmount("left")}
+                aria-label="Previous reviews"
+                className="w-10 h-10 rounded-full flex items-center justify-center border transition-all hover:bg-black/5 active:scale-95"
+                style={{ borderColor: "rgba(91,31,36,0.18)", color: MAROON, background: "#FFFFFF" }}
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                onClick={() => scrollByAmount("right")}
+                aria-label="Next reviews"
+                className="w-10 h-10 rounded-full flex items-center justify-center border transition-all hover:bg-black/5 active:scale-95"
+                style={{ borderColor: "rgba(91,31,36,0.18)", color: MAROON, background: "#FFFFFF" }}
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+            <button onClick={() => {
+                setShowForm(s => !s);
+                if (submitted) {
+                  setSubmitted(false);
+                  setReview({ name: "", rating: 5, text: "", product: "" });
+                }
+              }}
+              className="flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-semibold transition-all hover:opacity-80"
+              style={{ background: MAROON, color: IVORY }}>
+              ✍ Write a Review
+            </button>
+          </div>
         </div>
+
         {showForm && (
           <div className="mb-10 rounded-3xl p-7" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 4px 30px rgba(91,31,36,0.07)" }}>
             {submitted ? (
@@ -173,8 +230,14 @@ export function CommunityComments({ products = [] }: { products?: ArohamProduct[
             )}
           </div>
         )}
-        <div className="flex gap-5 overflow-x-auto pb-3 -mx-6 lg:-mx-10 px-6 lg:px-10 scroll-pl-6 lg:scroll-pl-10"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none", scrollSnapType: "x mandatory" }}>
+
+        <div
+          ref={scrollRef}
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          className="flex gap-5 overflow-x-auto pb-3 -mx-6 lg:-mx-10 px-6 lg:px-10 scroll-pl-6 lg:scroll-pl-10"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none", scrollSnapType: "x mandatory" }}
+        >
           {allReviews.map((c, i) => (
             <div key={c.id || i} className="p-6 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-xl flex-shrink-0 flex flex-col justify-between"
               style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.07)", boxShadow: "0 2px 12px rgba(91,31,36,0.04)", width: "clamp(280px,80vw,340px)", scrollSnapAlign: "start" }}>
