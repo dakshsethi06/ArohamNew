@@ -141,7 +141,7 @@ export function HexPrismCarousel({ products, onProductClick }: { products: Aroha
         ))}
       </div>
 
-      <div style={{ position: "relative", width: "90%", margin: "0 auto", zIndex: 50, overflow: "hidden", maxHeight: expanded ? 220 : 0, opacity: expanded ? 1 : 0, transition: `max-height ${SMOOTH_EASE}, opacity ${SMOOTH_EASE}`, pointerEvents: expanded ? "auto" : "none" }}>
+      <div style={{ position: "absolute", bottom: "10px", left: "5%", right: "5%", width: "90%", zIndex: 50, overflow: "hidden", maxHeight: expanded ? 220 : 0, opacity: expanded ? 1 : 0, transition: `max-height ${SMOOTH_EASE}, opacity ${SMOOTH_EASE}`, pointerEvents: expanded ? "auto" : "none" }}>
         <div className="rounded-2xl p-4 shadow-2xl mb-2" style={{ background: "rgba(30,10,12,0.95)", border: "1px solid rgba(200,160,68,0.3)" }}>
           <div className="flex gap-4 items-start">
             <div className="flex-1 min-w-0">
