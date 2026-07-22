@@ -48,7 +48,34 @@ export function ProductDetailPage() {
   const [qty, setQty] = useState(1);
   const [selectedImg, setSelectedImg] = useState(0);
   const [showSticky, setShowSticky] = useState(false);
+  const [copied, setCopied] = useState(false);
   const mainButtonsRef = useRef<HTMLDivElement>(null);
+
+  const handleShare = async () => {
+    if (!product) return;
+    const shareData = {
+      title: product.name,
+      text: `Check out ${product.name} on Aroham!`,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch (err) {
+        // Fallback to clipboard if share was cancelled or failed
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch (err) {
+      alert("Link copied: " + window.location.href);
+    }
+  };
 
   useEffect(() => {
     const el = mainButtonsRef.current;
@@ -258,10 +285,23 @@ export function ProductDetailPage() {
                 <button aria-label="Add to wishlist" onClick={() => { if (product) { toggleWishlist(product); } }} className="p-2 rounded-full hover:opacity-80 transition-opacity" style={{ background: "rgba(255,255,255,0.9)" }}>
                   <Heart size={16} style={{ color: product && isInWishlist(product.id) ? "#E74C3C" : "#7A6A58", fill: product && isInWishlist(product.id) ? "#E74C3C" : "none" }} />
                 </button>
-                <button aria-label="Share product" className="p-2 rounded-full hover:opacity-80 transition-opacity" style={{ background: "rgba(255,255,255,0.9)" }}><Share2 size={16} style={{ color: "#7A6A58" }} /></button>
+                <button
+                  aria-label="Share product"
+                  onClick={handleShare}
+                  className="p-2 rounded-full hover:opacity-80 transition-all active:scale-90"
+                  style={{ background: "rgba(255,255,255,0.9)" }}
+                >
+                  <Share2 size={16} style={{ color: copied ? MAROON : "#7A6A58" }} />
+                </button>
               </div>
               <div className="absolute bottom-4 left-4 px-3 py-1 rounded-full text-[10px] font-semibold" style={{ background: "rgba(91,31,36,0.88)", color: GOLD }}>{imgViews[selectedImg]}</div>
             </div>
+
+            {copied && (
+              <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2 text-xs font-semibold text-white animate-bounce" style={{ background: MAROON }}>
+                <span>✨ Link copied to clipboard!</span>
+              </div>
+            )}
             <div className="flex gap-2 overflow-x-auto pb-1">
               {imgViews.map((v, i) => (
                 <button key={i} onClick={() => setSelectedImg(i)}
