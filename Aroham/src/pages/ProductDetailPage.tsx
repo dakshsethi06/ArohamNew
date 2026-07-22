@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router";
-import { Star, ShoppingCart, Share2, Heart, ChevronRight, Sparkles, Flame, Gem, Award, Shield, Package, Truck, CheckCircle, Mail, Phone, ChevronDown } from "lucide-react";
+import { Star, ShoppingCart, Share2, Heart, ChevronLeft, ChevronRight, Sparkles, Flame, Gem, Award, Shield, Package, Truck, CheckCircle, Mail, Phone, ChevronDown } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
 import { CONTACT_INFO } from "@/constants/contact";
 import { useCart } from "@/context/CartContext";
@@ -225,6 +225,21 @@ export function ProductDetailPage() {
   return (
     <div className="w-full overflow-x-hidden" style={{ background: "#FAF7F2", minHeight: "100vh", fontFamily: SANS }}>
       <div className="pt-24 pb-0 px-5 lg:px-10">
+        <div className="max-w-7xl mx-auto mb-4">
+          <button
+            onClick={() => {
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                navigate("/shop");
+              }
+            }}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all hover:bg-black/5 active:scale-95"
+            style={{ color: MAROON, border: "1px solid rgba(91,31,36,0.18)", background: "#FFFFFF" }}
+          >
+            <ChevronLeft size={14} /> Back
+          </button>
+        </div>
         <div className="max-w-7xl mx-auto flex flex-wrap items-center gap-2 text-xs mb-6" style={{ color: "#9A8A78" }}>
           <button onClick={() => navigate("/")} className="hover:underline whitespace-nowrap" style={{ color: MAROON }}>Home</button>
           <ChevronRight size={12} className="flex-shrink-0" />

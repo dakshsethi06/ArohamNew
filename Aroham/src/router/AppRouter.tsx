@@ -38,7 +38,7 @@ function ScrollManager() {
 
   // Reset scroll on forward navigation only
   useEffect(() => {
-    if (navType !== "POP") {
+    if (navType === "PUSH") {
       window.scrollTo({ top: 0, behavior: "instant" });
     }
   }, [location.pathname, navType]);
