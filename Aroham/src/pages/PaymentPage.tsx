@@ -343,12 +343,15 @@ export function PaymentPage() {
             {/* Ultra-compact Coupon Bar */}
             <div className="rounded-2xl p-3 sm:p-4" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 12px rgba(91,31,36,0.04)" }}>
               {appliedCoupon ? (
-                <div className="flex items-center justify-between gap-2 p-2 rounded-xl" style={{ background: "rgba(74,138,74,0.08)", border: "1px solid rgba(74,138,74,0.2)" }}>
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 flex-shrink-0">{appliedCoupon.code}</span>
-                    <span className="text-xs font-medium text-emerald-700 truncate">🎉 {appliedCoupon.label} (−₹{discount})</span>
+                <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl" style={{ background: "rgba(74,138,74,0.08)", border: "1px solid rgba(74,138,74,0.2)" }}>
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <span className="text-xs font-bold px-2.5 py-1.5 rounded-lg flex-shrink-0" style={{ background: "rgba(74,138,74,0.18)", color: "#1B5E20" }}>{appliedCoupon.code}</span>
+                    <div className="flex flex-col min-w-0 justify-center">
+                      <span className="text-xs font-bold text-emerald-800 whitespace-nowrap">🎉 You're saving ₹{discount.toLocaleString("en-IN")}!</span>
+                      <span className="text-[11px] font-medium text-emerald-700 truncate">{appliedCoupon.label}</span>
+                    </div>
                   </div>
-                  <button onClick={() => { removeCoupon(); setCouponMsg(null); setShowCouponCelebration(false); }} className="text-xs font-semibold px-2 py-1 text-red-600 hover:bg-red-50 rounded flex-shrink-0">Remove</button>
+                  <button onClick={() => { removeCoupon(); setCouponMsg(null); setShowCouponCelebration(false); }} className="text-xs font-semibold px-2.5 py-1 text-red-600 hover:bg-red-50 rounded-lg flex-shrink-0">Remove</button>
                 </div>
               ) : (
                 <>
