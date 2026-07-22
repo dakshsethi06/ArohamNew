@@ -60,13 +60,13 @@ export function Newsletter() {
   };
 
   return (
-    <section className="py-10 sm:py-16 px-4 sm:px-6 lg:px-10" style={{ background: "#FAF7F2" }}>
+    <section className="pt-2 sm:pt-6 pb-8 sm:pb-12 px-4 sm:px-6 lg:px-10" style={{ background: "#FAF7F2" }}>
       <div className="max-w-2xl mx-auto text-center">
-        <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">ॐ</div>
-        <h2 className="mb-2 sm:mb-3" style={{ fontFamily: SERIF, fontSize: "clamp(1.5rem,4vw,2.5rem)", fontWeight: 500, color: MAROON, lineHeight: 1.2 }}>
+        <div className="text-2xl sm:text-3xl mb-1.5 sm:mb-2">ॐ</div>
+        <h2 className="mb-2 sm:mb-3" style={{ fontFamily: SERIF, fontSize: "clamp(1.4rem,4vw,2.2rem)", fontWeight: 500, color: MAROON, lineHeight: 1.2 }}>
           Join India's Spiritual Community
         </h2>
-        <p className="text-xs sm:text-sm mb-5 sm:mb-8" style={{ color: "#7A6A58" }}>Auspicious dates, Vedic wisdom, exclusive offers &amp; early access to new products.</p>
+        <p className="text-xs sm:text-sm mb-4 sm:mb-6" style={{ color: "#7A6A58" }}>Auspicious dates, Vedic wisdom, exclusive offers &amp; early access to new products.</p>
         {joined ? (
           <div className="flex items-center justify-center gap-2 py-4 px-6 rounded-2xl" style={{ background: "rgba(200,160,68,0.1)", border: `1px solid rgba(200,160,68,0.3)` }}>
             <CheckCircle size={18} style={{ color: GOLD }} /><span className="text-sm font-medium" style={{ color: MAROON }}>Welcome to the Aroham community!</span>
