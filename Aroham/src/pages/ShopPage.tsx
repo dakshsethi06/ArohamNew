@@ -275,7 +275,7 @@ export function ShopPage() {
                         <div className="absolute top-2.5 left-2.5 flex flex-col gap-1">
                           {p.price > 1000 && p.badges.slice(0, 1).map(b => <span key={b} className="px-2 py-0.5 rounded-full text-[9px] font-bold" style={{ background: "rgba(91,31,36,0.88)", color: GOLD }}>{b}</span>)}
                         </div>
-                        <button aria-label="Add to wishlist" onClick={e => { e.stopPropagation(); toggleWishlist(p); navigate("/wishlist"); }}
+                        <button aria-label="Add to wishlist" onClick={e => { e.stopPropagation(); toggleWishlist(p); }}
                           className="absolute top-2.5 right-2.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-sm" style={{ background: "rgba(255,255,255,0.9)" }}>
                           <Heart size={13} style={{ color: isInWishlist(p.id) ? "#E74C3C" : "#7A6A58", fill: isInWishlist(p.id) ? "#E74C3C" : "none" }} />
                         </button>

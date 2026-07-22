@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import { X, Heart, ShoppingBag } from "lucide-react";
+import { X, Heart, ShoppingBag, ChevronLeft } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCart } from "@/context/CartContext";
@@ -17,6 +17,15 @@ export function WishlistPage() {
   return (
     <div style={{ background: "#FAF7F2", minHeight: "100vh", fontFamily: SANS }} className="pt-28 pb-16 px-4 sm:px-6 lg:px-10">
       <div className="max-w-6xl mx-auto">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold mb-4 transition-all hover:bg-black/5 shadow-sm"
+          style={{ color: MAROON, border: "1px solid rgba(91,31,36,0.18)", background: "#FFFFFF" }}
+        >
+          <ChevronLeft size={14} /> Back
+        </button>
+
         {/* Header */}
         <div className="mb-8 border-b border-black/[0.06] pb-4 flex items-baseline gap-3">
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight" style={{ fontFamily: SERIF, color: MAROON }}>

@@ -25,7 +25,6 @@ export function ProductCard({ product: p, onProductClick, onAddToCart, wishKey =
       onToggleWish(wishKey, e);
     }
     toggleWishlist(p);
-    navigate("/wishlist");
   };
 
   return (

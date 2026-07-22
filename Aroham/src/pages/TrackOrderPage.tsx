@@ -1,7 +1,7 @@
 import { MAROON, GOLD, SERIF, SANS, IVORY } from "@/constants/theme";
 import { FloatingInput } from "@/components/auth/FloatingInput";
 import { useState } from "react";
-import { PackageSearch, ArrowRight, Loader2 } from "lucide-react";
+import { PackageSearch, ArrowRight, Loader2, ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router";
 
 export function TrackOrderPage() {
@@ -33,6 +33,9 @@ export function TrackOrderPage() {
   return (
     <div className="min-h-screen bg-[#FAF7F2] font-sans selection:bg-[#C8A044] selection:text-[#0D0508] pb-10 flex flex-col">
       <div className="flex-1 flex flex-col items-center justify-center px-6 pt-32 pb-20 max-w-lg mx-auto w-full">
+        <button onClick={() => navigate(-1)} className="self-start flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold mb-6 transition-all hover:bg-black/5" style={{ color: MAROON, border: "1px solid rgba(91,31,36,0.18)", background: "#FFFFFF" }}>
+          <ChevronLeft size={14} /> Back
+        </button>
         
         <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6" style={{ background: "rgba(91,31,36,0.05)", color: MAROON }}>
           <PackageSearch size={36} strokeWidth={1.5} />

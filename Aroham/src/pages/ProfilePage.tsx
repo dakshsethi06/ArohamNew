@@ -213,7 +213,7 @@ export function ProfilePage() {
   return (
     <div className="min-h-screen pt-20 lg:pt-28 pb-16 px-4 sm:px-6" style={{ background: "#FAF7F2" }}>
       <div className="max-w-2xl mx-auto">
-        <button onClick={() => navigate("/")} className="flex items-center gap-2 mb-6 text-sm font-medium hover:opacity-70 transition-opacity" style={{ color: MAROON }}>
+        <button onClick={() => navigate(-1)} className="flex items-center gap-2 mb-6 text-sm font-medium hover:opacity-70 transition-opacity" style={{ color: MAROON }}>
           <ChevronLeft size={16} /> Back
         </button>
 
