@@ -126,6 +126,44 @@ export function AuthPage() {
       }
     }
 
+    if (activeTab === "signup") {
+      let existingUser: any = null;
+
+      // 1. Check Local Storage
+      const localCached = localStorage.getItem(`aroham_registered_user_phone_${phoneDigits}`);
+      if (localCached) {
+        try { existingUser = JSON.parse(localCached); } catch (e) {}
+      }
+
+      // 2. Check Firestore
+      if (!existingUser) {
+        try {
+          const q = query(collection(db, "users"), where("phone", "==", phoneDigits));
+          const snapshot = await getDocs(q);
+          if (!snapshot.empty) {
+            existingUser = snapshot.docs[0].data();
+          }
+        } catch (e) {}
+      }
+
+      // 3. Check Supabase
+      if (!existingUser) {
+        try {
+          const { data } = await supabase.from('users').select('*').eq('phone', phoneDigits).maybeSingle();
+          if (data) existingUser = data;
+        } catch (e) {}
+      }
+
+      if (existingUser) {
+        setLoading(false);
+        setErrorMsg("User already exists. Redirecting to Sign In...");
+        setTimeout(() => {
+          switchTab("signin");
+        }, 1200);
+        return;
+      }
+    }
+
     setTimeout(() => {
       setLoading(false);
       goTo("otp");
