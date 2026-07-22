@@ -51,7 +51,7 @@ export function AuthPage() {
   const panelKey = authState;
   const panel = LEFT_PANELS[panelKey] || LEFT_PANELS.signin;
 
-  const switchTab = (t: "signin") => {
+  const switchTab = (t: "signin" | "signup") => {
     setActiveTab(t);
     setAuthState(t);
     setOtp(Array(6).fill(""));
@@ -79,15 +79,57 @@ export function AuthPage() {
       return;
     }
 
+    if (activeTab === "signup" && !name.trim()) {
+      setErrorMsg("Please enter your full name to create an account.");
+      return;
+    }
+
     setLoading(true);
     setErrorMsg("");
     setNoAccountNotice(false);
 
-    // MOCK OTP FLOW - BYPASS FIREBASE SMS
+    if (activeTab === "signin") {
+      let existingUser: any = null;
+
+      // 1. Check Local Storage
+      const localCached = localStorage.getItem(`aroham_registered_user_phone_${phoneDigits}`);
+      if (localCached) {
+        try { existingUser = JSON.parse(localCached); } catch (e) {}
+      }
+
+      // 2. Check Firestore
+      if (!existingUser) {
+        try {
+          const q = query(collection(db, "users"), where("phone", "==", phoneDigits));
+          const snapshot = await getDocs(q);
+          if (!snapshot.empty) {
+            existingUser = snapshot.docs[0].data();
+          }
+        } catch (e) {}
+      }
+
+      // 3. Check Supabase
+      if (!existingUser) {
+        try {
+          const { data } = await supabase.from('users').select('*').eq('phone', phoneDigits).maybeSingle();
+          if (data) existingUser = data;
+        } catch (e) {}
+      }
+
+      if (!existingUser) {
+        setLoading(false);
+        setErrorMsg("Mobile number not registered. Redirecting to Create Account...");
+        setTimeout(() => {
+          switchTab("signup");
+        }, 1200);
+        return;
+      }
+    }
+
     setTimeout(() => {
       setLoading(false);
       goTo("otp");
-    }, 800);
+    }, 600);
   };
 
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -226,6 +268,43 @@ export function AuthPage() {
             user_metadata: { full_name: existingUser.fullName, phone: existingUser.phone }
           });
           handleAuthSuccess();
+        } else if (name.trim()) {
+          // Account creation flow: Save profile now
+          const newUserId = crypto.randomUUID();
+          const userProfile = {
+            id: newUserId,
+            fullName: name.trim(),
+            email: email.trim() || null,
+            phone: phoneDigits
+          };
+
+          // Save local cache
+          localStorage.setItem(`aroham_registered_user_phone_${phoneDigits}`, JSON.stringify(userProfile));
+
+          // Save Firestore
+          setDoc(doc(db, "users", newUserId), {
+            fullName: name.trim(),
+            email: email.trim() || null,
+            phone: phoneDigits,
+            createdAt: serverTimestamp()
+          }, { merge: true }).catch(err => console.warn("Firestore setDoc warning:", err));
+
+          // Save Supabase
+          Promise.resolve(supabase.from('users').upsert({
+            id: newUserId,
+            full_name: name.trim(),
+            email: email.trim() || null,
+            phone: phoneDigits,
+            created_at: new Date().toISOString()
+          })).catch(err => console.warn("Supabase upsert warning:", err));
+
+          setLoading(false);
+          login({
+            id: newUserId,
+            email: email.trim() || null,
+            user_metadata: { full_name: name.trim(), phone: phoneDigits }
+          });
+          handleAuthSuccess();
         } else {
           setLoading(false);
           goTo("profile-setup");
@@ -237,14 +316,10 @@ export function AuthPage() {
     }, 800);
   };
 
-  // Complete Profile Setup handler (Name + Email + DOB + Gender page)
+  // Complete Profile Setup handler
   const handleCompleteProfile = async () => {
     if (!name.trim()) {
       setErrorMsg("Please enter your full name.");
-      return;
-    }
-    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setErrorMsg("Please enter a valid email address.");
       return;
     }
 
@@ -261,38 +336,24 @@ export function AuthPage() {
         phone: phoneDigits
       };
 
-      // 1. Save to Local Storage cache
       if (phoneDigits) {
         localStorage.setItem(`aroham_registered_user_phone_${phoneDigits}`, JSON.stringify(userProfile));
       }
-      if (email.trim()) {
-        localStorage.setItem(`aroham_registered_user_email_${email.trim()}`, JSON.stringify(userProfile));
-      }
 
-      // 2. Save to Firestore
-      try {
-        await setDoc(doc(db, "users", newUserId), {
-          fullName: name.trim(),
-          email: email.trim() || null,
-          phone: phoneDigits,
-          createdAt: serverTimestamp()
-        }, { merge: true });
-      } catch (err) {
-        console.warn("Firestore setDoc warning:", err);
-      }
+      setDoc(doc(db, "users", newUserId), {
+        fullName: name.trim(),
+        email: email.trim() || null,
+        phone: phoneDigits,
+        createdAt: serverTimestamp()
+      }, { merge: true }).catch(err => console.warn("Firestore setDoc warning:", err));
 
-      // 3. Save to Supabase
-      try {
-        await supabase.from('users').upsert({
-          id: newUserId,
-          full_name: name.trim(),
-          email: email.trim() || null,
-          phone: phoneDigits,
-          gender: null,
-          dob: null,
-          created_at: new Date().toISOString()
-        });
-      } catch (err) {}
+      Promise.resolve(supabase.from('users').upsert({
+        id: newUserId,
+        full_name: name.trim(),
+        email: email.trim() || null,
+        phone: phoneDigits,
+        created_at: new Date().toISOString()
+      })).catch(err => console.warn("Supabase upsert warning:", err));
 
       setLoading(false);
       login({
@@ -307,9 +368,37 @@ export function AuthPage() {
     }
   };
 
-  // 1. Unified Auth JSX - Merged Sign In & Sign Up
+  // 1. Unified Auth JSX - Sign In & Create Account Tabs
   const signinJsx = (
     <div style={formStyle} className="space-y-6">
+      {/* Auth Tab Switcher */}
+      <div className="flex rounded-2xl p-1 mb-2" style={{ background: "rgba(91,31,36,0.06)", border: "1px solid rgba(91,31,36,0.1)" }}>
+        <button
+          type="button"
+          onClick={() => switchTab("signin")}
+          className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all"
+          style={{
+            background: activeTab === "signin" ? MAROON : "transparent",
+            color: activeTab === "signin" ? IVORY : "#7A6A58",
+            boxShadow: activeTab === "signin" ? "0 4px 12px rgba(91,31,36,0.2)" : "none"
+          }}
+        >
+          Sign In
+        </button>
+        <button
+          type="button"
+          onClick={() => switchTab("signup")}
+          className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all"
+          style={{
+            background: activeTab === "signup" ? MAROON : "transparent",
+            color: activeTab === "signup" ? IVORY : "#7A6A58",
+            boxShadow: activeTab === "signup" ? "0 4px 12px rgba(91,31,36,0.2)" : "none"
+          }}
+        >
+          Create Account
+        </button>
+      </div>
+
       <div className="text-center space-y-2">
         <div className="flex items-center justify-center mb-3">
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden"
@@ -318,11 +407,13 @@ export function AuthPage() {
             <Sparkles size={24} style={{ color: IVORY }} />
           </div>
         </div>
-        <h2 className="mb-2" style={{ fontFamily: SERIF, fontSize: "2rem", fontWeight: 600, color: MAROON }}>
-          Welcome
+        <h2 className="mb-2" style={{ fontFamily: SERIF, fontSize: "1.85rem", fontWeight: 600, color: MAROON }}>
+          {activeTab === "signin" ? "Welcome Back" : "Create Account"}
         </h2>
         <p className="text-sm leading-relaxed" style={{ color: "#7A6A58", fontFamily: SANS }}>
-          Enter your mobile number to continue your sacred journey
+          {activeTab === "signin"
+            ? "Enter your mobile number to sign in to your account"
+            : "Enter your full name and mobile number to get started"}
         </p>
       </div>
 
@@ -334,6 +425,10 @@ export function AuthPage() {
           </div>
           <p className="text-sm font-medium flex-1" style={{ color: "#991b1b" }}>{errorMsg}</p>
         </div>
+      )}
+
+      {activeTab === "signup" && (
+        <AuthInput label="Full Name" value={name} onChange={setName} />
       )}
 
       <AuthInput label="Mobile Number" type="tel" value={phone} onChange={v => setPhone(v.replace(/\D/g, "").slice(0, 10))} />
@@ -360,7 +455,7 @@ export function AuthPage() {
         ) : (
           <>
             <Lock size={16} />
-            <span>Continue</span>
+            <span>{activeTab === "signin" ? "Sign In with OTP" : "Get OTP & Create Account"}</span>
           </>
         )}
       </button>
