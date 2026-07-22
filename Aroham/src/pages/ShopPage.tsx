@@ -199,22 +199,22 @@ export function ShopPage() {
 
   return (
     <div style={{ background: "#FAF7F2", minHeight: "100vh", fontFamily: SANS }}>
-      <div className="pt-24 pb-8 px-6 lg:px-10" style={{ background: `linear-gradient(135deg,#F5EDE0,#FAF7F2)` }}>
+      <div className="pt-16 sm:pt-24 pb-4 sm:pb-8 px-4 sm:px-6 lg:px-10" style={{ background: `linear-gradient(135deg,#F5EDE0,#FAF7F2)` }}>
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-2 mb-3 text-xs" style={{ color: "#9A8A78" }}>
+          <div className="flex items-center gap-2 mb-2 sm:mb-3 text-xs" style={{ color: "#9A8A78" }}>
             <button onClick={() => navigate("/")} className="hover:underline" style={{ color: MAROON }}>Home</button>
             <ChevronRight size={12} /><span>Shop</span>
             {isCustom && <><ChevronRight size={12} /><span style={{ color: MAROON }}>{displayTitle}</span></>}
           </div>
-          <h1 style={{ fontFamily: SERIF, fontSize: "clamp(1.75rem,4vw,3rem)", fontWeight: 500, color: MAROON }}>{displayTitle}</h1>
-          <p className="text-sm mt-1" style={{ color: "#7A6A58" }}>
+          <h1 style={{ fontFamily: SERIF, fontSize: "clamp(1.5rem,4vw,3rem)", fontWeight: 500, color: MAROON }}>{displayTitle}</h1>
+          <p className="text-xs sm:text-sm mt-0.5 sm:mt-1" style={{ color: "#7A6A58" }}>
             {isCustom ? `Explore our finest selection of ${displayTitle.toLowerCase()} items` : "Temple-energized, handcrafted, expert-recommended"}
           </p>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-6 lg:px-10 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-4 sm:py-8">
         {(cats.length > 0 || prps.length > 0 || cols.length > 0 || maxPrice < 30000) && (
-          <div className="flex flex-wrap gap-2 mb-6">
+          <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
             {cats.map(c => <span key={c} className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium" style={{ background: "rgba(91,31,36,0.08)", color: MAROON }}>{c}<button onClick={() => toggleCat(c)} className="ml-1"><X size={10} /></button></span>)}
             {prps.map(p => <span key={p} className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium" style={{ background: "rgba(91,31,36,0.08)", color: MAROON }}>{p}<button onClick={() => togglePrp(p)} className="ml-1"><X size={10} /></button></span>)}
             {cols.map(c => <span key={c} className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium" style={{ background: "rgba(91,31,36,0.08)", color: MAROON }}>{c}<button onClick={() => toggleCol(c)} className="ml-1"><X size={10} /></button></span>)}
@@ -228,7 +228,7 @@ export function ShopPage() {
             </div>
           </div>
           <div className="flex-1">
-            <div className="flex flex-wrap items-center justify-between gap-2.5 mb-6">
+            <div className="flex flex-wrap items-center justify-between gap-2.5 mb-3 sm:mb-6">
               <p className="text-xs sm:text-sm font-medium" style={{ color: "#7A6A58" }}>Showing <strong style={{ color: MAROON }}>{filtered.length}</strong> products</p>
               <div className="flex items-center gap-2 sm:gap-3 ml-auto">
                 <button onClick={() => setSidebarOpen(true)} className="lg:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all"

@@ -251,8 +251,8 @@ export function ProductDetailPage() {
 
   return (
     <div className="w-full overflow-x-hidden" style={{ background: "#FAF7F2", minHeight: "100vh", fontFamily: SANS }}>
-      <div className="pt-24 pb-0 px-5 lg:px-10">
-        <div className="max-w-7xl mx-auto mb-4">
+      <div className="pt-16 sm:pt-24 pb-0 px-4 sm:px-6 lg:px-10">
+        <div className="max-w-7xl mx-auto mb-3 sm:mb-4">
           <button
             onClick={() => {
               if (window.history.length > 1) {
@@ -267,7 +267,7 @@ export function ProductDetailPage() {
             <ChevronLeft size={14} /> Back
           </button>
         </div>
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center gap-2 text-xs mb-6" style={{ color: "#9A8A78" }}>
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center gap-2 text-xs mb-3 sm:mb-6" style={{ color: "#9A8A78" }}>
           <button onClick={() => navigate("/")} className="hover:underline whitespace-nowrap" style={{ color: MAROON }}>Home</button>
           <ChevronRight size={12} className="flex-shrink-0" />
           <button onClick={() => navigate("/shop")} className="hover:underline whitespace-nowrap" style={{ color: MAROON }}>Shop</button>
@@ -275,7 +275,7 @@ export function ProductDetailPage() {
           <span>{product.name}</span>
         </div>
       </div>
-      <div className="px-5 lg:px-10 pb-10">
+      <div className="px-4 sm:px-6 lg:px-10 pb-10">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[48%_32%_20%] gap-6 lg:gap-8">
           {/* Gallery */}
           <div>
