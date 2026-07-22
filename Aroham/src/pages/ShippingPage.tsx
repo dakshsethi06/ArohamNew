@@ -56,6 +56,7 @@ export function ShippingPage() {
 
   // Pre-fill phone from user profile & load persistent saved address
   useEffect(() => {
+    let localAddrs: any[] = [];
     try {
       const savedForm = localStorage.getItem("aroham_saved_shipping_form");
       if (savedForm) {
@@ -67,12 +68,44 @@ export function ShippingPage() {
       if (savedList) {
         const parsedList = JSON.parse(savedList);
         if (Array.isArray(parsedList) && parsedList.length > 0) {
+          localAddrs = parsedList;
           setSavedAddresses(parsedList);
           setSelectedAddr(parsedList[0].id);
           setShowForm(false);
+          parsedList.forEach((a: any) => {
+            const p = String(a.pincode || a.pin || "");
+            if (p) fetchEstimate(p);
+          });
         }
       }
     } catch (e) {}
+
+    if (user?.id) {
+      Promise.resolve(supabase.from("addresses").select("*").eq("user_id", user.id))
+        .then(({ data }) => {
+          if (Array.isArray(data) && data.length > 0) {
+            setSavedAddresses(data);
+            localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(data));
+            setSelectedAddr(data[0].id);
+            setShowForm(false);
+            data.forEach((a: any) => {
+              const p = String(a.pincode || a.pin || "");
+              if (p) fetchEstimate(p);
+            });
+          } else if (localAddrs.length === 0) {
+            setShowForm(true);
+          }
+        })
+        .catch(() => {
+          if (localAddrs.length === 0) {
+            setShowForm(true);
+          }
+        });
+    } else {
+      if (localAddrs.length === 0) {
+        setShowForm(true);
+      }
+    }
 
     if (user?.user_metadata?.phone) {
       const userPhone = String(user.user_metadata.phone).replace(/\D/g, "");
@@ -322,35 +355,7 @@ export function ShippingPage() {
     }
   }, []);
 
-  // Fetch real addresses from backend when logged in
-  useEffect(() => {
-    if (isLoggedIn) {
-      api("/addresses")
-        .then(data => {
-          if (Array.isArray(data) && data.length > 0) {
-            setSavedAddresses(data);
-            const def = data.find((a: any) => a.is_default) || data[0];
-            setSelectedAddr(def.id);
-            setShowForm(false); // Show saved addresses, not form
-            data.forEach((a: any) => {
-              const p = String(a.pincode || a.pin || "");
-              if (p) fetchEstimate(p);
-            });
-          } else {
-            setSavedAddresses([]);
-            setShowForm(true);
-          }
-        })
-        .catch(() => {
-          setSavedAddresses([]);
-          setShowForm(true);
-        });
-    } else {
-      setSavedAddresses([]);
-      setSelectedAddr(null);
-      setShowForm(true);
-    }
-  }, [isLoggedIn]);
+
 
   const fieldBorder = (key: string) => validationErrors[key] ? "2px solid #E53E3E" : undefined;
 
