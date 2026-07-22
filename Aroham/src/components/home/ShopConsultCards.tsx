@@ -34,15 +34,15 @@ export function ShopConsultCards({ products, onShop, onProductClick }: { product
               ].map(({ icon, label }) => (
                 <div key={label} className="flex items-center gap-1.5 sm:gap-2.5 py-2 sm:py-2.5 min-w-0" style={{ borderBottom: "1px solid rgba(200,160,68,0.08)" }}>
                   <span style={{ color: GOLD, flexShrink: 0 }}>{icon}</span>
-                  <span className="truncate text-[10px] sm:text-[11px]" style={{ color: "rgba(217,195,171,0.6)", fontFamily: SANS, letterSpacing: "0.02em" }}>{label}</span>
+                  <span className="truncate flex-1 min-w-0 text-[10px] sm:text-[11px]" style={{ color: "rgba(217,195,171,0.6)", fontFamily: SANS, letterSpacing: "0.02em" }}>{label}</span>
                 </div>
               ))}
             </div>
-            <div className="relative z-10 flex items-center gap-2 text-xs sm:text-sm" style={{ color: "rgba(217,195,171,0.8)" }}>
-              <span style={{ color: GOLD, letterSpacing: 2 }}>★★★★★</span>
-              <strong style={{ color: IVORY }}>4.8</strong>
-              <span className="w-1 h-1 rounded-full inline-block" style={{ background: "rgba(217,195,171,0.5)" }} />
-              <span className="truncate">12,000+ devotees served</span>
+            <div className="relative z-10 flex items-center gap-2 text-xs sm:text-sm min-w-0" style={{ color: "rgba(217,195,171,0.8)" }}>
+              <span style={{ color: GOLD, letterSpacing: 2, flexShrink: 0 }}>★★★★★</span>
+              <strong style={{ color: IVORY, flexShrink: 0 }}>4.8</strong>
+              <span className="w-1 h-1 rounded-full inline-block flex-shrink-0" style={{ background: "rgba(217,195,171,0.5)" }} />
+              <span className="truncate flex-1 min-w-0">12,000+ devotees served</span>
             </div>
             <div className="flex-1 relative z-10" />
             <button onClick={onShop}
