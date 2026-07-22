@@ -74,9 +74,9 @@ export function CartSidebar() {
                 </div>
               </div>
 
-              {/* Trash/Close Icon on Top Right */}
+              {/* Trash Icon on Top Right */}
               <button aria-label={`Remove ${p.name}`} onClick={() => removeFromCart(p.id)} className="absolute top-3.5 right-3.5 text-gray-400 hover:text-red-600 transition-colors p-1">
-                <X size={16} />
+                <Trash2 size={16} />
               </button>
 
               {/* Price Stack on Bottom Right */}
