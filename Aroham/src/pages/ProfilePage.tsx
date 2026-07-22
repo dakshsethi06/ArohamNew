@@ -339,6 +339,15 @@ export function ProfilePage() {
       return;
     }
 
+    if (editForm.dob) {
+      const selectedDate = new Date(editForm.dob);
+      const today = new Date();
+      if (selectedDate > today) {
+        alert("Date of birth cannot be in the future. Please select a valid date.");
+        return;
+      }
+    }
+
     setSaving(true);
     setSaveSuccess(false);
 
@@ -552,9 +561,15 @@ export function ProfilePage() {
                             .rdp-day_today:not(.rdp-day_selected) { font-weight: inherit; border: none; outline: none; }
                             .rdp-day:focus { outline: none !important; border: none !important; background: transparent; }
                           `}</style>
-                          <DayPicker mode="single" selected={editForm.dob ? (() => { const [y, m, d] = editForm.dob.split("-").map(Number); return new Date(y, m - 1, d); })() : undefined}
+                          <DayPicker mode="single"
+                            disabled={{ after: new Date() }}
+                            selected={editForm.dob ? (() => { const [y, m, d] = editForm.dob.split("-").map(Number); return new Date(y, m - 1, d); })() : undefined}
                             onSelect={(date) => { 
                               if (date) {
+                                if (date > new Date()) {
+                                  alert("Date of birth cannot be in the future.");
+                                  return;
+                                }
                                 const y = date.getFullYear();
                                 const m = String(date.getMonth() + 1).padStart(2, '0');
                                 const d = String(date.getDate()).padStart(2, '0');
@@ -562,7 +577,7 @@ export function ProfilePage() {
                               }
                             }}
                             defaultMonth={editForm.dob ? (() => { const [y, m, d] = editForm.dob.split("-").map(Number); return new Date(y, m - 1, d); })() : new Date(2000, 0)}
-                            fromYear={1950} toYear={new Date().getFullYear()} captionLayout="dropdown" />
+                            fromYear={1930} toYear={new Date().getFullYear()} captionLayout="dropdown" />
                         </Popover.Content>
                       </Popover.Portal>
                     </Popover.Root>
