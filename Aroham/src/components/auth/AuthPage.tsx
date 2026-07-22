@@ -349,13 +349,18 @@ export function AuthPage() {
           }, { merge: true }).catch(err => console.warn("Firestore setDoc warning:", err));
 
           // Save Supabase
-          Promise.resolve(supabase.from('users').upsert({
-            id: newUserId,
-            full_name: name.trim(),
-            email: email.trim() || null,
-            phone: phoneDigits,
-            created_at: new Date().toISOString()
-          })).catch(err => console.warn("Supabase upsert warning:", err));
+          try {
+            const { error: sbErr } = await supabase.from('users').upsert({
+              id: newUserId,
+              full_name: name.trim(),
+              email: email.trim() || null,
+              phone: phoneDigits ? `+91${phoneDigits}` : null,
+              created_at: new Date().toISOString()
+            });
+            if (sbErr) console.warn("Supabase user insert error:", sbErr);
+          } catch (e) {
+            console.warn("Supabase user insert exception:", e);
+          }
 
           setLoading(false);
           login({
