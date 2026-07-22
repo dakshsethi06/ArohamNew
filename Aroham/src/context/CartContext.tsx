@@ -117,9 +117,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const taxableAmount = Math.max(0, subtotal - discount);
-  const gst = Math.round(taxableAmount * 0.05);
-  const total = taxableAmount + gst;
+  const total = Math.max(0, subtotal - discount);
 
   const applyCoupon = (code: string) => {
     const cleanCode = code.trim().toUpperCase();

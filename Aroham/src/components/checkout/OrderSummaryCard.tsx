@@ -102,8 +102,8 @@ export function OrderSummaryCard({ cartItems, onBack, onNext, nextLabel, step }:
           </div>
 
           <div className="flex justify-between text-sm">
-            <span style={{ color: "#7A6A58" }}>GST (5%)</span>
-            <span style={{ color: MAROON, fontFamily: PRICE_FONT, fontWeight: 600 }}>₹{Math.round(Math.max(0, subtotal - discount) * 0.05).toLocaleString("en-IN")}</span>
+            <span style={{ color: "#7A6A58" }}>GST (5% Included)</span>
+            <span style={{ color: "#4A8A4A", fontFamily: PRICE_FONT, fontWeight: 600 }}>INCLUDED</span>
           </div>
 
           <div className="h-px w-full" style={{ background: `linear-gradient(90deg,transparent,rgba(200,160,68,0.3),transparent)` }} />
