@@ -55,14 +55,19 @@ export function ConsultPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 pt-24 pb-16"
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 pt-24 pb-16 relative"
       style={{ background: `linear-gradient(170deg,#0D0508 0%,#1A0D10 60%,#0D0508 100%)` }}>
       <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 60% 50% at 50% 40%, rgba(200,160,68,0.07) 0%, transparent 70%)" }} />
-      <div className="relative text-center max-w-lg mx-auto flex flex-col items-center">
-        <button onClick={() => navigate(-1)} className="self-start inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold mb-6 transition-all hover:opacity-80" style={{ color: GOLD, border: "1px solid rgba(200,160,68,0.3)", background: "rgba(255,255,255,0.05)" }}>
-          <ChevronLeft size={14} /> Back
+      
+      {/* Top Left Back Button Container */}
+      <div className="max-w-4xl w-full mx-auto mb-4 flex items-center justify-start z-10">
+        <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all hover:opacity-80 active:scale-95 shadow-sm" style={{ color: GOLD, border: "1px solid rgba(200,160,68,0.3)", background: "rgba(255,255,255,0.08)" }}>
+          <ChevronLeft size={15} /> Back
         </button>
-        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-8" style={{ background: "rgba(200,160,68,0.1)", border: "1px solid rgba(200,160,68,0.25)" }}>
+      </div>
+
+      <div className="relative text-center max-w-lg mx-auto flex flex-col items-center z-10">
+        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(200,160,68,0.1)", border: "1px solid rgba(200,160,68,0.25)" }}>
           <span style={{ fontSize: 28 }}>🪬</span>
         </div>
         <h1 style={{ fontFamily: SERIF, fontSize: "clamp(2rem,5vw,3rem)", fontWeight: 700, color: IVORY, lineHeight: 1.15, marginBottom: 20 }}>
