@@ -39,8 +39,15 @@ export function Nav() {
   ];
 
   return (
-    <nav role="navigation" aria-label="Main navigation"
-      className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
+    <>
+      {isSearchOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/5 backdrop-blur-[1px] transition-opacity cursor-pointer" 
+          onClick={() => { setIsSearchOpen(false); setQuery(""); }} 
+        />
+      )}
+      <nav role="navigation" aria-label="Main navigation"
+        className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
       style={{ background: solid ? "rgba(250,247,242,0.97)" : "transparent",
         backdropFilter: solid ? "blur(12px)" : "none",
         borderBottom: solid ? `1px solid rgba(91,31,36,0.1)` : "none",
@@ -151,5 +158,6 @@ export function Nav() {
         </div>
       </div>
     </nav>
+    </>
   );
 }

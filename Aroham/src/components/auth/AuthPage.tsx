@@ -79,11 +79,6 @@ export function AuthPage() {
       return;
     }
 
-    if (!agreed) {
-      setErrorMsg("Please agree to the Terms & Privacy Policy.");
-      return;
-    }
-
     setLoading(true);
     setErrorMsg("");
     setNoAccountNotice(false);
@@ -295,32 +290,16 @@ export function AuthPage() {
 
       <AuthInput label="Mobile Number" type="tel" value={phone} onChange={v => setPhone(v.replace(/\D/g, "").slice(0, 10))} />
 
-      <button
-        onClick={() => setAgreed(a => !a)}
-        className="flex items-center gap-3 text-sm text-left w-full cursor-pointer group"
-        style={{ color: "#5A4A3A" }}
-      >
-        <div
-          className="w-6 h-6 rounded-lg flex-shrink-0 flex items-center justify-center transition-all duration-200 group-hover:scale-110"
-          style={{
-            border: `2px solid ${agreed ? MAROON : "rgba(91,31,36,0.22)"}`,
-            background: agreed ? `linear-gradient(135deg,${MAROON},#7A2A30)` : "transparent",
-            boxShadow: agreed ? "0 4px 12px rgba(91,31,36,0.25)" : "none"
-          }}
-        >
-          {agreed && <CheckCircle size={14} color="white" strokeWidth={3} />}
-        </div>
-        <span className="flex-1 leading-relaxed">
-          I agree to the{" "}
-          <Link to="/terms" onClick={e => e.stopPropagation()} className="font-semibold underline decoration-dotted" style={{ color: MAROON }}>Terms of Service</Link>
-          {" "}and{" "}
-          <Link to="/privacy" onClick={e => e.stopPropagation()} className="font-semibold underline decoration-dotted" style={{ color: MAROON }}>Privacy Policy</Link>
-        </span>
-      </button>
+      <p className="text-xs text-center leading-relaxed px-4" style={{ color: "#7A6A58" }}>
+        By continuing, you agree to Aroham's{" "}
+        <Link to="/terms" onClick={e => e.stopPropagation()} className="font-semibold underline decoration-dotted" style={{ color: MAROON }}>Terms of Service</Link>
+        {" "}and{" "}
+        <Link to="/privacy" onClick={e => e.stopPropagation()} className="font-semibold underline decoration-dotted" style={{ color: MAROON }}>Privacy Policy</Link>
+      </p>
 
       <button
         onClick={() => handleSendPhoneOtp()}
-        disabled={loading || !agreed}
+        disabled={loading}
         className="group w-full py-4 rounded-2xl text-sm font-semibold tracking-wide transition-all hover:opacity-90 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
         style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}
       >
@@ -692,8 +671,8 @@ export function AuthPage() {
                 boxShadow: "0 24px 70px -20px rgba(91,31,36,0.28), 0 2px 6px rgba(91,31,36,0.05)",
               }}
             >
-              {/* Step indicator (shown once past the account screen) */}
-              {authState !== "signin" && authState !== "signup" && stepper}
+              {/* Step indicator (shown once past the account screen, only for signup flow) */}
+              {isSignupFlow && authState !== "signin" && authState !== "signup" && stepper}
 
               {/* Signin UI */}
               {rightContent}
