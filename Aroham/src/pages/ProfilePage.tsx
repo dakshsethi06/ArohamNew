@@ -193,6 +193,9 @@ export function ProfilePage() {
   const handleCancelOrder = async (orderId: string | number) => {
     if (!confirm(`Are you sure you want to cancel Order #${orderId}?`)) return;
 
+    // 1. Save CANCELLED status persistently in localStorage
+    localStorage.setItem(`aroham_order_status_${orderId}`, "CANCELLED");
+
     try {
       if (user?.id) {
         await Promise.resolve(
@@ -250,39 +253,63 @@ export function ProfilePage() {
     });
   };
 
-  // Fetch real orders from DB — only show CONFIRMED/paid orders
+  // Fetch real orders from DB with cancellation persistence
   useEffect(() => {
     if (activeTab === "orders") {
       setLoadingOrders(true);
-      // Since backend is disconnected, fetch the latest local order from sessionStorage
-      const localOrderId = sessionStorage.getItem("aroham_last_order_id");
-      const localItemsStr = sessionStorage.getItem("aroham_last_order_items");
-      const localTotalStr = sessionStorage.getItem("aroham_order_total");
       
-      let mockOrders: any[] = [];
-      if (localOrderId && localItemsStr) {
-        try {
-          const parsedItems = JSON.parse(localItemsStr);
-          mockOrders.push({
-            id: localOrderId,
-            created_at: new Date().toISOString(),
-            status: "Processing",
-            total_amount: parseFloat(localTotalStr || "0") * 100, // component divides by 100
-            items: parsedItems.map((i: any) => ({
-              product_name: i.product?.name || "Sacred Item",
-              quantity: i.qty || 1,
-              unit_price: (i.product?.price || 0) * 100
-            }))
-          });
-        } catch (e) {
-          console.error("Failed to parse local order items", e);
+      const fetchOrders = async () => {
+        let fetchedOrders: any[] = [];
+
+        if (user?.id) {
+          try {
+            const { data } = await supabase.from("orders").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+            if (data && data.length > 0) {
+              fetchedOrders = data;
+            }
+          } catch (e) {
+            console.warn("Error fetching Supabase orders:", e);
+          }
         }
-      }
-      
-      setOrders(mockOrders);
-      setLoadingOrders(false);
+
+        const localOrderId = sessionStorage.getItem("aroham_last_order_id");
+        const localItemsStr = sessionStorage.getItem("aroham_last_order_items");
+        const localTotalStr = sessionStorage.getItem("aroham_order_total");
+
+        if (localOrderId && localItemsStr && !fetchedOrders.some(o => String(o.id) === String(localOrderId))) {
+          try {
+            const parsedItems = JSON.parse(localItemsStr);
+            const savedStatus = localStorage.getItem(`aroham_order_status_${localOrderId}`) || "Processing";
+            
+            fetchedOrders.unshift({
+              id: localOrderId,
+              created_at: new Date().toISOString(),
+              status: savedStatus,
+              total_amount: parseFloat(localTotalStr || "0") * 100,
+              items: parsedItems.map((i: any) => ({
+                product_name: i.product?.name || "Sacred Item",
+                quantity: i.qty || 1,
+                unit_price: (i.product?.price || 0) * 100
+              }))
+            });
+          } catch (e) {
+            console.error("Failed to parse local order items", e);
+          }
+        }
+
+        // Apply saved status overrides from localStorage for all orders
+        fetchedOrders = fetchedOrders.map(o => {
+          const overrideStatus = localStorage.getItem(`aroham_order_status_${o.id}`);
+          return overrideStatus ? { ...o, status: overrideStatus } : o;
+        });
+
+        setOrders(fetchedOrders);
+        setLoadingOrders(false);
+      };
+
+      fetchOrders();
     }
-  }, [activeTab]);
+  }, [activeTab, user?.id]);
 
   const handleSaveProfile = async () => {
     if (!user?.id) return;
