@@ -76,7 +76,7 @@ export function CommunityComments({ products = [] }: { products?: ArohamProduct[
       } else {
         scrollRef.current.scrollBy({ left: 350, behavior: "smooth" });
       }
-    }, 2000);
+    }, 4500);
 
     return () => clearInterval(interval);
   }, [isPaused, showForm, allReviews.length]);

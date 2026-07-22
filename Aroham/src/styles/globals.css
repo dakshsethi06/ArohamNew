@@ -1,17 +1,36 @@
-/* Prevent horizontal overflow on mobile */
+/* Smooth scrolling & hardware acceleration for 60fps mobile performance */
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
 html, body, #root {
   overflow-x: hidden;
   width: 100%;
   position: relative;
   -webkit-overflow-scrolling: touch;
+  touch-action: manipulation;
 }
 
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
 
 /* Mobile responsive utilities */
 @media (max-width: 768px) {
   /* Fix iOS auto-zoom on input focus */
   input, select, textarea {
     font-size: 16px !important;
+  }
+  
+  /* Optimize backdrop blur performance on mobile GPU */
+  .backdrop-blur-3xl, .backdrop-blur-2xl, .backdrop-blur-xl {
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
   }
 }
 
@@ -24,14 +43,14 @@ html, body, #root {
   -ms-overflow-style: none;
 }
 
-/* Fast touch response */
+/* Fast touch response without tap delay */
 button, a, input, select, textarea, [role="button"] {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Hardware accelerated modals and drawers without GPU memory bloat */
-[role="dialog"] {
+/* GPU Hardware Acceleration for fixed/sticky headers and modals */
+nav, header, [role="dialog"], .sticky, .fixed-header {
   transform: translateZ(0);
   backface-visibility: hidden;
 }
@@ -39,4 +58,5 @@ button, a, input, select, textarea, [role="button"] {
 /* Hardware accelerated smooth scrolling containers */
 .overflow-x-auto, .overflow-y-auto {
   -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 }
