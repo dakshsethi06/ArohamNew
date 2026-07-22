@@ -91,21 +91,13 @@ export function AuthPage() {
     if (activeTab === "signin") {
       let existingUser: any = null;
 
-      // 1. Check Local Storage
-      const localCached = localStorage.getItem(`aroham_registered_user_phone_${phoneDigits}`);
-      if (localCached) {
-        try { existingUser = JSON.parse(localCached); } catch (e) {}
-      }
+      // 1. Check Supabase DB First
+      try {
+        const { data } = await supabase.from('users').select('*').or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`).maybeSingle();
+        if (data) existingUser = data;
+      } catch (e) {}
 
-      if (!existingUser) {
-        try {
-          const allUsers = JSON.parse(localStorage.getItem("aroham_registered_users") || "[]");
-          const found = allUsers.find((u: any) => u.phone && u.phone.includes(phoneDigits));
-          if (found) existingUser = found;
-        } catch (e) {}
-      }
-
-      // 2. Check Firestore
+      // 2. Check Firestore DB
       if (!existingUser) {
         try {
           const q = query(collection(db, "users"), where("phone", "in", [phoneDigits, `+91${phoneDigits}`, `91${phoneDigits}`]));
@@ -116,15 +108,23 @@ export function AuthPage() {
         } catch (e) {}
       }
 
-      // 3. Check Supabase
+      // 3. Fallback to Local Storage only if DB check fails due to offline
       if (!existingUser) {
-        try {
-          const { data } = await supabase.from('users').select('*').or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`).maybeSingle();
-          if (data) existingUser = data;
-        } catch (e) {}
+        const localCached = localStorage.getItem(`aroham_registered_user_phone_${phoneDigits}`);
+        if (localCached) {
+          try {
+            const parsed = JSON.parse(localCached);
+            // Verify if local user has an actual valid profile
+            if (parsed && (parsed.id || parsed.full_name || parsed.name)) {
+              existingUser = parsed;
+            }
+          } catch (e) {}
+        }
       }
 
       if (!existingUser) {
+        // Clear any leftover stale local storage keys for this phone
+        localStorage.removeItem(`aroham_registered_user_phone_${phoneDigits}`);
         setLoading(false);
         setErrorMsg("Mobile number not registered. Redirecting to Create Account...");
         setTimeout(() => {
