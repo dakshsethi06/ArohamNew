@@ -29,11 +29,17 @@ export function AuthPage() {
   const { login, closeAuth } = useAuth();
   const navigate = useNavigate();
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const handleAuthSuccess = () => {
     closeAuth(true);
-    navigate("/");
+    const redirectTo = searchParams.get("redirect") || searchParams.get("returnUrl");
+    if (redirectTo) {
+      navigate(redirectTo);
+    } else if (window.location.pathname === "/login" || window.location.pathname === "/auth") {
+      navigate("/");
+    }
   };
-  const [searchParams, setSearchParams] = useSearchParams();
 
   const initialTabFromUrl = searchParams.get("tab") || searchParams.get("mode") || sessionStorage.getItem("aroham_auth_tab");
   const initialTab = initialTabFromUrl === "signup" ? "signup" : "signin";
