@@ -133,7 +133,7 @@ export function CommunityComments({ products = [] }: { products?: ArohamProduct[
               <>
                 <h3 className="text-lg font-semibold mb-6" style={{ fontFamily: SERIF, color: MAROON }}>Share Your Experience</h3>
                 <div className="grid md:grid-cols-2 gap-4 mb-4">
-                  <FloatingInput label="Your Name *" value={review.name} onChange={v => setReview(r => ({ ...r, name: v }))} required />
+                  <FloatingInput label="Your Name" value={review.name} onChange={v => setReview(r => ({ ...r, name: v }))} required />
                   <FloatingSelect label="Product Purchased" options={products.length ? products.map(p => p.name) : ["Sacred Product", "Rudraksha", "Yantra", "Crystals"]} value={review.product} onChange={v => setReview(r => ({ ...r, product: v }))} />
                 </div>
                 <div className="mb-4">
