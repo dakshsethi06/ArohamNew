@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { ChevronLeft, User, Package, Truck, CheckCircle, Edit2, Save, X, Calendar, ChevronDown, MapPin, Trash2, Plus } from "lucide-react";
+import { ChevronLeft, User, Package, Truck, CheckCircle, Edit2, Save, X, Calendar, ChevronDown, MapPin, Trash2, Plus, LogOut } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
@@ -565,10 +565,32 @@ export function ProfilePage() {
               </div>
             )}
 
-            <button onClick={handleLogout}
-              className="w-full py-3 rounded-2xl text-sm font-semibold transition-all hover:opacity-90 mt-2"
-              style={{ background: "rgba(91,31,36,0.07)", color: MAROON, border: "1px solid rgba(91,31,36,0.12)" }}>
-              Sign Out
+            <button
+              onClick={handleLogout}
+              className="w-full py-3.5 rounded-2xl text-sm font-bold tracking-wide transition-all duration-300 flex items-center justify-center gap-2 mt-4 group relative overflow-hidden active:scale-95"
+              style={{
+                background: "rgba(91,31,36,0.06)",
+                color: MAROON,
+                border: "1.5px solid rgba(91,31,36,0.18)",
+                cursor: "pointer"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "linear-gradient(135deg, #8B1A24, #B22222)";
+                e.currentTarget.style.color = IVORY;
+                e.currentTarget.style.borderColor = "#DC2626";
+                e.currentTarget.style.boxShadow = "0 0 25px rgba(220, 38, 38, 0.55), 0 4px 18px rgba(139, 26, 36, 0.35)";
+                e.currentTarget.style.transform = "translateY(-1px) scale(1.01)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(91,31,36,0.06)";
+                e.currentTarget.style.color = MAROON;
+                e.currentTarget.style.borderColor = "rgba(91,31,36,0.18)";
+                e.currentTarget.style.boxShadow = "none";
+                e.currentTarget.style.transform = "none";
+              }}
+            >
+              <LogOut size={16} className="transition-transform duration-300 group-hover:-translate-x-1" />
+              <span>Sign Out</span>
             </button>
           </>
         )}
