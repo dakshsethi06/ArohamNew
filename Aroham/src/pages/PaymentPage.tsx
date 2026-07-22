@@ -6,6 +6,7 @@ import { CheckoutProgress } from "@/components/checkout/CheckoutProgress";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 
 declare global {
   interface Window {
@@ -169,13 +170,45 @@ export function PaymentPage() {
               })
             }).catch(() => {});
 
+            const saveOrderData = async (orderId: string | number) => {
+              const orderObj = {
+                id: orderId,
+                user_id: user?.id || null,
+                created_at: new Date().toISOString(),
+                status: "Processing",
+                total_amount: Math.round(total * 100),
+                items: items.map((i: any) => ({
+                  product_name: i.product?.name || "Sacred Item",
+                  quantity: i.qty || 1,
+                  unit_price: Math.round((i.product?.price || 0) * 100)
+                })),
+                shipping_address: shippingAddr || null
+              };
+
+              if (user?.id) {
+                try {
+                  await Promise.resolve(
+                    supabase.from("orders").insert(orderObj)
+                  ).catch(() => {});
+                } catch (e) {}
+              }
+
+              try {
+                const key = user?.id ? `aroham_user_orders_${user.id}` : "aroham_guest_orders";
+                const existingStr = localStorage.getItem(key);
+                const existing = existingStr ? JSON.parse(existingStr) : [];
+                const updated = [orderObj, ...existing.filter((o: any) => String(o.id) !== String(orderId))];
+                localStorage.setItem(key, JSON.stringify(updated));
+              } catch (e) {}
+            };
+
+            await saveOrderData(internalOrderId);
+
             sessionStorage.setItem("aroham_last_order_items", JSON.stringify(items));
             sessionStorage.removeItem("aroham_shipping_addr");
             sessionStorage.setItem("aroham_last_order_id", String(internalOrderId));
             sessionStorage.setItem("aroham_order_total", String(total));
             
-            // Defer clearing the cart slightly to avoid the cart counter jumping to 0 
-            // while the Razorpay success animation/navigation is still happening
             setTimeout(() => {
               clearCart();
             }, 500);

@@ -50,38 +50,51 @@ export function CartProvider({ children }: { children: ReactNode }) {
     toastTimer.current = setTimeout(() => setToast(null), 2200);
   };
   const [showCart, setShowCart] = useState(false);
-  const { isLoggedIn, cartSynced } = useAuth();
+  const { isLoggedIn, user } = useAuth();
 
   // Track previous login state to detect logout
   const prevIsLoggedIn = useRef<boolean | null>(null);
   const isLoggingOut = useRef(false);
 
-  // Load from LocalStorage or Backend
+  // Load from LocalStorage or User Cart
   useEffect(() => {
     const justLoggedOut = prevIsLoggedIn.current === true && !isLoggedIn;
     if (justLoggedOut) isLoggingOut.current = true;
     prevIsLoggedIn.current = isLoggedIn;
 
     if (justLoggedOut) {
-      // User just logged out — clear cart and localStorage
+      // User just logged out — clear current view
       setItems([]);
       localStorage.removeItem("aroham_cart");
       localStorage.removeItem("aroham_buy_now_intent");
       setTimeout(() => { isLoggingOut.current = false; }, 100);
+    } else if (user?.id) {
+      // User logged in — restore saved account cart!
+      const userCart = localStorage.getItem(`aroham_user_cart_${user.id}`);
+      if (userCart) {
+        try { setItems(JSON.parse(userCart)); } catch (e) {}
+      } else {
+        const local = localStorage.getItem("aroham_cart");
+        if (local) {
+          try { setItems(JSON.parse(local)); } catch (e) {}
+        }
+      }
     } else {
-      // Load from localStorage for all users (guests and logged in)
       const local = localStorage.getItem("aroham_cart");
       if (local) {
-        try { setItems(JSON.parse(local)); } catch (e) { }
+        try { setItems(JSON.parse(local)); } catch (e) {}
       }
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, user?.id]);
 
   useEffect(() => {
     if (!isLoggingOut.current) {
       localStorage.setItem("aroham_cart", JSON.stringify(items));
+      if (user?.id) {
+        localStorage.setItem(`aroham_user_cart_${user.id}`, JSON.stringify(items));
+      }
     }
-  }, [items]);
+  }, [items, user?.id]);
 
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(() => {
     try {

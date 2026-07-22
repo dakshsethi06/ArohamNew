@@ -272,6 +272,20 @@ export function ProfilePage() {
           }
         }
 
+        // Fetch from user-specific local storage
+        const userOrdersKey = user?.id ? `aroham_user_orders_${user.id}` : "aroham_guest_orders";
+        const localUserOrdersStr = localStorage.getItem(userOrdersKey);
+        if (localUserOrdersStr) {
+          try {
+            const parsedLocal = JSON.parse(localUserOrdersStr);
+            parsedLocal.forEach((lo: any) => {
+              if (!fetchedOrders.some(o => String(o.id) === String(lo.id))) {
+                fetchedOrders.push(lo);
+              }
+            });
+          } catch (e) {}
+        }
+
         const localOrderId = sessionStorage.getItem("aroham_last_order_id");
         const localItemsStr = sessionStorage.getItem("aroham_last_order_items");
         const localTotalStr = sessionStorage.getItem("aroham_order_total");
