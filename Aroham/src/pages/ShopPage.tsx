@@ -273,25 +273,25 @@ export function ShopPage() {
                 <button onClick={clearAll} className="mt-4 px-6 py-2.5 rounded-full text-sm font-medium" style={{ background: MAROON, color: IVORY }}>Clear Filters</button>
               </div>
             ) : (
-              <div className="flex flex-col sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 items-stretch">
+              <div className="flex flex-col sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 items-stretch">
                 {filtered.map(p => {
                   const discountPct = Math.round((1 - p.price / p.original) * 100);
                   return (
                     <div key={p.id} onClick={() => navigate(`/shop/${p.slug}`)}
                       className="group rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 sm:hover:-translate-y-2 flex flex-row sm:flex-col justify-between bg-white"
-                      style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(91,31,36,0.06)", border: "1px solid rgba(91,31,36,0.08)" }}
+                      style={{ background: "#FFFFFF", boxShadow: "0 2px 16px rgba(91,31,36,0.06)", border: "1px solid rgba(91,31,36,0.08)" }}
                       onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.boxShadow = "0 16px 40px rgba(91,31,36,0.14)"}
-                      onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.boxShadow = "0 2px 20px rgba(91,31,36,0.06)"}>
+                      onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.boxShadow = "0 2px 16px rgba(91,31,36,0.06)"}>
                       
                       {/* Product Image Box */}
-                      <div className="relative overflow-hidden w-32 sm:w-full self-stretch bg-amber-50 flex-shrink-0 min-h-[140px] sm:min-h-0">
+                      <div className="relative overflow-hidden w-28 sm:w-full self-stretch bg-amber-50 flex-shrink-0">
                         <img src={p.img} alt={`${p.name} - ${p.subtitle}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                        <div className="absolute top-2 left-2 flex flex-col gap-1">
+                        <div className="absolute top-1.5 left-1.5 flex flex-col gap-1">
                           {p.price > 1000 && p.badges.slice(0, 1).map(b => <span key={b} className="px-1.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-bold" style={{ background: "rgba(91,31,36,0.88)", color: GOLD }}>{b}</span>)}
                         </div>
                         <button aria-label="Add to wishlist" onClick={e => { e.stopPropagation(); toggleWishlist(p); }}
-                          className="absolute top-2 right-2 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-sm" style={{ background: "rgba(255,255,255,0.9)" }}>
-                          <Heart size={13} style={{ color: isInWishlist(p.id) ? "#E74C3C" : "#7A6A58", fill: isInWishlist(p.id) ? "#E74C3C" : "none" }} />
+                          className="absolute top-1.5 right-1.5 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-sm" style={{ background: "rgba(255,255,255,0.9)" }}>
+                          <Heart size={12} style={{ color: isInWishlist(p.id) ? "#E74C3C" : "#7A6A58", fill: isInWishlist(p.id) ? "#E74C3C" : "none" }} />
                         </button>
                         <div className="hidden sm:flex absolute inset-x-0 bottom-0 py-3 items-center justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-300"
                           style={{ background: "rgba(91,31,36,0.9)" }}>
@@ -300,19 +300,19 @@ export function ShopPage() {
                       </div>
 
                       {/* Details Box */}
-                      <div className="p-3 sm:p-4 flex-1 flex flex-col justify-between min-w-0 gap-1.5">
+                      <div className="p-2.5 sm:p-4 flex-1 flex flex-col justify-between min-w-0 gap-1">
                         <div>
-                          <h3 className="text-xs sm:text-sm font-bold sm:font-semibold mb-0.5 leading-snug line-clamp-2" style={{ fontFamily: SERIF, color: MAROON }}>{p.name}</h3>
+                          <h3 className="text-xs sm:text-sm font-bold sm:font-semibold mb-0.5 leading-tight line-clamp-2" style={{ fontFamily: SERIF, color: MAROON }}>{p.name}</h3>
                           <p className="text-[10px] sm:text-xs mb-1 truncate" style={{ color: "#7A6A58" }}>{p.subtitle}</p>
                           <div className="flex items-center gap-1 mb-1">
-                            {Array.from({ length: 5 }).map((_, j) => <Star key={j} size={10} fill={j < Math.round(p.rating) ? GOLD : "none"} stroke={GOLD} strokeWidth={1.5} />)}
-                            <span className="text-[10px] ml-1 font-bold" style={{ color: MAROON }}>{p.rating}</span>
-                            <span className="text-[10px]" style={{ color: "#9A8A78" }}>({p.reviews})</span>
+                            {Array.from({ length: 5 }).map((_, j) => <Star key={j} size={9} fill={j < Math.round(p.rating) ? GOLD : "none"} stroke={GOLD} strokeWidth={1.5} />)}
+                            <span className="text-[9px] sm:text-[10px] ml-0.5 font-bold" style={{ color: MAROON }}>{p.rating}</span>
+                            <span className="text-[9px] sm:text-[10px]" style={{ color: "#9A8A78" }}>({p.reviews})</span>
                           </div>
                         </div>
 
                         {/* Price & Add to Cart button */}
-                        <div className="pt-1.5 sm:pt-0 flex items-end justify-between gap-1.5 border-t sm:border-t-0 border-black/[0.05]">
+                        <div className="pt-1 sm:pt-0 flex items-end justify-between gap-1 border-t sm:border-t-0 border-black/[0.05]">
                           <div className="flex flex-col min-w-0">
                             <div className="flex items-baseline gap-1 flex-wrap">
                               <span className="text-xs sm:text-base font-bold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{p.price.toLocaleString("en-IN")}</span>
@@ -344,7 +344,7 @@ export function ShopPage() {
                                 slug: p.slug
                               });
                             }}
-                            className="flex-shrink-0 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-[9px] sm:text-xs font-bold tracking-wide transition-all hover:opacity-90 active:scale-95 flex items-center justify-center shadow-sm uppercase whitespace-nowrap"
+                            className="flex-shrink-0 px-2.5 py-1.5 rounded-xl text-[9px] sm:text-xs font-bold tracking-wide transition-all hover:opacity-90 active:scale-95 flex items-center justify-center shadow-sm uppercase whitespace-nowrap"
                             style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}
                           >
                             <span>ADD TO CART</span>
