@@ -101,26 +101,50 @@ export function AuthPage() {
     if (activeTab === "signin") {
       let existingUser: any = null;
 
+      // 1. Check Supabase DB
       try {
-        const { data } = await Promise.race([
-          supabase.from('users').select('*').or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`).maybeSingle(),
-          new Promise<any>(res => setTimeout(() => res({ data: null }), 1000))
-        ]);
+        const { data } = await supabase
+          .from('users')
+          .select('*')
+          .or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits},phone.ilike.%${phoneDigits}%`)
+          .maybeSingle();
         if (data && (data.phone || data.id)) {
           existingUser = data;
         }
       } catch (e) {}
 
+      // 2. Check Firestore DB fallback
       if (!existingUser) {
-        // Unregistered number entered on Sign In -> Redirect to Create Account
-        localStorage.removeItem(`aroham_registered_user_phone_${phoneDigits}`);
+        try {
+          const q = query(collection(db, "users"), where("phone", "in", [phoneDigits, `+91${phoneDigits}`, `91${phoneDigits}`]));
+          const snapshot = await getDocs(q);
+          if (!snapshot.empty) {
+            existingUser = snapshot.docs[0].data();
+          }
+        } catch (e) {}
+      }
+
+      // 3. Check Local Storage fallback
+      if (!existingUser) {
+        const localCached = localStorage.getItem(`aroham_registered_user_phone_${phoneDigits}`);
+        if (localCached) {
+          try {
+            const parsed = JSON.parse(localCached);
+            if (parsed && (parsed.id || parsed.fullName || parsed.name || parsed.phone)) {
+              existingUser = parsed;
+            }
+          } catch (e) {}
+        }
+      }
+
+      if (!existingUser) {
         setLoading(false);
         setErrorMsg("Mobile number not registered. Redirecting to Create Account...");
         setTimeout(() => {
           setActiveTab("signup");
           setAuthState("signup");
           setErrorMsg("Mobile number not registered. Please create an account.");
-        }, 1000);
+        }, 1200);
         return;
       }
     }
