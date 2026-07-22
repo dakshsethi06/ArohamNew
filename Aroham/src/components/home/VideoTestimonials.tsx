@@ -163,9 +163,9 @@ export function VideoTestimonials() {
               <div key={i} onClick={() => scrollTo(i % n)}
                 className="flex-shrink-0 relative cursor-pointer transition-all duration-500"
                 style={{ width: isMobile ? mobileWidth : desktopWidth, height: isMobile ? mobileHeight : desktopHeight, borderRadius: 24, overflow: "hidden", scrollSnapAlign: "center",
-                  transform: `perspective(1000px) rotateY(${rotY}deg) scale(${sc})`, opacity: op,
+                  transform: isMobile ? `scale(${sc})` : `perspective(1000px) rotateY(${rotY}deg) scale(${sc})`, opacity: op,
                   border: isActive ? `2px solid ${GOLD}` : "2px solid transparent",
-                  transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)",
+                  transition: "transform 0.3s ease, opacity 0.3s ease",
                   boxShadow: isActive ? `0 0 0 1px rgba(200,160,68,0.2), 0 24px 60px rgba(0,0,0,0.6)` : "none" }}>
                 <img src={v.thumb} alt={v.name} className="absolute inset-0 w-full h-full object-cover" />
                 <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom,rgba(0,0,0,0.1) 0%,transparent 30%,transparent 40%,rgba(0,0,0,0.85) 100%)" }} />

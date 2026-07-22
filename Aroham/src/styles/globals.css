@@ -24,14 +24,19 @@ html, body, #root {
   -ms-overflow-style: none;
 }
 
-/* GPU Hardware Acceleration & Smooth Tab Transitions */
-button, a, input, [role="button"] {
+/* Fast touch response */
+button, a, input, select, textarea, [role="button"] {
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* Enable hardware acceleration on drawer dialogs & modals */
-[role="dialog"], .backdrop-blur-sm, [class*="transition-"] {
-  will-change: transform, opacity;
+/* Hardware accelerated modals and drawers without GPU memory bloat */
+[role="dialog"] {
   transform: translateZ(0);
   backface-visibility: hidden;
+}
+
+/* Hardware accelerated smooth scrolling containers */
+.overflow-x-auto, .overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
 }
