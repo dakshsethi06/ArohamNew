@@ -796,7 +796,7 @@ export function AuthPage() {
         </div>
 
         {/* Right Form Container */}
-        <div className="w-full lg:w-1/2 relative flex flex-col justify-center px-6 sm:px-12 md:px-16 py-8 overflow-y-auto">
+        <div className="w-full lg:w-1/2 relative flex flex-col justify-center px-4 sm:px-12 md:px-16 py-4 sm:py-8 overflow-y-auto">
           {/* Ambient floating gradient orbs */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             <div className="absolute rounded-full" style={{ width: 360, height: 360, top: -100, right: -70, background: "radial-gradient(circle, rgba(200,160,68,0.28), transparent 70%)", filter: "blur(24px)", animation: "aroham-float 15s ease-in-out infinite" }} />
@@ -807,7 +807,7 @@ export function AuthPage() {
           <div className="relative max-w-md mx-auto w-full">
             {/* Glassmorphism form card */}
             <div
-              className="rounded-[28px] p-7 sm:p-9"
+              className="rounded-3xl sm:rounded-[28px] p-5 sm:p-9"
               style={{
                 background: "rgba(255,255,255,0.62)",
                 backdropFilter: "blur(22px) saturate(140%)",

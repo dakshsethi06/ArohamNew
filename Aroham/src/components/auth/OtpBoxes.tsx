@@ -19,11 +19,11 @@ export function OtpBoxes({ value, onChange, onComplete }: { value:string[]; onCh
     if(i<5)refs[i+1].current?.focus();if(i===5)onComplete?.(n.join(""));
   };
   return(
-    <div className="flex gap-2.5 justify-center">
+    <div className="flex gap-1.5 sm:gap-2.5 justify-center w-full my-2">
       {Array.from({length:6}).map((_,i)=>(
         <input key={i} ref={refs[i]} type="text" inputMode="numeric" maxLength={6}
           value={value[i]||""} onKeyDown={e=>handleKey(i,e)} onChange={e=>handleChange(i,e.target.value)}
-          className="w-11 h-14 text-center text-xl font-bold rounded-2xl outline-none transition-all duration-200"
+          className="w-9 sm:w-11 h-12 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl sm:rounded-2xl outline-none transition-all duration-200"
           style={{ border:`2px solid ${value[i]?GOLD:"rgba(91,31,36,0.15)"}`,
             background:value[i]?"rgba(200,160,68,0.06)":"#FFFFFF", color:MAROON,
             fontFamily:SERIF, boxShadow:value[i]?`0 0 0 3px rgba(200,160,68,0.1)`:"none" }}
