@@ -38,7 +38,7 @@ export function ShippingPage() {
   const [selectedAddr, setSelectedAddr] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(true);
   const [editingAddrId, setEditingAddrId] = useState<string | number | null>(null);
-  const [form, setForm] = useState({ firstName: "", lastName: "", phone: "", email: "", pin: "", house: "", street: "", landmark: "", city: "", state: "", addressType: "Home", saveAddress: true, sameBilling: true, specialRequest: "" });
+  const [form, setForm] = useState({ firstName: "", lastName: "", phone: "", email: "", pin: "", house: "", street: "", landmark: "", city: "", state: "", addressType: "Home", isDefault: false, saveAddress: true, sameBilling: true, specialRequest: "" });
   const [savingAddress, setSavingAddress] = useState(false);
   const [estimates, setEstimates] = useState<Record<string, ShippingEstimate>>({});
   const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({});
@@ -577,6 +577,40 @@ export function ShippingPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div style={{ border: fieldBorder("city"), borderRadius: 16 }}><FloatingInput label="City" value={form.city} onChange={set("city") as (v: string) => void} required /></div>
                     <FloatingSelect label="State" options={INDIA_STATES} value={form.state} onChange={set("state") as (v: string) => void} />
+                  </div>
+
+                  {/* Address Type Selector & Default option */}
+                  <div className="space-y-3 pt-2">
+                    <div>
+                      <label className="block text-xs font-semibold mb-2" style={{ color: "#7A6A58" }}>Save Address As</label>
+                      <div className="flex gap-2">
+                        {["Home", "Office", "Other"].map(type => (
+                          <button
+                            key={type}
+                            type="button"
+                            onClick={() => set("addressType")(type)}
+                            className="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+                            style={{
+                              background: form.addressType === type ? MAROON : "#FAF7F2",
+                              color: form.addressType === type ? IVORY : MAROON,
+                              border: `1.5px solid ${form.addressType === type ? MAROON : "rgba(91,31,36,0.15)"}`
+                            }}
+                          >
+                            {type === "Home" ? "🏠 Home" : type === "Office" ? "🏢 Office" : "📍 Other"}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <label className="flex items-center gap-2 cursor-pointer pt-1">
+                      <input
+                        type="checkbox"
+                        checked={form.isDefault || false}
+                        onChange={e => set("isDefault")(e.target.checked)}
+                        className="w-4 h-4 rounded text-amber-700 focus:ring-amber-500 cursor-pointer"
+                      />
+                      <span className="text-xs font-semibold" style={{ color: MAROON }}>Make this my default delivery address</span>
+                    </label>
                   </div>
                   {form.pin.length === 6 && estimates[form.pin] && (
                     <div className="p-3.5 rounded-2xl flex items-center gap-2.5 my-2" style={{ background: "rgba(74,138,74,0.08)", border: "1px solid rgba(74,138,74,0.2)" }}>

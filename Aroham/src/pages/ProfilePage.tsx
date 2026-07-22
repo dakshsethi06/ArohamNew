@@ -588,6 +588,30 @@ export function ProfilePage() {
                       className="w-full px-4 py-2.5 rounded-xl text-sm outline-none border border-black/15 bg-[#FAF7F2]" />
                   </div>
                 </div>
+
+                {/* Address Type Selector */}
+                <div className="space-y-3 pt-1">
+                  <div>
+                    <label className="block text-xs font-semibold mb-2 text-gray-600">Save Address As</label>
+                    <div className="flex gap-2">
+                      {["Home", "Office", "Other"].map(type => (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => setAddrForm(p => ({ ...p, addressType: type }))}
+                          className="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+                          style={{
+                            background: addrForm.addressType === type ? MAROON : "#FAF7F2",
+                            color: addrForm.addressType === type ? IVORY : MAROON,
+                            border: `1.5px solid ${addrForm.addressType === type ? MAROON : "rgba(91,31,36,0.15)"}`
+                          }}
+                        >
+                          {type === "Home" ? "🏠 Home" : type === "Office" ? "🏢 Office" : "📍 Other"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
                 <div className="flex gap-2 pt-2">
                   <button onClick={() => setShowAddrForm(false)} className="flex-1 py-3 rounded-xl text-xs font-semibold bg-black/5" style={{ color: MAROON }}>Cancel</button>
                   <button onClick={handleSaveProfileAddress} className="flex-1 py-3 rounded-xl text-xs font-semibold text-white flex items-center justify-center gap-1.5" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)` }}>
