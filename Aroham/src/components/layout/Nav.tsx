@@ -169,9 +169,8 @@ export function Nav() {
             {navLinks.map(([l, fn]) => (
               <button key={l} onClick={() => { fn(); setOpen(false); }} className="py-2 text-sm font-medium border-b text-left" style={{ color: MAROON, borderColor: "rgba(91,31,36,0.08)" }}>{l}</button>
             ))}
-            <button onClick={() => { navigate("/shop"); setOpen(false); }} className="py-2 text-sm font-medium border-b text-left flex items-center justify-between" style={{ color: MAROON, borderColor: "rgba(91,31,36,0.08)" }}>
+            <button onClick={() => { navigate("/wishlist"); setOpen(false); }} className="py-2 text-sm font-medium border-b text-left flex items-center justify-between" style={{ color: MAROON, borderColor: "rgba(91,31,36,0.08)" }}>
               <span>Wishlist</span>
-              <Heart size={16} />
             </button>
             {isLoggedIn ? (
               <button onClick={() => { navigate("/profile"); setOpen(false); }} className="mt-2 py-3 rounded-full text-sm font-medium flex items-center justify-center gap-2" style={{ background: MAROON, color: IVORY }}><User size={15} />My Profile</button>
