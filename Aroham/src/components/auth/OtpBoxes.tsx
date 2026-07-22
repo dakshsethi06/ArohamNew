@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { GOLD, MAROON, SERIF } from "@/constants/theme";
 
-export function OtpBoxes({ value, onChange, onComplete }: { value:string[]; onChange:(v:string[])=>void; onComplete?:()=>void; }) {
+export function OtpBoxes({ value, onChange, onComplete }: { value:string[]; onChange:(v:string[])=>void; onComplete?:(fullCode:string)=>void; }) {
   const r0=useRef<HTMLInputElement>(null),r1=useRef<HTMLInputElement>(null),
         r2=useRef<HTMLInputElement>(null),r3=useRef<HTMLInputElement>(null),
         r4=useRef<HTMLInputElement>(null),r5=useRef<HTMLInputElement>(null);
@@ -14,9 +14,9 @@ export function OtpBoxes({ value, onChange, onComplete }: { value:string[]; onCh
     const d=raw.replace(/\D/g,"");if(!d)return;
     if(d.length>1){const arr=d.slice(0,6).split("");const n=[...value];
       arr.forEach((x,idx)=>{if(idx<6)n[idx]=x;});onChange(n);
-      refs[Math.min(arr.length,5)].current?.focus();if(arr.length>=6)onComplete?.();return;}
+      refs[Math.min(arr.length,5)].current?.focus();if(arr.length>=6)onComplete?.(n.join(""));return;}
     const n=[...value];n[i]=d;onChange(n);
-    if(i<5)refs[i+1].current?.focus();if(i===5)onComplete?.();
+    if(i<5)refs[i+1].current?.focus();if(i===5)onComplete?.(n.join(""));
   };
   return(
     <div className="flex gap-2.5 justify-center">

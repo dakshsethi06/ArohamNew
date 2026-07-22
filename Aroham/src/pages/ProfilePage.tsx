@@ -45,7 +45,7 @@ export function ProfilePage() {
     fullName: "",
     email: "",
     phone: "",
-    gender: "Other",
+    gender: "",
     dob: "",
     pobCity: ""
   });
@@ -87,7 +87,7 @@ export function ProfilePage() {
       fullName: p?.full_name || p?.fullName || user?.user_metadata?.full_name || "",
       email: p?.email || user?.email || "",
       phone: p?.phone || user?.user_metadata?.phone || "",
-      gender: p?.gender || "Other",
+      gender: p?.gender || "",
       dob: p?.dob ? new Date(p.dob).toISOString().split("T")[0] : "",
       pobCity: p?.pob_city || p?.pobCity || ""
     });
@@ -178,7 +178,7 @@ export function ProfilePage() {
   return (
     <div className="min-h-screen pt-20 lg:pt-28 pb-16 px-4 sm:px-6" style={{ background: "#FAF7F2" }}>
       <div className="max-w-2xl mx-auto">
-        <button onClick={() => navigate(-1)} className="flex items-center gap-2 mb-6 text-sm font-medium hover:opacity-70 transition-opacity" style={{ color: MAROON }}>
+        <button onClick={() => navigate("/")} className="flex items-center gap-2 mb-6 text-sm font-medium hover:opacity-70 transition-opacity" style={{ color: MAROON }}>
           <ChevronLeft size={16} /> Back
         </button>
 
@@ -260,7 +260,7 @@ export function ProfilePage() {
                       <Select.Trigger asChild>
                         <button className="w-full px-3 py-2.5 rounded-xl text-sm text-left flex items-center justify-between transition-all focus:ring-2 focus:ring-offset-1"
                           style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON, fontFamily: SANS, outline: "none" }}>
-                          <Select.Value />
+                          <Select.Value placeholder="Select gender" />
                           <ChevronDown size={14} style={{ color: GOLD }} />
                         </button>
                       </Select.Trigger>
@@ -407,17 +407,23 @@ export function ProfilePage() {
                         ))}
                       </div>
 
-                      {/* Cancel Button */}
-                      {stepIdx <= 1 && (
-                        <div className="pt-2 flex justify-end">
+                      {/* Action Buttons */}
+                      <div className="pt-4 flex justify-between items-center mt-2">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); window.open(`https://shiprocket.co/tracking/${order.id}`, "_blank"); }}
+                          className="text-xs font-semibold px-5 py-2 rounded-full transition-colors border"
+                          style={{ borderColor: "rgba(200,160,68,0.5)", color: MAROON, background: "rgba(200,160,68,0.05)" }}>
+                          Track Order
+                        </button>
+                        {stepIdx <= 1 && (
                           <button 
                             onClick={(e) => { e.stopPropagation(); alert("Order cancellation requested. Support will contact you shortly."); }}
-                            className="text-[10px] font-semibold px-4 py-1.5 rounded-full transition-colors border"
+                            className="text-xs font-semibold px-5 py-2 rounded-full transition-colors border"
                             style={{ borderColor: "rgba(220,38,38,0.3)", color: "#DC2626", background: "rgba(220,38,38,0.05)" }}>
                             Cancel Order
                           </button>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>

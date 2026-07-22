@@ -6,10 +6,6 @@ html, body, #root {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
-}
 
 /* Mobile responsive utilities */
 @media (max-width: 768px) {

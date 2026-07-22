@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router";
 import { X, Star, CheckCircle, Shield, ArrowRight, User as UserIcon, Calendar, ChevronDown, Sparkles, Lock, Verified } from "lucide-react";
 import { MAROON, GOLD, SAFFRON, IVORY, SANS, SERIF } from "@/constants/theme";
 import { AuthInput } from "./AuthInput";
@@ -26,7 +26,7 @@ const LEFT_PANELS = {
 };
 
 export function AuthPage() {
-  const { closeAuth } = useAuth();
+  const { login, closeAuth } = useAuth();
   const navigate = useNavigate();
 
   const handleAuthSuccess = () => {
@@ -149,8 +149,8 @@ export function AuthPage() {
   };
 
   // Verify OTP handler
-  const handleVerifyOtp = async () => {
-    const joinedOtp = otp.join("");
+  const handleVerifyOtp = async (autoFilledCode?: any) => {
+    const joinedOtp = typeof autoFilledCode === 'string' ? autoFilledCode : otp.join("");
     if (joinedOtp.length < 6) {
       setErrorMsg("Please enter the full 6-digit OTP code.");
       return;
@@ -168,6 +168,7 @@ export function AuthPage() {
       const phoneDigits = phone.replace(/\D/g, "");
 
       try {
+        /* FIREBASE CODE (Temporarily disabled)
         const q = query(collection(db, "users"), where("phone", "==", phoneDigits));
         const snapshot = await getDocs(q);
         
@@ -179,6 +180,22 @@ export function AuthPage() {
             id: userDoc.id,
             email: data.email,
             user_metadata: { full_name: data.fullName || data.full_name, phone: data.phone }
+          });
+          handleAuthSuccess();
+        } else {
+          setLoading(false);
+          goTo("profile-setup");
+        }
+        */
+
+        const { data, error } = await supabase.from('users').select('*').eq('phone', phoneDigits).maybeSingle();
+        
+        if (data && !error) {
+          setLoading(false);
+          login({
+            id: data.id,
+            email: data.email,
+            user_metadata: { full_name: data.full_name || data.fullName, phone: data.phone }
           });
           handleAuthSuccess();
         } else {
@@ -210,12 +227,29 @@ export function AuthPage() {
       const newUserId = crypto.randomUUID();
       const phoneDigits = phone.replace(/\D/g, "");
 
+      /* FIREBASE CODE (Temporarily disabled)
       await setDoc(doc(db, "users", newUserId), {
         fullName: name.trim(),
         email: email.trim() || null,
         phone: phoneDigits,
         createdAt: serverTimestamp()
       }, { merge: true });
+      */
+
+      const { error } = await supabase.from('users').upsert({
+        id: newUserId,
+        full_name: name.trim(),
+        email: email.trim() || null,
+        phone: phoneDigits,
+        gender: null,
+        dob: null,
+        created_at: new Date().toISOString()
+      });
+
+      // Ignore RLS errors since we are mocking auth without a real Supabase session
+      if (error && !error.message?.includes("row-level security")) {
+        throw error;
+      }
 
       setLoading(false);
       login({
@@ -278,9 +312,9 @@ export function AuthPage() {
         </div>
         <span className="flex-1 leading-relaxed">
           I agree to the{" "}
-          <span className="font-semibold underline decoration-dotted" style={{ color: MAROON }}>Terms of Service</span>
+          <Link to="/terms" onClick={e => e.stopPropagation()} className="font-semibold underline decoration-dotted" style={{ color: MAROON }}>Terms of Service</Link>
           {" "}and{" "}
-          <span className="font-semibold underline decoration-dotted" style={{ color: MAROON }}>Privacy Policy</span>
+          <Link to="/privacy" onClick={e => e.stopPropagation()} className="font-semibold underline decoration-dotted" style={{ color: MAROON }}>Privacy Policy</Link>
         </span>
       </button>
 

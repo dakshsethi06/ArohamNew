@@ -1,4 +1,5 @@
 import { Instagram, Twitter, Facebook, Youtube } from "lucide-react";
+import { Link } from "react-router";
 import { MAROON, GOLD, SAFFRON, IVORY, SANS, SERIF } from "@/constants/theme";
 
 const SOCIAL_LINKS = [
@@ -35,20 +36,20 @@ export function Footer() {
           </div>
           {[
             { title: "Products", links: [{ label: "Yantras", href: "/shop" }, { label: "Pendants", href: "/shop" }, { label: "Crystals", href: "/shop" }, { label: "Rudraksha", href: "/shop" }, { label: "Combo Kits", href: "/shop" }] },
-            { title: "Support",  links: [{ label: "FAQ", href: "#" }, { label: "Shipping Policy", href: "#" }, { label: "Return Policy", href: "#" }, { label: "Track Order", href: "/profile?tab=orders" }, { label: "Contact Us", href: "mailto:priyanshubansal720@gmail.com" }] },
+            { title: "Support",  links: [{ label: "FAQ", href: "/faq" }, { label: "Shipping Policy", href: "/shipping" }, { label: "Return Policy", href: "/returns" }, { label: "Track Order", href: "/track" }, { label: "Contact Us", href: "/contact" }] },
             { title: "Company",  links: [{ label: "About Us", href: "#" }, { label: "Our Story", href: "#" }, { label: "Careers", href: "#" }, { label: "Press", href: "#" }, { label: "Blog", href: "#" }] },
           ].map(col => (
             <div key={col.title}>
               <h4 className="text-xs tracking-[0.15em] uppercase font-semibold mb-3 lg:mb-5" style={{ color: GOLD }}>{col.title}</h4>
-              <ul className="space-y-2 lg:space-y-3">{col.links.map(l => <li key={l.label}><a href={l.href} className="text-sm hover:text-white transition-colors" style={{ color: "rgba(250,247,242,0.5)" }}>{l.label}</a></li>)}</ul>
+              <ul className="space-y-2 lg:space-y-3">{col.links.map(l => <li key={l.label}><Link to={l.href} className="text-sm hover:text-white transition-colors" style={{ color: "rgba(250,247,242,0.5)" }}>{l.label}</Link></li>)}</ul>
             </div>
           ))}
         </div>
         <div id="site-footer" className="pt-6 lg:pt-8 flex flex-col md:flex-row items-center justify-between gap-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
           <p className="text-xs" style={{ color: "rgba(250,247,242,0.3)" }}>© 2025 Aroham. All rights reserved. Made with reverence in India.</p>
           <div className="flex gap-6 text-xs" style={{ color: "rgba(250,247,242,0.3)" }}>
-            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+            <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
           </div>
         </div>
       </div>

@@ -384,8 +384,8 @@ export function ShippingPage() {
       <div className="pt-3 pb-5 lg:pt-2 lg:pb-4 relative overflow-hidden" style={{ background: "linear-gradient(135deg,#F5EDE0,#FAF7F2,#F0E8D8)" }}>
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `repeating-linear-gradient(0deg,${MAROON} 0,${MAROON} 1px,transparent 1px,transparent 48px),repeating-linear-gradient(90deg,${MAROON} 0,${MAROON} 1px,transparent 1px,transparent 48px)` }} />
         <div className="relative max-w-7xl mx-auto px-5 lg:px-10">
-          <button onClick={() => { navigate("/"); openCart(); }} className="flex items-center gap-2 mb-4 lg:mb-3 px-4 py-2 rounded-full text-sm font-medium transition-all hover:shadow-md active:scale-95" style={{ background: "#FFFFFF", color: MAROON, border: `1px solid rgba(91,31,36,0.15)`, boxShadow: "0 2px 8px rgba(91,31,36,0.08)" }}>
-            <ChevronLeft size={16} /> Back to Cart
+          <button onClick={() => navigate("/")} className="flex items-center gap-2 mb-4 lg:mb-3 px-4 py-2 rounded-full text-sm font-medium transition-all hover:shadow-md active:scale-95" style={{ background: "#FFFFFF", color: MAROON, border: `1px solid rgba(91,31,36,0.15)`, boxShadow: "0 2px 8px rgba(91,31,36,0.08)" }}>
+            <ChevronLeft size={16} /> Back to Home
           </button>
           <div className="flex items-center gap-2 mb-3 lg:mb-2 text-xs" style={{ color: "#9A8A78" }}>
             <span style={{ color: MAROON }}>Cart</span><ChevronRight size={12} /><span className="font-medium" style={{ color: MAROON }}>Delivery Details</span><ChevronRight size={12} /><span>Payment</span>
@@ -466,22 +466,22 @@ export function ShippingPage() {
                 </div>
                 <div className="p-6 space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div style={{ border: fieldBorder("firstName"), borderRadius: 16 }}><FloatingInput label="First Name *" value={form.firstName} onChange={set("firstName") as (v: string) => void} required /></div>
+                    <div style={{ border: fieldBorder("firstName"), borderRadius: 16 }}><FloatingInput label="First Name" value={form.firstName} onChange={set("firstName") as (v: string) => void} required /></div>
                     <FloatingInput label="Last Name" value={form.lastName} onChange={set("lastName") as (v: string) => void} />
                   </div>
                   <div style={{ border: fieldBorder("phone"), borderRadius: 16 }}>
-                    <FloatingInput label="Mobile Phone Number *" type="tel" value={form.phone} onChange={v => set("phone")(v.replace(/\D/g, "").slice(0, 10))} required />
+                    <FloatingInput label="Mobile Phone Number" type="tel" value={form.phone} onChange={v => set("phone")(v.replace(/\D/g, "").slice(0, 10))} required />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div style={{ border: fieldBorder("pin"), borderRadius: 16 }}><FloatingInput label="PIN Code *" value={form.pin} onChange={handlePinChange} required /></div>
-                    <div style={{ border: fieldBorder("house"), borderRadius: 16 }}><FloatingInput label="House / Flat No. *" value={form.house} onChange={set("house") as (v: string) => void} required /></div>
+                    <div style={{ border: fieldBorder("pin"), borderRadius: 16 }}><FloatingInput label="PIN Code" value={form.pin} onChange={handlePinChange} required /></div>
+                    <div style={{ border: fieldBorder("house"), borderRadius: 16 }}><FloatingInput label="House / Flat No." value={form.house} onChange={set("house") as (v: string) => void} required /></div>
                   </div>
                   <div style={{ border: fieldBorder("street"), borderRadius: 16 }}>
-                    <FloatingInput label="Street Address *" value={form.street} onChange={set("street") as (v: string) => void} required />
+                    <FloatingInput label="Street Address" value={form.street} onChange={set("street") as (v: string) => void} required />
                   </div>
                   <FloatingInput label="Landmark (Optional)" value={form.landmark} onChange={set("landmark") as (v: string) => void} />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div style={{ border: fieldBorder("city"), borderRadius: 16 }}><FloatingInput label="City *" value={form.city} onChange={set("city") as (v: string) => void} required /></div>
+                    <div style={{ border: fieldBorder("city"), borderRadius: 16 }}><FloatingInput label="City" value={form.city} onChange={set("city") as (v: string) => void} required /></div>
                     <FloatingSelect label="State" options={INDIA_STATES} value={form.state} onChange={set("state") as (v: string) => void} />
                   </div>
                   {form.pin.length === 6 && estimates[form.pin] && (

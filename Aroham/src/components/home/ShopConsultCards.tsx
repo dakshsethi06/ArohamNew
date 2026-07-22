@@ -53,8 +53,8 @@ export function ShopConsultCards({ products, onShop, onProductClick }: { product
           </div>
         </div>
         {/* Consult / carousel card */}
-        <div className="rounded-3xl overflow-hidden" onClick={e => e.stopPropagation()} style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 4px 30px rgba(91,31,36,0.06)", minHeight: 280 }}>
-          <div className="p-6 pb-10 flex flex-col h-full relative" style={{ background: `linear-gradient(135deg,#0D0508,#1A0D10)` }}>
+        <div className="rounded-3xl" onClick={e => e.stopPropagation()} style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 4px 30px rgba(91,31,36,0.06)", minHeight: 280 }}>
+          <div className="rounded-3xl p-6 pb-10 flex flex-col h-full relative" style={{ background: `linear-gradient(135deg,#0D0508,#1A0D10)` }}>
             <div className="flex items-center gap-2 mb-3">
               <span className="text-xs tracking-widest uppercase font-semibold" style={{ color: GOLD, fontFamily: SANS }}>Sacred Collection</span>
             </div>
