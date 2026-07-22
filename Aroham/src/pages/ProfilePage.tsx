@@ -177,7 +177,7 @@ export function ProfilePage() {
 
   const handleDeleteProfileAddress = (id: string | number) => {
     if (!confirm("Remove this address?")) return;
-    const newList = profileAddresses.filter(a => a.id !== id);
+    const newList = profileAddresses.filter(a => String(a.id) !== String(id));
     setProfileAddresses(newList);
     localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(newList));
     if (user?.id) {

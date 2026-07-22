@@ -304,12 +304,29 @@ export function ShippingPage() {
 
   const handleDeleteAddress = async (addrId: string | number) => {
     if (!confirm("Delete this address?")) return;
+
+    // 1. Update state & localStorage immediately with type-safe string matching
+    setSavedAddresses(prev => {
+      const updated = prev.filter(a => String(a.id) !== String(addrId));
+      localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(updated));
+      if (updated.length === 0) {
+        setShowForm(true);
+      }
+      return updated;
+    });
+
+    if (String(selectedAddr) === String(addrId)) {
+      setSelectedAddr(null);
+    }
+
+    // 2. Delete from Supabase / API in background
     try {
-      await api(`/addresses/${addrId}`, { method: "DELETE" });
-      setSavedAddresses(prev => prev.filter(a => a.id !== addrId));
-      if (selectedAddr === addrId) setSelectedAddr(null);
-    } catch (e: any) {
-      alert("Failed to delete: " + (e.message || "Please try again."));
+      if (user?.id) {
+        Promise.resolve(supabase.from("addresses").delete().eq("id", addrId)).catch(() => {});
+      }
+      await api(`/addresses/${addrId}`, { method: "DELETE" }).catch(() => {});
+    } catch (e) {
+      console.warn("Delete address backend warning:", e);
     }
   };
 
