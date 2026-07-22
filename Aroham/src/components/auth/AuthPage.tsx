@@ -108,12 +108,15 @@ export function AuthPage() {
       } catch (e) {}
 
       if (!existingUser) {
+        // Unregistered number entered on Sign In -> Redirect to Create Account
         localStorage.removeItem(`aroham_registered_user_phone_${phoneDigits}`);
         setLoading(false);
         setErrorMsg("Mobile number not registered. Redirecting to Create Account...");
         setTimeout(() => {
-          switchTab("signup");
-        }, 1200);
+          setActiveTab("signup");
+          setAuthState("signup");
+          setErrorMsg("Mobile number not registered. Please create an account.");
+        }, 1000);
         return;
       }
     }
@@ -124,22 +127,26 @@ export function AuthPage() {
 
       try {
         const { data } = await Promise.race([
-          supabase.from('users').select('*').or(`email.eq.${cleanEmail},phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`).maybeSingle(),
+          supabase.from('users').select('*').or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}${cleanEmail ? `,email.eq.${cleanEmail}` : ''}`).maybeSingle(),
           new Promise<any>(res => setTimeout(() => res({ data: null }), 1000))
         ]);
-        if (data) existingUser = data;
+        if (data && (data.phone || data.id || data.email)) {
+          existingUser = data;
+        }
       } catch (e) {}
 
       if (existingUser) {
+        // Already registered number/email entered on Create Account -> Redirect to Sign In
         setLoading(false);
-        const reason = (existingUser.email && existingUser.email.trim().toLowerCase() === cleanEmail)
-          ? "An account with this email address already exists. Redirecting to Sign In..."
-          : "User already exists with this mobile number. Redirecting to Sign In...";
+        const reason = (existingUser.email && cleanEmail && existingUser.email.trim().toLowerCase() === cleanEmail)
+          ? "Account already exists with this email. Redirecting to Sign In..."
+          : "Mobile number already registered. Redirecting to Sign In...";
         setErrorMsg(reason);
         setTimeout(() => {
-          switchTab("signin");
-          setErrorMsg(reason.includes("email") ? "Email address already registered. Please sign in." : "User already exists. Please sign in.");
-        }, 1200);
+          setActiveTab("signin");
+          setAuthState("signin");
+          setErrorMsg(reason.includes("email") ? "Email address already registered. Please sign in." : "Mobile number already registered. Please sign in.");
+        }, 1000);
         return;
       }
     }
