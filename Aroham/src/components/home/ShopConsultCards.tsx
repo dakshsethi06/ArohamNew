@@ -7,9 +7,9 @@ export function ShopConsultCards({ products, onShop, onProductClick }: { product
   const displayProducts = products.length >= 3 ? products.slice(0, 3) : [];
   return (
     <section className="py-10 lg:py-20 px-4 sm:px-6 lg:px-10" style={{ background: "#FAF7F2" }}>
-      <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-6">
+      <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-6 min-w-0">
         {/* Shop card */}
-        <div className="rounded-3xl overflow-hidden group transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl h-full"
+        <div className="rounded-3xl overflow-hidden group transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl h-full min-w-0"
           style={{ background: `linear-gradient(160deg,${MAROON} 0%,#5C1B23 100%)`, boxShadow: "0 20px 50px rgba(92,27,35,0.35)" }}>
           <div className="p-6 sm:p-8 flex flex-col gap-4 sm:gap-5 relative h-full">
             <div className="absolute inset-0 opacity-5" style={{ backgroundImage: `radial-gradient(circle,${GOLD} 1px,transparent 1px)`, backgroundSize: "24px 24px" }} />
@@ -53,7 +53,7 @@ export function ShopConsultCards({ products, onShop, onProductClick }: { product
           </div>
         </div>
         {/* Consult / carousel card */}
-        <div className="rounded-3xl" onClick={e => e.stopPropagation()} style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 4px 30px rgba(91,31,36,0.06)", minHeight: 280 }}>
+        <div className="rounded-3xl min-w-0" onClick={e => e.stopPropagation()} style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 4px 30px rgba(91,31,36,0.06)", minHeight: 280 }}>
           <div className="rounded-3xl overflow-hidden p-6 pb-10 flex flex-col h-full relative" style={{ background: `linear-gradient(135deg,#0D0508,#1A0D10)` }}>
             <div className="flex items-center gap-2 mb-3">
               <span className="text-xs tracking-widest uppercase font-semibold" style={{ color: GOLD, fontFamily: SANS }}>Sacred Collection</span>
