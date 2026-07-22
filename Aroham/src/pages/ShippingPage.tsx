@@ -53,11 +53,27 @@ export function ShippingPage() {
     }
   };
 
-  // Pre-fill phone from user profile
+  // Pre-fill phone from user profile & load persistent saved address
   useEffect(() => {
+    try {
+      const savedForm = localStorage.getItem("aroham_saved_shipping_form");
+      if (savedForm) {
+        const parsed = JSON.parse(savedForm);
+        setForm(prev => ({ ...prev, ...parsed }));
+        if (parsed.pin) fetchEstimate(parsed.pin);
+      }
+      const savedList = localStorage.getItem("aroham_saved_addresses_list");
+      if (savedList) {
+        const parsedList = JSON.parse(savedList);
+        if (Array.isArray(parsedList) && parsedList.length > 0) {
+          setSavedAddresses(parsedList);
+          setSelectedAddr(parsedList[0].id);
+        }
+      }
+    } catch (e) {}
+
     if (user?.user_metadata?.phone) {
       const userPhone = String(user.user_metadata.phone).replace(/\D/g, "");
-      // Handle +91, 0-prefix, or plain 10-digit
       const cleanPhone = userPhone.length > 10 ? userPhone.slice(-10) : userPhone;
       setForm(prev => ({ ...prev, phone: prev.phone || cleanPhone }));
     }
@@ -82,7 +98,6 @@ export function ShippingPage() {
     const est = estimates[pin];
     return {
       ...found,
-      courier: est?.courier || found.courier || "Shiprocket Express",
       deliveryDate: est?.deliveryDate || found.deliveryDate || "3–5 business days"
     };
   };
@@ -109,6 +124,35 @@ export function ShippingPage() {
     setSavingAddress(true);
     const est = estimates[form.pin];
 
+    // Save to LocalStorage for automatic pre-fill next time
+    try {
+      localStorage.setItem("aroham_saved_shipping_form", JSON.stringify(form));
+      const newAddrItem = {
+        id: editingAddrId || Date.now(),
+        full_name: `${form.firstName} ${form.lastName}`.trim(),
+        name: `${form.firstName} ${form.lastName}`.trim(),
+        phone: form.phone.replace(/\D/g, "").slice(-10),
+        email: form.email,
+        line1: `${form.house}, ${form.street}${form.landmark ? ", " + form.landmark : ""}`.trim(),
+        address: `${form.house}, ${form.street}${form.landmark ? ", " + form.landmark : ""}`.trim(),
+        city: form.city,
+        state: form.state,
+        pin: form.pin,
+        pincode: form.pin,
+        address_type: form.addressType,
+        deliveryDate: est?.deliveryDate || "3–5 business days",
+        specialRequest: form.specialRequest
+      };
+
+      setSavedAddresses(prev => {
+        const filtered = prev.filter(a => a.id !== editingAddrId);
+        const updated = [newAddrItem, ...filtered];
+        localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(updated));
+        return updated;
+      });
+      setSelectedAddr(typeof newAddrItem.id === "number" ? newAddrItem.id : Number(newAddrItem.id) || Date.now());
+    } catch (e) {}
+
     try {
       const payload = {
         name: `${form.firstName} ${form.lastName}`.trim(),
@@ -123,30 +167,32 @@ export function ShippingPage() {
 
       let savedObj: any = null;
       if (editingAddrId) {
-        const result = await api(`/addresses/${editingAddrId}`, { method: "PUT", body: JSON.stringify(payload) });
-        savedObj = result.data || result;
-        setSavedAddresses(prev => prev.map(a => a.id === editingAddrId ? { ...a, ...savedObj } : a));
-        setSelectedAddr(editingAddrId as number);
-        setEditingAddrId(null);
+        const result = await api(`/addresses/${editingAddrId}`, { method: "PUT", body: JSON.stringify(payload) }).catch(() => null);
+        savedObj = result?.data || result;
       } else {
-        const result = await api("/addresses", { method: "POST", body: JSON.stringify(payload) });
-        savedObj = result.data || result;
-        setSavedAddresses(prev => [savedObj, ...prev]);
-        setSelectedAddr(savedObj.id);
+        const result = await api("/addresses", { method: "POST", body: JSON.stringify(payload) }).catch(() => null);
+        savedObj = result?.data || result;
       }
 
       const finalAddrObj = {
-        ...savedObj,
-        courier: est?.courier || "Shiprocket Express",
+        id: Date.now(),
+        full_name: `${form.firstName} ${form.lastName}`.trim(),
+        name: `${form.firstName} ${form.lastName}`.trim(),
+        phone: form.phone.replace(/\D/g, "").slice(-10),
+        email: form.email,
+        line1: `${form.house}, ${form.street}${form.landmark ? ", " + form.landmark : ""}`.trim(),
+        city: form.city,
+        state: form.state,
+        pin: form.pin,
+        pincode: form.pin,
         deliveryDate: est?.deliveryDate || "3–5 business days",
-        specialRequest: form.specialRequest
+        specialRequest: form.specialRequest,
+        ...savedObj
       };
 
       sessionStorage.setItem("aroham_shipping_addr", JSON.stringify(finalAddrObj));
       navigate("/checkout/payment");
     } catch (e: any) {
-      console.error("Save address API error:", e);
-      // Fallback local save & navigate
       const fallbackObj = {
         id: Date.now(),
         full_name: `${form.firstName} ${form.lastName}`.trim(),
@@ -156,7 +202,6 @@ export function ShippingPage() {
         city: form.city,
         state: form.state,
         pin: form.pin,
-        courier: est?.courier || "Shiprocket Express",
         deliveryDate: est?.deliveryDate || "3–5 business days",
         specialRequest: form.specialRequest
       };
@@ -444,7 +489,7 @@ export function ShippingPage() {
                           <div className="mt-3 pt-3 flex items-center gap-2" style={{ borderTop: "1px solid rgba(200,160,68,0.2)" }}>
                             <Truck size={12} style={{ color: "#4A8A4A", flexShrink: 0 }} />
                             <span className="text-[10px] font-medium leading-tight" style={{ color: "#4A8A4A" }}>
-                              Expected delivery by <strong>{dateStr}</strong> via <strong>{courierStr}</strong> · Free Shipping
+                              Expected delivery by <strong>{dateStr}</strong> · Free Shipping
                             </span>
                           </div>
                         );
@@ -488,7 +533,7 @@ export function ShippingPage() {
                     <div className="p-3.5 rounded-2xl flex items-center gap-2.5 my-2" style={{ background: "rgba(74,138,74,0.08)", border: "1px solid rgba(74,138,74,0.2)" }}>
                       <Truck size={15} style={{ color: "#4A8A4A", flexShrink: 0 }} />
                       <span className="text-xs font-semibold" style={{ color: "#4A8A4A" }}>
-                        Expected delivery by <strong>{estimates[form.pin].deliveryDate}</strong> via <strong>{estimates[form.pin].courier}</strong> · Free Shipping
+                        Expected delivery by <strong>{estimates[form.pin].deliveryDate}</strong> · Free Shipping
                       </span>
                     </div>
                   )}
