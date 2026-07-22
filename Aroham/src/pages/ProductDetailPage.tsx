@@ -277,7 +277,7 @@ export function ProductDetailPage() {
               </div>
               <span className="text-xs" style={{ color: "#4A8A4A" }}>✓ In Stock</span>
             </div>
-            <div ref={mainButtonsRef} className="space-y-3 mb-5">
+            <div ref={mainButtonsRef} className="hidden lg:block space-y-3 mb-5">
               <button onClick={() => addToCart(product, qty)}
                 className="w-full py-4 rounded-2xl text-sm font-semibold flex items-center justify-center transition-all hover:opacity-90 hover:shadow-lg uppercase"
                 style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
@@ -292,7 +292,6 @@ export function ProductDetailPage() {
                 className="w-full py-3.5 rounded-2xl text-sm font-semibold border transition-all hover:bg-amber-50 flex items-center justify-center gap-2"
                 style={{ borderColor: GOLD, color: MAROON }}>⚡ Buy Now
               </button>
-
             </div>
 
             {/* Myntra-style Delivery & Pincode Checker */}
@@ -429,21 +428,26 @@ export function ProductDetailPage() {
         </div>
       </div>
       {/* Mobile sticky bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 px-5 py-4 transition-transform duration-300"
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 px-4 py-3 border-t transition-transform duration-300 shadow-2xl"
         style={{
-          background: "rgba(250,247,242,0.97)",
-          backdropFilter: "blur(12px)",
-          borderTop: "1px solid rgba(91,31,36,0.1)",
-          boxShadow: "0 -4px 24px rgba(91,31,36,0.08)",
-          transform: showSticky ? "translateY(0)" : "translateY(100%)"
+          background: "rgba(250,247,242,0.98)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
+          borderColor: "rgba(91,31,36,0.12)",
+          boxShadow: "0 -4px 24px rgba(91,31,36,0.12)",
+          transform: "translateY(0)"
         }}>
-        <div className="flex items-center gap-3 mb-2">
-          <span className="text-lg font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{product.price.toLocaleString("en-IN")}</span>
-          <span className="text-xs line-through" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{Math.round(product.original).toLocaleString("en-IN")}</span>
+        <div className="flex items-center justify-between mb-1.5 px-1">
+          <div className="flex items-baseline gap-2">
+            <span className="text-xl font-bold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{product.price.toLocaleString("en-IN")}</span>
+            <span className="text-xs line-through" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{Math.round(product.original).toLocaleString("en-IN")}</span>
+            <span className="text-xs font-bold" style={{ color: "#4A8A4A" }}>{Math.round((1 - product.price / product.original) * 100)}% off</span>
+          </div>
+          <span className="text-[10px] font-semibold text-emerald-600 flex items-center gap-1">✓ In Stock</span>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <button onClick={() => addToCart(product, qty)}
-            className="flex-1 py-4 rounded-2xl text-sm font-semibold flex items-center justify-center uppercase"
+            className="flex-1 py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center shadow-md active:scale-95 transition-all"
             style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
             Add to Cart
           </button>
@@ -453,8 +457,8 @@ export function ProductDetailPage() {
               navigate("/checkout/shipping");
               window.scrollTo({ top: 0, behavior: "instant" });
             }}
-            className="px-5 py-4 rounded-2xl text-sm font-semibold border"
-            style={{ borderColor: GOLD, color: MAROON }}>⚡ Buy</button>
+            className="px-6 py-3 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+            style={{ borderColor: GOLD, color: MAROON, background: "#FFFFFF" }}>⚡ Buy</button>
         </div>
       </div>
     </div>
