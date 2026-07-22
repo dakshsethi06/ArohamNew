@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { ChevronLeft, User, Package, Truck, CheckCircle, Edit2, Save, X, Calendar, ChevronDown } from "lucide-react";
+import { ChevronLeft, User, Package, Truck, CheckCircle, Edit2, Save, X, Calendar, ChevronDown, MapPin, Trash2, Plus } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
@@ -11,6 +11,7 @@ import "react-day-picker/dist/style.css";
 import { supabase } from "@/lib/supabase";
 import { db } from "@/lib/firebase";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { INDIA_STATES } from "@/constants/data";
 
 const ORDER_STEPS = [
   { label: "Ordered", icon: "✓" },
@@ -30,8 +31,8 @@ export function ProfilePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState<"profile" | "orders">(
-    (searchParams.get("tab") as "profile" | "orders") || "profile"
+  const [activeTab, setActiveTab] = useState<"profile" | "addresses" | "orders">(
+    (searchParams.get("tab") as "profile" | "addresses" | "orders") || "profile"
   );
   const [orders, setOrders] = useState<any[]>([]);
   const [profile, setProfile] = useState<any>(null);
@@ -51,6 +52,111 @@ export function ProfilePage() {
     dob: "",
     pobCity: ""
   });
+
+  // Address Manager State
+  const [profileAddresses, setProfileAddresses] = useState<any[]>([]);
+  const [showAddrForm, setShowAddrForm] = useState(false);
+  const [editingAddrId, setEditingAddrId] = useState<string | number | null>(null);
+  const [addrForm, setAddrForm] = useState({
+    name: "",
+    phone: "",
+    pin: "",
+    house: "",
+    street: "",
+    landmark: "",
+    city: "",
+    state: "",
+    addressType: "Home"
+  });
+
+  // Load profile addresses
+  useEffect(() => {
+    try {
+      const savedList = localStorage.getItem("aroham_saved_addresses_list");
+      if (savedList) {
+        setProfileAddresses(JSON.parse(savedList));
+      }
+    } catch (e) {}
+
+    if (user?.id) {
+      Promise.resolve(supabase.from("addresses").select("*").eq("user_id", user.id))
+        .then(({ data }) => {
+          if (data && data.length > 0) {
+            setProfileAddresses(data);
+            localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(data));
+          }
+        }).catch(() => {});
+    }
+  }, [user?.id, activeTab]);
+
+  const handleSaveProfileAddress = async () => {
+    if (!addrForm.name.trim() || !addrForm.phone.trim() || !addrForm.pin.trim() || !addrForm.house.trim() || !addrForm.city.trim()) {
+      alert("Please fill in required fields (Name, Phone, PIN, House No., City)");
+      return;
+    }
+
+    const newAddrObj = {
+      id: editingAddrId || Date.now(),
+      name: addrForm.name.trim(),
+      full_name: addrForm.name.trim(),
+      phone: addrForm.phone.replace(/\D/g, "").slice(-10),
+      address: `${addrForm.house}, ${addrForm.street}${addrForm.landmark ? ", " + addrForm.landmark : ""}`.trim(),
+      line1: `${addrForm.house}, ${addrForm.street}${addrForm.landmark ? ", " + addrForm.landmark : ""}`.trim(),
+      city: addrForm.city,
+      state: addrForm.state,
+      pincode: addrForm.pin,
+      pin: addrForm.pin,
+      address_type: addrForm.addressType
+    };
+
+    const updatedList = profileAddresses.filter(a => a.id !== editingAddrId);
+    const newList = [newAddrObj, ...updatedList];
+    setProfileAddresses(newList);
+    localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(newList));
+    setShowAddrForm(false);
+    setEditingAddrId(null);
+    setAddrForm({ name: "", phone: "", pin: "", house: "", street: "", landmark: "", city: "", state: "", addressType: "Home" });
+
+    if (user?.id) {
+      Promise.resolve(supabase.from("addresses").upsert({
+        user_id: user.id,
+        name: newAddrObj.name,
+        phone: newAddrObj.phone,
+        address: newAddrObj.address,
+        city: newAddrObj.city,
+        state: newAddrObj.state,
+        pincode: newAddrObj.pincode,
+        address_type: newAddrObj.address_type
+      })).catch(err => console.warn("Supabase address save warning:", err));
+    }
+  };
+
+  const handleEditProfileAddress = (addr: any) => {
+    const nameParts = (addr.full_name || addr.name || "").trim();
+    setEditingAddrId(addr.id);
+    setAddrForm({
+      name: nameParts,
+      phone: addr.phone || "",
+      pin: String(addr.pincode || addr.pin || ""),
+      house: addr.address || addr.line1 || "",
+      street: addr.street || "",
+      landmark: addr.landmark || "",
+      city: addr.city || "",
+      state: addr.state || "",
+      addressType: addr.address_type || addr.type || "Home"
+    });
+    setShowAddrForm(true);
+  };
+
+  const handleDeleteProfileAddress = (id: string | number) => {
+    if (!confirm("Remove this address?")) return;
+    const newList = profileAddresses.filter(a => a.id !== id);
+    setProfileAddresses(newList);
+    localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(newList));
+    if (user?.id) {
+      Promise.resolve(supabase.from("addresses").delete().eq("id", id)).catch(() => {});
+    }
+  };
 
   const toggleOrder = (id: string) => {
     setExpandedOrders(prev => ({ ...prev, [id]: !prev[id] }));
@@ -237,11 +343,11 @@ export function ProfilePage() {
 
         {/* Tabs */}
         <div className="flex p-1 rounded-2xl mb-5" style={{ background: "rgba(91,31,36,0.06)" }}>
-          {(["profile", "orders"] as const).map(t => (
+          {(["profile", "addresses", "orders"] as const).map(t => (
             <button key={t} onClick={() => setActiveTab(t)}
-              className="flex-1 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200"
+              className="flex-1 py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200"
               style={{ background: activeTab === t ? MAROON : "transparent", color: activeTab === t ? IVORY : MAROON }}>
-              {t === "profile" ? "My Profile" : "My Orders"}
+              {t === "profile" ? "My Profile" : t === "addresses" ? "Saved Addresses" : "My Orders"}
             </button>
           ))}
         </div>
@@ -375,6 +481,122 @@ export function ProfilePage() {
               Sign Out
             </button>
           </>
+        )}
+
+        {/* Saved Addresses Tab */}
+        {activeTab === "addresses" && (
+          <div className="space-y-4">
+            {!showAddrForm ? (
+              <>
+                <div className="flex items-center justify-between px-2 mb-2">
+                  <h3 className="text-base font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Your Saved Addresses</h3>
+                  <button
+                    onClick={() => {
+                      setEditingAddrId(null);
+                      setAddrForm({ name: "", phone: "", pin: "", house: "", street: "", landmark: "", city: "", state: "", addressType: "Home" });
+                      setShowAddrForm(true);
+                    }}
+                    className="text-xs font-semibold px-4 py-2 rounded-full flex items-center gap-1 transition-all hover:opacity-90 shadow-sm"
+                    style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}
+                  >
+                    <Plus size={14} /> Add Address
+                  </button>
+                </div>
+
+                {profileAddresses.length === 0 ? (
+                  <div className="text-center py-12 rounded-2xl" style={{ background: "#fff", border: "1px solid rgba(91,31,36,0.08)" }}>
+                    <MapPin size={32} className="mx-auto mb-2 opacity-40" style={{ color: MAROON }} />
+                    <p className="text-sm font-semibold mb-1" style={{ fontFamily: SERIF, color: MAROON }}>No saved addresses</p>
+                    <p className="text-xs text-gray-500">Add an address to make your checkout faster</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {profileAddresses.map(addr => {
+                      const addrLine = [addr.line1 || addr.address_line1 || addr.address, addr.city, addr.state].filter(Boolean).join(", ");
+                      return (
+                        <div key={addr.id} className="p-4 rounded-2xl bg-white border border-black/10 flex items-start justify-between gap-3 shadow-sm">
+                          <div className="flex items-start gap-3 min-w-0 flex-1">
+                            <div className="p-2 rounded-xl mt-0.5" style={{ background: "rgba(200,160,68,0.1)", color: MAROON }}>
+                              <MapPin size={16} />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-md" style={{ background: "rgba(91,31,36,0.08)", color: MAROON }}>
+                                  {addr.address_type || addr.type || "Home"}
+                                </span>
+                              </div>
+                              <p className="text-xs font-semibold" style={{ color: "#3A2A1A" }}>{addr.full_name || addr.name} · {addr.phone}</p>
+                              <p className="text-xs leading-relaxed text-gray-600 mt-1">{addrLine} – {addr.pincode || addr.pin}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            <button onClick={() => handleEditProfileAddress(addr)} className="p-2 rounded-lg hover:bg-amber-50" style={{ color: MAROON, border: "1px solid rgba(91,31,36,0.12)" }}>
+                              <Edit2 size={13} />
+                            </button>
+                            <button onClick={() => handleDeleteProfileAddress(addr.id)} className="p-2 rounded-lg hover:bg-red-50" style={{ color: "#C04040", border: "1px solid rgba(192,64,64,0.15)" }}>
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="rounded-2xl p-6 space-y-4" style={{ background: "#fff", border: "1px solid rgba(91,31,36,0.12)", boxShadow: "0 4px 20px rgba(91,31,36,0.05)" }}>
+                <div className="flex items-center justify-between pb-3 border-b border-black/5">
+                  <h3 className="text-base font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>{editingAddrId ? "Edit Address" : "Add New Address"}</h3>
+                  <button onClick={() => setShowAddrForm(false)} className="p-1 rounded-full hover:bg-black/5" style={{ color: MAROON }}><X size={18} /></button>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1 text-gray-600">Full Name *</label>
+                  <input type="text" value={addrForm.name} onChange={e => setAddrForm(p => ({ ...p, name: e.target.value }))}
+                    className="w-full px-4 py-2.5 rounded-xl text-sm outline-none border border-black/15 bg-[#FAF7F2]" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1 text-gray-600">Phone Number *</label>
+                  <input type="tel" value={addrForm.phone} onChange={e => setAddrForm(p => ({ ...p, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }))}
+                    className="w-full px-4 py-2.5 rounded-xl text-sm outline-none border border-black/15 bg-[#FAF7F2]" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold mb-1 text-gray-600">PIN Code *</label>
+                    <input type="text" maxLength={6} value={addrForm.pin} onChange={e => setAddrForm(p => ({ ...p, pin: e.target.value.replace(/\D/g, "") }))}
+                      className="w-full px-4 py-2.5 rounded-xl text-sm outline-none border border-black/15 bg-[#FAF7F2]" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold mb-1 text-gray-600">House / Flat No. *</label>
+                    <input type="text" value={addrForm.house} onChange={e => setAddrForm(p => ({ ...p, house: e.target.value }))}
+                      className="w-full px-4 py-2.5 rounded-xl text-sm outline-none border border-black/15 bg-[#FAF7F2]" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1 text-gray-600">Street Address</label>
+                  <input type="text" value={addrForm.street} onChange={e => setAddrForm(p => ({ ...p, street: e.target.value }))}
+                    className="w-full px-4 py-2.5 rounded-xl text-sm outline-none border border-black/15 bg-[#FAF7F2]" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold mb-1 text-gray-600">City *</label>
+                    <input type="text" value={addrForm.city} onChange={e => setAddrForm(p => ({ ...p, city: e.target.value }))}
+                      className="w-full px-4 py-2.5 rounded-xl text-sm outline-none border border-black/15 bg-[#FAF7F2]" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold mb-1 text-gray-600">State</label>
+                    <input type="text" value={addrForm.state} onChange={e => setAddrForm(p => ({ ...p, state: e.target.value }))}
+                      className="w-full px-4 py-2.5 rounded-xl text-sm outline-none border border-black/15 bg-[#FAF7F2]" />
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <button onClick={() => setShowAddrForm(false)} className="flex-1 py-3 rounded-xl text-xs font-semibold bg-black/5" style={{ color: MAROON }}>Cancel</button>
+                  <button onClick={handleSaveProfileAddress} className="flex-1 py-3 rounded-xl text-xs font-semibold text-white flex items-center justify-center gap-1.5" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)` }}>
+                    <Save size={14} /> Save Address
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Orders Tab */}
