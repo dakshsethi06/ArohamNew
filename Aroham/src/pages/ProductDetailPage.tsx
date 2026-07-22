@@ -393,11 +393,11 @@ export function ProductDetailPage() {
           ))}
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-6 lg:px-10 py-12">
-        <div className="w-full min-h-[350px]">{tabContent[tab]}</div>
+      <div className="max-w-7xl mx-auto px-6 lg:px-10 pt-6 pb-2">
+        <div className="w-full">{tabContent[tab]}</div>
       </div>
       {/* Contact section */}
-      <div className="px-6 lg:px-10">
+      <div className="px-6 lg:px-10 mt-2 mb-8">
         <div className="max-w-7xl mx-auto">
           <div className="rounded-3xl overflow-hidden" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, position: "relative" }}>
             <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: `radial-gradient(circle,${GOLD} 1px,transparent 1px)`, backgroundSize: "24px 24px" }} />

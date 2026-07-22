@@ -400,13 +400,6 @@ export function AuthPage() {
       </div>
 
       <div className="text-center space-y-2">
-        <div className="flex items-center justify-center mb-3">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden"
-            style={{ background: `linear-gradient(135deg,${MAROON},${SAFFRON})` }}>
-            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-            <Sparkles size={24} style={{ color: IVORY }} />
-          </div>
-        </div>
         <h2 className="mb-2" style={{ fontFamily: SERIF, fontSize: "1.85rem", fontWeight: 600, color: MAROON }}>
           {activeTab === "signin" ? "Welcome Back" : "Create Account"}
         </h2>
