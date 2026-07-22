@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { Star, Heart, Eye, Filter, X, CheckCircle, ChevronRight, ChevronDown } from "lucide-react";
+import { Star, Heart, Eye, Filter, X, CheckCircle, ChevronRight, ChevronDown, ShoppingCart } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
 import { CATEGORIES, PURPOSES, PRICE_RANGES } from "@/constants/data";
 import { useProducts } from "@/hooks/useProducts";
+import { useCart } from "@/context/CartContext";
 import { ArohamProduct } from "@/types/product";
 
 export function ShopPage() {
   const navigate = useNavigate();
+  const { addToCart } = useCart();
   const [searchParams] = useSearchParams();
   const titleParam = searchParams.get("title") || searchParams.get("collection") || "";
   const catParam = searchParams.get("category") || "";
@@ -255,44 +257,86 @@ export function ShopPage() {
                 <button onClick={clearAll} className="mt-4 px-6 py-2.5 rounded-full text-sm font-medium" style={{ background: MAROON, color: IVORY }}>Clear Filters</button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-5 items-stretch">
-                {filtered.map(p => (
-                  <div key={p.id} onClick={() => navigate(`/shop/${p.slug}`)}
-                    className="group rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-2 h-full flex flex-col justify-between"
-                    style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(91,31,36,0.06)", border: "1px solid rgba(91,31,36,0.06)" }}
-                    onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.boxShadow = "0 16px 40px rgba(91,31,36,0.14)"}
-                    onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.boxShadow = "0 2px 20px rgba(91,31,36,0.06)"}>
-                    <div>
-                      <div className="relative overflow-hidden aspect-square bg-amber-50">
+              <div className="flex flex-col sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 items-stretch">
+                {filtered.map(p => {
+                  const discountPct = Math.round((1 - p.price / p.original) * 100);
+                  return (
+                    <div key={p.id} onClick={() => navigate(`/shop/${p.slug}`)}
+                      className="group rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 sm:hover:-translate-y-2 h-full flex flex-row sm:flex-col justify-between bg-white"
+                      style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(91,31,36,0.06)", border: "1px solid rgba(91,31,36,0.08)" }}
+                      onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.boxShadow = "0 16px 40px rgba(91,31,36,0.14)"}
+                      onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.boxShadow = "0 2px 20px rgba(91,31,36,0.06)"}>
+                      
+                      {/* Product Image Box */}
+                      <div className="relative overflow-hidden w-32 sm:w-full aspect-square bg-amber-50 flex-shrink-0">
                         <img src={p.img} alt={`${p.name} - ${p.subtitle}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                        <div className="absolute top-3 left-3 flex flex-col gap-1">
+                        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1">
                           {p.price > 1000 && p.badges.slice(0, 1).map(b => <span key={b} className="px-2 py-0.5 rounded-full text-[9px] font-bold" style={{ background: "rgba(91,31,36,0.88)", color: GOLD }}>{b}</span>)}
                         </div>
                         <button aria-label="Add to wishlist" onClick={e => { e.stopPropagation(); setWish(w => ({ ...w, [p.id]: !w[p.id] })); }}
-                          className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.9)" }}>
+                          className="absolute top-2.5 right-2.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-sm" style={{ background: "rgba(255,255,255,0.9)" }}>
                           <Heart size={13} style={{ color: wish[p.id] ? "#E74C3C" : "#7A6A58", fill: wish[p.id] ? "#E74C3C" : "none" }} />
                         </button>
-                        <div className="absolute inset-x-0 bottom-0 py-3 flex items-center justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-300"
+                        <div className="hidden sm:flex absolute inset-x-0 bottom-0 py-3 items-center justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-300"
                           style={{ background: "rgba(91,31,36,0.9)" }}>
                           <span className="text-xs font-semibold flex items-center gap-2" style={{ color: GOLD }}><Eye size={12} /> View Product</span>
                         </div>
                       </div>
-                      <div className="p-4">
-                        <h3 className="text-sm font-semibold mb-1 leading-snug h-[2.8rem] overflow-hidden line-clamp-2" style={{ fontFamily: SERIF, color: MAROON }}>{p.name}</h3>
-                        <p className="text-xs mb-2 truncate" style={{ color: "#7A6A58" }}>{p.subtitle}</p>
-                        <div className="flex items-center gap-1 mb-2">
-                          {Array.from({ length: 5 }).map((_, j) => <Star key={j} size={10} fill={j < Math.round(p.rating) ? GOLD : "none"} stroke={GOLD} strokeWidth={1.5} />)}
-                          <span className="text-[10px] ml-1" style={{ color: "#9A8A78" }}>({p.reviews})</span>
+
+                      {/* Details Box */}
+                      <div className="p-3 sm:p-4 flex-1 flex flex-col justify-between min-w-0">
+                        <div>
+                          <h3 className="text-xs sm:text-sm font-bold sm:font-semibold mb-1 leading-snug truncate sm:line-clamp-2" style={{ fontFamily: SERIF, color: MAROON }}>{p.name}</h3>
+                          <p className="text-[11px] sm:text-xs mb-1.5 truncate" style={{ color: "#7A6A58" }}>{p.subtitle}</p>
+                          <div className="flex items-center gap-1 mb-2">
+                            {Array.from({ length: 5 }).map((_, j) => <Star key={j} size={10} fill={j < Math.round(p.rating) ? GOLD : "none"} stroke={GOLD} strokeWidth={1.5} />)}
+                            <span className="text-[10px] ml-1 font-bold" style={{ color: MAROON }}>{p.rating}</span>
+                            <span className="text-[10px]" style={{ color: "#9A8A78" }}>({p.reviews})</span>
+                          </div>
+                        </div>
+
+                        {/* Price & Add to Cart button */}
+                        <div className="pt-2 sm:pt-0 flex flex-wrap items-center justify-between gap-1.5 border-t sm:border-t-0 border-black/[0.05]">
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-sm sm:text-base font-bold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{p.price.toLocaleString("en-IN")}</span>
+                            {p.original > p.price && (
+                              <>
+                                <span className="text-[10px] sm:text-xs line-through opacity-70" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{p.original.toLocaleString("en-IN")}</span>
+                                <span className="text-[9px] font-bold" style={{ color: "#2E7D32" }}>{discountPct}% OFF</span>
+                              </>
+                            )}
+                          </div>
+
+                          <button
+                            aria-label={`Add ${p.name} to cart`}
+                            onClick={e => {
+                              e.stopPropagation();
+                              addToCart({
+                                id: p.id,
+                                name: p.name,
+                                subtitle: p.subtitle,
+                                price: p.price,
+                                original: p.original,
+                                rating: p.rating,
+                                reviews: p.reviews,
+                                img: p.img,
+                                category: p.category,
+                                purpose: p.purpose,
+                                badges: p.badges,
+                                slug: p.slug
+                              });
+                            }}
+                            className="px-3 py-1.5 rounded-xl text-[10px] sm:text-xs font-bold tracking-wide transition-all hover:opacity-90 active:scale-95 flex items-center justify-center gap-1 shadow-sm uppercase ml-auto sm:ml-0"
+                            style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}
+                          >
+                            <ShoppingCart size={12} />
+                            <span>ADD TO CART</span>
+                          </button>
                         </div>
                       </div>
                     </div>
-                    <div className="p-4 pt-0 flex items-baseline gap-2">
-                      <span className="text-base font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{p.price.toLocaleString("en-IN")}</span>
-                      <span className="text-xs line-through" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{p.original.toLocaleString("en-IN")}</span>
-                      <span className="text-[10px] font-semibold" style={{ color: "#4A8A4A" }}>{Math.round((1 - p.price / p.original) * 100)}% off</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
