@@ -79,9 +79,15 @@ export function AuthPage() {
       return;
     }
 
-    if (activeTab === "signup" && !name.trim()) {
-      setErrorMsg("Please enter your full name to create an account.");
-      return;
+    if (activeTab === "signup") {
+      if (!name.trim()) {
+        setErrorMsg("Please enter your full name to create an account.");
+        return;
+      }
+      if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+        setErrorMsg("Please enter a valid email address.");
+        return;
+      }
     }
 
     setLoading(true);
@@ -506,10 +512,29 @@ export function AuthPage() {
       )}
 
       {activeTab === "signup" && (
-        <AuthInput label="Full Name" value={name} onChange={setName} />
+        <>
+          <AuthInput label="Full Name" value={name} onChange={setName} />
+          <AuthInput label="Email Address" type="email" placeholder="name@example.com" value={email} onChange={setEmail} />
+        </>
       )}
 
-      <AuthInput label="Mobile Number" type="tel" value={phone} onChange={v => setPhone(v.replace(/\D/g, "").slice(0, 10))} />
+      <div>
+        <label className="block text-xs font-semibold mb-1" style={{ color: MAROON, fontFamily: SANS }}>Mobile Number</label>
+        <div className="flex items-center rounded-2xl overflow-hidden" style={{ background: "#FFFFFF", border: "1.5px solid rgba(91,31,36,0.14)" }}>
+          <span className="px-3.5 py-3 text-xs font-bold border-r flex items-center gap-1 flex-shrink-0 select-none" style={{ background: "rgba(91,31,36,0.04)", color: MAROON, borderColor: "rgba(91,31,36,0.1)", fontFamily: SANS }}>
+            🇮🇳 +91
+          </span>
+          <input
+            type="tel"
+            placeholder="10-digit mobile number"
+            maxLength={10}
+            value={phone}
+            onChange={e => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+            className="flex-1 px-3 py-3 text-sm bg-transparent outline-none font-medium"
+            style={{ color: MAROON, fontFamily: SANS }}
+          />
+        </div>
+      </div>
 
       <p className="text-xs text-center leading-relaxed px-4" style={{ color: "#7A6A58" }}>
         By continuing, you agree to Aroham's{" "}

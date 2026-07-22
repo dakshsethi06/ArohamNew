@@ -608,8 +608,25 @@ export function ShippingPage() {
                     <div style={{ border: fieldBorder("firstName"), borderRadius: 16 }}><FloatingInput label="First Name" value={form.firstName} onChange={set("firstName") as (v: string) => void} required /></div>
                     <FloatingInput label="Last Name" value={form.lastName} onChange={set("lastName") as (v: string) => void} />
                   </div>
-                  <div style={{ border: fieldBorder("phone"), borderRadius: 16 }}>
-                    <FloatingInput label="Mobile Phone Number" type="tel" value={form.phone} onChange={v => set("phone")(v.replace(/\D/g, "").slice(0, 10))} required />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold mb-1" style={{ color: MAROON, fontFamily: SANS }}>Mobile Phone Number *</label>
+                      <div className="flex items-center rounded-2xl overflow-hidden" style={{ background: "#FFFFFF", border: fieldBorder("phone") || "1.5px solid rgba(91,31,36,0.14)" }}>
+                        <span className="px-3 py-3 text-xs font-bold border-r flex items-center gap-1 flex-shrink-0 select-none" style={{ background: "rgba(91,31,36,0.04)", color: MAROON, borderColor: "rgba(91,31,36,0.1)", fontFamily: SANS }}>
+                          🇮🇳 +91
+                        </span>
+                        <input
+                          type="tel"
+                          placeholder="10-digit mobile number"
+                          maxLength={10}
+                          value={form.phone}
+                          onChange={e => set("phone")(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                          className="flex-1 px-3 py-3 text-sm bg-transparent outline-none font-medium"
+                          style={{ color: MAROON, fontFamily: SANS }}
+                        />
+                      </div>
+                    </div>
+                    <FloatingInput label="Email Address (Optional)" type="email" value={form.email} onChange={set("email") as (v: string) => void} />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div style={{ border: fieldBorder("pin"), borderRadius: 16 }}><FloatingInput label="PIN Code" value={form.pin} onChange={handlePinChange} required /></div>

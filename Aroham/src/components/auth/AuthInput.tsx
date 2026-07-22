@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { GOLD, SANS } from "@/constants/theme";
 
-export function AuthInput({ label, type = "text", value, onChange, right, name, autoComplete }: {
+export function AuthInput({ label, type = "text", value, onChange, right, name, autoComplete, placeholder }: {
   label: string; type?: string; value: string;
   onChange: (v: string) => void; right?: React.ReactNode;
-  name?: string; autoComplete?: string;
+  name?: string; autoComplete?: string; placeholder?: string;
 }) {
   const [focused, setFocused] = useState(false);
   const active = focused || value.length > 0;

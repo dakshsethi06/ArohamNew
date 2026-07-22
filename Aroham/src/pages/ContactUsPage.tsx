@@ -11,6 +11,10 @@ export function ContactUsPage() {
 
   const handleSubmit = async () => {
     if (!form.name || !form.email || !form.message) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      alert("Please enter a valid email address.");
+      return;
+    }
     setLoading(true);
     try {
       const { error } = await supabase.from('contact_messages').insert([{

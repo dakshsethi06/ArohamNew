@@ -327,6 +327,18 @@ export function ProfilePage() {
 
   const handleSaveProfile = async () => {
     if (!user?.id) return;
+
+    const phoneDigits = editForm.phone.replace(/\D/g, "");
+    if (phoneDigits.length !== 10) {
+      alert("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    if (editForm.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editForm.email.trim())) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
     setSaving(true);
     setSaveSuccess(false);
 
@@ -480,9 +492,14 @@ export function ProfilePage() {
                     className="w-full px-4 py-2.5 rounded-xl text-sm outline-none" style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON }} />
                 </div>
                 <div>
-                  <label htmlFor="profile-phone" className="block text-xs font-semibold mb-1" style={{ color: "#7A6A58" }}>Phone Number</label>
-                  <input id="profile-phone" name="tel" autoComplete="tel" type="tel" value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }))}
-                    className="w-full px-4 py-2.5 rounded-xl text-sm outline-none" style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON }} />
+                  <label htmlFor="profile-phone" className="block text-xs font-semibold mb-1" style={{ color: "#7A6A58" }}>Mobile Phone Number</label>
+                  <div className="flex items-center rounded-xl overflow-hidden" style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2" }}>
+                    <span className="px-3 py-2.5 text-xs font-bold border-r flex items-center gap-1 flex-shrink-0 select-none" style={{ background: "rgba(91,31,36,0.04)", color: MAROON, borderColor: "rgba(91,31,36,0.1)", fontFamily: SANS }}>
+                      🇮🇳 +91
+                    </span>
+                    <input id="profile-phone" name="tel" autoComplete="tel" type="tel" placeholder="10-digit mobile number" maxLength={10} value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }))}
+                      className="flex-1 px-3 py-2.5 text-sm outline-none bg-transparent" style={{ color: MAROON }} />
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
