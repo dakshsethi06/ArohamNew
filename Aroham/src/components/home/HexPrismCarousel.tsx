@@ -78,7 +78,7 @@ export function HexPrismCarousel({ products, onProductClick }: { products: Aroha
         }
       `}</style>
       <div className="relative flex items-center justify-center w-full"
-        style={{ height: baseH + 80, marginTop: 85, marginBottom: 25, transform: expanded ? "translateY(-70px) scale(0.85)" : "translateY(0px) scale(1)", transition: `all ${SMOOTH_EASE}` }}>
+        style={{ height: baseH + 80, marginTop: isMobile ? 40 : 85, marginBottom: 25, transform: expanded ? (isMobile ? "translateY(-40px) scale(0.85)" : "translateY(-70px) scale(0.85)") : "translateY(0px) scale(1)", transition: `all ${SMOOTH_EASE}` }}>
         <button aria-label="Previous product" onClick={prev}
           className="absolute left-0 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95"
           style={{ background: "rgba(200,160,68,0.13)", border: `1px solid rgba(200,160,68,0.3)`, color: GOLD, top: "50%", transform: "translateY(-50%)" }}>
