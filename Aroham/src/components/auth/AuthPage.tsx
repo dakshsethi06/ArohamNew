@@ -84,10 +84,6 @@ export function AuthPage() {
         setErrorMsg("Please enter your full name to create an account.");
         return;
       }
-      if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-        setErrorMsg("Please enter a valid email address.");
-        return;
-      }
     }
 
     setLoading(true);
@@ -446,10 +442,7 @@ export function AuthPage() {
       )}
 
       {activeTab === "signup" && (
-        <>
-          <AuthInput label="Full Name" value={name} onChange={setName} />
-          <AuthInput label="Email Address" type="email" placeholder="name@example.com" value={email} onChange={setEmail} />
-        </>
+        <AuthInput label="Full Name" value={name} onChange={setName} />
       )}
 
       <div>
