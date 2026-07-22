@@ -810,22 +810,16 @@ export function ProfilePage() {
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="pt-4 flex justify-between items-center mt-2">
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); window.open(`https://shiprocket.co/tracking/${order.id}`, "_blank"); }}
-                          className="text-xs font-semibold px-5 py-2 rounded-full transition-colors border"
-                          style={{ borderColor: "rgba(200,160,68,0.5)", color: MAROON, background: "rgba(200,160,68,0.05)" }}>
-                          Track Order
-                        </button>
-                        {!isCancelled && stepIdx <= 1 && (
+                      {!isCancelled && stepIdx <= 1 && (
+                        <div className="pt-4 flex justify-end items-center mt-2">
                           <button 
                             onClick={(e) => { e.stopPropagation(); handleCancelOrder(order.id); }}
                             className="text-xs font-semibold px-5 py-2 rounded-full transition-colors border hover:bg-red-100 active:scale-95 transition-all"
                             style={{ borderColor: "rgba(220,38,38,0.3)", color: "#DC2626", background: "rgba(220,38,38,0.05)" }}>
                             Cancel Order
                           </button>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
