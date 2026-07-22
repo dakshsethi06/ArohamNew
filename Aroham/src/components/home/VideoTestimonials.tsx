@@ -89,7 +89,12 @@ export function VideoTestimonials() {
   }, [n]);
 
   return (
-    <section className="py-20 px-0 overflow-hidden" style={{ background: "#0D0508" }}>
+    <section
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      className="py-20 px-0 overflow-hidden"
+      style={{ background: "#0D0508" }}
+    >
       <style>{`
         .reel-scroll{scrollbar-width:none;}
         .reel-scroll::-webkit-scrollbar{display:none;}
@@ -100,21 +105,8 @@ export function VideoTestimonials() {
         <p className="text-sm mt-2" style={{ color: "rgba(250,247,242,0.5)", fontFamily: SANS }}>Real experiences shared by our sacred community</p>
       </div>
       <div className="relative max-w-7xl mx-auto">
-        <button aria-label="Previous testimonial" onClick={prev}
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95"
-          style={{ background: "rgba(200,160,68,0.2)", border: "1px solid rgba(200,160,68,0.4)", color: GOLD, backdropFilter: "blur(8px)" }}>
-          <ChevronLeft size={18} />
-        </button>
-        <button aria-label="Next testimonial" onClick={next}
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95"
-          style={{ background: "rgba(200,160,68,0.2)", border: "1px solid rgba(200,160,68,0.4)", color: GOLD, backdropFilter: "blur(8px)" }}>
-          <ChevronRight size={18} />
-        </button>
-        
         <div
           ref={scrollRef}
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
           className="reel-scroll flex items-center gap-5 overflow-x-auto px-8 lg:px-16"
           style={{ scrollSnapType: "x mandatory", paddingBottom: "12px", minHeight: isMobile ? 420 : 450 }}
         >
