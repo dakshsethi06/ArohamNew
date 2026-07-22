@@ -89,7 +89,7 @@ export function HexPrismCarousel({ products, onProductClick }: { products: Aroha
           onMouseLeave={e => onDragEnd(e.clientX)}
           onTouchStart={e => onDragStart(e.touches[0].clientX)} onTouchEnd={e => onDragEnd(e.changedTouches[0].clientX)}
           onWheel={e => { e.preventDefault(); if (wheelCooldown.current) return; const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY; if (Math.abs(d) < 25) return; d > 0 ? next() : prev(); wheelCooldown.current = true; setTimeout(() => { wheelCooldown.current = false; }, 500); pauseAuto(); }}
-          style={{ perspective: 1100, width: baseW * 5, height: baseH, display: "flex", alignItems: "center", justifyContent: "center", cursor: "grab", userSelect: "none" }}>
+          style={{ perspective: 1100, width: baseW * 5, maxWidth: "100%", height: baseH, display: "flex", alignItems: "center", justifyContent: "center", cursor: "grab", userSelect: "none" }}>
           <div style={{ width: baseW, height: baseH, position: "relative", transformStyle: "preserve-3d", transform: `rotateY(${-current * (360 / n)}deg)`, transition: `transform ${SMOOTH_EASE}` }}>
             {products.map((prod, i) => {
               const angle = i * (360 / n);
