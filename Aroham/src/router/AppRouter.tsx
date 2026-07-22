@@ -119,15 +119,13 @@ export function AppRouter() {
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/terms" element={<TermsOfServicePage />} />
           
-          <Route element={<ProtectedRoute />}>
-            <Route path="/profile" element={<ProfilePage />} />
-          </Route>
-        </Route>
-        
-        <Route element={<ProtectedRoute />}>
           <Route path="/checkout/shipping" element={<ShippingPage />} />
           <Route path="/checkout/payment" element={<PaymentPage />} />
           <Route path="/checkout/confirm" element={<ConfirmationPage />} />
+          
+          <Route element={<ProtectedRoute />}>
+            <Route path="/profile" element={<ProfilePage />} />
+          </Route>
         </Route>
         
         <Route path="/astrologer" element={<AstrologerDashboard />} />
