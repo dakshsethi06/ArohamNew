@@ -117,30 +117,29 @@ export function ConfirmationPage() {
 
   return (
     <div className="w-full overflow-x-hidden" style={{ background: "#FAF7F2", minHeight: "100vh", fontFamily: SANS, position: "relative" }}>
-      <CheckoutHeader />
       <Confetti />
-      <div className="relative overflow-hidden pt-16 pb-16 px-6 lg:px-10 text-center" style={{ background: `linear-gradient(160deg,#FAF0D8,#FAF7F2,#F0E8D8)` }}>
+      <div className="relative overflow-hidden pt-20 sm:pt-24 pb-8 sm:pb-12 px-4 sm:px-6 lg:px-10 text-center" style={{ background: `linear-gradient(160deg,#FAF0D8,#FAF7F2,#F0E8D8)` }}>
         <div className="relative max-w-7xl mx-auto">
-          <div className="relative mx-auto mb-8 flex items-center justify-center transition-all duration-700"
-            style={{ width: 100, height: 100, opacity: visible ? 1 : 0, transform: visible ? "scale(1)" : "scale(0.6)" }}>
+          <div className="relative mx-auto mb-4 sm:mb-6 flex items-center justify-center transition-all duration-700"
+            style={{ width: 80, height: 80, opacity: visible ? 1 : 0, transform: visible ? "scale(1)" : "scale(0.6)" }}>
             <div className="absolute inset-0 rounded-full" style={{ background: `radial-gradient(circle,rgba(200,160,68,0.25),transparent)`, transform: "scale(1.8)" }} />
             <div className="absolute inset-0 rounded-full" style={{ border: `2px solid rgba(200,160,68,0.3)`, transform: "scale(1.35)" }} />
             <div className="w-full h-full rounded-full flex items-center justify-center" style={{ background: `linear-gradient(135deg,${GOLD},${SAFFRON})`, boxShadow: `0 12px 48px rgba(200,160,68,0.45)` }}>
-              <CheckCircle size={40} color="white" strokeWidth={2.5} />
+              <CheckCircle size={36} color="white" strokeWidth={2.5} />
             </div>
           </div>
           <div className="transition-all duration-700 delay-200" style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(16px)" }}>
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <span className="h-px w-16" style={{ background: `linear-gradient(90deg,transparent,${GOLD})` }} />
-              <span className="text-xs tracking-[0.25em] uppercase font-medium" style={{ color: GOLD }}>Order Confirmed</span>
-              <span className="h-px w-16" style={{ background: `linear-gradient(90deg,${GOLD},transparent)` }} />
+            <div className="flex items-center justify-center gap-3 mb-2 sm:mb-4">
+              <span className="h-px w-12 sm:w-16" style={{ background: `linear-gradient(90deg,transparent,${GOLD})` }} />
+              <span className="text-[10px] sm:text-xs tracking-[0.25em] uppercase font-medium" style={{ color: GOLD }}>Order Confirmed</span>
+              <span className="h-px w-12 sm:w-16" style={{ background: `linear-gradient(90deg,${GOLD},transparent)` }} />
             </div>
-            <h1 className="mb-4 mx-auto max-w-2xl" style={{ fontFamily: SERIF, fontSize: "clamp(1.8rem,5vw,3.2rem)", fontWeight: 500, color: MAROON, lineHeight: 1.1 }}>Your Sacred Order Has Been Confirmed</h1>
-            <p className="text-sm leading-relaxed max-w-md mx-auto" style={{ color: "#7A6A58" }}>Thank you for placing your trust in Aroham.<br />Your spiritual journey begins today.</p>
+            <h1 className="mb-2 sm:mb-3 mx-auto max-w-2xl" style={{ fontFamily: SERIF, fontSize: "clamp(1.4rem,4vw,3rem)", fontWeight: 500, color: MAROON, lineHeight: 1.15 }}>Your Sacred Order Has Been Confirmed</h1>
+            <p className="text-xs sm:text-sm leading-relaxed max-w-md mx-auto" style={{ color: "#7A6A58" }}>Thank you for placing your trust in Aroham.<br />Your spiritual journey begins today.</p>
           </div>
         </div>
       </div>
-      <div className="max-w-6xl mx-auto px-6 lg:px-10 py-12 pb-12 space-y-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-10 space-y-6">
         <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 4px 40px rgba(91,31,36,0.07)" }}>
           <div className="px-8 py-5 flex flex-wrap items-center justify-between gap-4" style={{ background: `linear-gradient(90deg,${MAROON},#7A2A30)` }}>
             <div><p className="text-xs tracking-widest uppercase mb-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>Order Number</p><p className="text-lg font-semibold" style={{ fontFamily: SERIF, color: GOLD }}>{displayOrderId}</p></div>
