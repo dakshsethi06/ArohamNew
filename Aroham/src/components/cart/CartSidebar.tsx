@@ -35,7 +35,7 @@ export function CartSidebar() {
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <div className="flex items-center gap-2">
-            <h2 className="text-base font-extrabold tracking-wider uppercase" style={{ fontFamily: SERIF, color: MAROON }}>
+            <h2 className="text-lg font-bold leading-tight" style={{ fontFamily: SERIF, color: MAROON }}>
               Your Cart
             </h2>
             <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white bg-red-600">
@@ -61,7 +61,7 @@ export function CartSidebar() {
               <img src={p.img} alt={p.name} className="w-16 h-16 rounded-xl object-cover flex-shrink-0 bg-amber-50 border border-black/5" />
               
               <div className="flex-1 min-w-0 pr-6">
-                <p className="text-xs font-bold leading-tight uppercase tracking-tight text-gray-900 truncate mb-1" style={{ fontFamily: SERIF, color: MAROON }}>
+                <p className="text-xs font-semibold leading-tight text-gray-900 truncate mb-1" style={{ fontFamily: SERIF, color: MAROON }}>
                   {p.name}
                 </p>
                 {p.subtitle && <p className="text-[10px] text-gray-500 mb-3 truncate">{p.subtitle}</p>}
@@ -130,9 +130,9 @@ export function CartSidebar() {
                 }
               });
             }}
-              className="w-full py-3.5 px-4 rounded-xl text-sm font-bold tracking-wider uppercase flex items-center justify-between text-white shadow-lg transition-all hover:opacity-95 active:scale-[0.99]"
+              className="w-full py-3.5 px-4 rounded-xl text-sm font-semibold flex items-center justify-between text-white shadow-lg transition-all hover:opacity-95 active:scale-[0.99]"
               style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)` }}>
-              <span>PROCEED TO CHECKOUT</span>
+              <span>Proceed to Checkout</span>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20">UPI / Cards</span>
                 <ChevronRight size={18} />
