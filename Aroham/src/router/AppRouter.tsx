@@ -65,9 +65,8 @@ function ProtectedRoute() {
   const { isLoggedIn, openAuth } = useAuth();
 
   if (!isLoggedIn) {
-    // If not logged in, immediately redirect to home and pop open the auth modal
     setTimeout(() => openAuth(), 0);
-    return <Navigate to="/" replace />;
+    return null;
   }
 
   return <Outlet />;
