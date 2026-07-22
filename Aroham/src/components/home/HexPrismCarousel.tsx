@@ -6,18 +6,17 @@ import { ArohamProduct } from "@/types/product";
 export function HexPrismCarousel({ products, onProductClick }: { products: ArohamProduct[]; onProductClick: (p: ArohamProduct) => void }) {
   const [current, setCurrent] = useState(0);
   const [expanded, setExpanded] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth < 640 : false);
   const n = products?.length || 0;
 
   useEffect(() => {
-    setIsMobile(window.innerWidth < 640);
     const handleResize = () => setIsMobile(window.innerWidth < 640);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const baseW = isMobile ? 95 : 150;
-  const baseH = isMobile ? 135 : 200;
+  const baseW = isMobile ? 100 : 150;
+  const baseH = isMobile ? 140 : 200;
   const baseTz = isMobile ? 100 : 190;
   const activeScale = 1.35;
   const SMOOTH_EASE = "0.7s cubic-bezier(0.25, 1, 0.5, 1)";
