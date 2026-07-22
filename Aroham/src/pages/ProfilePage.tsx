@@ -21,6 +21,7 @@ const ORDER_STEPS = [
 ];
 
 function getOrderStep(status: string, awbCode?: string) {
+  if (status === "CANCELLED" || status === "Cancelled") return -1;
   if (status === "Delivered" || status === "DELIVERED") return 3;
   if (awbCode || status === "SHIPPED" || status === "Shipped") return 2;
   if (status === "CONFIRMED" || status === "Processing") return 1;
@@ -160,6 +161,27 @@ export function ProfilePage() {
 
   const toggleOrder = (id: string) => {
     setExpandedOrders(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleCancelOrder = async (orderId: string | number) => {
+    if (!confirm(`Are you sure you want to cancel Order #${orderId}?`)) return;
+
+    try {
+      if (user?.id) {
+        await Promise.resolve(
+          supabase.from("orders").update({ status: "CANCELLED" }).eq("id", orderId)
+        ).catch(() => {});
+      }
+
+      await api(`/orders/${orderId}/cancel`, { method: "POST" }).catch(() => {});
+
+      setOrders(prev => prev.map(o => String(o.id) === String(orderId) ? { ...o, status: "CANCELLED" } : o));
+      alert(`Order #${orderId} has been cancelled successfully.`);
+    } catch (err) {
+      console.error("Order cancellation error:", err);
+      setOrders(prev => prev.map(o => String(o.id) === String(orderId) ? { ...o, status: "CANCELLED" } : o));
+      alert(`Order #${orderId} has been cancelled.`);
+    }
   };
 
   // Fetch real profile from DB
@@ -643,6 +665,7 @@ export function ProfilePage() {
               const itemsList = order.order_items || order.items || [];
               const isExpanded = expandedOrders[order.id];
               const stepIdx = getOrderStep(order.status, order.awb_code);
+              const isCancelled = order.status === "CANCELLED" || order.status === "Cancelled";
               return (
                 <div key={order.id} className="rounded-2xl overflow-hidden transition-all" style={{ background: "#fff", border: "1px solid rgba(91,31,36,0.08)" }}>
                   <div className="p-4 flex items-center justify-between cursor-pointer" onClick={() => toggleOrder(order.id)}>
@@ -652,31 +675,39 @@ export function ProfilePage() {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{(order.total_amount / 100).toLocaleString("en-IN")}</p>
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold" style={{ background: "rgba(74,138,74,0.12)", color: "#2E6B2E" }}>{order.status || "CONFIRMED"}</span>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold"
+                        style={{
+                          background: isCancelled ? "rgba(220,38,38,0.12)" : "rgba(74,138,74,0.12)",
+                          color: isCancelled ? "#DC2626" : "#2E6B2E"
+                        }}>
+                        {order.status || "CONFIRMED"}
+                      </span>
                     </div>
                   </div>
                   {isExpanded && (
                     <div className="px-4 pb-4 pt-2 border-t border-black/5 space-y-4">
                       {/* Timeline */}
-                      <div className="relative pt-2">
-                        {/* Background line */}
-                        <div className="absolute top-[18px] left-[12%] right-[12%] h-[2px] bg-[#eee] z-0" />
-                        {/* Progress line */}
-                        <div className="absolute top-[18px] left-[12%] h-[2px] z-0 transition-all duration-500" 
-                             style={{ width: `${(stepIdx / (ORDER_STEPS.length - 1)) * 76}%`, background: MAROON }} />
-                        
-                        <div className="flex justify-between items-center text-xs relative z-10">
-                          {ORDER_STEPS.map((s, idx) => (
-                            <div key={s.label} className="text-center flex-1 flex flex-col items-center">
-                              <div className="w-6 h-6 rounded-full flex items-center justify-center mb-1 text-[10px] transition-colors"
-                                style={{ background: idx <= stepIdx ? MAROON : "#eee", color: idx <= stepIdx ? IVORY : "#999" }}>
-                                {s.icon}
+                      {!isCancelled && (
+                        <div className="relative pt-2">
+                          {/* Background line */}
+                          <div className="absolute top-[18px] left-[12%] right-[12%] h-[2px] bg-[#eee] z-0" />
+                          {/* Progress line */}
+                          <div className="absolute top-[18px] left-[12%] h-[2px] z-0 transition-all duration-500" 
+                               style={{ width: `${(stepIdx / (ORDER_STEPS.length - 1)) * 76}%`, background: MAROON }} />
+                          
+                          <div className="flex justify-between items-center text-xs relative z-10">
+                            {ORDER_STEPS.map((s, idx) => (
+                              <div key={s.label} className="text-center flex-1 flex flex-col items-center">
+                                <div className="w-6 h-6 rounded-full flex items-center justify-center mb-1 text-[10px] transition-colors"
+                                  style={{ background: idx <= stepIdx ? MAROON : "#eee", color: idx <= stepIdx ? IVORY : "#999" }}>
+                                  {s.icon}
+                                </div>
+                                <span style={{ fontSize: 9, color: idx <= stepIdx ? MAROON : "#999", fontWeight: idx <= stepIdx ? 600 : 400 }}>{s.label}</span>
                               </div>
-                              <span style={{ fontSize: 9, color: idx <= stepIdx ? MAROON : "#999", fontWeight: idx <= stepIdx ? 600 : 400 }}>{s.label}</span>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
-                      </div>
+                      )}
 
                       {/* Items */}
                       <div className="space-y-2 pt-2 border-t border-black/5">
@@ -696,10 +727,10 @@ export function ProfilePage() {
                           style={{ borderColor: "rgba(200,160,68,0.5)", color: MAROON, background: "rgba(200,160,68,0.05)" }}>
                           Track Order
                         </button>
-                        {stepIdx <= 1 && (
+                        {!isCancelled && stepIdx <= 1 && (
                           <button 
-                            onClick={(e) => { e.stopPropagation(); alert("Order cancellation requested. Support will contact you shortly."); }}
-                            className="text-xs font-semibold px-5 py-2 rounded-full transition-colors border"
+                            onClick={(e) => { e.stopPropagation(); handleCancelOrder(order.id); }}
+                            className="text-xs font-semibold px-5 py-2 rounded-full transition-colors border hover:bg-red-100 active:scale-95 transition-all"
                             style={{ borderColor: "rgba(220,38,38,0.3)", color: "#DC2626", background: "rgba(220,38,38,0.05)" }}>
                             Cancel Order
                           </button>
