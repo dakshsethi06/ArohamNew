@@ -568,7 +568,7 @@ export function ShippingPage() {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div style={{ border: fieldBorder("pin"), borderRadius: 16 }}><FloatingInput label="PIN Code" value={form.pin} onChange={handlePinChange} required /></div>
-                    <div style={{ border: fieldBorder("house"), borderRadius: 16 }}><FloatingInput label="House / Flat No." value={form.house} onChange={set("house") as (v: string) => void} required /></div>
+                    <div style={{ border: fieldBorder("house"), borderRadius: 16 }}><FloatingInput label="House / Flat No." value={form.house} onChange={v => set("house")(v.replace(/\D/g, ""))} required /></div>
                   </div>
                   <div style={{ border: fieldBorder("street"), borderRadius: 16 }}>
                     <FloatingInput label="Street Address" value={form.street} onChange={set("street") as (v: string) => void} required />

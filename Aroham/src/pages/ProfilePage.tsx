@@ -567,7 +567,7 @@ export function ProfilePage() {
                   </div>
                   <div>
                     <label className="block text-xs font-semibold mb-1 text-gray-600">House / Flat No. *</label>
-                    <input type="text" value={addrForm.house} onChange={e => setAddrForm(p => ({ ...p, house: e.target.value }))}
+                    <input type="text" value={addrForm.house} onChange={e => setAddrForm(p => ({ ...p, house: e.target.value.replace(/\D/g, "") }))}
                       className="w-full px-4 py-2.5 rounded-xl text-sm outline-none border border-black/15 bg-[#FAF7F2]" />
                   </div>
                 </div>
