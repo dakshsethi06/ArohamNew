@@ -5,6 +5,7 @@ import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme"
 import { CONTACT_INFO } from "@/constants/contact";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { useWishlist } from "@/context/WishlistContext";
 import { useProducts } from "@/hooks/useProducts";
 import { ArohamProduct } from "@/types/product";
 import { DEFAULT_PRODUCTS } from "@/constants/products";
@@ -21,6 +22,7 @@ export function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
   const { isLoggedIn, openAuth } = useAuth();
   const { products, loading: productsLoading } = useProducts();
   const [product, setProduct] = useState<ArohamProduct | null>(null);
@@ -230,7 +232,9 @@ export function ProductDetailPage() {
             <div className="rounded-3xl overflow-hidden aspect-square bg-amber-50 mb-3 relative group" style={{ boxShadow: "0 8px 40px rgba(91,31,36,0.1)" }}>
               <img src={product.img} alt={`${product.name} - ${product.subtitle}`} className="w-full h-full object-cover" />
               <div className="absolute top-4 right-4 flex gap-2">
-                <button aria-label="Add to wishlist" className="p-2 rounded-full hover:opacity-80 transition-opacity" style={{ background: "rgba(255,255,255,0.9)" }}><Heart size={16} style={{ color: "#7A6A58" }} /></button>
+                <button aria-label="Add to wishlist" onClick={() => { if (product) { toggleWishlist(product); navigate("/wishlist"); } }} className="p-2 rounded-full hover:opacity-80 transition-opacity" style={{ background: "rgba(255,255,255,0.9)" }}>
+                  <Heart size={16} style={{ color: product && isInWishlist(product.id) ? "#E74C3C" : "#7A6A58", fill: product && isInWishlist(product.id) ? "#E74C3C" : "none" }} />
+                </button>
                 <button aria-label="Share product" className="p-2 rounded-full hover:opacity-80 transition-opacity" style={{ background: "rgba(255,255,255,0.9)" }}><Share2 size={16} style={{ color: "#7A6A58" }} /></button>
               </div>
               <div className="absolute bottom-4 left-4 px-3 py-1 rounded-full text-[10px] font-semibold" style={{ background: "rgba(91,31,36,0.88)", color: GOLD }}>{imgViews[selectedImg]}</div>

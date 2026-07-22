@@ -1,6 +1,9 @@
+import { useState } from "react";
+import { useNavigate } from "react-router";
 import { Star, Heart, ShoppingCart } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
 import { ArohamProduct } from "@/types/product";
+import { useWishlist } from "@/context/WishlistContext";
 
 export interface ProductCardProps {
   product: ArohamProduct;
@@ -11,7 +14,20 @@ export interface ProductCardProps {
   onToggleWish?: (key: string, e: React.MouseEvent) => void;
 }
 
-export function ProductCard({ product: p, onProductClick, onAddToCart, wishKey = "", wished = false, onToggleWish }: ProductCardProps) {
+export function ProductCard({ product: p, onProductClick, onAddToCart, wishKey = "", wished: propWished, onToggleWish }: ProductCardProps) {
+  const navigate = useNavigate();
+  const { toggleWishlist, isInWishlist } = useWishlist();
+  const isItemWished = propWished !== undefined ? propWished : isInWishlist(p.id);
+
+  const handleWishClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onToggleWish && wishKey) {
+      onToggleWish(wishKey, e);
+    }
+    toggleWishlist(p);
+    navigate("/wishlist");
+  };
+
   return (
     <div onClick={() => onProductClick(p)}
       className="group rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1.5 cursor-pointer h-full flex flex-col justify-between"
@@ -24,13 +40,11 @@ export function ProductCard({ product: p, onProductClick, onAddToCart, wishKey =
           {p.badges && p.badges.length > 0 && p.price > 1000 && (
             <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wide" style={{ background: "rgba(91,31,36,0.88)", color: GOLD }}>{p.badges[0]}</div>
           )}
-          {onToggleWish && (
-            <button aria-label="Add to wishlist" onClick={e => onToggleWish(wishKey, e)}
-              className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-transform hover:scale-110"
-              style={{ background: "rgba(255,255,255,0.92)", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
-              <Heart size={12} style={{ color: wished ? "#E74C3C" : "#9A8A78", fill: wished ? "#E74C3C" : "none" }} />
-            </button>
-          )}
+          <button aria-label="Add to wishlist" onClick={handleWishClick}
+            className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-transform hover:scale-110"
+            style={{ background: "rgba(255,255,255,0.92)", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
+            <Heart size={12} style={{ color: isItemWished ? "#E74C3C" : "#9A8A78", fill: isItemWished ? "#E74C3C" : "none" }} />
+          </button>
           {p.original > p.price && (
             <div className="absolute bottom-2 left-2 px-1.5 py-0.5 rounded-full text-[9px] font-bold" style={{ background: "#E74C3C", color: "#fff" }}>
               -{Math.round((1 - p.price / p.original) * 100)}%

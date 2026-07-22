@@ -21,6 +21,7 @@ import { ContactUsPage } from "@/pages/ContactUsPage";
 import { TrackOrderPage } from "@/pages/TrackOrderPage";
 import { PrivacyPolicyPage } from "@/pages/PrivacyPolicyPage";
 import { TermsOfServicePage } from "@/pages/TermsOfServicePage";
+import { WishlistPage } from "@/pages/WishlistPage";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 
@@ -108,6 +109,7 @@ export function AppRouter() {
           <Route path="/" element={<HomePage />} />
           <Route path="/shop" element={<ShopPage />} />
           <Route path="/shop/:slug" element={<ProductDetailPage />} />
+          <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/consult" element={<ConsultPage />} />
           <Route path="/shipping" element={<ShippingPolicyPage />} />
           <Route path="/returns" element={<ReturnPolicyPage />} />

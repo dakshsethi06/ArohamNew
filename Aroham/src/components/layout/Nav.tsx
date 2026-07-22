@@ -4,6 +4,7 @@ import { ShoppingCart, Heart, Search, User, Menu, X } from "lucide-react";
 import { MAROON, GOLD, SAFFRON, IVORY, SANS, SERIF } from "@/constants/theme";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { useWishlist } from "@/context/WishlistContext";
 import { SearchModal } from "./SearchModal";
 
 export function Nav() {
@@ -11,6 +12,7 @@ export function Nav() {
   const location = useLocation();
   const { cartCount, openCart } = useCart();
   const { isLoggedIn, openAuth } = useAuth();
+  const { wishlist } = useWishlist();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -99,7 +101,10 @@ export function Nav() {
                 <SearchModal isOpen={isSearchOpen} onClose={() => { setIsSearchOpen(false); setQuery(""); }} query={query} setQuery={setQuery} solid={solid} isMobile={false} />
               </div>
             </div>
-            <button aria-label="Wishlist" onClick={() => navigate("/shop")} className="p-2 rounded-full transition-colors hover:bg-black/5" style={{ color: solid ? MAROON : IVORY }}><Heart size={18} strokeWidth={1.5} /></button>
+            <button aria-label="Wishlist" onClick={() => navigate("/wishlist")} className="relative p-2 rounded-full transition-colors hover:bg-black/5" style={{ color: solid ? MAROON : IVORY }}>
+              <Heart size={18} strokeWidth={1.5} />
+              {wishlist.length > 0 && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-white text-[10px] flex items-center justify-center font-semibold" style={{ background: "#E74C3C" }}>{wishlist.length}</span>}
+            </button>
             <button aria-label="Open cart" onClick={openCart} className="relative p-2 rounded-full transition-colors hover:bg-black/5" style={{ color: solid ? MAROON : IVORY }}>
               <ShoppingCart size={18} strokeWidth={1.5} />
               {cartCount > 0 && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-white text-[10px] flex items-center justify-center font-semibold" style={{ background: GOLD }}>{cartCount}</span>}
@@ -143,8 +148,9 @@ export function Nav() {
                 <SearchModal isOpen={isSearchOpen} onClose={() => { setIsSearchOpen(false); setQuery(""); }} query={query} setQuery={setQuery} solid={solid} isMobile={true} />
               </div>
             </div>
-            <button aria-label="Wishlist" onClick={() => navigate("/shop")} className="p-1 flex-shrink-0">
+            <button aria-label="Wishlist" onClick={() => navigate("/wishlist")} className="relative p-1 flex-shrink-0">
               <Heart size={20} strokeWidth={1.5} />
+              {wishlist.length > 0 && <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full text-white text-[9px] flex items-center justify-center font-semibold" style={{ background: "#E74C3C" }}>{wishlist.length}</span>}
             </button>
             <button aria-label="Open cart" onClick={openCart} className="relative p-1 flex-shrink-0">
               <ShoppingCart size={20} strokeWidth={1.5} />
