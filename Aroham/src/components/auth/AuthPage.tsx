@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router";
+import { useNavigate, Link, useSearchParams } from "react-router";
 import { X, Star, CheckCircle, Shield, ArrowRight, User as UserIcon, Calendar, ChevronDown, Sparkles, Lock, Verified } from "lucide-react";
 import { MAROON, GOLD, SAFFRON, IVORY, SANS, SERIF } from "@/constants/theme";
 import { AuthInput } from "./AuthInput";
@@ -33,9 +33,13 @@ export function AuthPage() {
     closeAuth(true);
     navigate("/");
   };
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [authState, setAuthState] = useState<AuthState>("signin");
-  const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
+  const initialTabFromUrl = searchParams.get("tab") || searchParams.get("mode") || sessionStorage.getItem("aroham_auth_tab");
+  const initialTab = initialTabFromUrl === "signup" ? "signup" : "signin";
+
+  const [authState, setAuthState] = useState<AuthState>(initialTab);
+  const [activeTab, setActiveTab] = useState<"signin" | "signup">(initialTab);
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -56,6 +60,10 @@ export function AuthPage() {
     setAuthState(t);
     setOtp(Array(6).fill(""));
     setErrorMsg("");
+    try {
+      sessionStorage.setItem("aroham_auth_tab", t);
+      setSearchParams({ tab: t }, { replace: true });
+    } catch (e) {}
   };
 
   const goTo = (s: AuthState) => {
@@ -833,7 +841,7 @@ export function AuthPage() {
         </div>
 
         {/* Right Form Container */}
-        <div className="w-full lg:w-1/2 relative flex flex-col justify-center px-4 sm:px-12 md:px-16 py-4 sm:py-8 overflow-y-auto">
+        <div className="w-full lg:w-1/2 relative flex flex-col justify-start lg:justify-center px-4 sm:px-12 md:px-16 py-8 sm:py-12 overflow-y-auto">
           {/* Ambient floating gradient orbs */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             <div className="absolute rounded-full" style={{ width: 360, height: 360, top: -100, right: -70, background: "radial-gradient(circle, rgba(200,160,68,0.28), transparent 70%)", filter: "blur(24px)", animation: "aroham-float 15s ease-in-out infinite" }} />
@@ -841,7 +849,7 @@ export function AuthPage() {
             <div className="absolute rounded-full" style={{ width: 240, height: 240, top: "42%", left: "52%", background: "radial-gradient(circle, rgba(91,31,36,0.1), transparent 70%)", filter: "blur(28px)", animation: "aroham-float 22s ease-in-out infinite" }} />
           </div>
 
-          <div className="relative max-w-md mx-auto w-full">
+          <div className="relative max-w-md mx-auto w-full pt-4 sm:pt-6 pb-6">
             {/* Glassmorphism form card */}
             <div
               className="rounded-3xl sm:rounded-[28px] p-5 sm:p-9"
