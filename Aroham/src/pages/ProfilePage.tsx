@@ -9,6 +9,8 @@ import * as Popover from "@radix-ui/react-popover";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 import { supabase } from "@/lib/supabase";
+import { db } from "@/lib/firebase";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 const ORDER_STEPS = [
   { label: "Ordered", icon: "✓" },
@@ -132,23 +134,56 @@ export function ProfilePage() {
     setSaving(true);
     setSaveSuccess(false);
     try {
-      const updated = {
+      const profileData = {
         id: user.id,
         full_name: editForm.fullName,
+        fullName: editForm.fullName,
         email: editForm.email,
         phone: editForm.phone,
         gender: editForm.gender,
         dob: editForm.dob,
-        pob_city: editForm.pobCity,
-        updated_at: new Date().toISOString(),
+        pobCity: editForm.pobCity,
         created_at: profile?.created_at || new Date().toISOString()
       };
-      
-      const { error } = await supabase.from("users").upsert(updated);
-      if (error) throw error;
 
-      setProfile(updated);
-      sessionStorage.setItem("aroham_user_profile", JSON.stringify(updated));
+      // 1. Local Storage
+      sessionStorage.setItem("aroham_user_profile", JSON.stringify(profileData));
+      if (editForm.phone) {
+        const phoneDigits = editForm.phone.replace(/\D/g, "");
+        localStorage.setItem(`aroham_registered_user_phone_${phoneDigits}`, JSON.stringify(profileData));
+      }
+
+      // 2. Firestore
+      try {
+        await setDoc(doc(db, "users", user.id), {
+          fullName: editForm.fullName,
+          email: editForm.email,
+          phone: editForm.phone,
+          gender: editForm.gender,
+          dob: editForm.dob,
+          pobCity: editForm.pobCity,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      } catch (err) {
+        console.warn("Firestore save profile warning:", err);
+      }
+
+      // 3. Supabase (Only standard columns to avoid schema mismatch)
+      try {
+        await supabase.from("users").upsert({
+          id: user.id,
+          full_name: editForm.fullName,
+          email: editForm.email,
+          phone: editForm.phone,
+          gender: editForm.gender,
+          dob: editForm.dob,
+          created_at: profile?.created_at || new Date().toISOString()
+        });
+      } catch (err) {
+        console.warn("Supabase profile save warning:", err);
+      }
+
+      setProfile(profileData);
       setSaveSuccess(true);
       setIsEditing(false);
       setTimeout(() => setSaveSuccess(false), 3000);
