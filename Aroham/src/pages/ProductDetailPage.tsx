@@ -275,9 +275,9 @@ export function ProductDetailPage() {
             </div>
             <div ref={mainButtonsRef} className="space-y-3 mb-5">
               <button onClick={() => addToCart(product, qty)}
-                className="w-full py-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90 hover:shadow-lg"
+                className="w-full py-4 rounded-2xl text-sm font-semibold flex items-center justify-center transition-all hover:opacity-90 hover:shadow-lg uppercase"
                 style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
-                <ShoppingCart size={16} /> Add to Cart
+                Add to Cart
               </button>
               <button
                 onClick={async () => { 
@@ -439,9 +439,9 @@ export function ProductDetailPage() {
         </div>
         <div className="flex gap-3">
           <button onClick={() => addToCart(product, qty)}
-            className="flex-1 py-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2"
+            className="flex-1 py-4 rounded-2xl text-sm font-semibold flex items-center justify-center uppercase"
             style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
-            <ShoppingCart size={14} /> Add to Cart
+            Add to Cart
           </button>
           <button
             onClick={async () => {

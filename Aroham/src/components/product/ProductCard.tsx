@@ -63,9 +63,8 @@ export function ProductCard({ product: p, onProductClick, onAddToCart, wishKey =
         {onAddToCart && (
           <button aria-label={`Add ${p.name} to cart`}
             onClick={e => { e.stopPropagation(); onAddToCart(p); }}
-            className="flex-shrink-0 px-3 py-1.5 rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold tracking-wide transition-all hover:opacity-90 hover:scale-105 active:scale-95 shadow-sm uppercase"
+            className="flex-shrink-0 px-3.5 py-1.5 rounded-xl flex items-center justify-center text-xs font-bold tracking-wide transition-all hover:opacity-90 active:scale-95 shadow-sm uppercase"
             style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY, border: "none", cursor: "pointer", fontFamily: SANS }}>
-            <ShoppingCart size={13} style={{ color: IVORY }} />
             <span>Add to Cart</span>
           </button>
         )}

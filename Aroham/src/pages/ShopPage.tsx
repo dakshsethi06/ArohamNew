@@ -328,10 +328,9 @@ export function ShopPage() {
                                 slug: p.slug
                               });
                             }}
-                            className="flex-shrink-0 px-3 py-1.5 rounded-xl text-[10px] sm:text-xs font-bold tracking-wide transition-all hover:opacity-90 active:scale-95 flex items-center justify-center gap-1 shadow-sm uppercase"
+                            className="flex-shrink-0 px-3.5 py-1.5 rounded-xl text-[10px] sm:text-xs font-bold tracking-wide transition-all hover:opacity-90 active:scale-95 flex items-center justify-center shadow-sm uppercase"
                             style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}
                           >
-                            <ShoppingCart size={12} />
                             <span>ADD TO CART</span>
                           </button>
                         </div>
