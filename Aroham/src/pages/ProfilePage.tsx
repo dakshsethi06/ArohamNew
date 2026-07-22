@@ -146,18 +146,19 @@ export function ProfilePage() {
     const nameParts = (addr.full_name || addr.name || "").trim();
     setEditingAddrId(addr.id);
 
-    let houseVal = addr.house || "";
-    let streetVal = addr.street || "";
+    let houseVal = (addr.house || "").trim();
+    let streetVal = (addr.street || "").trim();
 
     if (!houseVal && (addr.address || addr.line1)) {
-      const full = addr.address || addr.line1 || "";
-      const commaIdx = full.indexOf(",");
-      if (commaIdx !== -1) {
-        houseVal = full.slice(0, commaIdx).trim();
-        streetVal = full.slice(commaIdx + 1).trim();
-      } else {
-        houseVal = full;
-        streetVal = "";
+      houseVal = (addr.address || addr.line1 || "").trim();
+    }
+
+    // Clean houseVal if it contains a comma or merged street address
+    if (houseVal.includes(",")) {
+      const parts = houseVal.split(",");
+      houseVal = parts[0].trim();
+      if (!streetVal) {
+        streetVal = parts.slice(1).join(",").trim();
       }
     }
 
