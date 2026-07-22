@@ -27,7 +27,7 @@ export function Footer() {
           </div>
           {[
             { title: "Products", links: [{ label: "Yantras", href: "/shop?category=Yantra" }, { label: "Pendants", href: "/shop?category=Pendant" }, { label: "Crystals", href: "/shop?category=Crystals" }, { label: "Rudraksha", href: "/shop?category=Rudraksha" }, { label: "Combo Kits", href: "/shop?title=Combo%20Deals" }] },
-            { title: "Support",  links: [{ label: "FAQ", href: "/faq" }, { label: "Shipping Policy", href: "/shipping" }, { label: "Return Policy", href: "/returns" }, { label: "Track Order", href: "/track" }, { label: "Contact Us", href: "/contact" }] },
+            { title: "Support",  links: [{ label: "FAQ", href: "/faq" }, { label: "Shipping Policy", href: "/shipping" }, { label: "Return Policy", href: "/returns" }, { label: "Track Order", href: "/track" }, { label: "Need Help?", href: "/contact" }] },
             { title: "Company",  links: [{ label: "About Us", href: "#" }, { label: "Our Story", href: "#" }, { label: "Careers", href: "#" }, { label: "Press", href: "#" }, { label: "Blog", href: "#" }] },
           ].map(col => (
             <div key={col.title}>

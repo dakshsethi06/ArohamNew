@@ -33,9 +33,9 @@ export function ContactUsPage() {
     <div className="min-h-screen bg-[#FAF7F2] font-sans selection:bg-[#C8A044] selection:text-[#0D0508] pb-10">
       <div className="max-w-5xl mx-auto px-6 pt-32 pb-20">
         <div className="text-center mb-12">
-          <h1 style={{ fontFamily: SERIF, color: MAROON }} className="text-4xl md:text-5xl font-medium mb-4">Contact Us</h1>
+          <h1 style={{ fontFamily: SERIF, color: MAROON }} className="text-4xl md:text-5xl font-medium mb-4">Need Help?</h1>
           <div className="h-1 w-24 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${GOLD}, transparent)` }} />
-          <p className="mt-6 text-[#7A6A58]">We are here to assist you on your spiritual journey.</p>
+          <p className="mt-6 text-[#7A6A58]">We are here to assist you with your orders, products, and spiritual journey.</p>
         </div>
         
         <div className="grid lg:grid-cols-2 gap-8 items-stretch">
