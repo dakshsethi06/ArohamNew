@@ -488,25 +488,25 @@ export function ShippingPage() {
   return (
     <div className="w-full overflow-x-hidden" style={{ background: "#FAF7F2", minHeight: "100vh", fontFamily: SANS }}>
       <CheckoutHeader />
-      <div className="pt-6 pb-6 lg:pt-8 lg:pb-6 relative overflow-hidden" style={{ background: "linear-gradient(135deg,#F5EDE0,#FAF7F2,#F0E8D8)" }}>
+      <div className="pt-4 pb-4 sm:pt-6 sm:pb-6 lg:pt-8 lg:pb-6 relative overflow-hidden" style={{ background: "linear-gradient(135deg,#F5EDE0,#FAF7F2,#F0E8D8)" }}>
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `repeating-linear-gradient(0deg,${MAROON} 0,${MAROON} 1px,transparent 1px,transparent 48px),repeating-linear-gradient(90deg,${MAROON} 0,${MAROON} 1px,transparent 1px,transparent 48px)` }} />
-        <div className="relative max-w-7xl mx-auto px-5 lg:px-10">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
           <button
             onClick={() => navigate("/shop")}
-            className="inline-flex items-center gap-2 mb-4 lg:mb-3 px-4 py-2 rounded-full text-sm font-medium transition-all hover:shadow-md active:scale-95"
+            className="inline-flex items-center gap-2 mb-3 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all hover:shadow-md active:scale-95"
             style={{ background: "#FFFFFF", color: MAROON, border: `1px solid rgba(91,31,36,0.15)`, boxShadow: "0 2px 8px rgba(91,31,36,0.08)" }}
           >
             <ChevronLeft size={16} /> Back
           </button>
-          <div className="flex items-center gap-2 mb-3 lg:mb-2 text-xs" style={{ color: "#9A8A78" }}>
+          <div className="flex items-center gap-2 mb-2 text-xs" style={{ color: "#9A8A78" }}>
             <span style={{ color: MAROON }}>Cart</span><ChevronRight size={12} /><span className="font-medium" style={{ color: MAROON }}>Delivery Details</span><ChevronRight size={12} /><span>Payment</span>
           </div>
-          <h1 className="mb-1" style={{ fontFamily: SERIF, fontSize: "clamp(1.75rem,4vw,2.5rem)", fontWeight: 500, color: MAROON, lineHeight: 1.1 }}>Delivery Details</h1>
-          <p className="text-sm" style={{ color: "#7A6A58" }}>Tell us where you'd like your sacred products delivered.</p>
+          <h1 className="mb-1" style={{ fontFamily: SERIF, fontSize: "clamp(1.5rem,4vw,2.5rem)", fontWeight: 500, color: MAROON, lineHeight: 1.1 }}>Delivery Details</h1>
+          <p className="text-xs sm:text-sm" style={{ color: "#7A6A58" }}>Tell us where you'd like your sacred products delivered.</p>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-5 lg:px-10 py-8 lg:py-6 pb-40 lg:pb-12">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10 items-start">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-8 pb-48 lg:pb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 sm:gap-10 items-start">
           <div>
             {savedAddresses.length > 0 && !showForm && (
               <div className="space-y-4">
@@ -597,13 +597,13 @@ export function ShippingPage() {
 
             {(showForm || savedAddresses.length === 0) && (
               <div className="rounded-3xl overflow-hidden mt-4" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
-                <div className="px-6 pt-6 pb-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
-                  <h2 className="text-lg font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>{editingAddrId ? "Edit Address" : "New Address"}</h2>
+                <div className="px-4 sm:px-6 pt-5 pb-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
+                  <h2 className="text-base sm:text-lg font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>{editingAddrId ? "Edit Address" : "New Address"}</h2>
                   {savedAddresses.length > 0 && (
-                    <button onClick={() => { setShowForm(false); setEditingAddrId(null); }} className="text-xs font-semibold px-4 py-2 rounded-full transition-all hover:opacity-80" style={{ background: "rgba(91,31,36,0.07)", color: MAROON }}>← Back to Saved Addresses</button>
+                    <button onClick={() => { setShowForm(false); setEditingAddrId(null); }} className="text-xs font-semibold px-3 py-1.5 sm:px-4 sm:py-2 rounded-full transition-all hover:opacity-80" style={{ background: "rgba(91,31,36,0.07)", color: MAROON }}>← Back to Saved Addresses</button>
                   )}
                 </div>
-                <div className="p-6 space-y-4">
+                <div className="p-4 sm:p-6 space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div style={{ border: fieldBorder("firstName"), borderRadius: 16 }}><FloatingInput label="First Name" value={form.firstName} onChange={set("firstName") as (v: string) => void} required /></div>
                     <FloatingInput label="Last Name" value={form.lastName} onChange={set("lastName") as (v: string) => void} />
