@@ -65,18 +65,18 @@ export function CommunityComments({ products = [] }: { products?: ArohamProduct[
 
   const allReviews = [...customReviews, ...COMMENTS_DATA];
 
-  // Auto-slide carousel gently
+  // 2-second smooth auto-slide
   useEffect(() => {
     if (isPaused || showForm) return;
     const interval = setInterval(() => {
       if (!scrollRef.current) return;
       const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-      if (scrollLeft + clientWidth >= scrollWidth - 15) {
+      if (scrollLeft + clientWidth >= scrollWidth - 30) {
         scrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
       } else {
-        scrollRef.current.scrollBy({ left: 320, behavior: "smooth" });
+        scrollRef.current.scrollBy({ left: 350, behavior: "smooth" });
       }
-    }, 4500);
+    }, 2000);
 
     return () => clearInterval(interval);
   }, [isPaused, showForm, allReviews.length]);
@@ -84,7 +84,7 @@ export function CommunityComments({ products = [] }: { products?: ArohamProduct[
   const scrollByAmount = (direction: "left" | "right") => {
     if (!scrollRef.current) return;
     scrollRef.current.scrollBy({
-      left: direction === "left" ? -340 : 340,
+      left: direction === "left" ? -350 : 350,
       behavior: "smooth"
     });
   };
@@ -159,6 +159,16 @@ export function CommunityComments({ products = [] }: { products?: ArohamProduct[
             <p className="text-sm mt-1" style={{ color: "#7A6A58" }}>{allReviews.length} verified reviews · 4.8 average rating</p>
           </div>
           <div className="flex items-center gap-3 self-start">
+            <button aria-label="Previous review" onClick={() => scrollByAmount("left")}
+              className="hidden sm:flex w-10 h-10 rounded-full items-center justify-center transition-all hover:scale-105 active:scale-95 border shadow-sm"
+              style={{ background: "#FFFFFF", borderColor: "rgba(91,31,36,0.15)", color: MAROON }}>
+              <ChevronLeft size={18} />
+            </button>
+            <button aria-label="Next review" onClick={() => scrollByAmount("right")}
+              className="hidden sm:flex w-10 h-10 rounded-full items-center justify-center transition-all hover:scale-105 active:scale-95 border shadow-sm"
+              style={{ background: "#FFFFFF", borderColor: "rgba(91,31,36,0.15)", color: MAROON }}>
+              <ChevronRight size={18} />
+            </button>
             <button onClick={() => {
                 setShowForm(s => !s);
                 if (submitted) {
