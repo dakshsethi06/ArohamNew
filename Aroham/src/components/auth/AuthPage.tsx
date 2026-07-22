@@ -611,7 +611,7 @@ export function AuthPage() {
         <div className="hidden lg:flex w-1/2 relative flex-col justify-between p-12 overflow-hidden">
           {/* Keyed crossfade + slow Ken-Burns zoom on each state change */}
           <div key={panel.img} className="absolute inset-0" style={{ animation: "aroham-fade 0.9s ease" }}>
-            <img src={panel.img} alt="Aroham sacred imagery" className="absolute inset-0 w-full h-full object-cover" />
+            <img src={panel.img} alt="Aroham sacred imagery" fetchPriority="high" decoding="sync" className="absolute inset-0 w-full h-full object-cover" />
           </div>
           <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(20,8,12,0.94) 0%, rgba(20,8,12,0.45) 55%, rgba(20,8,12,0.15) 100%)" }} />
           <div className="absolute inset-x-0 top-0 h-40" style={{ background: "linear-gradient(to bottom, rgba(20,8,12,0.55), transparent)" }} />
