@@ -228,20 +228,20 @@ export function ShopPage() {
             </div>
           </div>
           <div className="flex-1">
-            <div className="flex items-center justify-between mb-6">
-              <p className="text-sm" style={{ color: "#7A6A58" }}>Showing <strong style={{ color: MAROON }}>{filtered.length}</strong> products</p>
-              <div className="flex items-center gap-3">
-                <button onClick={() => setSidebarOpen(true)} className="lg:hidden flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border"
-                  style={{ borderColor: "rgba(91,31,36,0.15)", color: MAROON }}><Filter size={14} /> Filter</button>
+            <div className="flex flex-wrap items-center justify-between gap-2.5 mb-6">
+              <p className="text-xs sm:text-sm font-medium" style={{ color: "#7A6A58" }}>Showing <strong style={{ color: MAROON }}>{filtered.length}</strong> products</p>
+              <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+                <button onClick={() => setSidebarOpen(true)} className="lg:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all"
+                  style={{ borderColor: "rgba(91,31,36,0.15)", color: MAROON, background: "#FFFFFF" }}><Filter size={13} /> Filter</button>
                 
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium hidden sm:inline" style={{ color: "#7A6A58" }}>Sort by:</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-medium hidden sm:inline" style={{ color: "#7A6A58" }}>Sort:</span>
                   <Select.Root value={sort} onValueChange={setSort}>
                     <Select.Trigger asChild>
-                      <button className="pl-4 pr-3 py-2 rounded-full text-xs font-semibold flex items-center gap-2 cursor-pointer transition-all shadow-sm outline-none"
+                      <button className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-sm outline-none max-w-[150px] sm:max-w-none truncate"
                         style={{ border: `1px solid rgba(91,31,36,0.2)`, background: "#FFFFFF", color: MAROON, fontFamily: SANS }}>
                         <Select.Value />
-                        <ChevronDown size={14} style={{ color: MAROON }} />
+                        <ChevronDown size={13} style={{ color: MAROON }} />
                       </button>
                     </Select.Trigger>
                     <Select.Portal>
