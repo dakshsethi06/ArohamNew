@@ -320,32 +320,32 @@ export function PaymentPage() {
         </div>
       )}
       {/* Page header */}
-      <div className="pt-6 pb-6 lg:pt-8 lg:pb-6 relative overflow-hidden" style={{ background: "linear-gradient(135deg,#F5EDE0,#FAF7F2,#F0E8D8)" }}>
+      <div className="pt-4 pb-4 sm:pt-6 sm:pb-6 lg:pt-8 lg:pb-6 relative overflow-hidden" style={{ background: "linear-gradient(135deg,#F5EDE0,#FAF7F2,#F0E8D8)" }}>
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `repeating-linear-gradient(0deg,${MAROON} 0,${MAROON} 1px,transparent 1px,transparent 48px),repeating-linear-gradient(90deg,${MAROON} 0,${MAROON} 1px,transparent 1px,transparent 48px)` }} />
-        <div className="relative max-w-7xl mx-auto px-5 lg:px-10">
-          <button onClick={() => navigate("/checkout/shipping", { replace: true })} className="inline-flex items-center gap-2 mb-4 lg:mb-3 px-4 py-2 rounded-full text-sm font-medium transition-all hover:shadow-md active:scale-95" style={{ background: "#FFFFFF", color: MAROON, border: `1px solid rgba(91,31,36,0.15)`, boxShadow: "0 2px 8px rgba(91,31,36,0.08)" }}>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
+          <button onClick={() => navigate("/checkout/shipping", { replace: true })} className="inline-flex items-center gap-2 mb-3 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all hover:shadow-md active:scale-95" style={{ background: "#FFFFFF", color: MAROON, border: `1px solid rgba(91,31,36,0.15)`, boxShadow: "0 2px 8px rgba(91,31,36,0.08)" }}>
             <ChevronLeft size={16} /> Back to Delivery
           </button>
-          <div className="flex items-center gap-2 mb-3 lg:mb-2 text-xs" style={{ color: "#9A8A78" }}>
+          <div className="flex items-center gap-2 mb-2 text-xs" style={{ color: "#9A8A78" }}>
             <span>Cart</span><ChevronRight size={12} /><span style={{ color: MAROON }}>Delivery Details</span><ChevronRight size={12} /><span className="font-medium" style={{ color: MAROON }}>Payment</span>
           </div>
           <div className="flex items-center gap-3 mb-1">
-            <h1 style={{ fontFamily: SERIF, fontSize: "clamp(1.75rem,4vw,2.5rem)", fontWeight: 500, color: MAROON, lineHeight: 1.1 }}>Secure Payment</h1>
+            <h1 style={{ fontFamily: SERIF, fontSize: "clamp(1.5rem,4vw,2.5rem)", fontWeight: 500, color: MAROON, lineHeight: 1.1 }}>Secure Payment</h1>
           </div>
-          <p className="text-sm" style={{ color: "#7A6A58" }}>Complete your sacred purchase securely via Razorpay.</p>
+          <p className="text-xs sm:text-sm" style={{ color: "#7A6A58" }}>Complete your sacred purchase securely via Razorpay.</p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-5 lg:px-10 py-8 lg:py-6 pb-12 lg:pb-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10 items-start">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-8 pb-24 lg:pb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 sm:gap-10 items-start">
           {/* Left — Pay via Razorpay card */}
           <div className="space-y-4">
             {/* Coupon Code Section — now on Payment page */}
             <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
-              <div className="px-4 sm:px-6 pt-5 pb-3" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
+              <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
                 <div className="flex items-center gap-2">
                   <Tag size={14} style={{ color: GOLD }} />
-                  <h2 className="text-base font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Promo Code / Coupon</h2>
+                  <h2 className="text-sm sm:text-base font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Promo Code / Coupon</h2>
                 </div>
               </div>
               <div className="px-4 sm:px-6 py-4">
@@ -394,33 +394,33 @@ export function PaymentPage() {
 
             {/* Online Payment Card (Razorpay) */}
             <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
-              <div className="px-6 pt-6 pb-4" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
-                <h2 className="text-lg font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Payment Details</h2>
+              <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
+                <h2 className="text-base sm:text-lg font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Payment Details</h2>
               </div>
-              <div className="p-8 flex flex-col items-center text-center gap-6">
+              <div className="p-5 sm:p-8 flex flex-col items-center text-center gap-5 sm:gap-6">
                 {/* Razorpay brand */}
                 <div className="flex flex-col items-center gap-3">
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg" style={{ background: "linear-gradient(135deg,#072654,#3395FF)" }}>
-                    <span className="text-white font-black text-2xl" style={{ fontFamily: "sans-serif" }}>R</span>
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center shadow-lg" style={{ background: "linear-gradient(135deg,#072654,#3395FF)" }}>
+                    <span className="text-white font-black text-xl sm:text-2xl" style={{ fontFamily: "sans-serif" }}>R</span>
                   </div>
                   <div>
-                    <p className="text-base font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Pay Securely with Razorpay</p>
-                    <p className="text-xs mt-1" style={{ color: "#9A8A78" }}>UPI · Cards · Net Banking · Wallets · EMI</p>
+                    <p className="text-sm sm:text-base font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Pay Securely with Razorpay</p>
+                    <p className="text-[11px] sm:text-xs mt-1" style={{ color: "#9A8A78" }}>UPI · Cards · Net Banking · Wallets · EMI</p>
                   </div>
                 </div>
 
                 {/* Total amount */}
-                <div className="w-full rounded-2xl py-4 px-6" style={{ background: "linear-gradient(135deg,#FAF0D8,#FAF7F2)", border: "1px solid rgba(200,160,68,0.22)" }}>
-                  <p className="text-xs mb-1" style={{ color: "#9A8A78" }}>Total Amount</p>
-                  <p className="text-3xl font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{total.toLocaleString("en-IN")}</p>
-                  <p className="text-xs mt-1" style={{ color: "#4A8A4A" }}>Includes free shipping + GST</p>
+                <div className="w-full rounded-2xl py-3.5 sm:py-4 px-4 sm:px-6" style={{ background: "linear-gradient(135deg,#FAF0D8,#FAF7F2)", border: "1px solid rgba(200,160,68,0.22)" }}>
+                  <p className="text-xs mb-0.5" style={{ color: "#9A8A78" }}>Total Amount</p>
+                  <p className="text-2xl sm:text-3xl font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{total.toLocaleString("en-IN")}</p>
+                  <p className="text-[11px] sm:text-xs mt-1" style={{ color: "#4A8A4A" }}>Includes free shipping + GST</p>
                 </div>
 
                 {/* Pay button */}
                 <button
                   onClick={handlePay}
                   disabled={placing || items.length === 0}
-                  className="w-full py-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2.5 transition-all hover:opacity-90 hover:shadow-xl disabled:opacity-60"
+                  className="w-full py-3.5 sm:py-4 rounded-2xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2.5 transition-all hover:opacity-90 hover:shadow-xl disabled:opacity-60"
                   style={{ background: `linear-gradient(135deg,#072654,#3395FF)`, color: "#FFFFFF" }}
                 >
                   {placing
@@ -429,7 +429,7 @@ export function PaymentPage() {
                   }
                 </button>
 
-                <p className="text-[11px]" style={{ color: "#B0A090" }}>
+                <p className="text-[10px] sm:text-[11px]" style={{ color: "#B0A090" }}>
                   By proceeding, you agree to our Terms & Conditions. Your payment is processed securely by Razorpay.
                 </p>
               </div>
