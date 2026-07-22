@@ -90,10 +90,11 @@ export function AuthPage() {
     }, 800);
   };
 
-  // Google Sign-In handler
+  const [googleLoading, setGoogleLoading] = useState(false);
+
   // Google Sign-In handler
   const handleGoogleSignIn = async () => {
-    setLoading(true);
+    setGoogleLoading(true);
     setErrorMsg("");
 
     try {
@@ -106,30 +107,22 @@ export function AuthPage() {
         const gEmail = user.email || "";
         const phoneDigits = user.phoneNumber?.replace(/\D/g, "") || "";
 
-        // Save/update Firestore profile
-        try {
-          await setDoc(doc(db, "users", user.uid), {
-            fullName: displayName || "Devotee",
-            email: gEmail,
-            phone: phoneDigits,
-            updatedAt: serverTimestamp()
-          }, { merge: true });
-        } catch (err) {
-          console.warn("Firestore setDoc warning:", err);
-        }
+        // Non-blocking save/update Firestore profile
+        setDoc(doc(db, "users", user.uid), {
+          fullName: displayName || "Devotee",
+          email: gEmail,
+          phone: phoneDigits,
+          updatedAt: serverTimestamp()
+        }, { merge: true }).catch(err => console.warn("Firestore setDoc warning:", err));
 
-        // Save/update Supabase profile
-        try {
-          await supabase.from('users').upsert({
-            id: user.uid,
-            full_name: displayName || "Devotee",
-            email: gEmail,
-            phone: phoneDigits,
-            created_at: new Date().toISOString()
-          });
-        } catch (err) {
-          console.warn("Supabase upsert warning:", err);
-        }
+        // Non-blocking save/update Supabase profile
+        Promise.resolve(supabase.from('users').upsert({
+          id: user.uid,
+          full_name: displayName || "Devotee",
+          email: gEmail,
+          phone: phoneDigits,
+          created_at: new Date().toISOString()
+        })).catch(err => console.warn("Supabase upsert warning:", err));
 
         // Save local cache so future sign-ins retain profile
         if (gEmail || phoneDigits) {
@@ -143,11 +136,13 @@ export function AuthPage() {
           email: gEmail,
           user_metadata: { full_name: displayName || "Devotee", phone: phoneDigits }
         });
-        setLoading(false);
+        setGoogleLoading(false);
         handleAuthSuccess();
+      } else {
+        setGoogleLoading(false);
       }
     } catch (e: any) {
-      setLoading(false);
+      setGoogleLoading(false);
       if (e.code === "auth/popup-closed-by-user") {
         setErrorMsg("Sign-in cancelled. Please try again.");
       } else {
@@ -379,18 +374,27 @@ export function AuthPage() {
       {/* Google Sign-In Button */}
       <button
         onClick={handleGoogleSignIn}
-        disabled={loading}
-        className="group w-full py-4 rounded-2xl text-sm font-semibold tracking-wide transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 relative overflow-hidden"
+        disabled={loading || googleLoading}
+        className="group w-full py-4 rounded-2xl text-sm font-semibold tracking-wide transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 relative overflow-hidden disabled:opacity-50"
         style={{ background: "#FFFFFF", border: "2px solid rgba(91,31,36,0.12)", color: MAROON }}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-        </svg>
-        <span style={{ fontFamily: SANS }}>Continue with Google</span>
+        {googleLoading ? (
+          <>
+            <div className="w-5 h-5 rounded-full border-2 border-red-900/30 border-t-red-900 animate-spin" />
+            <span style={{ fontFamily: SANS }}>Signing in with Google...</span>
+          </>
+        ) : (
+          <>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            <span style={{ fontFamily: SANS }}>Continue with Google</span>
+          </>
+        )}
       </button>
     </div>
   );
