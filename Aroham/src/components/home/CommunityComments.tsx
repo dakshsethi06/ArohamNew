@@ -159,24 +159,6 @@ export function CommunityComments({ products = [] }: { products?: ArohamProduct[
             <p className="text-sm mt-1" style={{ color: "#7A6A58" }}>{allReviews.length} verified reviews · 4.8 average rating</p>
           </div>
           <div className="flex items-center gap-3 self-start">
-            <div className="hidden sm:flex items-center gap-2">
-              <button
-                onClick={() => scrollByAmount("left")}
-                aria-label="Previous reviews"
-                className="w-10 h-10 rounded-full flex items-center justify-center border transition-all hover:bg-black/5 active:scale-95"
-                style={{ borderColor: "rgba(91,31,36,0.18)", color: MAROON, background: "#FFFFFF" }}
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <button
-                onClick={() => scrollByAmount("right")}
-                aria-label="Next reviews"
-                className="w-10 h-10 rounded-full flex items-center justify-center border transition-all hover:bg-black/5 active:scale-95"
-                style={{ borderColor: "rgba(91,31,36,0.18)", color: MAROON, background: "#FFFFFF" }}
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
             <button onClick={() => {
                 setShowForm(s => !s);
                 if (submitted) {
@@ -257,11 +239,6 @@ export function CommunityComments({ products = [] }: { products?: ArohamProduct[
                     <div className="text-[10px]" style={{ color: "#9A8A78" }}>{c.city || "Verified Buyer"} · ✓ Verified</div>
                   </div>
                 </div>
-                <button onClick={() => setLiked(l => ({ ...l, [c.id || i]: !l[c.id || i] }))}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-medium transition-all"
-                  style={{ background: liked[c.id || i] ? "rgba(91,31,36,0.08)" : "rgba(91,31,36,0.04)", color: liked[c.id || i] ? MAROON : "#9A8A78", border: `1px solid ${liked[c.id || i] ? "rgba(91,31,36,0.2)" : "rgba(91,31,36,0.08)"}` }}>
-                  {liked[c.id || i] ? "❤️" : "🤍"} {(c.likes || 0) + (liked[c.id || i] ? 1 : 0)}
-                </button>
               </div>
             </div>
           ))}
