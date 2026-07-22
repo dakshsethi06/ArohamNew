@@ -1,4 +1,4 @@
-import { Star, Heart, Plus } from "lucide-react";
+import { Star, Heart, ShoppingCart } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
 import { ArohamProduct } from "@/types/product";
 
@@ -56,9 +56,10 @@ export function ProductCard({ product: p, onProductClick, onAddToCart, wishKey =
         {onAddToCart && (
           <button aria-label={`Add ${p.name} to cart`}
             onClick={e => { e.stopPropagation(); onAddToCart(p); }}
-            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-sm"
-            style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, border: "none", cursor: "pointer" }}>
-            <Plus size={14} color={IVORY} />
+            className="flex-shrink-0 px-3 py-1.5 rounded-xl flex items-center justify-center gap-1.5 text-xs font-semibold tracking-wide transition-all hover:opacity-90 hover:scale-105 active:scale-95 shadow-sm"
+            style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY, border: "none", cursor: "pointer", fontFamily: SANS }}>
+            <ShoppingCart size={13} style={{ color: IVORY }} />
+            <span>Add to Cart</span>
           </button>
         )}
       </div>
