@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { Star, Heart, Eye, Filter, X, CheckCircle, ChevronRight, ChevronDown, ShoppingCart } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
+import * as Select from "@radix-ui/react-select";
 import { CATEGORIES, PURPOSES, PRICE_RANGES } from "@/constants/data";
 import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/context/CartContext";
@@ -235,20 +236,33 @@ export function ShopPage() {
                 
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-medium hidden sm:inline" style={{ color: "#7A6A58" }}>Sort by:</span>
-                  <div className="relative flex items-center">
-                    <select
-                      value={sort}
-                      onChange={e => setSort(e.target.value)}
-                      className="pl-4 pr-8 py-2 rounded-full text-xs font-semibold outline-none cursor-pointer transition-all hover:border-maroon-400 shadow-sm appearance-none"
-                      style={{ border: `1px solid rgba(91,31,36,0.2)`, background: "#FFFFFF", color: MAROON, fontFamily: SANS }}
-                    >
-                      <option value="popular">Most Popular</option>
-                      <option value="price-asc">Price: Low to High</option>
-                      <option value="price-desc">Price: High to Low</option>
-                      <option value="rating">Highest Rated</option>
-                    </select>
-                    <ChevronDown size={14} className="absolute right-2.5 pointer-events-none" style={{ color: MAROON }} />
-                  </div>
+                  <Select.Root value={sort} onValueChange={setSort}>
+                    <Select.Trigger asChild>
+                      <button className="pl-4 pr-3 py-2 rounded-full text-xs font-semibold flex items-center gap-2 cursor-pointer transition-all shadow-sm outline-none"
+                        style={{ border: `1px solid rgba(91,31,36,0.2)`, background: "#FFFFFF", color: MAROON, fontFamily: SANS }}>
+                        <Select.Value />
+                        <ChevronDown size={14} style={{ color: MAROON }} />
+                      </button>
+                    </Select.Trigger>
+                    <Select.Portal>
+                      <Select.Content position="popper" align="end" sideOffset={6} className="z-[200] rounded-2xl shadow-xl border overflow-hidden p-1 min-w-[175px]"
+                        style={{ background: "#FFFFFF", borderColor: "rgba(91,31,36,0.15)" }}>
+                        <Select.Viewport className="space-y-0.5">
+                          {[
+                            { v: "popular", l: "Most Popular" },
+                            { v: "price-asc", l: "Price: Low to High" },
+                            { v: "price-desc", l: "Price: High to Low" },
+                            { v: "rating", l: "Highest Rated" }
+                          ].map(opt => (
+                            <Select.Item key={opt.v} value={opt.v} className="px-3.5 py-2.5 text-xs font-semibold rounded-xl cursor-pointer outline-none transition-colors data-[highlighted]:bg-[rgba(91,31,36,0.08)] data-[state=checked]:bg-[rgba(91,31,36,0.12)] data-[state=checked]:text-[#5B1F24]"
+                              style={{ color: MAROON, fontFamily: SANS }}>
+                              <Select.ItemText>{opt.l}</Select.ItemText>
+                            </Select.Item>
+                          ))}
+                        </Select.Viewport>
+                      </Select.Content>
+                    </Select.Portal>
+                  </Select.Root>
                 </div>
               </div>
             </div>
