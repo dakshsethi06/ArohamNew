@@ -28,10 +28,26 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<UnifiedUser | null>(() => {
+    try {
+      const mockSession = localStorage.getItem("aroham_mock_session");
+      return mockSession ? JSON.parse(mockSession) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
+    return !!localStorage.getItem("aroham_mock_session");
+  });
   const [showAuth, setShowAuth] = useState(false);
-  const [user, setUser] = useState<UnifiedUser | null>(null);
-  const [session, setSession] = useState<any | null>(null);
+  const [session, setSession] = useState<any | null>(() => {
+    try {
+      const mockSession = localStorage.getItem("aroham_mock_session");
+      return mockSession ? { user: JSON.parse(mockSession) } : null;
+    } catch (e) {
+      return null;
+    }
+  });
   const [cartSynced, setCartSynced] = useState(false);
 
   // Sync cart helper
@@ -58,7 +74,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    // Mock Session initialization
     const mockSession = localStorage.getItem("aroham_mock_session");
     if (mockSession) {
       try {
@@ -70,11 +85,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (e) {
         localStorage.removeItem("aroham_mock_session");
       }
-    } else {
-      setUser(null);
-      setSession(null);
-      setIsLoggedIn(false);
-      setCartSynced(false);
     }
   }, []);
 

@@ -1,15 +1,39 @@
 import { useState } from "react";
 import { GOLD, SANS } from "@/constants/theme";
 
-export function AuthInput({ label, type = "text", value, onChange, right }: {
+export function AuthInput({ label, type = "text", value, onChange, right, name, autoComplete }: {
   label: string; type?: string; value: string;
   onChange: (v: string) => void; right?: React.ReactNode;
+  name?: string; autoComplete?: string;
 }) {
   const [focused, setFocused] = useState(false);
   const active = focused || value.length > 0;
+
+  let inferredAutoComplete = autoComplete;
+  let inferredName = name;
+  const labelLower = label.toLowerCase();
+
+  if (!inferredAutoComplete) {
+    if (type === "tel" || labelLower.includes("phone") || labelLower.includes("mobile")) {
+      inferredAutoComplete = "tel";
+      inferredName = inferredName || "tel";
+    } else if (type === "email" || labelLower.includes("email")) {
+      inferredAutoComplete = "email";
+      inferredName = inferredName || "email";
+    } else if (labelLower.includes("name")) {
+      inferredAutoComplete = "name";
+      inferredName = inferredName || "name";
+    }
+  }
+
+  const inputId = `auth-input-${label.toLowerCase().replace(/\s+/g, '-')}`;
+
   return (
     <div className="relative">
       <input
+        id={inputId}
+        name={inferredName}
+        autoComplete={inferredAutoComplete}
         type={type} value={value}
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
@@ -19,7 +43,7 @@ export function AuthInput({ label, type = "text", value, onChange, right }: {
           boxShadow: focused ? `0 0 0 3px rgba(200,160,68,0.1)`:"none",
           color:"#222222", fontFamily:SANS }}
       />
-      <label className="absolute pointer-events-none transition-all duration-200"
+      <label htmlFor={inputId} className="absolute pointer-events-none transition-all duration-200"
         style={{ left:"1rem", top: active?"8px":"50%",
           transform: active?"translateY(0)":"translateY(-50%)",
           fontSize: active?"10px":"13px", color: focused ? GOLD:"#9A8A78",

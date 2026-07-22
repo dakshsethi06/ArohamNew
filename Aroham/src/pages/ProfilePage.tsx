@@ -133,6 +133,7 @@ export function ProfilePage() {
     if (!user?.id) return;
     setSaving(true);
     setSaveSuccess(false);
+
     try {
       const profileData = {
         id: user.id,
@@ -146,16 +147,23 @@ export function ProfilePage() {
         created_at: profile?.created_at || new Date().toISOString()
       };
 
-      // 1. Local Storage
+      // 1. Instant save to Session Storage & Local Storage
       sessionStorage.setItem("aroham_user_profile", JSON.stringify(profileData));
       if (editForm.phone) {
         const phoneDigits = editForm.phone.replace(/\D/g, "");
         localStorage.setItem(`aroham_registered_user_phone_${phoneDigits}`, JSON.stringify(profileData));
       }
 
-      // 2. Firestore
-      try {
-        await setDoc(doc(db, "users", user.id), {
+      // Update UI profile state & finish saving instantly
+      setProfile(profileData);
+      setIsEditing(false);
+      setSaveSuccess(true);
+      setSaving(false);
+      setTimeout(() => setSaveSuccess(false), 3000);
+
+      // 2. Non-blocking background sync with Firestore & Supabase
+      Promise.race([
+        setDoc(doc(db, "users", user.id), {
           fullName: editForm.fullName,
           email: editForm.email,
           phone: editForm.phone,
@@ -163,14 +171,12 @@ export function ProfilePage() {
           dob: editForm.dob,
           pobCity: editForm.pobCity,
           updatedAt: serverTimestamp()
-        }, { merge: true });
-      } catch (err) {
-        console.warn("Firestore save profile warning:", err);
-      }
+        }, { merge: true }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2500))
+      ]).catch(err => console.warn("Firestore save profile warning:", err));
 
-      // 3. Supabase (Only standard columns to avoid schema mismatch)
-      try {
-        await supabase.from("users").upsert({
+      Promise.race([
+        supabase.from("users").upsert({
           id: user.id,
           full_name: editForm.fullName,
           email: editForm.email,
@@ -178,18 +184,12 @@ export function ProfilePage() {
           gender: editForm.gender,
           dob: editForm.dob,
           created_at: profile?.created_at || new Date().toISOString()
-        });
-      } catch (err) {
-        console.warn("Supabase profile save warning:", err);
-      }
+        }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2500))
+      ]).catch(err => console.warn("Supabase profile save warning:", err));
 
-      setProfile(profileData);
-      setSaveSuccess(true);
-      setIsEditing(false);
-      setTimeout(() => setSaveSuccess(false), 3000);
     } catch (e: any) {
       alert("Failed to save profile: " + (e.message || "Please try again."));
-    } finally {
       setSaving(false);
     }
   };
@@ -274,18 +274,18 @@ export function ProfilePage() {
                   <button onClick={() => setIsEditing(false)} className="p-1 rounded-full hover:bg-black/5" style={{ color: MAROON }}><X size={18} /></button>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold mb-1" style={{ color: "#7A6A58" }}>Full Name</label>
-                  <input type="text" value={editForm.fullName} onChange={e => setEditForm(p => ({ ...p, fullName: e.target.value }))}
+                  <label htmlFor="profile-full-name" className="block text-xs font-semibold mb-1" style={{ color: "#7A6A58" }}>Full Name</label>
+                  <input id="profile-full-name" name="name" autoComplete="name" type="text" value={editForm.fullName} onChange={e => setEditForm(p => ({ ...p, fullName: e.target.value }))}
                     className="w-full px-4 py-2.5 rounded-xl text-sm outline-none" style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON }} />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold mb-1" style={{ color: "#7A6A58" }}>Email Address</label>
-                  <input type="email" value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))}
+                  <label htmlFor="profile-email" className="block text-xs font-semibold mb-1" style={{ color: "#7A6A58" }}>Email Address</label>
+                  <input id="profile-email" name="email" autoComplete="email" type="email" value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))}
                     className="w-full px-4 py-2.5 rounded-xl text-sm outline-none" style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON }} />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold mb-1" style={{ color: "#7A6A58" }}>Phone Number</label>
-                  <input type="tel" value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }))}
+                  <label htmlFor="profile-phone" className="block text-xs font-semibold mb-1" style={{ color: "#7A6A58" }}>Phone Number</label>
+                  <input id="profile-phone" name="tel" autoComplete="tel" type="tel" value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }))}
                     className="w-full px-4 py-2.5 rounded-xl text-sm outline-none" style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON }} />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -356,8 +356,8 @@ export function ProfilePage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold mb-1" style={{ color: "#7A6A58" }}>City of Birth</label>
-                  <input type="text" value={editForm.pobCity} onChange={e => setEditForm(p => ({ ...p, pobCity: e.target.value }))}
+                  <label htmlFor="profile-city" className="block text-xs font-semibold mb-1" style={{ color: "#7A6A58" }}>City of Birth</label>
+                  <input id="profile-city" name="address-level2" autoComplete="address-level2" type="text" value={editForm.pobCity} onChange={e => setEditForm(p => ({ ...p, pobCity: e.target.value }))}
                     className="w-full px-4 py-2.5 rounded-xl text-sm outline-none" style={{ border: "1px solid rgba(91,31,36,0.15)", background: "#FAF7F2", color: MAROON }} />
                 </div>
                 <div className="flex gap-2 pt-2">
