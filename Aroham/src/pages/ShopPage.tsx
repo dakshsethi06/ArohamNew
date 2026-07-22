@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { Star, Heart, Eye, Filter, X, CheckCircle, ChevronRight } from "lucide-react";
+import { Star, Heart, Eye, Filter, X, CheckCircle, ChevronRight, ChevronDown } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
 import { CATEGORIES, PURPOSES, PRICE_RANGES } from "@/constants/data";
 import { useProducts } from "@/hooks/useProducts";
@@ -27,7 +27,7 @@ export function ShopPage() {
     if (titleParam && !CATEGORIES.includes(titleParam) && !PURPOSES.includes(titleParam)) return [titleParam];
     return [];
   });
-  const [priceIdx, setPriceIdx] = useState<number | null>(null);
+  const [maxPrice, setMaxPrice] = useState<number>(30000);
   const [sort, setSort] = useState("popular");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [wish, setWish] = useState<Record<number, boolean>>({});
@@ -99,7 +99,7 @@ export function ShopPage() {
 
       if (!matchesCol) return false;
     }
-    if (priceIdx !== null) { const r = PRICE_RANGES[priceIdx]; if (p.price < r.min || p.price > r.max) return false; }
+    if (maxPrice < 30000 && p.price > maxPrice) return false;
     return true;
   }).sort((a, b) => {
     if (sort === "price-asc") return a.price - b.price;
@@ -111,7 +111,7 @@ export function ShopPage() {
   const toggleCat = (c: string) => setCats(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]);
   const togglePrp = (p: string) => setPrps(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
   const toggleCol = (c: string) => setCols(prev => prev[0] === c ? [] : [c]);
-  const clearAll = () => { setCats([]); setPrps([]); setCols([]); setPriceIdx(null); };
+  const clearAll = () => { setCats([]); setPrps([]); setCols([]); setMaxPrice(30000); };
 
   const FilterPanel = () => (
     <div className="space-y-7">
@@ -147,17 +147,27 @@ export function ShopPage() {
       </div>
       <div className="h-px" style={{ background: "rgba(91,31,36,0.08)" }} />
       <div>
-        <h3 className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: MAROON }}>Price</h3>
-        <div className="space-y-2.5">
-          {PRICE_RANGES.map((r, i) => (
-            <button key={r.label} onClick={() => setPriceIdx(priceIdx === i ? null : i)} className="flex items-center gap-3 w-full text-left">
-              <div className="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center transition-all"
-                style={{ border: `2px solid ${priceIdx === i ? GOLD : "rgba(91,31,36,0.2)"}`, background: priceIdx === i ? GOLD : "transparent" }}>
-                {priceIdx === i && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-              </div>
-              <span className="text-sm" style={{ color: priceIdx === i ? MAROON : "#5A4A3A" }}>{r.label}</span>
-            </button>
-          ))}
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: MAROON }}>Price Range</h3>
+          <span className="text-xs font-bold" style={{ color: MAROON, fontFamily: PRICE_FONT }}>
+            {maxPrice >= 30000 ? "All Prices" : `Up to ₹${maxPrice.toLocaleString("en-IN")}`}
+          </span>
+        </div>
+        <div className="space-y-3 pt-1">
+          <input
+            type="range"
+            min="500"
+            max="30000"
+            step="500"
+            value={maxPrice}
+            onChange={e => setMaxPrice(Number(e.target.value))}
+            className="w-full cursor-pointer h-2 bg-amber-100/80 rounded-lg appearance-none"
+            style={{ accentColor: MAROON }}
+          />
+          <div className="flex items-center justify-between text-[11px] font-medium" style={{ color: "#7A6A58" }}>
+            <span>₹500</span>
+            <span>₹30,000+</span>
+          </div>
         </div>
       </div>
       <div className="h-px" style={{ background: "rgba(91,31,36,0.08)" }} />
@@ -175,7 +185,7 @@ export function ShopPage() {
           ))}
         </div>
       </div>
-      {(cats.length > 0 || prps.length > 0 || cols.length > 0 || priceIdx !== null) && (
+      {(cats.length > 0 || prps.length > 0 || cols.length > 0 || maxPrice < 30000) && (
         <button onClick={clearAll} className="w-full py-2 rounded-xl text-xs font-semibold border transition-all hover:bg-red-50"
           style={{ borderColor: "rgba(200,0,0,0.2)", color: "#C04040" }}>Clear All Filters</button>
       )}
@@ -198,12 +208,12 @@ export function ShopPage() {
         </div>
       </div>
       <div className="max-w-7xl mx-auto px-6 lg:px-10 py-8">
-        {(cats.length > 0 || prps.length > 0 || cols.length > 0 || priceIdx !== null) && (
+        {(cats.length > 0 || prps.length > 0 || cols.length > 0 || maxPrice < 30000) && (
           <div className="flex flex-wrap gap-2 mb-6">
             {cats.map(c => <span key={c} className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium" style={{ background: "rgba(91,31,36,0.08)", color: MAROON }}>{c}<button onClick={() => toggleCat(c)} className="ml-1"><X size={10} /></button></span>)}
             {prps.map(p => <span key={p} className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium" style={{ background: "rgba(91,31,36,0.08)", color: MAROON }}>{p}<button onClick={() => togglePrp(p)} className="ml-1"><X size={10} /></button></span>)}
             {cols.map(c => <span key={c} className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium" style={{ background: "rgba(91,31,36,0.08)", color: MAROON }}>{c}<button onClick={() => toggleCol(c)} className="ml-1"><X size={10} /></button></span>)}
-            {priceIdx !== null && <span className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium" style={{ background: "rgba(91,31,36,0.08)", color: MAROON }}>{PRICE_RANGES[priceIdx].label}<button onClick={() => setPriceIdx(null)} className="ml-1"><X size={10} /></button></span>}
+            {maxPrice < 30000 && <span className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium" style={{ background: "rgba(91,31,36,0.08)", color: MAROON }}>Under ₹{maxPrice.toLocaleString("en-IN")}<button onClick={() => setMaxPrice(30000)} className="ml-1"><X size={10} /></button></span>}
           </div>
         )}
         <div className="flex gap-8">
@@ -218,14 +228,24 @@ export function ShopPage() {
               <div className="flex items-center gap-3">
                 <button onClick={() => setSidebarOpen(true)} className="lg:hidden flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border"
                   style={{ borderColor: "rgba(91,31,36,0.15)", color: MAROON }}><Filter size={14} /> Filter</button>
-                <select value={sort} onChange={e => setSort(e.target.value)}
-                  className="px-3 py-2 rounded-xl text-sm outline-none appearance-none"
-                  style={{ border: `1px solid rgba(91,31,36,0.15)`, background: "#FFFFFF", color: MAROON, fontFamily: SANS }}>
-                  <option value="popular">Most Popular</option>
-                  <option value="price-asc">Price: Low to High</option>
-                  <option value="price-desc">Price: High to Low</option>
-                  <option value="rating">Highest Rated</option>
-                </select>
+                
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium hidden sm:inline" style={{ color: "#7A6A58" }}>Sort by:</span>
+                  <div className="relative flex items-center">
+                    <select
+                      value={sort}
+                      onChange={e => setSort(e.target.value)}
+                      className="pl-4 pr-8 py-2 rounded-full text-xs font-semibold outline-none cursor-pointer transition-all hover:border-maroon-400 shadow-sm appearance-none"
+                      style={{ border: `1px solid rgba(91,31,36,0.2)`, background: "#FFFFFF", color: MAROON, fontFamily: SANS }}
+                    >
+                      <option value="popular">Most Popular</option>
+                      <option value="price-asc">Price: Low to High</option>
+                      <option value="price-desc">Price: High to Low</option>
+                      <option value="rating">Highest Rated</option>
+                    </select>
+                    <ChevronDown size={14} className="absolute right-2.5 pointer-events-none" style={{ color: MAROON }} />
+                  </div>
+                </div>
               </div>
             </div>
             {filtered.length === 0 ? (
