@@ -67,7 +67,7 @@ export function ProfilePage() {
     }
     
     if (user?.id) {
-      supabase.from("users").select("*").eq("id", user.id).single()
+      Promise.resolve(supabase.from("users").select("*").eq("id", user.id).single())
         .then(({ data, error }) => {
           if (data && !error) {
             setProfile(data);

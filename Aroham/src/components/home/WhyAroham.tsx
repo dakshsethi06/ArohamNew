@@ -141,7 +141,7 @@ export function WhyAroham() {
         </div>
       </div>
 
-      <div className="relative z-10 mx-4 lg:mx-16 mb-10 lg:mb-20 rounded-2xl lg:rounded-[1.75rem] overflow-hidden" style={{ background: "linear-gradient(135deg,rgba(91,31,36,0.6) 0%,rgba(40,15,20,0.9) 50%,rgba(91,31,36,0.4) 100%)", border: "1px solid rgba(200,160,68,0.2)" }}>
+      <div className="relative z-10 w-full mb-10 lg:mb-20 rounded-2xl lg:rounded-[1.75rem] overflow-hidden" style={{ background: "linear-gradient(135deg,rgba(91,31,36,0.6) 0%,rgba(40,15,20,0.9) 50%,rgba(91,31,36,0.4) 100%)", border: "1px solid rgba(200,160,68,0.2)" }}>
         <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 20% 50%,rgba(200,160,68,0.1) 0%,transparent 60%)", pointerEvents: "none" }} />
         <div className="relative z-10 px-6 py-8 lg:px-10 lg:py-10 flex flex-col gap-6">
           <div>

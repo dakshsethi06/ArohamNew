@@ -91,6 +91,7 @@ export function AuthPage() {
   };
 
   // Google Sign-In handler
+  // Google Sign-In handler
   const handleGoogleSignIn = async () => {
     setLoading(true);
     setErrorMsg("");
@@ -101,37 +102,49 @@ export function AuthPage() {
       const user = result.user;
 
       if (user) {
-        // Check if user already has a profile in Firestore
-        const userDoc = await getDoc(doc(db, "users", user.uid));
+        const displayName = user.displayName || "";
+        const gEmail = user.email || "";
+        const phoneDigits = user.phoneNumber?.replace(/\D/g, "") || "";
 
-        if (userDoc.exists() && userDoc.data().fullName) {
-          // Existing user with complete profile
-          setLoading(false);
-          handleAuthSuccess();
-        } else {
-          // New user or incomplete profile - create/update Firestore doc
-          const displayName = user.displayName || "";
-          const gEmail = user.email || "";
-
-          if (displayName && gEmail) {
-            // We have enough data from Google, create profile directly
-            await setDoc(doc(db, "users", user.uid), {
-              fullName: displayName,
-              email: gEmail,
-              phone: user.phoneNumber || "",
-              createdAt: serverTimestamp()
-            }, { merge: true });
-
-            setLoading(false);
-            handleAuthSuccess();
-          } else {
-            // Need more info, go to profile setup
-            setName(displayName);
-            setEmail(gEmail);
-            setLoading(false);
-            goTo("profile-setup");
-          }
+        // Save/update Firestore profile
+        try {
+          await setDoc(doc(db, "users", user.uid), {
+            fullName: displayName || "Devotee",
+            email: gEmail,
+            phone: phoneDigits,
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+        } catch (err) {
+          console.warn("Firestore setDoc warning:", err);
         }
+
+        // Save/update Supabase profile
+        try {
+          await supabase.from('users').upsert({
+            id: user.uid,
+            full_name: displayName || "Devotee",
+            email: gEmail,
+            phone: phoneDigits,
+            created_at: new Date().toISOString()
+          });
+        } catch (err) {
+          console.warn("Supabase upsert warning:", err);
+        }
+
+        // Save local cache so future sign-ins retain profile
+        if (gEmail || phoneDigits) {
+          const userObj = { id: user.uid, fullName: displayName || "Devotee", email: gEmail, phone: phoneDigits };
+          if (gEmail) localStorage.setItem(`aroham_registered_user_email_${gEmail}`, JSON.stringify(userObj));
+          if (phoneDigits) localStorage.setItem(`aroham_registered_user_phone_${phoneDigits}`, JSON.stringify(userObj));
+        }
+
+        login({
+          id: user.uid,
+          email: gEmail,
+          user_metadata: { full_name: displayName || "Devotee", phone: phoneDigits }
+        });
+        setLoading(false);
+        handleAuthSuccess();
       }
     } catch (e: any) {
       setLoading(false);
@@ -163,34 +176,59 @@ export function AuthPage() {
       const phoneDigits = phone.replace(/\D/g, "");
 
       try {
-        /* FIREBASE CODE (Temporarily disabled)
-        const q = query(collection(db, "users"), where("phone", "==", phoneDigits));
-        const snapshot = await getDocs(q);
-        
-        if (!snapshot.empty) {
-          const userDoc = snapshot.docs[0];
-          const data = userDoc.data();
-          setLoading(false);
-          login({
-            id: userDoc.id,
-            email: data.email,
-            user_metadata: { full_name: data.fullName || data.full_name, phone: data.phone }
-          });
-          handleAuthSuccess();
-        } else {
-          setLoading(false);
-          goTo("profile-setup");
-        }
-        */
+        let existingUser: { id: string; fullName: string; email?: string; phone: string } | null = null;
 
-        const { data, error } = await supabase.from('users').select('*').eq('phone', phoneDigits).maybeSingle();
-        
-        if (data && !error) {
+        // 1. Check Local Storage cache
+        const localCached = localStorage.getItem(`aroham_registered_user_phone_${phoneDigits}`);
+        if (localCached) {
+          try {
+            const parsed = JSON.parse(localCached);
+            if (parsed && parsed.fullName) existingUser = parsed;
+          } catch (e) {}
+        }
+
+        // 2. Check Firestore
+        if (!existingUser) {
+          try {
+            const q = query(collection(db, "users"), where("phone", "==", phoneDigits));
+            const snapshot = await getDocs(q);
+            if (!snapshot.empty) {
+              const docData = snapshot.docs[0].data();
+              if (docData.fullName || docData.full_name) {
+                existingUser = {
+                  id: snapshot.docs[0].id,
+                  fullName: docData.fullName || docData.full_name,
+                  email: docData.email,
+                  phone: docData.phone || phoneDigits
+                };
+              }
+            }
+          } catch (e) {
+            console.warn("Firestore search warning:", e);
+          }
+        }
+
+        // 3. Check Supabase
+        if (!existingUser) {
+          try {
+            const { data } = await supabase.from('users').select('*').eq('phone', phoneDigits).maybeSingle();
+            if (data && (data.full_name || data.fullName)) {
+              existingUser = {
+                id: data.id,
+                fullName: data.full_name || data.fullName,
+                email: data.email,
+                phone: data.phone || phoneDigits
+              };
+            }
+          } catch (e) {}
+        }
+
+        if (existingUser) {
           setLoading(false);
           login({
-            id: data.id,
-            email: data.email,
-            user_metadata: { full_name: data.full_name || data.fullName, phone: data.phone }
+            id: existingUser.id,
+            email: existingUser.email,
+            user_metadata: { full_name: existingUser.fullName, phone: existingUser.phone }
           });
           handleAuthSuccess();
         } else {
@@ -221,30 +259,45 @@ export function AuthPage() {
     try {
       const newUserId = crypto.randomUUID();
       const phoneDigits = phone.replace(/\D/g, "");
-
-      /* FIREBASE CODE (Temporarily disabled)
-      await setDoc(doc(db, "users", newUserId), {
+      const userProfile = {
+        id: newUserId,
         fullName: name.trim(),
         email: email.trim() || null,
-        phone: phoneDigits,
-        createdAt: serverTimestamp()
-      }, { merge: true });
-      */
+        phone: phoneDigits
+      };
 
-      const { error } = await supabase.from('users').upsert({
-        id: newUserId,
-        full_name: name.trim(),
-        email: email.trim() || null,
-        phone: phoneDigits,
-        gender: null,
-        dob: null,
-        created_at: new Date().toISOString()
-      });
-
-      // Ignore RLS errors since we are mocking auth without a real Supabase session
-      if (error && !error.message?.includes("row-level security")) {
-        throw error;
+      // 1. Save to Local Storage cache
+      if (phoneDigits) {
+        localStorage.setItem(`aroham_registered_user_phone_${phoneDigits}`, JSON.stringify(userProfile));
       }
+      if (email.trim()) {
+        localStorage.setItem(`aroham_registered_user_email_${email.trim()}`, JSON.stringify(userProfile));
+      }
+
+      // 2. Save to Firestore
+      try {
+        await setDoc(doc(db, "users", newUserId), {
+          fullName: name.trim(),
+          email: email.trim() || null,
+          phone: phoneDigits,
+          createdAt: serverTimestamp()
+        }, { merge: true });
+      } catch (err) {
+        console.warn("Firestore setDoc warning:", err);
+      }
+
+      // 3. Save to Supabase
+      try {
+        await supabase.from('users').upsert({
+          id: newUserId,
+          full_name: name.trim(),
+          email: email.trim() || null,
+          phone: phoneDigits,
+          gender: null,
+          dob: null,
+          created_at: new Date().toISOString()
+        });
+      } catch (err) {}
 
       setLoading(false);
       login({
@@ -382,7 +435,7 @@ export function AuthPage() {
       <div className="text-center">
         {canResend ? (
           <button
-            onClick={() => { setCanResend(false); handleSendPhoneOtp(activeTab); }}
+            onClick={() => { setCanResend(false); handleSendPhoneOtp(); }}
             className="text-sm font-semibold hover:opacity-70 transition-opacity inline-flex items-center gap-1"
             style={{ color: MAROON }}
           >

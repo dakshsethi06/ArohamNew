@@ -330,12 +330,6 @@ export function ProductDetailPage() {
                           Delivered to: <strong style={{ color: MAROON }}>{deliveryResult.city}, {deliveryResult.state}</strong>
                         </p>
                       )}
-                      <p style={{ color: "#7A6A58" }}>
-                        🚚 Shipping Partner: <strong style={{ color: MAROON }}>{deliveryResult.carrier || "Shiprocket Express"}</strong>
-                      </p>
-                      <p style={{ color: "#7A6A58" }}>
-                        💵 Cash on Delivery (COD) <strong className={deliveryResult.cod ? "text-emerald-600" : "text-red-500"}>{deliveryResult.cod ? "Available" : "Not Available"}</strong>
-                      </p>
                     </>
                   )}
                 </div>

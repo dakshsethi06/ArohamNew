@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { Star, Heart, Eye, Filter, X, CheckCircle, ChevronRight } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
@@ -9,21 +9,48 @@ import { ArohamProduct } from "@/types/product";
 export function ShopPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const initTitle = searchParams.get("title") || "";
+  const titleParam = searchParams.get("title") || searchParams.get("collection") || "";
+  const catParam = searchParams.get("category") || "";
+  const prpParam = searchParams.get("purpose") || "";
   
-  const [cats, setCats] = useState<string[]>([]);
-  const [prps, setPrps] = useState<string[]>([]);
-  const [cols, setCols] = useState<string[]>(["Discount Zone", "Trending Products", "Combos & Kits"].includes(initTitle) ? [initTitle] : []);
+  const [cats, setCats] = useState<string[]>(() => {
+    if (catParam) return [catParam];
+    if (CATEGORIES.includes(titleParam)) return [titleParam];
+    return [];
+  });
+  const [prps, setPrps] = useState<string[]>(() => {
+    if (prpParam) return [prpParam];
+    if (PURPOSES.includes(titleParam)) return [titleParam];
+    return [];
+  });
+  const [cols, setCols] = useState<string[]>(() => {
+    if (titleParam && !CATEGORIES.includes(titleParam) && !PURPOSES.includes(titleParam)) return [titleParam];
+    return [];
+  });
   const [priceIdx, setPriceIdx] = useState<number | null>(null);
   const [sort, setSort] = useState("popular");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [wish, setWish] = useState<Record<number, boolean>>({});
 
+  useEffect(() => {
+    if (catParam) setCats([catParam]);
+    else if (CATEGORIES.includes(titleParam)) setCats([titleParam]);
+    else setCats([]);
+
+    if (prpParam) setPrps([prpParam]);
+    else if (PURPOSES.includes(titleParam)) setPrps([titleParam]);
+    else setPrps([]);
+
+    if (titleParam && !CATEGORIES.includes(titleParam) && !PURPOSES.includes(titleParam)) setCols([titleParam]);
+    else setCols([]);
+  }, [titleParam, catParam, prpParam]);
+
   let displayTitle = "Sacred Products";
   if (cols.length === 1) displayTitle = cols[0];
   else if (cats.length === 1 && prps.length === 0) displayTitle = cats[0];
   else if (prps.length === 1 && cats.length === 0) displayTitle = prps[0];
-  else if (cats.length > 1 || prps.length > 1) displayTitle = "Filtered Products";
+  else if (cats.length > 1 || prps.length > 1 || cols.length > 1) displayTitle = "Filtered Products";
+  else if (titleParam) displayTitle = titleParam;
 
   const isCustom = displayTitle !== "Sacred Products";
 
@@ -34,9 +61,42 @@ export function ShopPage() {
     if (prps.length && p.purpose && !prps.includes(p.purpose)) return false;
     if (cols.length) {
       let matchesCol = false;
-      if (cols.includes("Discount Zone") && p.original && p.original > p.price) matchesCol = true;
-      if (cols.includes("Trending Products") && (p.rating || 0) >= 4.8) matchesCol = true;
-      if (cols.includes("Combos & Kits") && p.name.includes("Kit")) matchesCol = true;
+      const lowerCols = cols.map(c => c.toLowerCase());
+
+      if (lowerCols.some(c => c.includes("discount") || c.includes("sale") || c.includes("off"))) {
+        if (p.original && p.original > p.price) matchesCol = true;
+      }
+      if (lowerCols.some(c => c.includes("trending") || c.includes("bestsell") || c.includes("top pick"))) {
+        if ((p.rating || 0) >= 4.7 || (p.badges && p.badges.some(b => b.toLowerCase().includes("bestseller") || b.toLowerCase().includes("trending")))) {
+          matchesCol = true;
+        }
+      }
+      if (lowerCols.some(c => c.includes("combo") || c.includes("kit") || c.includes("bundle"))) {
+        if (
+          p.name.toLowerCase().includes("kit") ||
+          p.name.toLowerCase().includes("combo") ||
+          p.name.toLowerCase().includes("bundle") ||
+          (p.category && (p.category.toLowerCase().includes("kit") || p.category.toLowerCase().includes("combo")))
+        ) {
+          matchesCol = true;
+        }
+      }
+      if (lowerCols.some(c => c.includes("fav"))) {
+        if ((p.reviews || 0) >= 200 || (p.rating || 0) >= 4.8) matchesCol = true;
+      }
+
+      if (!matchesCol) {
+        const isKnownFilter = lowerCols.some(c => 
+          c.includes("discount") || c.includes("sale") || c.includes("trending") || 
+          c.includes("bestsell") || c.includes("combo") || c.includes("kit") || c.includes("fav")
+        );
+        if (!isKnownFilter) matchesCol = true;
+      }
+
+      if (!matchesCol && lowerCols.some(c => c.includes("combo") || c.includes("kit"))) {
+        matchesCol = true;
+      }
+
       if (!matchesCol) return false;
     }
     if (priceIdx !== null) { const r = PRICE_RANGES[priceIdx]; if (p.price < r.min || p.price > r.max) return false; }
@@ -104,7 +164,7 @@ export function ShopPage() {
       <div>
         <h3 className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: MAROON }}>Collections</h3>
         <div className="space-y-2.5">
-          {["Trending Products", "Discount Zone", "Combos & Kits"].map(c => (
+          {["Trending Products", "Discount Zone", "Combos & Kits", "Combo Deals"].map(c => (
             <button key={c} onClick={() => toggleCol(c)} className="flex items-center gap-3 w-full text-left">
               <div className="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center transition-all"
                 style={{ border: `2px solid ${cols.includes(c) ? GOLD : "rgba(91,31,36,0.2)"}`, background: cols.includes(c) ? GOLD : "transparent" }}>

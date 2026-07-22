@@ -17,4 +17,5 @@ export interface ArohamProduct {
   size?: string;
   material?: string;
   useFor?: string[];
+  stock?: number;
 }
