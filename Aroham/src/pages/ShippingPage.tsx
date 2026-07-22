@@ -8,6 +8,7 @@ import { FloatingSelect } from "@/components/auth/FloatingSelect";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 
 function CheckoutHeader() {
   const navigate = useNavigate();
@@ -164,6 +165,20 @@ export function ShippingPage() {
         pincode: form.pin,
         address_type: form.addressType,
       };
+
+      if (user?.id) {
+        Promise.resolve(supabase.from("addresses").upsert({
+          user_id: user.id,
+          name: `${form.firstName} ${form.lastName}`.trim(),
+          phone: form.phone.replace(/\D/g, "").slice(-10),
+          email: form.email,
+          address: `${form.house}, ${form.street}${form.landmark ? ", " + form.landmark : ""}`.trim(),
+          city: form.city,
+          state: form.state,
+          pincode: form.pin,
+          address_type: form.addressType
+        })).catch(err => console.warn("Supabase address save warning:", err));
+      }
 
       let savedObj: any = null;
       if (editingAddrId) {
