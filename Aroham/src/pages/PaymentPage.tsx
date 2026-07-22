@@ -359,120 +359,48 @@ export function PaymentPage() {
               </div>
             </div>
 
-            {/* Payment Method Selector Tabs */}
-            <div className="rounded-3xl p-2 flex gap-2" style={{ background: "rgba(91,31,36,0.06)" }}>
-              <button
-                type="button"
-                onClick={() => setPaymentMethod("online")}
-                className="flex-1 py-3 px-4 rounded-2xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2"
-                style={{
-                  background: paymentMethod === "online" ? MAROON : "transparent",
-                  color: paymentMethod === "online" ? IVORY : MAROON,
-                  boxShadow: paymentMethod === "online" ? "0 4px 12px rgba(91,31,36,0.15)" : "none"
-                }}
-              >
-                💳 Online Payment (Instant)
-              </button>
-              <button
-                type="button"
-                onClick={() => setPaymentMethod("cod")}
-                className="flex-1 py-3 px-4 rounded-2xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2"
-                style={{
-                  background: paymentMethod === "cod" ? MAROON : "transparent",
-                  color: paymentMethod === "cod" ? IVORY : MAROON,
-                  boxShadow: paymentMethod === "cod" ? "0 4px 12px rgba(91,31,36,0.15)" : "none"
-                }}
-              >
-                💵 Cash on Delivery (COD)
-              </button>
-            </div>
-
             {/* Online Payment Card (Razorpay) */}
-            {paymentMethod === "online" && (
-              <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
-                <div className="px-6 pt-6 pb-4" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
-                  <h2 className="text-lg font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Online Payment</h2>
-                </div>
-                <div className="p-8 flex flex-col items-center text-center gap-6">
-                  {/* Razorpay brand */}
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg" style={{ background: "linear-gradient(135deg,#072654,#3395FF)" }}>
-                      <span className="text-white font-black text-2xl" style={{ fontFamily: "sans-serif" }}>R</span>
-                    </div>
-                    <div>
-                      <p className="text-base font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Pay Securely with Razorpay</p>
-                      <p className="text-xs mt-1" style={{ color: "#9A8A78" }}>UPI · Cards · Net Banking · Wallets · EMI</p>
-                    </div>
-                  </div>
-
-                  {/* Total amount */}
-                  <div className="w-full rounded-2xl py-4 px-6" style={{ background: "linear-gradient(135deg,#FAF0D8,#FAF7F2)", border: "1px solid rgba(200,160,68,0.22)" }}>
-                    <p className="text-xs mb-1" style={{ color: "#9A8A78" }}>Total Amount</p>
-                    <p className="text-3xl font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{total.toLocaleString("en-IN")}</p>
-                    <p className="text-xs mt-1" style={{ color: "#4A8A4A" }}>Includes shipping + GST</p>
-                  </div>
-
-                  {/* Pay button */}
-                  <button
-                    onClick={handlePay}
-                    disabled={placing || items.length === 0}
-                    className="w-full py-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2.5 transition-all hover:opacity-90 hover:shadow-xl disabled:opacity-60"
-                    style={{ background: `linear-gradient(135deg,#072654,#3395FF)`, color: "#FFFFFF" }}
-                  >
-                    {placing
-                      ? <><span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />Processing…</>
-                      : <><Lock size={15} />Pay ₹{total.toLocaleString("en-IN")} with Razorpay</>
-                    }
-                  </button>
-
-                  <p className="text-[11px]" style={{ color: "#B0A090" }}>
-                    By proceeding, you agree to our Terms & Conditions. Your payment is processed securely by Razorpay.
-                  </p>
-                </div>
+            <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
+              <div className="px-6 pt-6 pb-4" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
+                <h2 className="text-lg font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Payment Details</h2>
               </div>
-            )}
-
-            {/* Cash on Delivery (COD) Card */}
-            {paymentMethod === "cod" && (
-              <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
-                <div className="px-6 pt-6 pb-4" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
-                  <h2 className="text-lg font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Cash on Delivery</h2>
-                </div>
-                <div className="p-8 flex flex-col items-center text-center gap-6">
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-md" style={{ background: "rgba(200,160,68,0.12)", border: "1px solid rgba(200,160,68,0.3)" }}>
-                    <span className="text-3xl">💵</span>
+              <div className="p-8 flex flex-col items-center text-center gap-6">
+                {/* Razorpay brand */}
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg" style={{ background: "linear-gradient(135deg,#072654,#3395FF)" }}>
+                    <span className="text-white font-black text-2xl" style={{ fontFamily: "sans-serif" }}>R</span>
                   </div>
                   <div>
-                    <p className="text-base font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Pay Cash / UPI at Doorstep</p>
-                    <p className="text-xs mt-1" style={{ color: "#7A6A58" }}>Pay comfortably when your sacred items arrive at your address.</p>
+                    <p className="text-base font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Pay Securely with Razorpay</p>
+                    <p className="text-xs mt-1" style={{ color: "#9A8A78" }}>UPI · Cards · Net Banking · Wallets · EMI</p>
                   </div>
-
-                  {/* Total amount */}
-                  <div className="w-full rounded-2xl py-4 px-6" style={{ background: "linear-gradient(135deg,#FAF0D8,#FAF7F2)", border: "1px solid rgba(200,160,68,0.22)" }}>
-                    <p className="text-xs mb-1" style={{ color: "#9A8A78" }}>Amount Payable on Delivery</p>
-                    <p className="text-3xl font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{total.toLocaleString("en-IN")}</p>
-                    <p className="text-xs mt-1 text-emerald-600 font-semibold">✓ Free Shipping & GST Included</p>
-                  </div>
-
-                  {/* Place COD Order Button */}
-                  <button
-                    onClick={handlePlaceCodOrder}
-                    disabled={placing || items.length === 0}
-                    className="w-full py-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2.5 transition-all hover:opacity-90 hover:shadow-xl disabled:opacity-60"
-                    style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}
-                  >
-                    {placing
-                      ? <><span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />Placing COD Order…</>
-                      : <>🚚 Confirm & Place COD Order (₹{total.toLocaleString("en-IN")})</>
-                    }
-                  </button>
-
-                  <p className="text-[11px]" style={{ color: "#B0A090" }}>
-                    No advance payment required. You will receive an SMS and WhatsApp update with tracking details.
-                  </p>
                 </div>
+
+                {/* Total amount */}
+                <div className="w-full rounded-2xl py-4 px-6" style={{ background: "linear-gradient(135deg,#FAF0D8,#FAF7F2)", border: "1px solid rgba(200,160,68,0.22)" }}>
+                  <p className="text-xs mb-1" style={{ color: "#9A8A78" }}>Total Amount</p>
+                  <p className="text-3xl font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{total.toLocaleString("en-IN")}</p>
+                  <p className="text-xs mt-1" style={{ color: "#4A8A4A" }}>Includes free shipping + GST</p>
+                </div>
+
+                {/* Pay button */}
+                <button
+                  onClick={handlePay}
+                  disabled={placing || items.length === 0}
+                  className="w-full py-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2.5 transition-all hover:opacity-90 hover:shadow-xl disabled:opacity-60"
+                  style={{ background: `linear-gradient(135deg,#072654,#3395FF)`, color: "#FFFFFF" }}
+                >
+                  {placing
+                    ? <><span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />Processing…</>
+                    : <><Lock size={15} />Pay ₹{total.toLocaleString("en-IN")} with Razorpay</>
+                  }
+                </button>
+
+                <p className="text-[11px]" style={{ color: "#B0A090" }}>
+                  By proceeding, you agree to our Terms & Conditions. Your payment is processed securely by Razorpay.
+                </p>
               </div>
-            )}
+            </div>
 
           </div>
 

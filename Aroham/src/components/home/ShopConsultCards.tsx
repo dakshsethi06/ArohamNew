@@ -30,7 +30,7 @@ export function ShopConsultCards({ products, onShop, onProductClick }: { product
                 { icon: <Flame size={13} />, label: "Temple Energized" },
                 { icon: <CheckCircle size={13} />, label: "Certified Authentic" },
                 { icon: <Truck size={13} />, label: "Free Shipping" },
-                { icon: <Shield size={13} />, label: "COD Available" },
+                { icon: <Shield size={13} />, label: "Secure Payment" },
               ].map(({ icon, label }) => (
                 <div key={label} className="flex items-center gap-1.5 sm:gap-2.5 py-2 sm:py-2.5 min-w-0" style={{ borderBottom: "1px solid rgba(200,160,68,0.08)" }}>
                   <span style={{ color: GOLD, flexShrink: 0 }}>{icon}</span>
