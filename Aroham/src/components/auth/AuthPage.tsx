@@ -97,10 +97,18 @@ export function AuthPage() {
         try { existingUser = JSON.parse(localCached); } catch (e) {}
       }
 
+      if (!existingUser) {
+        try {
+          const allUsers = JSON.parse(localStorage.getItem("aroham_registered_users") || "[]");
+          const found = allUsers.find((u: any) => u.phone && u.phone.includes(phoneDigits));
+          if (found) existingUser = found;
+        } catch (e) {}
+      }
+
       // 2. Check Firestore
       if (!existingUser) {
         try {
-          const q = query(collection(db, "users"), where("phone", "==", phoneDigits));
+          const q = query(collection(db, "users"), where("phone", "in", [phoneDigits, `+91${phoneDigits}`, `91${phoneDigits}`]));
           const snapshot = await getDocs(q);
           if (!snapshot.empty) {
             existingUser = snapshot.docs[0].data();
@@ -111,7 +119,7 @@ export function AuthPage() {
       // 3. Check Supabase
       if (!existingUser) {
         try {
-          const { data } = await supabase.from('users').select('*').eq('phone', phoneDigits).maybeSingle();
+          const { data } = await supabase.from('users').select('*').or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`).maybeSingle();
           if (data) existingUser = data;
         } catch (e) {}
       }
@@ -135,10 +143,18 @@ export function AuthPage() {
         try { existingUser = JSON.parse(localCached); } catch (e) {}
       }
 
+      if (!existingUser) {
+        try {
+          const allUsers = JSON.parse(localStorage.getItem("aroham_registered_users") || "[]");
+          const found = allUsers.find((u: any) => u.phone && u.phone.includes(phoneDigits));
+          if (found) existingUser = found;
+        } catch (e) {}
+      }
+
       // 2. Check Firestore
       if (!existingUser) {
         try {
-          const q = query(collection(db, "users"), where("phone", "==", phoneDigits));
+          const q = query(collection(db, "users"), where("phone", "in", [phoneDigits, `+91${phoneDigits}`, `91${phoneDigits}`]));
           const snapshot = await getDocs(q);
           if (!snapshot.empty) {
             existingUser = snapshot.docs[0].data();
@@ -149,7 +165,7 @@ export function AuthPage() {
       // 3. Check Supabase
       if (!existingUser) {
         try {
-          const { data } = await supabase.from('users').select('*').eq('phone', phoneDigits).maybeSingle();
+          const { data } = await supabase.from('users').select('*').or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`).maybeSingle();
           if (data) existingUser = data;
         } catch (e) {}
       }
@@ -159,7 +175,8 @@ export function AuthPage() {
         setErrorMsg("User already exists. Redirecting to Sign In...");
         setTimeout(() => {
           switchTab("signin");
-        }, 1200);
+          setErrorMsg("User already exists. Please sign in.");
+        }, 1000);
         return;
       }
     }
