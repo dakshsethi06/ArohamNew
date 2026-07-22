@@ -24,27 +24,40 @@ export function CommunityComments({ products = [] }: { products?: ArohamProduct[
     }
   });
 
-  // Fetch reviews from Supabase on mount
+  // Fetch reviews from Supabase on mount and merge with localStorage
   useEffect(() => {
     Promise.resolve(
       supabase.from("reviews").select("*").order("created_at", { ascending: false })
     ).then(({ data, error }) => {
+      const cachedStr = localStorage.getItem("aroham_custom_reviews");
+      const cached: any[] = cachedStr ? JSON.parse(cachedStr) : [];
+      const combinedMap = new Map();
+
+      // First add local cached reviews
+      cached.forEach(r => combinedMap.set(r.id || `${r.name}-${r.text}`, r));
+
+      // Then add Supabase reviews
       if (data && data.length > 0 && !error) {
-        const formatted = data.map((r: any) => ({
-          id: r.id,
-          name: r.name,
-          city: r.city || "Verified Buyer",
-          rating: r.rating || 5,
-          text: r.text,
-          product: r.product || "Sacred Item",
-          likes: r.likes || 0,
-          date: "Just now",
-          init: r.name ? r.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) : "VB",
-          bg: "#5B1F24"
-        }));
-        setCustomReviews(formatted);
-        localStorage.setItem("aroham_custom_reviews", JSON.stringify(formatted));
+        data.forEach((r: any) => {
+          const item = {
+            id: r.id,
+            name: r.name,
+            city: r.city || "Verified Buyer",
+            rating: r.rating || 5,
+            text: r.text,
+            product: r.product || "Sacred Item",
+            likes: r.likes || 0,
+            date: "Just now",
+            init: r.name ? r.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) : "VB",
+            bg: "#5B1F24"
+          };
+          combinedMap.set(r.id || `${r.name}-${r.text}`, item);
+        });
       }
+
+      const merged = Array.from(combinedMap.values());
+      setCustomReviews(merged);
+      localStorage.setItem("aroham_custom_reviews", JSON.stringify(merged));
     }).catch(() => {});
   }, []);
 
@@ -83,7 +96,7 @@ export function CommunityComments({ products = [] }: { products?: ArohamProduct[
         })
       ).catch(() => {});
 
-      // Add to local state immediately
+      // Add to local state and localStorage immediately
       const updatedList = [newRev, ...customReviews];
       setCustomReviews(updatedList);
       localStorage.setItem("aroham_custom_reviews", JSON.stringify(updatedList));
@@ -163,14 +176,16 @@ export function CommunityComments({ products = [] }: { products?: ArohamProduct[
         <div className="flex gap-5 overflow-x-auto pb-3 -mx-6 lg:-mx-10 px-6 lg:px-10 scroll-pl-6 lg:scroll-pl-10"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none", scrollSnapType: "x mandatory" }}>
           {allReviews.map((c, i) => (
-            <div key={c.id || i} className="p-6 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-xl flex-shrink-0 flex flex-col"
+            <div key={c.id || i} className="p-6 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-xl flex-shrink-0 flex flex-col justify-between"
               style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.07)", boxShadow: "0 2px 12px rgba(91,31,36,0.04)", width: "clamp(280px,80vw,340px)", scrollSnapAlign: "start" }}>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex">{Array.from({ length: c.rating }).map((_, j) => <Star key={j} size={12} fill={GOLD} stroke={GOLD} strokeWidth={1.5} />)}</div>
-                <span className="text-[10px]" style={{ color: "#9A8A78" }}>{c.date}</span>
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex">{Array.from({ length: c.rating }).map((_, j) => <Star key={j} size={12} fill={GOLD} stroke={GOLD} strokeWidth={1.5} />)}</div>
+                  <span className="text-[10px]" style={{ color: "#9A8A78" }}>{c.date}</span>
+                </div>
+                <p className="text-sm leading-relaxed mb-3 italic" style={{ color: "#4A3A2A", wordBreak: "break-word" }}>"{c.text}"</p>
+                <div className="text-[10px] mb-4 px-2 py-1 rounded-lg inline-block self-start" style={{ background: "rgba(200,160,68,0.08)", color: "#8B6914" }}>📦 {c.product}</div>
               </div>
-              <p className="text-sm leading-relaxed mb-3 italic" style={{ color: "#4A3A2A" }}>"{c.text}"</p>
-              <div className="text-[10px] mb-4 px-2 py-1 rounded-lg inline-block self-start" style={{ background: "rgba(200,160,68,0.08)", color: "#8B6914" }}>📦 {c.product}</div>
               <div className="flex items-center justify-between pt-3 mt-auto" style={{ borderTop: "1px solid rgba(91,31,36,0.07)" }}>
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style={{ background: c.bg || "#5B1F24", color: GOLD, fontFamily: SERIF }}>{c.init}</div>
