@@ -97,16 +97,17 @@ export function AuthPage() {
     if (activeTab === "signin") {
       let existingUser: any = null;
 
-      // Check Supabase DB ONLY as the single source of truth
       try {
-        const { data } = await supabase.from('users').select('*').or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`).maybeSingle();
+        const { data } = await Promise.race([
+          supabase.from('users').select('*').or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`).maybeSingle(),
+          new Promise<any>(res => setTimeout(() => res({ data: null }), 1000))
+        ]);
         if (data && (data.phone || data.id)) {
           existingUser = data;
         }
       } catch (e) {}
 
       if (!existingUser) {
-        // Purge any stale local storage cache for this phone
         localStorage.removeItem(`aroham_registered_user_phone_${phoneDigits}`);
         setLoading(false);
         setErrorMsg("Mobile number not registered. Redirecting to Create Account...");
@@ -121,64 +122,13 @@ export function AuthPage() {
       let existingUser: any = null;
       const cleanEmail = email.trim().toLowerCase();
 
-      // 1. Check Email in Local Storage
-      if (cleanEmail) {
-        try {
-          const allUsers = JSON.parse(localStorage.getItem("aroham_registered_users") || "[]");
-          const found = allUsers.find((u: any) => u.email && u.email.trim().toLowerCase() === cleanEmail);
-          if (found) existingUser = found;
-        } catch (e) {}
-      }
-
-      // 2. Check Phone in Local Storage
-      if (!existingUser) {
-        const localCached = localStorage.getItem(`aroham_registered_user_phone_${phoneDigits}`);
-        if (localCached) {
-          try { existingUser = JSON.parse(localCached); } catch (e) {}
-        }
-      }
-
-      if (!existingUser) {
-        try {
-          const allUsers = JSON.parse(localStorage.getItem("aroham_registered_users") || "[]");
-          const found = allUsers.find((u: any) => u.phone && u.phone.includes(phoneDigits));
-          if (found) existingUser = found;
-        } catch (e) {}
-      }
-
-      // 3. Check Firestore for Email or Phone
-      if (!existingUser) {
-        try {
-          if (cleanEmail) {
-            const qEmail = query(collection(db, "users"), where("email", "==", cleanEmail));
-            const snapEmail = await getDocs(qEmail);
-            if (!snapEmail.empty) {
-              existingUser = snapEmail.docs[0].data();
-            }
-          }
-          if (!existingUser) {
-            const qPhone = query(collection(db, "users"), where("phone", "in", [phoneDigits, `+91${phoneDigits}`, `91${phoneDigits}`]));
-            const snapPhone = await getDocs(qPhone);
-            if (!snapPhone.empty) {
-              existingUser = snapPhone.docs[0].data();
-            }
-          }
-        } catch (e) {}
-      }
-
-      // 4. Check Supabase for Email or Phone
-      if (!existingUser) {
-        try {
-          if (cleanEmail) {
-            const { data: emailData } = await supabase.from('users').select('*').eq('email', cleanEmail).maybeSingle();
-            if (emailData) existingUser = emailData;
-          }
-          if (!existingUser) {
-            const { data: phoneData } = await supabase.from('users').select('*').or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`).maybeSingle();
-            if (phoneData) existingUser = phoneData;
-          }
-        } catch (e) {}
-      }
+      try {
+        const { data } = await Promise.race([
+          supabase.from('users').select('*').or(`email.eq.${cleanEmail},phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`).maybeSingle(),
+          new Promise<any>(res => setTimeout(() => res({ data: null }), 1000))
+        ]);
+        if (data) existingUser = data;
+      } catch (e) {}
 
       if (existingUser) {
         setLoading(false);
