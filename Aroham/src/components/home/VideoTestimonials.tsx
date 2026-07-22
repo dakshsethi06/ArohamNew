@@ -13,10 +13,18 @@ const BASE_REELS = [
 export function VideoTestimonials() {
   const [active, setActive] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const n = BASE_REELS.length;
   const [centerIndex, setCenterIndex] = useState(n);
   const ALL_REELS = [...BASE_REELS, ...BASE_REELS, ...BASE_REELS];
+
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const scrollToIndex = (idx: number, smooth = true) => {
     const el = scrollRef.current;
@@ -120,7 +128,7 @@ export function VideoTestimonials() {
         </button>
         <div ref={scrollRef}
           className="reel-scroll flex items-center gap-4 overflow-x-auto px-[max(2rem,calc(50vw-140px))]"
-          style={{ scrollSnapType: "x mandatory", paddingBottom: "4px", minHeight: 464, perspective: 1200, WebkitMaskImage: "linear-gradient(to right, transparent, black 15%, black 85%, transparent)", maskImage: "linear-gradient(to right, transparent, black 15%, black 85%, transparent)" }}>
+          style={{ scrollSnapType: "x mandatory", paddingBottom: "4px", minHeight: isMobile ? 484 : 464, perspective: 1200, WebkitMaskImage: isMobile ? "none" : "linear-gradient(to right, transparent, black 15%, black 85%, transparent)", maskImage: isMobile ? "none" : "linear-gradient(to right, transparent, black 15%, black 85%, transparent)" }}>
           {ALL_REELS.map((v, i) => {
             const isActive = (i % n) === active;
             let diff = i - centerIndex;
@@ -128,22 +136,33 @@ export function VideoTestimonials() {
             let rotY = 0;
             let sc = 1;
             let op = 1;
-            if (diff === 0) {
-              rotY = 0; sc = 1; op = 1;
-            } else if (diff === -1) {
-              rotY = 22; sc = 0.93; op = 0.6;
-            } else if (diff === 1) {
-              rotY = -22; sc = 0.93; op = 0.6;
-            } else if (diff <= -2) {
-              rotY = 40; sc = 0.85; op = 0.2;
-            } else if (diff >= 2) {
-              rotY = -40; sc = 0.85; op = 0.2;
+            
+            if (isMobile) {
+              if (diff === 0) { sc = 1; op = 1; }
+              else { sc = 0.95; op = 0.4; }
+            } else {
+              if (diff === 0) {
+                rotY = 0; sc = 1; op = 1;
+              } else if (diff === -1) {
+                rotY = 22; sc = 0.93; op = 0.6;
+              } else if (diff === 1) {
+                rotY = -22; sc = 0.93; op = 0.6;
+              } else if (diff <= -2) {
+                rotY = 40; sc = 0.85; op = 0.2;
+              } else if (diff >= 2) {
+                rotY = -40; sc = 0.85; op = 0.2;
+              }
             }
+
+            const mobileWidth = isActive ? 300 : 280;
+            const mobileHeight = isActive ? 480 : 450;
+            const desktopWidth = isActive ? 260 : 200;
+            const desktopHeight = isActive ? 460 : 355;
 
             return (
               <div key={i} onClick={() => scrollTo(i % n)}
                 className="flex-shrink-0 relative cursor-pointer transition-all duration-500"
-                style={{ width: isActive ? 260 : 200, height: isActive ? 460 : 355, borderRadius: 24, overflow: "hidden", scrollSnapAlign: "center",
+                style={{ width: isMobile ? mobileWidth : desktopWidth, height: isMobile ? mobileHeight : desktopHeight, borderRadius: 24, overflow: "hidden", scrollSnapAlign: "center",
                   transform: `perspective(1000px) rotateY(${rotY}deg) scale(${sc})`, opacity: op,
                   border: isActive ? `2px solid ${GOLD}` : "2px solid transparent",
                   transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)",
