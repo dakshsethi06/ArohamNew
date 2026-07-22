@@ -169,6 +169,9 @@ export function ShippingPage() {
         name: `${form.firstName} ${form.lastName}`.trim(),
         phone: form.phone.replace(/\D/g, "").slice(-10),
         email: form.email,
+        house: form.house,
+        street: form.street,
+        landmark: form.landmark,
         line1: `${form.house}, ${form.street}${form.landmark ? ", " + form.landmark : ""}`.trim(),
         address: `${form.house}, ${form.street}${form.landmark ? ", " + form.landmark : ""}`.trim(),
         city: form.city,
@@ -265,6 +268,22 @@ export function ShippingPage() {
   const handleEditAddress = (addr: any) => {
     const nameParts = (addr.full_name || addr.name || "").trim().split(" ");
     setEditingAddrId(addr.id);
+
+    let houseVal = addr.house || "";
+    let streetVal = addr.street || "";
+
+    if (!houseVal && (addr.address || addr.line1 || addr.address_line1)) {
+      const full = addr.address || addr.line1 || addr.address_line1 || "";
+      const commaIdx = full.indexOf(",");
+      if (commaIdx !== -1) {
+        houseVal = full.slice(0, commaIdx).trim();
+        streetVal = full.slice(commaIdx + 1).trim();
+      } else {
+        houseVal = full;
+        streetVal = "";
+      }
+    }
+
     setForm(prev => ({
       ...prev,
       firstName: nameParts[0] || "",
@@ -272,8 +291,8 @@ export function ShippingPage() {
       phone: addr.phone || prev.phone,
       email: addr.email || prev.email,
       pin: String(addr.pincode || addr.pin || ""),
-      house: addr.address || addr.line1 || addr.address_line1 || "",
-      street: addr.street || "",
+      house: houseVal,
+      street: streetVal,
       landmark: addr.landmark || "",
       city: addr.city || "",
       state: addr.state || "",

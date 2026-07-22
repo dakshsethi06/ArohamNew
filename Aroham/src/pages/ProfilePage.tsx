@@ -108,6 +108,9 @@ export function ProfilePage() {
       name: addrForm.name.trim(),
       full_name: addrForm.name.trim(),
       phone: addrForm.phone.replace(/\D/g, "").slice(-10),
+      house: addrForm.house,
+      street: addrForm.street,
+      landmark: addrForm.landmark,
       address: `${addrForm.house}, ${addrForm.street}${addrForm.landmark ? ", " + addrForm.landmark : ""}`.trim(),
       line1: `${addrForm.house}, ${addrForm.street}${addrForm.landmark ? ", " + addrForm.landmark : ""}`.trim(),
       city: addrForm.city,
@@ -142,12 +145,28 @@ export function ProfilePage() {
   const handleEditProfileAddress = (addr: any) => {
     const nameParts = (addr.full_name || addr.name || "").trim();
     setEditingAddrId(addr.id);
+
+    let houseVal = addr.house || "";
+    let streetVal = addr.street || "";
+
+    if (!houseVal && (addr.address || addr.line1)) {
+      const full = addr.address || addr.line1 || "";
+      const commaIdx = full.indexOf(",");
+      if (commaIdx !== -1) {
+        houseVal = full.slice(0, commaIdx).trim();
+        streetVal = full.slice(commaIdx + 1).trim();
+      } else {
+        houseVal = full;
+        streetVal = "";
+      }
+    }
+
     setAddrForm({
       name: nameParts,
       phone: addr.phone || "",
       pin: String(addr.pincode || addr.pin || ""),
-      house: addr.address || addr.line1 || "",
-      street: addr.street || "",
+      house: houseVal,
+      street: streetVal,
       landmark: addr.landmark || "",
       city: addr.city || "",
       state: addr.state || "",
