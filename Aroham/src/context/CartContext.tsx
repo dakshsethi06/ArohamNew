@@ -117,6 +117,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const cartCount = items.reduce((s, i) => s + i.qty, 0);
   const subtotal = items.reduce((s, i) => s + i.product.price * i.qty, 0);
 
+  const [couponsMap, setCouponsMap] = useState<Record<string, { type: "percent" | "flat"; value: number; label: string }>>(VALID_COUPONS);
+
+  // Fetch dynamic coupons from Supabase DB on mount
+  useEffect(() => {
+    Promise.resolve(
+      supabase.from("coupons").select("*")
+    ).then(({ data, error }) => {
+      if (data && data.length > 0 && !error) {
+        const merged: Record<string, { type: "percent" | "flat"; value: number; label: string }> = { ...VALID_COUPONS };
+        data.forEach((c: any) => {
+          if (c.code) {
+            merged[c.code.trim().toUpperCase()] = {
+              type: c.type === "flat" ? "flat" : "percent",
+              value: Number(c.value) || 10,
+              label: c.label || (c.type === "flat" ? `₹${c.value} OFF` : `${c.value}% OFF sacred items`)
+            };
+          }
+        });
+        setCouponsMap(merged);
+      }
+    }).catch(() => {});
+  }, []);
+
   let discount = 0;
   if (appliedCoupon && subtotal > 0) {
     if (appliedCoupon.type === "percent") {
@@ -130,7 +153,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const applyCoupon = (code: string) => {
     const cleanCode = code.trim().toUpperCase();
-    const found = VALID_COUPONS[cleanCode];
+    const found = couponsMap[cleanCode] || VALID_COUPONS[cleanCode];
     if (!found) {
       return { success: false, message: "Invalid coupon code. Try AROHAM10 or FIRST100" };
     }
