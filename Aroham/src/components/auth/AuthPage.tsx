@@ -823,9 +823,6 @@ export function AuthPage() {
                 boxShadow: "0 24px 70px -20px rgba(91,31,36,0.28), 0 2px 6px rgba(91,31,36,0.05)",
               }}
             >
-              {/* Step indicator (shown once past the account screen, only for signup flow) */}
-              {isSignupFlow && authState !== "signin" && authState !== "signup" && stepper}
-
               {/* Signin UI */}
               {rightContent}
             </div>
