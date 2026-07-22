@@ -91,8 +91,15 @@ export function ProfilePage() {
   }, [user?.id, activeTab]);
 
   const handleSaveProfileAddress = async () => {
-    if (!addrForm.name.trim() || !addrForm.phone.trim() || !addrForm.pin.trim() || !addrForm.house.trim() || !addrForm.city.trim()) {
-      alert("Please fill in required fields (Name, Phone, PIN, House No., City)");
+    const missing: string[] = [];
+    if (!addrForm.name.trim()) missing.push("Name");
+    if (!addrForm.phone.trim()) missing.push("Phone Number");
+    if (!addrForm.pin.trim()) missing.push("PIN Code");
+    if (!addrForm.house.trim()) missing.push("House / Flat No.");
+    if (!addrForm.city.trim()) missing.push("City");
+
+    if (missing.length > 0) {
+      alert(`Please fill in: ${missing.join(", ")}`);
       return;
     }
 

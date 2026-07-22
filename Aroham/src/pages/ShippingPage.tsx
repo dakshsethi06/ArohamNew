@@ -142,17 +142,18 @@ export function ShippingPage() {
   // Save new address and proceed to payment
   const handleSaveAddress = async () => {
     const errors: Record<string, boolean> = {};
+    const missing: string[] = [];
     setFormErrorMsg("");
-    if (!form.firstName.trim()) errors.firstName = true;
-    if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 10) errors.phone = true;
-    if (!form.pin.trim() || form.pin.replace(/\D/g, "").length !== 6) errors.pin = true;
-    if (!form.house.trim()) errors.house = true;
-    if (!form.street.trim()) errors.street = true;
-    if (!form.city.trim()) errors.city = true;
+    if (!form.firstName.trim()) { errors.firstName = true; missing.push("First Name"); }
+    if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 10) { errors.phone = true; missing.push("Mobile Phone Number"); }
+    if (!form.pin.trim() || form.pin.replace(/\D/g, "").length !== 6) { errors.pin = true; missing.push("6-Digit PIN Code"); }
+    if (!form.house.trim()) { errors.house = true; missing.push("House / Flat No."); }
+    if (!form.street.trim()) { errors.street = true; missing.push("Street Address"); }
+    if (!form.city.trim()) { errors.city = true; missing.push("City"); }
 
-    if (Object.keys(errors).length > 0) {
+    if (missing.length > 0) {
       setValidationErrors(errors);
-      setFormErrorMsg("Please fill in all required fields (First Name, Mobile Phone, PIN Code, House No, Street Address, City).");
+      setFormErrorMsg(`Please fill in: ${missing.join(", ")}`);
       return;
     }
 
@@ -387,14 +388,17 @@ export function ShippingPage() {
 
     // 2. User is entering a new address (showForm === true)
     const errors: Record<string, boolean> = {};
-    if (!form.firstName.trim()) errors.firstName = true;
-    if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 10) errors.phone = true;
-    if (!form.pin.trim() || form.pin.replace(/\D/g, "").length !== 6) errors.pin = true;
-    if (!form.house.trim()) errors.house = true;
-    if (!form.city.trim()) errors.city = true;
+    const missing: string[] = [];
+    if (!form.firstName.trim()) { errors.firstName = true; missing.push("First Name"); }
+    if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 10) { errors.phone = true; missing.push("Mobile Phone Number"); }
+    if (!form.pin.trim() || form.pin.replace(/\D/g, "").length !== 6) { errors.pin = true; missing.push("6-Digit PIN Code"); }
+    if (!form.house.trim()) { errors.house = true; missing.push("House / Flat No."); }
+    if (!form.street.trim()) { errors.street = true; missing.push("Street Address"); }
+    if (!form.city.trim()) { errors.city = true; missing.push("City"); }
 
-    if (Object.keys(errors).length > 0) {
+    if (missing.length > 0) {
       setValidationErrors(errors);
+      setFormErrorMsg(`Please fill in: ${missing.join(", ")}`);
       setShowForm(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
