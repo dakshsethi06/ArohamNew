@@ -46,7 +46,7 @@ export function ShopConsultCards({ products, onShop, onProductClick }: { product
             </div>
             <div className="flex-1 relative z-10" />
             <button onClick={onShop}
-              className="relative z-10 w-full flex items-center justify-center gap-3 rounded-2xl font-bold transition-all hover:opacity-90 hover:scale-[1.02]"
+              className="relative z-10 w-full hidden sm:flex items-center justify-center gap-3 rounded-2xl font-bold transition-all hover:opacity-90 hover:scale-[1.02]"
               style={{ background: GOLD, color: "#5C1B23", fontFamily: SANS, fontSize: "clamp(1rem,2vw,1.2rem)", padding: "18px 24px", letterSpacing: "0.01em" }}>
               Shop Now <ArrowRight size={18} />
             </button>
