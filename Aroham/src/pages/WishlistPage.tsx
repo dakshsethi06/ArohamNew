@@ -9,8 +9,8 @@ export function WishlistPage() {
   const { wishlist, removeFromWishlist } = useWishlist();
   const { addToCart } = useCart();
 
-  const handleMoveToBag = (product: any) => {
-    addToCart(product, 1, true);
+  const handleAddToCart = (product: any) => {
+    addToCart(product, 1, false);
     removeFromWishlist(product.id);
   };
 
@@ -118,15 +118,17 @@ export function WishlistPage() {
                     </div>
                   </div>
 
-                  {/* Move to Bag Button */}
-                  <button
-                    onClick={() => handleMoveToBag(product)}
-                    className="w-full py-3.5 border-t border-gray-100 text-xs font-bold tracking-wider hover:bg-rose-50 transition-colors uppercase flex items-center justify-center gap-1.5 mt-2"
-                    style={{ color: "#E74C3C" }}
-                  >
-                    <ShoppingBag size={14} />
-                    <span>MOVE TO BAG</span>
-                  </button>
+                  {/* Add to Cart Button */}
+                  <div className="p-3.5 pt-0 mt-2">
+                    <button
+                      aria-label={`Add ${product.name} to cart`}
+                      onClick={() => handleAddToCart(product)}
+                      className="w-full py-2.5 rounded-xl flex items-center justify-center text-[11px] font-bold tracking-wide transition-all hover:opacity-90 active:scale-95 shadow-sm uppercase"
+                      style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY, border: "none", cursor: "pointer", fontFamily: SANS }}
+                    >
+                      <span>Add to Cart</span>
+                    </button>
+                  </div>
                 </div>
               );
             })}
