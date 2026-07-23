@@ -30,7 +30,14 @@ import {
   Calendar,
   CheckCircle2,
   Lock,
-  ThumbsUp
+  ThumbsUp,
+  LogOut,
+  BarChart2,
+  Bell,
+  Headphones,
+  Users,
+  Layers,
+  Activity
 } from "lucide-react";
 
 const REMEDY_PRODUCTS = [
@@ -66,13 +73,18 @@ const MOCK_TRANSACTIONS = [
   { id: "TXN-8810", user: "Anand Verma", type: "Audio Call", duration: "30 mins", rate: "₹25/min", amount: "₹750", status: "Settled", date: "Yesterday" }
 ];
 
-type MainTab = "workstation" | "wallet" | "reviews" | "profile" | "remedies";
+const MOCK_CALL_LOGS = [
+  { id: "CALL-101", user: "Sneha Reddy", duration: "12 mins", status: "Completed", amount: "₹240", time: "Today, 11:20 AM" },
+  { id: "CALL-102", user: "Amitabh K.", duration: "20 mins", status: "Completed", amount: "₹400", time: "Yesterday, 06:15 PM" }
+];
+
+type MainTab = "overview" | "workstation" | "calls" | "wallet" | "reviews" | "remedies" | "profile";
 
 export function AstrologerDashboard() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<MainTab>("workstation");
+  const [activeTab, setActiveTab] = useState<MainTab>("overview");
   const [sessions, setSessions] = useState<any[]>([]);
   const [activeSession, setActiveSession] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
@@ -107,18 +119,6 @@ export function AstrologerDashboard() {
     }
   });
 
-  const getProfileCompletion = () => {
-    let score = 0;
-    if (profile.name) score += 15;
-    if (profile.email) score += 15;
-    if (profile.dob) score += 15;
-    if (profile.title) score += 15;
-    if (profile.experience) score += 10;
-    if (profile.bio && profile.bio.length > 20) score += 15;
-    if (profile.avatar) score += 15;
-    return Math.min(score, 100);
-  };
-
   const currentAstroId = user?.id || "astro-1";
 
   useEffect(() => {
@@ -146,6 +146,14 @@ export function AstrologerDashboard() {
       supabase.removeChannel(sub);
     };
   }, [user, currentAstroId]);
+
+  const handleLogout = async () => {
+    await broadcastStatus(false);
+    try {
+      await logout();
+    } catch (e) {}
+    navigate("/auth?role=astrologer");
+  };
 
   const toggleChatOnline = async () => {
     const nextStatus = !isChatOnline;
@@ -201,7 +209,6 @@ export function AstrologerDashboard() {
       const latestLocal = localStorage.getItem("aroham_latest_live_session");
       if (latestLocal) {
         const parsed = JSON.parse(latestLocal);
-        // Only include if targeted specifically for this astrologer
         if (parsed.astrologer_id === currentAstroId || parsed.astrologer_id === "astro-1" || !parsed.astrologer_id) {
           if (!sessionList.some(s => s.id === parsed.id)) {
             sessionList.unshift(parsed);
@@ -249,6 +256,7 @@ export function AstrologerDashboard() {
 
     const activeObj = { ...s, status: "active" };
     setActiveSession(activeObj);
+    setActiveTab("workstation");
 
     setSessions(prev => prev.map(item => item.id === s.id ? { ...item, status: "active" } : item));
 
@@ -353,22 +361,22 @@ export function AstrologerDashboard() {
     return true;
   });
 
-  const completionScore = getProfileCompletion();
+  const pendingCount = sessions.filter(s => s.status === "pending" && !acceptedSessionIds.has(s.id)).length;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF6F0]" style={{ fontFamily: SANS, color: "#4A3E31" }}>
       
-      <header className="px-6 py-4 border-b border-amber-900/15 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-40 shadow-xl" style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}>
+      <header className="px-6 py-3.5 border-b border-amber-900/15 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-40 shadow-xl" style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}>
         <div className="flex items-center gap-3.5">
           <div className="relative">
-            <img src={profile.avatar} alt={profile.name} className="w-12 h-12 rounded-2xl object-cover border-2 border-amber-300 shadow-md" />
+            <img src={profile.avatar} alt={profile.name} className="w-11 h-11 rounded-2xl object-cover border-2 border-amber-300 shadow-md" />
             <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-[#5B1F24] ${isChatOnline ? "bg-emerald-400 animate-pulse" : "bg-gray-400"}`} />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-base font-bold text-white tracking-wide" style={{ fontFamily: SERIF }}>{profile.name}</h1>
               <span className="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-400/20 text-amber-200 border border-amber-400/30 flex items-center gap-1">
-                <Award size={10} /> Verified Scholar
+                <Award size={10} /> Certified Scholar
               </span>
             </div>
             <p className="text-xs text-amber-200/80">{profile.title} • ₹{profile.pricePerMin}/min</p>
@@ -377,14 +385,24 @@ export function AstrologerDashboard() {
 
         <div className="flex items-center gap-3 flex-wrap">
           
-          <div className="px-3.5 py-2 rounded-xl bg-amber-400/15 border border-amber-400/30 text-amber-200 text-xs font-bold flex items-center gap-1.5 shadow-xs">
+          {pendingCount > 0 && (
+            <button
+              onClick={() => setActiveTab("workstation")}
+              className="px-3 py-1.5 rounded-xl bg-amber-400 text-black font-extrabold text-xs flex items-center gap-1.5 animate-bounce shadow-md"
+            >
+              <Bell size={14} />
+              <span>{pendingCount} Ringing</span>
+            </button>
+          )}
+
+          <div className="px-3 py-1.5 rounded-xl bg-amber-400/15 border border-amber-400/30 text-amber-200 text-xs font-bold flex items-center gap-1.5 shadow-xs">
             <Wallet size={14} className="text-amber-300" />
             <span>Today: ₹3,850</span>
           </div>
 
           <button
             onClick={toggleChatOnline}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shadow-xs ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shadow-xs ${
               isChatOnline
                 ? "bg-emerald-600/30 text-emerald-200 border-emerald-400/40 hover:bg-emerald-600/40"
                 : "bg-black/30 text-amber-200/60 border-white/20 hover:bg-black/40"
@@ -396,7 +414,7 @@ export function AstrologerDashboard() {
 
           <button
             onClick={toggleCallOnline}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shadow-xs ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shadow-xs ${
               isCallOnline
                 ? "bg-amber-400/20 text-amber-200 border-amber-400/40 hover:bg-amber-400/30"
                 : "bg-black/30 text-amber-200/60 border-white/20 hover:bg-black/40"
@@ -408,9 +426,18 @@ export function AstrologerDashboard() {
 
           <button
             onClick={() => navigate("/consult")}
-            className="px-3.5 py-2 rounded-xl text-xs font-bold border border-white/20 text-amber-100 hover:text-white hover:bg-white/10 transition-all"
+            className="px-3 py-1.5 rounded-xl text-xs font-bold border border-white/20 text-amber-100 hover:text-white hover:bg-white/10 transition-all"
           >
             User Directory
+          </button>
+
+          <button
+            onClick={handleLogout}
+            title="Log Out Astrologer Session"
+            className="px-3 py-1.5 rounded-xl text-xs font-bold bg-red-900/40 hover:bg-red-900/60 text-red-200 border border-red-500/30 transition-all flex items-center gap-1.5 shadow-xs active:scale-95"
+          >
+            <LogOut size={14} />
+            <span className="hidden sm:inline">Logout</span>
           </button>
         </div>
       </header>
@@ -420,11 +447,13 @@ export function AstrologerDashboard() {
         <aside className="w-full lg:w-64 bg-[#F5EDE0] border-r border-amber-900/15 p-4 flex lg:flex-col justify-between overflow-x-auto lg:overflow-y-auto shrink-0">
           <div className="space-y-1 flex lg:flex-col gap-1 w-full">
             {[
-              { id: "workstation", label: "Workstation & Queue", icon: MessageCircle },
+              { id: "overview", label: "Dashboard & Analytics", icon: BarChart2 },
+              { id: "workstation", label: "Live Workstation & Queue", icon: MessageCircle, badge: pendingCount },
+              { id: "calls", label: "Call & Audio Consults", icon: PhoneCall },
               { id: "wallet", label: "Earnings & Wallet", icon: Wallet },
               { id: "reviews", label: "Ratings & Reviews", icon: Star },
               { id: "remedies", label: "Remedies Catalog", icon: ShoppingBag },
-              { id: "profile", label: "Profile & Settings", icon: User }
+              { id: "profile", label: "Profile & Rate Settings", icon: User }
             ].map(tab => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -432,33 +461,147 @@ export function AstrologerDashboard() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as MainTab)}
-                  className={`w-full px-4 py-3 rounded-2xl text-xs font-bold flex items-center gap-3 transition-all whitespace-nowrap ${
+                  className={`w-full px-3.5 py-3 rounded-2xl text-xs font-bold flex items-center justify-between transition-all whitespace-nowrap ${
                     isActive
                       ? "text-white shadow-md"
                       : "text-amber-900/80 hover:text-[#5B1F24] hover:bg-amber-900/10"
                   }`}
                   style={isActive ? { background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` } : {}}
                 >
-                  <Icon size={16} className={isActive ? "text-amber-300" : "text-amber-900/60"} />
-                  <span>{tab.label}</span>
+                  <div className="flex items-center gap-3">
+                    <Icon size={16} className={isActive ? "text-amber-300" : "text-amber-900/60"} />
+                    <span>{tab.label}</span>
+                  </div>
+                  {tab.badge ? (
+                    <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-400 text-black">
+                      {tab.badge}
+                    </span>
+                  ) : null}
                 </button>
               );
             })}
           </div>
 
-          <div className="hidden lg:block pt-6 border-t border-amber-900/15 mt-6">
-            <div className="p-4 rounded-2xl bg-white/60 border border-amber-900/10 text-xs">
+          <div className="hidden lg:block pt-4 border-t border-amber-900/15 mt-6 space-y-3">
+            <div className="p-3.5 rounded-2xl bg-white/60 border border-amber-900/10 text-xs">
               <p className="text-xs font-bold text-[#5B1F24] mb-1" style={{ fontFamily: SERIF }}>Aroham Scholar Helpline</p>
-              <p className="text-[11px] text-amber-900/70 leading-relaxed">Dedicated Astrologer support available 24x7 for Vedic consultations.</p>
+              <p className="text-[10px] text-amber-900/70 leading-relaxed">Dedicated Astrologer support available 24x7.</p>
             </div>
+
+            <button
+              onClick={handleLogout}
+              className="w-full py-2.5 rounded-2xl text-xs font-bold bg-red-900/10 hover:bg-red-900/20 text-red-800 border border-red-900/20 transition-all flex items-center justify-center gap-2 active:scale-95"
+            >
+              <LogOut size={14} /> Log Out Account
+            </button>
           </div>
         </aside>
 
         <main className="flex-1 flex flex-col overflow-hidden bg-[#FAF6F0]">
           
+          {activeTab === "overview" && (
+            <div className="p-6 sm:p-8 space-y-6 max-w-6xl mx-auto w-full overflow-y-auto">
+              <div>
+                <h2 className="text-xl font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Professional Scholar Control Center</h2>
+                <p className="text-xs text-amber-900/70">Overview of active consultations, seeker metrics, and total payouts.</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="p-5 rounded-3xl bg-white border border-amber-900/15 shadow-xs space-y-2">
+                  <div className="flex items-center justify-between text-amber-900/60 text-xs font-bold">
+                    <span>Total Consultations</span>
+                    <MessageSquare size={16} className="text-[#5B1F24]" />
+                  </div>
+                  <h3 className="text-2xl font-black text-[#5B1F24]">412 Sessions</h3>
+                  <p className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
+                    <TrendingUp size={11} /> +18% from last month
+                  </p>
+                </div>
+
+                <div className="p-5 rounded-3xl bg-white border border-emerald-200 shadow-xs space-y-2">
+                  <div className="flex items-center justify-between text-emerald-800 text-xs font-bold">
+                    <span>Monthly Earnings</span>
+                    <DollarSign size={16} className="text-emerald-600" />
+                  </div>
+                  <h3 className="text-2xl font-black text-emerald-600">₹84,200</h3>
+                  <p className="text-[10px] text-emerald-600 font-bold">Settled to Bank Account</p>
+                </div>
+
+                <div className="p-5 rounded-3xl bg-white border border-amber-900/15 shadow-xs space-y-2">
+                  <div className="flex items-center justify-between text-amber-900/60 text-xs font-bold">
+                    <span>Seeker Satisfaction</span>
+                    <Star size={16} fill="#C8A044" stroke="none" />
+                  </div>
+                  <h3 className="text-2xl font-black text-[#5B1F24]">4.95 ★</h3>
+                  <p className="text-[10px] text-amber-900/60">Based on 412 Verified Ratings</p>
+                </div>
+
+                <div className="p-5 rounded-3xl bg-white border border-purple-200 shadow-xs space-y-2">
+                  <div className="flex items-center justify-between text-purple-800 text-xs font-bold">
+                    <span>Repeat Seekers</span>
+                    <Users size={16} className="text-purple-600" />
+                  </div>
+                  <h3 className="text-2xl font-black text-purple-700">86.4%</h3>
+                  <p className="text-[10px] text-purple-600 font-bold">High Client Retention</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 p-6 rounded-3xl bg-white border border-amber-900/15 shadow-xs space-y-4">
+                  <h3 className="text-sm font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Weekly Consultation Volume</h3>
+                  <div className="h-44 flex items-end justify-between gap-3 pt-6 pb-2 border-b border-amber-900/10 px-2">
+                    {[
+                      { day: "Mon", count: 12, height: "60%" },
+                      { day: "Tue", count: 18, height: "85%" },
+                      { day: "Wed", count: 15, height: "70%" },
+                      { day: "Thu", count: 22, height: "100%" },
+                      { day: "Fri", count: 19, height: "90%" },
+                      { day: "Sat", count: 25, height: "100%" },
+                      { day: "Sun", count: 21, height: "95%" }
+                    ].map(d => (
+                      <div key={d.day} className="flex-1 flex flex-col items-center gap-2 group">
+                        <span className="text-[10px] font-bold text-amber-900/60">{d.count}</span>
+                        <div className="w-full rounded-t-xl bg-gradient-to-t from-[#5B1F24] to-[#7A2A30] group-hover:from-amber-600 group-hover:to-amber-500 transition-all shadow-xs" style={{ height: d.height }} />
+                        <span className="text-[10px] font-bold text-[#4A3E31]">{d.day}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="p-6 rounded-3xl bg-white border border-amber-900/15 shadow-xs space-y-4">
+                  <h3 className="text-sm font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Quick Controls</h3>
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => setActiveTab("workstation")}
+                      className="w-full p-3.5 rounded-2xl bg-amber-900/10 hover:bg-amber-900/15 text-[#5B1F24] font-bold text-xs flex items-center justify-between transition-all"
+                    >
+                      <span className="flex items-center gap-2"><MessageCircle size={15} /> Enter Live Workstation</span>
+                      <ArrowUpRight size={15} />
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab("wallet")}
+                      className="w-full p-3.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center justify-between transition-all border border-emerald-200"
+                    >
+                      <span className="flex items-center gap-2"><Wallet size={15} /> Request Instant Payout</span>
+                      <ArrowUpRight size={15} />
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab("profile")}
+                      className="w-full p-3.5 rounded-2xl bg-amber-50 hover:bg-amber-100 text-[#5B1F24] font-bold text-xs flex items-center justify-between transition-all border border-amber-900/15"
+                    >
+                      <span className="flex items-center gap-2"><Settings size={15} /> Edit Per-Minute Fee</span>
+                      <ArrowUpRight size={15} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeTab === "workstation" && (
             <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-              
               <div className="w-full md:w-1/3 border-r border-amber-900/15 p-5 bg-[#F7F0E6] flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-4 pb-3 border-b border-amber-900/15">
@@ -490,7 +633,6 @@ export function AstrologerDashboard() {
                       <div className="p-6 rounded-2xl bg-white border border-amber-900/10 text-center text-xs text-amber-900/70 space-y-2 shadow-xs">
                         <Clock size={24} className="mx-auto text-amber-700/50" />
                         <p className="font-semibold text-[#5B1F24]">No pending requests right now.</p>
-                        <p className="text-[11px] text-amber-900/60">Users requesting consultations on /consult will appear here live.</p>
                       </div>
                     ) : (
                       filteredSessions.map(s => {
@@ -665,6 +807,50 @@ export function AstrologerDashboard() {
                     </p>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === "calls" && (
+            <div className="p-6 sm:p-8 space-y-6 max-w-5xl mx-auto w-full overflow-y-auto">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Audio & Call Consultations</h2>
+                  <p className="text-xs text-amber-900/70 font-semibold">Manage live audio call requests and consultation logs.</p>
+                </div>
+                <button
+                  onClick={toggleCallOnline}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                    isCallOnline ? "bg-emerald-600 text-white border-emerald-600 shadow-xs" : "bg-gray-200 text-gray-700 border-gray-300"
+                  }`}
+                >
+                  CALL STATUS: {isCallOnline ? "ONLINE" : "OFFLINE"}
+                </button>
+              </div>
+
+              <div className="bg-white border border-amber-900/15 rounded-3xl p-6 shadow-xs">
+                <h3 className="text-sm font-bold text-[#5B1F24] mb-4" style={{ fontFamily: SERIF }}>Call History & Logs</h3>
+                <div className="space-y-3">
+                  {MOCK_CALL_LOGS.map(call => (
+                    <div key={call.id} className="p-4 rounded-2xl bg-[#FAF6F0] border border-amber-900/10 flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-xl bg-amber-900/10 text-[#5B1F24]">
+                          <PhoneCall size={16} />
+                        </div>
+                        <div>
+                          <p className="font-bold text-[#5B1F24] text-sm">{call.user}</p>
+                          <p className="text-amber-900/60 text-[11px]">{call.time} • Duration: {call.duration}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-emerald-700 text-sm">{call.amount}</p>
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          {call.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
