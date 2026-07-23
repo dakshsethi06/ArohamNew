@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { firebaseAuth } from "@/lib/firebase";
-import { onAuthStateChanged, signOut as firebaseSignOut, User as FirebaseUser } from "firebase/auth";
 import { api } from "@/lib/api";
 import { setCookie, getCookie, deleteCookie } from "@/lib/cookies";
 
@@ -164,7 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
   
   const logout = async () => {
-    try { await firebaseSignOut(firebaseAuth); } catch (e) {}
+    try { await firebaseAuth.signOut(); } catch (e) {}
     try { await supabase.auth.signOut(); } catch (e) {}
     localStorage.removeItem("aroham_mock_session");
     deleteCookie("aroham_session");

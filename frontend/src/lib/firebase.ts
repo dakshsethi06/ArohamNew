@@ -1,5 +1,4 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 // Live Firebase configuration for Aroham (Project: aroham-ccfab)
@@ -21,12 +20,13 @@ const firebaseConfig = {
 
 // Initialize Firebase App singleton
 export const firebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-export const firebaseAuth = getAuth(firebaseApp);
 export const db = getFirestore(firebaseApp);
 
-// Use browserLocalPersistence (localStorage-based) — does NOT trigger Chrome's
-// "Access other apps and services on this device" permission dialog.
-// The previous indexedDBLocalPersistence was still causing the prompt in certain Chrome versions.
-setPersistence(firebaseAuth, browserLocalPersistence).catch(err => {
-  console.error("Firebase persistence error:", err);
-});
+// Mock firebaseAuth to prevent loading the Auth iframe/WebAuthn/FedCM mechanisms
+// that trigger Chromium's "Access other apps and services on this device" dialog.
+// Since Aroham uses custom/Supabase auth, Firebase Auth is unused.
+export const firebaseAuth = {
+  currentUser: null,
+  onAuthStateChanged: () => () => {},
+  signOut: async () => {}
+} as any;
