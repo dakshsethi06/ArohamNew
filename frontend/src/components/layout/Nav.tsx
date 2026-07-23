@@ -177,10 +177,12 @@ export function Nav() {
             <button onClick={() => { navigate("/wishlist"); setOpen(false); }} className="py-2 text-sm font-medium border-b text-left flex items-center justify-between" style={{ color: MAROON, borderColor: "rgba(91,31,36,0.08)" }}>
               <span>Wishlist</span>
             </button>
-            <button onClick={() => { openAuth(); navigate("?role=astrologer", { replace: true }); setOpen(false); }} className="py-2 text-sm font-semibold border-b text-left text-amber-900 flex items-center justify-between" style={{ borderColor: "rgba(91,31,36,0.08)" }}>
-              <span>Astrologer? Sign In / Join</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold">Vedic Portal</span>
-            </button>
+            {!isLoggedIn && (
+              <button onClick={() => { openAuth(); navigate("?role=astrologer", { replace: true }); setOpen(false); }} className="py-2 text-sm font-semibold border-b text-left text-amber-900 flex items-center justify-between" style={{ borderColor: "rgba(91,31,36,0.08)" }}>
+                <span>Astrologer? Sign In / Join</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold">Vedic Portal</span>
+              </button>
+            )}
             {isLoggedIn ? (
               <button onClick={() => { navigate("/profile?tab=profile"); setOpen(false); }} className="mt-2 py-3 rounded-full text-sm font-medium flex items-center justify-center gap-2" style={{ background: MAROON, color: IVORY }}><User size={15} />My Profile</button>
             ) : (
