@@ -118,7 +118,20 @@ export function ConsultPage() {
   // Subscribe to real-time status changes and sync newly registered astrologers
   useEffect(() => {
     const syncAstrologers = () => {
-      setAstrologers(getMergedAstrologers());
+      let merged = getMergedAstrologers();
+      try {
+        const globalStatusStr = localStorage.getItem("aroham_global_online_status");
+        if (globalStatusStr) {
+          const parsed = JSON.parse(globalStatusStr);
+          merged = merged.map(a => {
+            if (a.id === parsed.userId || (parsed.userId === "astro-1" && a.id.startsWith("astro-"))) {
+              return { ...a, status: parsed.isOnline ? "online" : "offline" };
+            }
+            return a;
+          });
+        }
+      } catch (e) {}
+      setAstrologers(merged);
     };
 
     window.addEventListener("storage", syncAstrologers);

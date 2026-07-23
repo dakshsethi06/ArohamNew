@@ -122,8 +122,26 @@ export function AstrologerDashboard() {
     setIsOnline(nextStatus);
 
     try {
+      const existing = JSON.parse(localStorage.getItem("aroham_registered_astrologers") || "[]");
+      if (Array.isArray(existing) && existing.length > 0) {
+        const updated = existing.map((a: any) => ({ ...a, status: nextStatus ? "online" : "offline" }));
+        localStorage.setItem("aroham_registered_astrologers", JSON.stringify(updated));
+      }
+
+      localStorage.setItem("aroham_global_online_status", JSON.stringify({
+        userId: user?.id || "astro-1",
+        isOnline: nextStatus,
+        timestamp: Date.now()
+      }));
+
+      window.dispatchEvent(new Event("storage"));
+    } catch (e) {}
+
+    try {
       if (user?.id) {
         await supabase.from("astrologers").update({ is_online: nextStatus }).eq("id", user.id);
+      } else {
+        await supabase.from("astrologers").update({ is_online: nextStatus }).eq("id", "astro-1");
       }
     } catch (e) {
       console.warn("Status toggle warning:", e);
