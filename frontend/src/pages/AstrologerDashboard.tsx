@@ -413,25 +413,6 @@ export function AstrologerDashboard() {
           </button>
 
           <button
-            onClick={toggleCallOnline}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shadow-xs ${
-              isCallOnline
-                ? "bg-amber-400/20 text-amber-200 border-amber-400/40 hover:bg-amber-400/30"
-                : "bg-black/30 text-amber-200/60 border-white/20 hover:bg-black/40"
-            }`}
-          >
-            <PhoneCall size={13} />
-            <span>CALL: {isCallOnline ? "ONLINE" : "OFFLINE"}</span>
-          </button>
-
-          <button
-            onClick={() => navigate("/consult")}
-            className="px-3 py-1.5 rounded-xl text-xs font-bold border border-white/20 text-amber-100 hover:text-white hover:bg-white/10 transition-all"
-          >
-            User Directory
-          </button>
-
-          <button
             onClick={handleLogout}
             title="Log Out Astrologer Session"
             className="px-3 py-1.5 rounded-xl text-xs font-bold bg-red-900/40 hover:bg-red-900/60 text-red-200 border border-red-500/30 transition-all flex items-center gap-1.5 shadow-xs active:scale-95"
