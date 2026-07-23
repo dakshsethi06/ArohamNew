@@ -20,7 +20,17 @@ import {
   BookOpen,
   ShoppingBag,
   Award,
-  AlertCircle
+  AlertCircle,
+  PhoneCall,
+  Wallet,
+  MessageSquare,
+  FileText,
+  Settings,
+  ArrowUpRight,
+  Calendar,
+  CheckCircle2,
+  Lock,
+  ThumbsUp
 } from "lucide-react";
 
 const REMEDY_PRODUCTS = [
@@ -44,35 +54,49 @@ const QUICK_ASTRO_RESPONSES = [
   "According to your 7th House position, Jupiter brings strong marriage prospects."
 ];
 
+const MOCK_REVIEWS = [
+  { id: 1, user: "Rahul Sharma", rating: 5, date: "Today", text: "Acharya Ji gave very accurate Kundali analysis. Recommended 5 Mukhi Rudraksha which brought immense mental peace." },
+  { id: 2, user: "Priya Malhotra", rating: 5, date: "Yesterday", text: "Extremely insightful consultation regarding my career change & gemstone selection!" },
+  { id: 3, user: "Vikram Patel", rating: 5, date: "2 days ago", text: "Prashna Kundali remedy for business growth worked wonders. Grateful!" }
+];
+
+const MOCK_TRANSACTIONS = [
+  { id: "TXN-8812", user: "Daksh Sethi", type: "Live Chat", duration: "18 mins", rate: "₹20/min", amount: "₹360", status: "Settled", date: "Today, 02:45 PM" },
+  { id: "TXN-8811", user: "Priya M.", type: "Live Chat", duration: "25 mins", rate: "₹20/min", amount: "₹500", status: "Settled", date: "Today, 01:15 PM" },
+  { id: "TXN-8810", user: "Anand Verma", type: "Audio Call", duration: "30 mins", rate: "₹25/min", amount: "₹750", status: "Settled", date: "Yesterday" }
+];
+
+type MainTab = "workstation" | "wallet" | "reviews" | "profile" | "remedies";
+
 export function AstrologerDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  const [activeTab, setActiveTab] = useState<MainTab>("workstation");
   const [sessions, setSessions] = useState<any[]>([]);
   const [activeSession, setActiveSession] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [reply, setReply] = useState("");
-  const [isOnline, setIsOnline] = useState(true);
+  const [isChatOnline, setIsChatOnline] = useState(true);
+  const [isCallOnline, setIsCallOnline] = useState(true);
   const [filterTab, setFilterTab] = useState<"all" | "active" | "completed">("all");
 
-  // Astrologer Profile & Completion State
   const [showProfileWizard, setShowProfileWizard] = useState(false);
   const [profile, setProfile] = useState({
     name: user?.user_metadata?.full_name || "Acharya Astrologer",
-    email: user?.email || "",
-    phone: user?.user_metadata?.phone || "",
-    dob: "",
-    title: "Senior Vedic Jyotish Acharya",
+    email: user?.email || "acharya.vedic@aroham.com",
+    phone: user?.user_metadata?.phone || "9876543210",
+    dob: "1988-06-15",
+    title: "Senior Vedic Jyotish & Prashna Kundali Master",
     experience: "8",
     specialty: "Vedic Kundali",
-    languages: "Hindi, English, Sanskrit",
-    degree: "Jyotish Acharya (BHU)",
-    bio: "Certified Vedic Astrologer with over 8+ years of experience in Prashna Kundali, Gemology & Vastu remedies.",
+    languages: "Hindi, English, Sanskrit, Gujarati",
+    degree: "Jyotish Acharya (BHU, Varanasi)",
+    bio: "Certified Vedic Astrologer with over 8+ years of experience in Prashna Kundali, Gemology & Vastu remedies. Over 9,500+ consultations guided successfully.",
     avatar: PRESET_AVATARS[0],
-    pricePerMin: "0"
+    pricePerMin: "20"
   });
 
-  // Calculate Profile Completion Percentage
   const getProfileCompletion = () => {
     let score = 0;
     if (profile.name) score += 15;
@@ -86,18 +110,12 @@ export function AstrologerDashboard() {
   };
 
   useEffect(() => {
-    // Load cached profile if available
     try {
       const cached = localStorage.getItem(`aroham_astro_profile_${user?.id}`);
-      if (cached) {
-        setProfile(prev => ({ ...prev, ...JSON.parse(cached) }));
-      }
+      if (cached) setProfile(prev => ({ ...prev, ...JSON.parse(cached) }));
     } catch (e) {}
 
-    const syncSessions = () => {
-      fetchSessions();
-    };
-
+    const syncSessions = () => { fetchSessions(); };
     window.addEventListener("storage", syncSessions);
     window.addEventListener("focus", syncSessions);
 
@@ -117,20 +135,27 @@ export function AstrologerDashboard() {
     };
   }, [user]);
 
-  const toggleOnlineStatus = async () => {
-    const nextStatus = !isOnline;
-    setIsOnline(nextStatus);
+  const toggleChatOnline = async () => {
+    const nextStatus = !isChatOnline;
+    setIsChatOnline(nextStatus);
+    broadcastStatus(nextStatus);
+  };
 
+  const toggleCallOnline = () => {
+    setIsCallOnline(prev => !prev);
+  };
+
+  const broadcastStatus = async (statusBool: boolean) => {
     try {
       const existing = JSON.parse(localStorage.getItem("aroham_registered_astrologers") || "[]");
       if (Array.isArray(existing) && existing.length > 0) {
-        const updated = existing.map((a: any) => ({ ...a, status: nextStatus ? "online" : "offline" }));
+        const updated = existing.map((a: any) => ({ ...a, status: statusBool ? "online" : "offline" }));
         localStorage.setItem("aroham_registered_astrologers", JSON.stringify(updated));
       }
 
       localStorage.setItem("aroham_global_online_status", JSON.stringify({
         userId: user?.id || "astro-1",
-        isOnline: nextStatus,
+        isOnline: statusBool,
         timestamp: Date.now()
       }));
 
@@ -139,13 +164,9 @@ export function AstrologerDashboard() {
 
     try {
       if (user?.id) {
-        await supabase.from("astrologers").update({ is_online: nextStatus }).eq("id", user.id);
-      } else {
-        await supabase.from("astrologers").update({ is_online: nextStatus }).eq("id", "astro-1");
+        await supabase.from("astrologers").update({ is_online: statusBool }).eq("id", user.id);
       }
-    } catch (e) {
-      console.warn("Status toggle warning:", e);
-    }
+    } catch (e) {}
   };
 
   const fetchSessions = async () => {
@@ -185,7 +206,7 @@ export function AstrologerDashboard() {
           languages: profile.languages.split(",").map(l => l.trim()),
           bio: profile.bio,
           avatar_url: profile.avatar,
-          is_online: isOnline,
+          is_online: isChatOnline,
           role: "astrologer"
         });
       }
@@ -312,7 +333,7 @@ export function AstrologerDashboard() {
   };
 
   const filteredSessions = sessions.filter(s => {
-    if (filterTab === "active") return s.status === "active" || s.status === "pending";
+    if (filterTab === "active") return s.status === "active" || acceptedSessionIds.has(s.id);
     if (filterTab === "completed") return s.status === "completed";
     return true;
   });
@@ -320,462 +341,518 @@ export function AstrologerDashboard() {
   const completionScore = getProfileCompletion();
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ fontFamily: SANS, background: "#12080A", color: IVORY }}>
+    <div className="min-h-screen flex flex-col bg-[#0D0507]" style={{ fontFamily: SANS, color: IVORY }}>
       
-      {/* Top Astrologer Portal Navigation Header */}
-      <header className="px-6 py-4 bg-[#1A0D10] border-b border-amber-900/20 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-40 shadow-xl">
+      <header className="px-6 py-3.5 bg-[#160B0E] border-b border-amber-900/20 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-40 shadow-2xl">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <img src={profile.avatar} alt={profile.name} className="w-12 h-12 rounded-2xl object-cover border-2 border-amber-500/40 shadow-md" />
-            <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#1A0D10] ${isOnline ? "bg-emerald-500 animate-pulse" : "bg-gray-500"}`} />
+            <img src={profile.avatar} alt={profile.name} className="w-11 h-11 rounded-2xl object-cover border-2 border-amber-500/50 shadow-md" />
+            <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-[#160B0E] ${isChatOnline ? "bg-emerald-500 animate-pulse" : "bg-gray-500"}`} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-bold text-white tracking-wide" style={{ fontFamily: SERIF }}>{profile.name}</h1>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
-                <Award size={11} /> Verified Vedic Scholar
+              <h1 className="text-sm sm:text-base font-bold text-white tracking-wide" style={{ fontFamily: SERIF }}>{profile.name}</h1>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                <Award size={10} /> Verified Scholar
               </span>
             </div>
-            <p className="text-xs text-amber-200/70">{profile.title} • {profile.experience} Yrs Exp</p>
+            <p className="text-[11px] text-amber-200/70">{profile.title} • ₹{profile.pricePerMin}/min</p>
           </div>
         </div>
 
-        {/* Action Controls & Live Online Switch */}
         <div className="flex items-center gap-3 flex-wrap">
-          {/* Profile Completion Button */}
-          <button
-            onClick={() => setShowProfileWizard(true)}
-            className="px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border bg-amber-500/10 text-amber-300 border-amber-500/30 hover:bg-amber-500/20"
-          >
-            <User size={14} />
-            <span>Profile ({completionScore}%)</span>
-          </button>
+          <div className="px-3.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-1.5">
+            <Wallet size={14} className="text-emerald-400" />
+            <span>Today: ₹3,850</span>
+          </div>
 
-          {/* Live Online/Offline Status Switch */}
           <button
-            onClick={toggleOnlineStatus}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border shadow-sm ${
-              isOnline
+            onClick={toggleChatOnline}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shadow-xs ${
+              isChatOnline
                 ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30"
                 : "bg-gray-500/20 text-gray-400 border-gray-500/40 hover:bg-gray-500/30"
             }`}
           >
-            <span className={`w-2.5 h-2.5 rounded-full ${isOnline ? "bg-emerald-400 animate-ping" : "bg-gray-400"}`} />
-            <span>{isOnline ? "STATUS: ONLINE" : "STATUS: OFFLINE"}</span>
+            <MessageSquare size={13} />
+            <span>CHAT: {isChatOnline ? "ONLINE" : "OFFLINE"}</span>
+          </button>
+
+          <button
+            onClick={toggleCallOnline}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shadow-xs ${
+              isCallOnline
+                ? "bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30"
+                : "bg-gray-500/20 text-gray-400 border-gray-500/40 hover:bg-gray-500/30"
+            }`}
+          >
+            <PhoneCall size={13} />
+            <span>CALL: {isCallOnline ? "ONLINE" : "OFFLINE"}</span>
           </button>
 
           <button
             onClick={() => navigate("/consult")}
-            className="px-3.5 py-2 rounded-xl text-xs font-bold border border-white/10 text-amber-100/70 hover:text-white hover:bg-white/5 transition-all"
+            className="px-3 py-1.5 rounded-xl text-xs font-bold border border-white/10 text-amber-100/70 hover:text-white hover:bg-white/5 transition-all"
           >
-            View User Directory
+            User Directory
           </button>
         </div>
       </header>
 
-      {/* Profile Completion Warning Banner */}
-      {completionScore < 100 && (
-        <div className="px-6 py-3 bg-amber-900/30 border-b border-amber-500/20 flex items-center justify-between text-xs text-amber-200">
-          <div className="flex items-center gap-2">
-            <AlertCircle size={16} className="text-amber-400 flex-shrink-0" />
-            <span>
-              Your profile is <strong>{completionScore}% complete</strong>. Complete your bio & qualifications to receive 3x more consultation requests!
-            </span>
-          </div>
-          <button
-            onClick={() => setShowProfileWizard(true)}
-            className="underline font-bold text-amber-300 hover:text-white"
-          >
-            Complete Now →
-          </button>
-        </div>
-      )}
-
-      {/* Daily Stats Dashboard Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-6 bg-[#0B0406] border-b border-amber-900/20">
-        <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400"><MessageCircle size={18} /></div>
-          <div>
-            <p className="text-[11px] text-amber-100/60 uppercase font-semibold">Today's Sessions</p>
-            <p className="text-base font-bold text-white">8 Consultations</p>
-          </div>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400"><DollarSign size={18} /></div>
-          <div>
-            <p className="text-[11px] text-amber-100/60 uppercase font-semibold">Today's Earnings</p>
-            <p className="text-base font-bold text-emerald-400">₹2,400</p>
-          </div>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400"><Star size={18} fill="#C8A044" /></div>
-          <div>
-            <p className="text-[11px] text-amber-100/60 uppercase font-semibold">User Rating</p>
-            <p className="text-base font-bold text-white">4.9 ★ (412 Reviews)</p>
-          </div>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-400"><TrendingUp size={18} /></div>
-          <div>
-            <p className="text-[11px] text-amber-100/60 uppercase font-semibold">Active Queue</p>
-            <p className="text-base font-bold text-purple-300">{sessions.filter(s => s.status === 'pending' || s.status === 'active').length} Live Seekers</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Workstation Workspace */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         
-        {/* Sidebar Consultation Request Queue */}
-        <div className="w-full md:w-1/3 border-r border-amber-900/20 p-5 bg-[#160B0E] flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
-              <h2 className="text-sm font-bold text-white tracking-wider uppercase flex items-center gap-2">
-                <Sparkles size={16} className="text-amber-400" />
-                <span>Incoming User Requests</span>
-              </h2>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300">
-                {filteredSessions.length} Requests
-              </span>
-            </div>
-
-            {/* Filter Sub-Tabs */}
-            <div className="flex gap-2 mb-4 bg-black/40 p-1 rounded-xl border border-white/10">
-              {(["all", "active", "completed"] as const).map(tab => (
+        <aside className="w-full lg:w-64 bg-[#14090C] border-r border-amber-900/20 p-4 flex lg:flex-col justify-between overflow-x-auto lg:overflow-y-auto shrink-0">
+          <div className="space-y-1 flex lg:flex-col gap-1 w-full">
+            {[
+              { id: "workstation", label: "Workstation & Queue", icon: MessageCircle },
+              { id: "wallet", label: "Earnings & Wallet", icon: Wallet },
+              { id: "reviews", label: "Ratings & Reviews", icon: Star },
+              { id: "remedies", label: "Remedies Catalog", icon: ShoppingBag },
+              { id: "profile", label: "Profile & Settings", icon: User }
+            ].map(tab => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
                 <button
-                  key={tab}
-                  onClick={() => setFilterTab(tab)}
-                  className={`flex-1 py-1.5 rounded-lg text-xs font-bold uppercase transition-all ${
-                    filterTab === tab ? "bg-amber-900/60 text-amber-200 shadow-xs" : "text-amber-100/50 hover:text-white"
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as MainTab)}
+                  className={`w-full px-3.5 py-3 rounded-2xl text-xs font-bold flex items-center gap-3 transition-all whitespace-nowrap ${
+                    isActive
+                      ? "bg-gradient-to-r from-[#5B1F24] to-[#7A2A30] text-white border border-amber-500/30 shadow-md"
+                      : "text-amber-100/60 hover:text-white hover:bg-white/5"
                   }`}
                 >
-                  {tab}
+                  <Icon size={16} className={isActive ? "text-amber-400" : "text-amber-100/40"} />
+                  <span>{tab.label}</span>
                 </button>
-              ))}
-            </div>
+              );
+            })}
+          </div>
 
-            {/* Request List */}
-            <div className="space-y-3 max-h-[calc(100vh-380px)] overflow-y-auto pr-1">
-              {filteredSessions.length === 0 ? (
-                <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center text-xs text-amber-100/60 space-y-2">
-                  <Clock size={24} className="mx-auto text-amber-500/40" />
-                  <p className="font-semibold">No pending requests right now.</p>
-                  <p className="text-[11px] text-amber-100/40">Users visiting /consult will appear here live when they request a session.</p>
-                </div>
-              ) : (
-                filteredSessions.map(s => {
-                  const isActive = activeSession?.id === s.id;
-                  const isAccepted = s.status === "active" || acceptedSessionIds.has(s.id) || isActive;
-                  const isPending = s.status === "pending" && !isAccepted;
-
-                  return (
-                    <div
-                      key={s.id}
-                      className={`p-4 rounded-2xl border transition-all duration-300 flex flex-col justify-between gap-3 ${
-                        isActive
-                          ? "bg-amber-900/30 border-amber-500/50 shadow-lg ring-1 ring-amber-500/30"
-                          : "bg-white/5 border-white/10 hover:bg-white/10"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-bold text-xs text-amber-200">Seeker #{s.user_id?.slice(0, 8)}</span>
-                            {isPending && (
-                              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-amber-500 text-black animate-pulse">
-                                Ringing Request
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-amber-100/70 font-semibold">{s.topic || "Vedic Kundali Consultation"}</p>
-                        </div>
-                        <span className="text-[10px] text-amber-100/50">{new Date(s.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                      </div>
-
-                      {/* Accept / Decline Action Buttons */}
-                      <div className="flex items-center gap-2 pt-2 border-t border-white/10">
-                        {!isAccepted ? (
-                          <>
-                            <button
-                              onClick={() => acceptSession(s)}
-                              className="flex-1 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs transition-all flex items-center justify-center gap-1.5 active:scale-95"
-                            >
-                              <Check size={14} /> Accept & Chat
-                            </button>
-                            <button
-                              onClick={() => rejectSession(s)}
-                              className="px-3 py-2 rounded-xl text-xs font-bold bg-red-900/40 hover:bg-red-900/60 text-red-200 border border-red-500/30 transition-all flex items-center justify-center active:scale-95"
-                            >
-                              <X size={14} /> Decline
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            onClick={() => acceptSession(s)}
-                            className="w-full py-2 rounded-xl text-xs font-bold bg-amber-900/40 hover:bg-amber-900/60 text-amber-200 border border-amber-500/30 transition-all flex items-center justify-center gap-1.5"
-                          >
-                            <MessageCircle size={13} /> {isActive ? "Currently Active Room" : "Open Consultation Room"}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
+          <div className="hidden lg:block pt-6 border-t border-white/10 mt-6">
+            <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 text-xs">
+              <p className="text-[11px] font-bold text-amber-300 mb-1">Astrotalk Support</p>
+              <p className="text-[10px] text-amber-100/50">Need assistance? Contact scholar helpdesk 24x7.</p>
             </div>
           </div>
-        </div>
+        </aside>
 
-        {/* Center Live Consultation Chat Room */}
-        <div className="w-full md:w-2/3 p-6 flex flex-col justify-between bg-[#1A0D10]">
-          {activeSession ? (
-            <>
-              {/* Chat Room Top Bar */}
-              <div className="flex justify-between items-center pb-4 border-b border-white/10 mb-4">
+        <main className="flex-1 flex flex-col overflow-hidden bg-[#0D0507]">
+          
+          {activeTab === "workstation" && (
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+              
+              <div className="w-full md:w-1/3 border-r border-amber-900/20 p-5 bg-[#14090C] flex flex-col justify-between">
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-base font-bold text-white" style={{ fontFamily: SERIF }}>Live Consultation Room #{activeSession.id?.slice(0, 8)}</h2>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" /> Real-time Live
+                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+                    <h2 className="text-xs font-bold text-white tracking-wider uppercase flex items-center gap-2">
+                      <Sparkles size={15} className="text-amber-400" />
+                      <span>Live Request Queue</span>
+                    </h2>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300">
+                      {filteredSessions.length} Requests
                     </span>
                   </div>
-                  <p className="text-xs text-amber-200/60 mt-0.5">Topic: {activeSession.topic || "Vedic Horoscope & Sacred Remedies"}</p>
-                </div>
 
+                  <div className="flex gap-1 mb-4 bg-black/40 p-1 rounded-xl border border-white/10">
+                    {(["all", "active", "completed"] as const).map(tab => (
+                      <button
+                        key={tab}
+                        onClick={() => setFilterTab(tab)}
+                        className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all ${
+                          filterTab === tab ? "bg-amber-900/60 text-amber-200 shadow-xs" : "text-amber-100/50 hover:text-white"
+                        }`}
+                      >
+                        {tab}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="space-y-3 max-h-[calc(100vh-320px)] overflow-y-auto pr-1">
+                    {filteredSessions.length === 0 ? (
+                      <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center text-xs text-amber-100/60 space-y-2">
+                        <Clock size={24} className="mx-auto text-amber-500/40" />
+                        <p className="font-semibold">No pending consultation requests.</p>
+                        <p className="text-[11px] text-amber-100/40">Users requesting consultations on /consult will appear here live.</p>
+                      </div>
+                    ) : (
+                      filteredSessions.map(s => {
+                        const isActive = activeSession?.id === s.id;
+                        const isAccepted = s.status === "active" || acceptedSessionIds.has(s.id) || isActive;
+                        const isPending = s.status === "pending" && !isAccepted;
+
+                        return (
+                          <div
+                            key={s.id}
+                            className={`p-4 rounded-2xl border transition-all duration-300 flex flex-col justify-between gap-3 ${
+                              isActive
+                                ? "bg-amber-900/30 border-amber-500/50 shadow-lg ring-1 ring-amber-500/30"
+                                : "bg-white/5 border-white/10 hover:bg-white/10"
+                            }`}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="font-bold text-xs text-amber-200">Seeker #{s.user_id?.slice(0, 8)}</span>
+                                  {isPending && (
+                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-amber-500 text-black animate-pulse">
+                                      Ringing
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-xs text-amber-100/70 font-semibold">{s.topic || "Vedic Kundali Consultation"}</p>
+                              </div>
+                              <span className="text-[10px] text-amber-100/50">{new Date(s.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+
+                            <div className="flex items-center gap-2 pt-2 border-t border-white/10">
+                              {!isAccepted ? (
+                                <>
+                                  <button
+                                    onClick={() => acceptSession(s)}
+                                    className="flex-1 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs transition-all flex items-center justify-center gap-1.5 active:scale-95"
+                                  >
+                                    <Check size={14} /> Accept & Chat
+                                  </button>
+                                  <button
+                                    onClick={() => rejectSession(s)}
+                                    className="px-3 py-2 rounded-xl text-xs font-bold bg-red-900/40 hover:bg-red-900/60 text-red-200 border border-red-500/30 transition-all flex items-center justify-center active:scale-95"
+                                  >
+                                    <X size={14} /> Decline
+                                  </button>
+                                </>
+                              ) : (
+                                <button
+                                  onClick={() => acceptSession(s)}
+                                  className="w-full py-2 rounded-xl text-xs font-bold bg-amber-900/40 hover:bg-amber-900/60 text-amber-200 border border-amber-500/30 transition-all flex items-center justify-center gap-1.5"
+                                >
+                                  <MessageCircle size={13} /> {isActive ? "Currently Active Room" : "Open Consultation Room"}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-full md:w-2/3 p-6 flex flex-col justify-between bg-[#160B0E]">
+                {activeSession ? (
+                  <>
+                    <div className="flex justify-between items-center pb-4 border-b border-white/10 mb-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-base font-bold text-white" style={{ fontFamily: SERIF }}>Live Room #{activeSession.id?.slice(0, 8)}</h2>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" /> Real-time Live
+                          </span>
+                        </div>
+                        <p className="text-xs text-amber-200/60 mt-0.5">Topic: {activeSession.topic || "Vedic Horoscope & Sacred Remedies"}</p>
+                      </div>
+
+                      <button
+                        onClick={endSession}
+                        className="px-4 py-2 text-xs font-bold rounded-xl bg-red-900/40 text-red-200 border border-red-500/30 hover:bg-red-900/60 active:scale-95 transition-all"
+                      >
+                        End Session
+                      </button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto mb-4 p-4 rounded-2xl bg-black/40 border border-white/10 space-y-3 min-h-[300px]">
+                      {messages.map(m => (
+                        <div
+                          key={m.id}
+                          className={`p-3.5 rounded-2xl max-w-[80%] text-xs leading-relaxed ${
+                            m.sender === "astrologer"
+                              ? "ml-auto bg-gradient-to-r from-[#5B1F24] to-[#7A2A30] text-white rounded-tr-xs shadow-md"
+                              : "mr-auto bg-white/10 text-amber-100 border border-white/10 rounded-tl-xs"
+                          }`}
+                        >
+                          <p className="whitespace-pre-line">{m.text}</p>
+                          {m.recommendedProduct && (
+                            <div className="mt-3 p-3 rounded-xl bg-black/50 border border-amber-500/30 text-amber-100 flex items-center gap-3">
+                              <img src={m.recommendedProduct.img} alt={m.recommendedProduct.name} className="w-10 h-10 rounded-lg object-cover border border-amber-500/30" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[9px] font-extrabold uppercase text-amber-400">Recommended Sacred Remedy</p>
+                                <h4 className="font-bold text-xs truncate text-white">{m.recommendedProduct.name}</h4>
+                                <p className="text-xs font-bold text-amber-300">₹{m.recommendedProduct.price}</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mb-3 flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                      {QUICK_ASTRO_RESPONSES.map((resp, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => sendMessage(resp)}
+                          className="flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 transition-all"
+                        >
+                          {resp}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="mb-3 p-3 rounded-2xl bg-amber-900/20 border border-amber-500/20">
+                      <p className="text-[10px] font-extrabold uppercase text-amber-400 mb-2 flex items-center gap-1">
+                        <ShoppingBag size={12} /> Recommend Sacred Remedy Item:
+                      </p>
+                      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                        {REMEDY_PRODUCTS.map(prod => (
+                          <button
+                            key={prod.slug}
+                            onClick={() => sendMessage(`I recommend wearing this sacred item to balance your planetary stars:`, prod)}
+                            className="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 border border-white/10 text-white flex items-center gap-2 transition-all active:scale-95"
+                          >
+                            <img src={prod.img} alt={prod.name} className="w-5 h-5 rounded-md object-cover" />
+                            <span>{prod.name} (₹{prod.price})</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={reply}
+                        onChange={e => setReply(e.target.value)}
+                        onKeyDown={e => e.key === "Enter" && sendMessage()}
+                        placeholder="Type your astrological remedy or guidance..."
+                        className="flex-1 h-12 px-4 rounded-xl text-xs bg-white/10 border border-white/15 text-white outline-none focus:border-amber-400 transition-all"
+                      />
+                      <button
+                        onClick={() => sendMessage()}
+                        disabled={!reply.trim()}
+                        className="h-12 px-6 rounded-xl font-bold text-xs text-white flex items-center gap-2 shadow-md active:scale-95 transition-all disabled:opacity-50"
+                        style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}
+                      >
+                        <span>Send</span>
+                        <Send size={14} />
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-amber-100/40 space-y-4 p-8 text-center">
+                    <div className="p-5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                      <MessageCircle size={48} />
+                    </div>
+                    <h3 className="text-lg font-bold text-white" style={{ fontFamily: SERIF }}>Astrotalk Workstation Ready</h3>
+                    <p className="text-xs max-w-sm text-amber-100/60 leading-relaxed">
+                      Select an incoming consultation request from the left queue to accept and begin live Vedic guidance.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === "wallet" && (
+            <div className="p-6 sm:p-8 space-y-6 max-w-5xl mx-auto w-full overflow-y-auto">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-white" style={{ fontFamily: SERIF }}>Earnings & Wallet Dashboard</h2>
+                  <p className="text-xs text-amber-200/70">Track your daily, monthly, and lifetime consultation payouts.</p>
+                </div>
                 <button
-                  onClick={endSession}
-                  className="px-4 py-2 text-xs font-bold rounded-xl bg-red-900/40 text-red-200 border border-red-500/30 hover:bg-red-900/60 active:scale-95 transition-all"
+                  onClick={() => alert("Withdrawal request initiated via UPI / Netbanking. Settlement within 24 hours.")}
+                  className="px-5 py-3 rounded-2xl font-bold text-xs bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg active:scale-95 transition-all"
                 >
-                  End Session
+                  Withdraw Payout (₹3,850)
                 </button>
               </div>
 
-              {/* Chat Thread Messages */}
-              <div className="flex-1 overflow-y-auto mb-4 p-4 rounded-2xl bg-black/40 border border-white/10 space-y-3 min-h-[300px]">
-                {messages.map(m => (
-                  <div
-                    key={m.id}
-                    className={`p-3.5 rounded-2xl max-w-[80%] text-xs leading-relaxed ${
-                      m.sender === "astrologer"
-                        ? "ml-auto bg-gradient-to-r from-[#5B1F24] to-[#7A2A30] text-white rounded-tr-xs shadow-md"
-                        : "mr-auto bg-white/10 text-amber-100 border border-white/10 rounded-tl-xs"
-                    }`}
-                  >
-                    <p className="whitespace-pre-line">{m.text}</p>
-                    
-                    {/* Recommended Product Widget inside Astrologer Chat Stream */}
-                    {m.recommendedProduct && (
-                      <div className="mt-3 p-3 rounded-xl bg-black/50 border border-amber-500/30 text-amber-100 flex items-center gap-3">
-                        <img src={m.recommendedProduct.img} alt={m.recommendedProduct.name} className="w-10 h-10 rounded-lg object-cover border border-amber-500/30" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[9px] font-extrabold uppercase text-amber-400">Recommended Sacred Remedy</p>
-                          <h4 className="font-bold text-xs truncate text-white">{m.recommendedProduct.name}</h4>
-                          <p className="text-xs font-bold text-amber-300">₹{m.recommendedProduct.price}</p>
-                        </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="p-5 rounded-3xl bg-gradient-to-br from-emerald-900/40 to-emerald-950/60 border border-emerald-500/30">
+                  <p className="text-xs text-emerald-300 font-bold uppercase tracking-wider mb-1">Today's Earnings</p>
+                  <h3 className="text-2xl font-black text-emerald-400">₹3,850</h3>
+                  <p className="text-[11px] text-emerald-200/60 mt-1">18 Live Consultation Mins</p>
+                </div>
+
+                <div className="p-5 rounded-3xl bg-gradient-to-br from-amber-900/40 to-amber-950/60 border border-amber-500/30">
+                  <p className="text-xs text-amber-300 font-bold uppercase tracking-wider mb-1">This Month (July)</p>
+                  <h3 className="text-2xl font-black text-amber-300">₹84,200</h3>
+                  <p className="text-[11px] text-amber-200/60 mt-1">412 Total Consultations</p>
+                </div>
+
+                <div className="p-5 rounded-3xl bg-gradient-to-br from-purple-900/40 to-purple-950/60 border border-purple-500/30">
+                  <p className="text-xs text-purple-300 font-bold uppercase tracking-wider mb-1">Lifetime Payouts</p>
+                  <h3 className="text-2xl font-black text-purple-300">₹4,12,000</h3>
+                  <p className="text-[11px] text-purple-200/60 mt-1">Direct Bank Transfers</p>
+                </div>
+              </div>
+
+              <div className="bg-[#14090C] border border-amber-900/20 rounded-3xl p-6">
+                <h3 className="text-sm font-bold text-white mb-4">Recent Session Earnings</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-white/10 text-amber-200/60 text-[11px]">
+                        <th className="pb-3 font-semibold">Transaction ID</th>
+                        <th className="pb-3 font-semibold">Seeker Name</th>
+                        <th className="pb-3 font-semibold">Session Type</th>
+                        <th className="pb-3 font-semibold">Duration</th>
+                        <th className="pb-3 font-semibold">Earnings</th>
+                        <th className="pb-3 font-semibold">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {MOCK_TRANSACTIONS.map(t => (
+                        <tr key={t.id} className="hover:bg-white/5">
+                          <td className="py-3.5 font-mono text-amber-300">{t.id}</td>
+                          <td className="py-3.5 font-bold text-white">{t.user}</td>
+                          <td className="py-3.5 text-amber-100/70">{t.type}</td>
+                          <td className="py-3.5 text-amber-100/70">{t.duration}</td>
+                          <td className="py-3.5 font-bold text-emerald-400">{t.amount}</td>
+                          <td className="py-3.5">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                              {t.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "reviews" && (
+            <div className="p-6 sm:p-8 space-y-6 max-w-5xl mx-auto w-full overflow-y-auto">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-white" style={{ fontFamily: SERIF }}>Customer Reviews & Ratings</h2>
+                  <p className="text-xs text-amber-200/70">Seeker feedback and ratings from live Vedic consultations.</p>
+                </div>
+                <div className="flex items-center gap-2 bg-amber-500/10 px-4 py-2 rounded-2xl border border-amber-500/30 text-amber-300 font-bold text-sm">
+                  <Star size={18} fill="#C8A044" />
+                  <span>4.95 ★ Rating (412 Reviews)</span>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {MOCK_REVIEWS.map(r => (
+                  <div key={r.id} className="p-5 rounded-3xl bg-[#14090C] border border-amber-900/20 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm text-white">{r.user}</span>
+                        <span className="flex text-amber-400 text-xs">
+                          {"★".repeat(r.rating)}
+                        </span>
                       </div>
-                    )}
+                      <span className="text-xs text-amber-100/40">{r.date}</span>
+                    </div>
+                    <p className="text-xs text-amber-100/80 leading-relaxed font-medium">"{r.text}"</p>
                   </div>
                 ))}
               </div>
-
-              {/* Quick Astrologer Sacred Response Chips */}
-              <div className="mb-3 flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-                {QUICK_ASTRO_RESPONSES.map((resp, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => sendMessage(resp)}
-                    className="flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 transition-all"
-                  >
-                    {resp}
-                  </button>
-                ))}
-              </div>
-
-              {/* Remedy Recommendation Toolbar */}
-              <div className="mb-3 p-3 rounded-2xl bg-amber-900/20 border border-amber-500/20">
-                <p className="text-[10px] font-extrabold uppercase text-amber-400 mb-2 flex items-center gap-1">
-                  <ShoppingBag size={12} /> Recommend Sacred Remedy Item to Seeker:
-                </p>
-                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-                  {REMEDY_PRODUCTS.map(prod => (
-                    <button
-                      key={prod.slug}
-                      onClick={() => sendMessage(`I recommend wearing this sacred item to balance your planetary stars:`, prod)}
-                      className="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 border border-white/10 text-white flex items-center gap-2 transition-all active:scale-95"
-                    >
-                      <img src={prod.img} alt={prod.name} className="w-5 h-5 rounded-md object-cover" />
-                      <span>{prod.name} (₹{prod.price})</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Chat Input Bar */}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={reply}
-                  onChange={e => setReply(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && sendMessage()}
-                  placeholder="Type your astrological remedy or guidance..."
-                  className="flex-1 h-12 px-4 rounded-xl text-xs bg-white/10 border border-white/15 text-white outline-none focus:border-amber-400 transition-all"
-                />
-                <button
-                  onClick={() => sendMessage()}
-                  disabled={!reply.trim()}
-                  className="h-12 px-6 rounded-xl font-bold text-xs text-white flex items-center gap-2 shadow-md active:scale-95 transition-all disabled:opacity-50"
-                  style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}
-                >
-                  <span>Send</span>
-                  <Send size={14} />
-                </button>
-              </div>
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full text-amber-100/40 space-y-4 p-8 text-center">
-              <div className="p-5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400">
-                <MessageCircle size={48} />
-              </div>
-              <h3 className="text-lg font-bold text-white" style={{ fontFamily: SERIF }}>Astrologer Workstation Ready</h3>
-              <p className="text-xs max-w-sm text-amber-100/60 leading-relaxed">
-                Select an incoming consultation request from the left panel to accept and begin live Vedic guidance.
-              </p>
             </div>
           )}
-        </div>
-      </div>
 
-      {/* Profile Completion Modal Wizard */}
-      {showProfileWizard && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#1A0D10] border border-amber-500/30 rounded-3xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto text-amber-100 shadow-2xl space-y-6">
-            
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+          {activeTab === "remedies" && (
+            <div className="p-6 sm:p-8 space-y-6 max-w-5xl mx-auto w-full overflow-y-auto">
               <div>
-                <h2 className="text-xl font-bold text-white" style={{ fontFamily: SERIF }}>Complete Astrologer Profile</h2>
-                <p className="text-xs text-amber-200/70">Ensure your Vedic credentials and details are complete for seekers.</p>
+                <h2 className="text-xl font-bold text-white" style={{ fontFamily: SERIF }}>Sacred Remedies Catalog</h2>
+                <p className="text-xs text-amber-200/70">These temple-energized remedies can be recommended during live chats.</p>
               </div>
-              <button onClick={() => setShowProfileWizard(false)} className="p-2 rounded-full hover:bg-white/10 text-white">
-                <X size={20} />
-              </button>
-            </div>
 
-            {/* Progress Bar */}
-            <div>
-              <div className="flex justify-between text-xs font-bold mb-1.5">
-                <span className="text-amber-400">Profile Completeness</span>
-                <span>{completionScore}%</span>
-              </div>
-              <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-amber-500 to-emerald-400 transition-all duration-500" style={{ width: `${completionScore}%` }} />
-              </div>
-            </div>
-
-            {/* Avatar Selector */}
-            <div>
-              <label className="block text-xs font-bold text-amber-300 mb-2">Choose Avatar / Portrait</label>
-              <div className="flex items-center gap-3 overflow-x-auto pb-2">
-                {PRESET_AVATARS.map((av, i) => (
-                  <img
-                    key={i}
-                    src={av}
-                    onClick={() => setProfile(p => ({ ...p, avatar: av }))}
-                    alt="Preset"
-                    className={`w-14 h-14 rounded-2xl object-cover cursor-pointer border-2 transition-all ${
-                      profile.avatar === av ? "border-amber-400 scale-105 shadow-md" : "border-transparent opacity-60 hover:opacity-100"
-                    }`}
-                  />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {REMEDY_PRODUCTS.map(prod => (
+                  <div key={prod.slug} className="p-4 rounded-3xl bg-[#14090C] border border-amber-900/20 space-y-3 flex flex-col justify-between">
+                    <div>
+                      <img src={prod.img} alt={prod.name} className="w-full h-32 rounded-2xl object-cover border border-amber-900/20 mb-3" />
+                      <h4 className="font-bold text-xs text-white">{prod.name}</h4>
+                      <p className="text-xs font-bold text-amber-400 mt-1">₹{prod.price}</p>
+                    </div>
+                    <button
+                      onClick={() => alert(`Item "${prod.name}" ready to recommend during chat.`)}
+                      className="w-full py-2 rounded-xl text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-all"
+                    >
+                      Active Remedy Item
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>
+          )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-amber-300 mb-1">Full Name</label>
-                <input
-                  type="text"
-                  value={profile.name}
-                  onChange={e => setProfile(p => ({ ...p, name: e.target.value }))}
-                  className="w-full h-11 px-3.5 rounded-xl text-xs bg-white/10 border border-white/15 text-white outline-none focus:border-amber-400"
-                />
+          {activeTab === "profile" && (
+            <div className="p-6 sm:p-8 space-y-6 max-w-3xl mx-auto w-full overflow-y-auto">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-white" style={{ fontFamily: SERIF }}>Astrologer Profile Settings</h2>
+                  <p className="text-xs text-amber-200/70">Update your qualifications, bio, and per-minute fee.</p>
+                </div>
+                <button
+                  onClick={saveProfile}
+                  className="px-5 py-2.5 rounded-2xl text-xs font-bold bg-gradient-to-r from-amber-400 to-amber-500 text-black shadow-lg active:scale-95 transition-all"
+                >
+                  Save Profile Changes
+                </button>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-amber-300 mb-1">Email Address</label>
-                <input
-                  type="email"
-                  value={profile.email}
-                  onChange={e => setProfile(p => ({ ...p, email: e.target.value }))}
-                  className="w-full h-11 px-3.5 rounded-xl text-xs bg-white/10 border border-white/15 text-white outline-none focus:border-amber-400"
-                />
+              <div className="p-6 rounded-3xl bg-[#14090C] border border-amber-900/20 space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-amber-300 mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    value={profile.name}
+                    onChange={e => setProfile(p => ({ ...p, name: e.target.value }))}
+                    className="w-full h-11 px-3.5 rounded-xl text-xs bg-white/10 border border-white/15 text-white outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-amber-300 mb-1">Per-Minute Rate (₹/min)</label>
+                    <input
+                      type="number"
+                      value={profile.pricePerMin}
+                      onChange={e => setProfile(p => ({ ...p, pricePerMin: e.target.value }))}
+                      className="w-full h-11 px-3.5 rounded-xl text-xs bg-white/10 border border-white/15 text-white outline-none focus:border-amber-400 font-bold text-emerald-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-amber-300 mb-1">Experience (Years)</label>
+                    <input
+                      type="number"
+                      value={profile.experience}
+                      onChange={e => setProfile(p => ({ ...p, experience: e.target.value }))}
+                      className="w-full h-11 px-3.5 rounded-xl text-xs bg-white/10 border border-white/15 text-white outline-none focus:border-amber-400"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-amber-300 mb-1">Title Badge</label>
+                  <input
+                    type="text"
+                    value={profile.title}
+                    onChange={e => setProfile(p => ({ ...p, title: e.target.value }))}
+                    className="w-full h-11 px-3.5 rounded-xl text-xs bg-white/10 border border-white/15 text-white outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-amber-300 mb-1">Bio & Vedic Practice Summary</label>
+                  <textarea
+                    rows={4}
+                    value={profile.bio}
+                    onChange={e => setProfile(p => ({ ...p, bio: e.target.value }))}
+                    className="w-full p-3.5 rounded-xl text-xs bg-white/10 border border-white/15 text-white outline-none focus:border-amber-400 leading-relaxed"
+                  />
+                </div>
               </div>
-
-              <div>
-                <label className="block text-xs font-bold text-amber-300 mb-1">Date of Birth</label>
-                <input
-                  type="date"
-                  value={profile.dob}
-                  onChange={e => setProfile(p => ({ ...p, dob: e.target.value }))}
-                  className="w-full h-11 px-3.5 rounded-xl text-xs bg-white/10 border border-white/15 text-white outline-none focus:border-amber-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-amber-300 mb-1">Experience (Years)</label>
-                <input
-                  type="number"
-                  value={profile.experience}
-                  onChange={e => setProfile(p => ({ ...p, experience: e.target.value }))}
-                  className="w-full h-11 px-3.5 rounded-xl text-xs bg-white/10 border border-white/15 text-white outline-none focus:border-amber-400"
-                />
-              </div>
             </div>
+          )}
 
-            <div>
-              <label className="block text-xs font-bold text-amber-300 mb-1">Title & Title Badge</label>
-              <input
-                type="text"
-                value={profile.title}
-                onChange={e => setProfile(p => ({ ...p, title: e.target.value }))}
-                placeholder="e.g. Senior Prashna Kundali & Gemology Master"
-                className="w-full h-11 px-3.5 rounded-xl text-xs bg-white/10 border border-white/15 text-white outline-none focus:border-amber-400"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-amber-300 mb-1">Languages Spoken</label>
-              <input
-                type="text"
-                value={profile.languages}
-                onChange={e => setProfile(p => ({ ...p, languages: e.target.value }))}
-                placeholder="Hindi, English, Sanskrit, Gujarati"
-                className="w-full h-11 px-3.5 rounded-xl text-xs bg-white/10 border border-white/15 text-white outline-none focus:border-amber-400"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-amber-300 mb-1">Short Vedic Bio & Credentials</label>
-              <textarea
-                rows={3}
-                value={profile.bio}
-                onChange={e => setProfile(p => ({ ...p, bio: e.target.value }))}
-                placeholder="Write a brief overview of your astrological practice..."
-                className="w-full p-3 rounded-xl text-xs bg-white/10 border border-white/15 text-white outline-none focus:border-amber-400"
-              />
-            </div>
-
-            <button
-              onClick={saveProfile}
-              className="w-full py-3.5 rounded-2xl text-xs font-bold uppercase tracking-wider text-black bg-gradient-to-r from-amber-400 to-amber-500 shadow-xl active:scale-95 transition-all"
-            >
-              Save Astrologer Profile
-            </button>
-          </div>
-        </div>
-      )}
+        </main>
+      </div>
 
     </div>
   );
