@@ -269,6 +269,24 @@ export function ConsultPage() {
       } catch (e) {}
     };
 
+    const checkSessionStatus = async () => {
+      try {
+        const { data } = await supabase
+          .from("chat_sessions")
+          .select("status")
+          .eq("id", session.id)
+          .maybeSingle();
+
+        if (data && (data.status === "completed" || data.status === "ended" || data.status === "declined")) {
+          setSession(null);
+          setSelectedAstrologer(null);
+          setMessages([]);
+        }
+      } catch (e) {}
+    };
+
+    const statusInterval = setInterval(checkSessionStatus, 2000);
+
     window.addEventListener("storage", syncLiveMessages);
 
     const channel = supabase
@@ -286,10 +304,23 @@ export function ConsultPage() {
       })
       .subscribe();
 
+    const sessionChannel = supabase
+      .channel(`session-status-${session.id}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "chat_sessions", filter: `id=eq.${session.id}` }, payload => {
+        if (payload.new && (payload.new.status === "completed" || payload.new.status === "ended" || payload.new.status === "declined")) {
+          setSession(null);
+          setSelectedAstrologer(null);
+          setMessages([]);
+        }
+      })
+      .subscribe();
+
     return () => {
       clearInterval(pollInterval);
+      clearInterval(statusInterval);
       window.removeEventListener("storage", syncLiveMessages);
       supabase.removeChannel(channel);
+      supabase.removeChannel(sessionChannel);
     };
   }, [session?.id]);
 
@@ -326,7 +357,16 @@ export function ConsultPage() {
     } catch (e) {}
 
   };
-  const endSession = () => {
+
+  const endSession = async () => {
+    if (session?.id) {
+      try {
+        await supabase
+          .from("chat_sessions")
+          .update({ status: "completed", ended_at: new Date().toISOString() })
+          .eq("id", session.id);
+      } catch (e) {}
+    }
     setSession(null);
     setSelectedAstrologer(null);
     setMessages([]);

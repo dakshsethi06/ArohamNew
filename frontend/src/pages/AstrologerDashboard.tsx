@@ -402,6 +402,13 @@ export function AstrologerDashboard() {
     } catch (e) {}
 
     setSessions(sessionList);
+
+    if (activeSession) {
+      const match = sessionList.find(s => s.id === activeSession.id);
+      if (match && (match.status === "completed" || match.status === "ended" || match.status === "declined")) {
+        setActiveSession(null);
+      }
+    }
   };
 
   const saveProfile = async () => {
