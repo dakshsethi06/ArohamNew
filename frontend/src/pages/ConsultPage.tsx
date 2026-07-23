@@ -302,8 +302,6 @@ export function ConsultPage() {
       localStorage.setItem(existingKey, JSON.stringify(updated));
       window.dispatchEvent(new Event("storage"));
     } catch (e) {}
-  };
-
   const endSession = () => {
     setSession(null);
     setSelectedAstrologer(null);
@@ -312,14 +310,16 @@ export function ConsultPage() {
 
   if (session && selectedAstrologer) {
     return (
-      <div className="min-h-screen bg-[#FAF6F0] flex flex-col justify-center items-center p-3 sm:p-6" style={{ fontFamily: SANS }}>
-        <div className="w-full max-w-4xl bg-white rounded-3xl border border-amber-900/15 shadow-2xl flex flex-col h-[85vh] overflow-hidden">
+      <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4" style={{ fontFamily: SANS }}>
+        <div className="w-full max-w-5xl bg-white rounded-3xl border border-amber-900/20 shadow-2xl flex flex-col h-[94vh] max-h-[920px] overflow-hidden relative animate-in fade-in zoom-in-95 duration-200">
           
-          <div className="p-4 border-b border-amber-900/15 flex items-center justify-between" style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}>
+          {/* Top Bar Header */}
+          <div className="p-4 sm:px-6 border-b border-amber-900/15 flex items-center justify-between shadow-md shrink-0" style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}>
             <div className="flex items-center gap-3">
               <button
                 onClick={endSession}
-                className="p-2 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all"
+                className="p-2 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all active:scale-95"
+                title="Back to Consultations"
               >
                 <ChevronLeft size={20} />
               </button>
@@ -330,7 +330,7 @@ export function ConsultPage() {
               </div>
               
               <div>
-                <h3 className="font-bold text-sm text-white flex items-center gap-1.5" style={{ fontFamily: SERIF }}>
+                <h3 className="font-bold text-sm sm:text-base text-white flex items-center gap-1.5" style={{ fontFamily: SERIF }}>
                   {selectedAstrologer.name}
                   <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-400/20 text-amber-200 border border-amber-400/30">
                     Verified
@@ -342,16 +342,17 @@ export function ConsultPage() {
 
             <button
               onClick={endSession}
-              className="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all bg-red-900/40 text-red-200 border border-red-500/30 hover:bg-red-900/60 active:scale-95"
+              className="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-red-900/40 text-red-200 border border-red-500/30 hover:bg-red-900/60 active:scale-95"
             >
               End Chat
             </button>
           </div>
 
-          <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-[#FAF6F0]/60">
+          {/* Chat Messages Body */}
+          <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 bg-[#FAF6F0]/60">
             <div className="text-center my-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-900/5 text-amber-900/70 border border-amber-900/10">
-                <Lock size={11} /> End-to-End Encrypted Vedic Session
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-bold bg-amber-900/5 text-amber-900/80 border border-amber-900/10 shadow-xs">
+                <Lock size={11} /> End-to-End Encrypted Sacred Vedic Session
               </span>
             </div>
 
@@ -399,19 +400,20 @@ export function ConsultPage() {
             {isTyping && (
               <div className="flex items-center gap-2 text-xs font-semibold text-amber-900/60 p-2.5 bg-white/90 rounded-2xl w-fit border border-amber-900/15 shadow-xs">
                 <RefreshCw size={13} className="animate-spin text-amber-600" />
-                <span>{selectedAstrologer.name} is typing remedy...</span>
+                <span>{selectedAstrologer.name} is typing...</span>
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
+          {/* Quick Questions Pills - Wrap without ugly scrollbar slider */}
           {messages.length < 3 && (
-            <div className="p-2.5 border-t border-amber-900/10 bg-white flex gap-2 overflow-x-auto">
+            <div className="px-4 py-3 border-t border-amber-900/10 bg-white flex flex-wrap gap-2 shrink-0">
               {STARTER_QUESTIONS.map((q, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleSendMessage(q)}
-                  className="flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all border border-amber-900/15 bg-amber-900/5 hover:bg-amber-900/10 text-[#5B1F24]"
+                  className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all border border-amber-900/15 bg-amber-900/5 hover:bg-amber-900/10 text-[#5B1F24] active:scale-95 shadow-xs"
                 >
                   {q}
                 </button>
@@ -419,29 +421,30 @@ export function ConsultPage() {
             </div>
           )}
 
-          <div className="p-3.5 border-t border-amber-900/15 bg-white flex items-center gap-2">
+          {/* Input Box Footer Bar */}
+          <div className="p-3.5 sm:p-5 border-t border-amber-900/15 bg-white flex items-center gap-3 shrink-0">
             <input
               type="text"
               value={inputMessage}
               onChange={e => setInputMessage(e.target.value)}
               onKeyDown={e => e.key === "Enter" && handleSendMessage()}
               placeholder="Ask about Kundali, Rudraksha, Gemstones or Vastu..."
-              className="flex-1 h-12 px-4 rounded-xl text-xs sm:text-sm border border-amber-900/20 outline-none focus:border-[#5B1F24] transition-all bg-[#FAF6F0]/50 text-[#4A3E31]"
+              className="flex-1 h-12 px-4 rounded-2xl text-xs sm:text-sm border border-amber-900/20 outline-none focus:border-[#5B1F24] transition-all bg-[#FAF6F0]/60 text-[#4A3E31]"
             />
             <button
               onClick={() => handleSendMessage()}
               disabled={!inputMessage.trim()}
-              className="h-12 px-6 rounded-xl font-bold text-xs sm:text-sm text-white flex items-center gap-2 shadow-md active:scale-95 transition-all disabled:opacity-50"
+              className="h-12 px-6 rounded-2xl font-bold text-xs sm:text-sm text-white flex items-center gap-2 shadow-md active:scale-95 transition-all disabled:opacity-50 shrink-0"
               style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}
             >
               <span>Send</span>
               <Send size={14} />
             </button>
           </div>
-
         </div>
       </div>
     );
+  };
   }
 
   // Filter Astrologers strictly from DB
