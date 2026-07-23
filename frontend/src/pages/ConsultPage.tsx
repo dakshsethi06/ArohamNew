@@ -179,42 +179,86 @@ export function ConsultPage() {
     }
 
     const activeUser = user;
+    setSelectedAstrologer(astro);
 
-    const sessionUuid = generateUUID();
+    let sessionUuid = generateUUID();
+    let isExisting = false;
+
+    try {
+      const { data: existing } = await supabase
+        .from("chat_sessions")
+        .select("*")
+        .eq("user_id", activeUser.id)
+        .eq("astrologer_id", astro.id)
+        .in("status", ["pending", "active"])
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (existing && existing.length > 0) {
+        sessionUuid = existing[0].id;
+        isExisting = true;
+      }
+    } catch (e) {}
+
     let createdSession: any = {
       id: sessionUuid,
       user_id: activeUser.id,
       astrologer_id: astro.id,
-      status: "pending",
+      status: isExisting ? existing[0].status : "pending",
       topic: "Vedic Kundali & Horoscope",
-      created_at: new Date().toISOString()
+      created_at: isExisting ? existing[0].created_at : new Date().toISOString()
     };
 
-    // Open chat UI instantly for 0ms latency
-    setSelectedAstrologer(astro);
     setSession(createdSession);
 
-    const initialMsg = {
-      id: "initial-" + Date.now(),
-      session_id: sessionUuid,
-      sender: "astrologer",
-      text: "Namaste! Astrologer will join your chat soon.",
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
+    if (!isExisting) {
+      const initialMsg = {
+        id: "initial-" + Date.now(),
+        session_id: sessionUuid,
+        sender: "astrologer",
+        text: "Namaste! Astrologer will join your chat soon.",
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
 
-    setMessages([initialMsg]);
+      setMessages([initialMsg]);
 
-    try {
-      localStorage.setItem("aroham_latest_live_session", JSON.stringify(createdSession));
-      localStorage.setItem(`aroham_live_chat_${createdSession.id}`, JSON.stringify([initialMsg]));
-      window.dispatchEvent(new Event("storage"));
-    } catch (e) {}
+      try {
+        localStorage.setItem("aroham_latest_live_session", JSON.stringify(createdSession));
+        localStorage.setItem(`aroham_live_chat_${createdSession.id}`, JSON.stringify([initialMsg]));
+        window.dispatchEvent(new Event("storage"));
+      } catch (e) {}
 
-    try {
-      await supabase
-        .from("chat_sessions")
-        .insert({ id: sessionUuid, user_id: activeUser.id, status: "pending", astrologer_id: astro.id, topic: "Vedic Kundali & Horoscope" });
-    } catch {}
+      try {
+        await supabase
+          .from("chat_sessions")
+          .insert({ id: sessionUuid, user_id: activeUser.id, status: "pending", astrologer_id: astro.id, topic: "Vedic Kundali & Horoscope" });
+
+        await supabase.from("chat_messages").insert({
+          session_id: sessionUuid,
+          sender: "astrologer",
+          sender_type: "astrologer",
+          text: "Namaste! Astrologer will join your chat soon.",
+          message_text: "Namaste! Astrologer will join your chat soon."
+        });
+      } catch {}
+    } else {
+      try {
+        const { data: pastMsgs } = await supabase
+          .from("chat_messages")
+          .select("*")
+          .eq("session_id", sessionUuid)
+          .order("created_at", { ascending: true });
+
+        if (pastMsgs && pastMsgs.length > 0) {
+          setMessages(pastMsgs.map(m => ({
+            id: m.id,
+            sender: m.sender || m.sender_type,
+            text: m.text || m.message_text,
+            timestamp: new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          })));
+        }
+      } catch (e) {}
+    }
   };
 
   useEffect(() => {
@@ -239,7 +283,10 @@ export function ConsultPage() {
           setMessages(prev => {
             const merged = [...prev];
             dbFormatted.forEach(dm => {
-              if (!merged.some(p => p.id === dm.id || (p.text === dm.text && p.sender === dm.sender))) {
+              const index = merged.findIndex(p => p.id === dm.id || (p.text?.trim() === dm.text?.trim() && p.sender === dm.sender));
+              if (index !== -1) {
+                merged[index] = dm;
+              } else {
                 merged.push(dm);
               }
             });
@@ -259,7 +306,10 @@ export function ConsultPage() {
           setMessages(prev => {
             const merged = [...prev];
             stored.forEach(m => {
-              if (!merged.some(p => p.id === m.id || (p.text === m.text && p.sender === m.sender))) {
+              const index = merged.findIndex(p => p.id === m.id || (p.text?.trim() === m.text?.trim() && p.sender === m.sender));
+              if (index !== -1) {
+                merged[index] = m;
+              } else {
                 merged.push(m);
               }
             });
@@ -299,7 +349,15 @@ export function ConsultPage() {
             text: payload.new.text || payload.new.message_text,
             timestamp: new Date(payload.new.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           };
-          setMessages(prev => prev.some(m => m.id === newMsg.id) ? prev : [...prev, newMsg]);
+          setMessages(prev => {
+            const index = prev.findIndex(m => m.id === newMsg.id || (m.text?.trim() === newMsg.text?.trim() && m.sender === newMsg.sender));
+            if (index !== -1) {
+              const updated = [...prev];
+              updated[index] = newMsg;
+              return updated;
+            }
+            return [...prev, newMsg];
+          });
         }
       })
       .subscribe();

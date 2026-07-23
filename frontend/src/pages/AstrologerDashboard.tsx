@@ -250,7 +250,15 @@ export function AstrologerDashboard() {
             text: payload.new.text || payload.new.message_text,
             created_at: payload.new.created_at || new Date().toISOString()
           };
-          setMessages(prev => prev.some(m => m.id === newMsg.id) ? prev : [...prev, newMsg]);
+          setMessages(prev => {
+            const index = prev.findIndex(m => m.id === newMsg.id || (m.text?.trim() === newMsg.text?.trim() && m.sender === newMsg.sender));
+            if (index !== -1) {
+              const updated = [...prev];
+              updated[index] = newMsg;
+              return updated;
+            }
+            return [...prev, newMsg];
+          });
         }
       })
       .subscribe();
@@ -486,7 +494,8 @@ export function AstrologerDashboard() {
       const localMsgs = JSON.parse(localStorage.getItem(`aroham_live_chat_${sessionId}`) || "[]");
       if (Array.isArray(localMsgs) && localMsgs.length > 0) {
         localMsgs.forEach(lm => {
-          if (!loadedMsgs.some(m => m.id === lm.id || (m.text === lm.text && m.sender === lm.sender))) {
+          const index = loadedMsgs.findIndex(m => m.id === lm.id || (m.text?.trim() === lm.text?.trim() && m.sender === lm.sender));
+          if (index === -1) {
             loadedMsgs.push(lm);
           }
         });
@@ -794,9 +803,22 @@ export function AstrologerDashboard() {
                             <p className="font-bold text-[#5B1F24]">Seeker #{s.user_id?.slice(0, 8) || "Client"}</p>
                             <p className="text-[11px] text-amber-900/60">{s.topic || "Vedic Consultation"} • {new Date(s.created_at || Date.now()).toLocaleDateString()}</p>
                           </div>
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                            Completed
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                              Completed
+                            </span>
+                            <button
+                              onClick={() => {
+                                setActiveSession(s);
+                                setActiveTab("workstation");
+                                fetchMessages(s.id);
+                              }}
+                              className="px-3 py-1.5 rounded-xl text-[11px] font-bold bg-amber-900/10 hover:bg-amber-900/15 text-[#5B1F24] transition-all flex items-center gap-1"
+                            >
+                              <MessageSquare size={12} />
+                              <span>View Chat Log</span>
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
