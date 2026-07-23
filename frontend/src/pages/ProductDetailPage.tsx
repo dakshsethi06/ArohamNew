@@ -295,7 +295,7 @@ export function ProductDetailPage() {
           <span>{product.name}</span>
         </div>
       </div>
-      <div className="px-4 sm:px-6 lg:px-10 pb-10">
+      <div className="px-4 sm:px-6 lg:px-10 pb-28 lg:pb-10">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[48%_32%_20%] gap-6 lg:gap-8">
           {/* Gallery with Slider Controls & Responsive Proportions */}
           <div>
@@ -419,11 +419,11 @@ export function ProductDetailPage() {
               <span className="text-xs font-semibold text-emerald-600">✓ In Stock</span>
             </div>
 
-            {/* Action Buttons for Desktop (Mobile uses floating fixed bottom bar) */}
-            <div ref={mainButtonsRef} className="hidden lg:block space-y-3 mb-5">
+            {/* Inline Action Buttons (Visible on mobile & desktop) */}
+            <div ref={mainButtonsRef} className="space-y-2.5 sm:space-y-3 mb-6">
               <button
                 onClick={() => addToCart(product, qty)}
-                className="w-full py-4 rounded-2xl text-sm font-bold tracking-wider uppercase flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all active:scale-98"
+                className="w-full py-3.5 sm:py-4 rounded-2xl text-xs sm:text-sm font-bold tracking-wider uppercase flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all active:scale-98"
                 style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)`, color: IVORY }}
               >
                 <ShoppingCart size={16} />
@@ -436,7 +436,7 @@ export function ProductDetailPage() {
                   navigate("/checkout/shipping");
                   window.scrollTo({ top: 0, behavior: "instant" });
                 }}
-                className="w-full py-3.5 rounded-2xl text-sm font-bold tracking-wide border transition-all hover:bg-amber-50/80 active:scale-98 flex items-center justify-center gap-2"
+                className="w-full py-3 sm:py-3.5 rounded-2xl text-xs sm:text-sm font-bold tracking-wide border transition-all hover:bg-amber-50/80 active:scale-98 flex items-center justify-center gap-2"
                 style={{ borderColor: GOLD, color: MAROON, background: "#FFFFFF" }}
               >
                 <span>⚡ BUY NOW</span>
