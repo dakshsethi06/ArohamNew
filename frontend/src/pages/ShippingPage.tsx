@@ -80,8 +80,7 @@ export function ShippingPage() {
             const parsed = JSON.parse(uStr);
             if (Array.isArray(parsed) && parsed.length > 0) localAddrs = parsed;
           }
-        }
-        if (localAddrs.length === 0) {
+        } else {
           const gStr = localStorage.getItem("aroham_saved_addresses_list");
           if (gStr) {
             const parsed = JSON.parse(gStr);
@@ -92,67 +91,91 @@ export function ShippingPage() {
 
       let combined: any[] = [...localAddrs];
 
-      // 3. Fetch from Supabase addresses table
+      // 3. Fetch from Supabase addresses table matching this account
       try {
-        const { data: dbAddrs } = await supabase.from("addresses").select("*");
-        if (dbAddrs && dbAddrs.length > 0) {
-          dbAddrs.forEach((a: any) => {
-            const aPhone = String(a.phone || "").replace(/\D/g, "").slice(-10);
-            const aEmail = String(a.email || "").trim().toLowerCase();
-            const matches = (user?.id && a.user_id === user.id) ||
-                            (userPhone && aPhone && aPhone === userPhone) ||
-                            (userEmail && aEmail && aEmail === userEmail.toLowerCase());
+        const query = supabase.from("addresses").select("*");
+        let hasFilter = false;
+        if (user?.id) {
+          query.or(`user_id.eq.${user.id},user_phone.eq.${userPhone},phone.ilike.%${userPhone}%`);
+          hasFilter = true;
+        } else if (userPhone) {
+          query.or(`user_phone.eq.${userPhone},phone.ilike.%${userPhone}%`);
+          hasFilter = true;
+        }
 
-            if (matches) {
-              const fullAddr = a.address || a.line1 || "";
-              if (!combined.some(existing => String(existing.id) === String(a.id) || (existing.address === fullAddr && existing.pincode === a.pincode))) {
-                combined.push(a);
+        if (hasFilter) {
+          const { data: dbAddrs } = await query;
+          if (dbAddrs && dbAddrs.length > 0) {
+            dbAddrs.forEach((a: any) => {
+              const aPhone = String(a.phone || "").replace(/\D/g, "").slice(-10);
+              const aEmail = String(a.email || "").trim().toLowerCase();
+              const matches = (user?.id && String(a.user_id) === String(user.id)) ||
+                              (userPhone && aPhone && aPhone === userPhone) ||
+                              (userEmail && aEmail && aEmail === userEmail.toLowerCase());
+
+              if (matches) {
+                const fullAddr = a.address || a.line1 || "";
+                if (!combined.some(existing => String(existing.id) === String(a.id) || (existing.address === fullAddr && existing.pincode === a.pincode))) {
+                  combined.push(a);
+                }
+                if (user?.id && (!a.user_id || a.user_id !== user.id)) {
+                  Promise.resolve(supabase.from("addresses").update({ user_id: user.id }).eq("id", a.id)).catch(() => {});
+                }
               }
-              if (user?.id && (!a.user_id || a.user_id !== user.id)) {
-                Promise.resolve(supabase.from("addresses").update({ user_id: user.id }).eq("id", a.id)).catch(() => {});
-              }
-            }
-          });
+            });
+          }
         }
       } catch (e) {}
 
       // 4. Extract addresses from past orders (guarantees order shipping addresses are never lost)
       try {
-        const { data: dbOrders } = await supabase.from("orders").select("*");
-        if (dbOrders && dbOrders.length > 0) {
-          dbOrders.forEach((o: any) => {
-            const sa = o.shipping_address || o.address;
-            if (sa && (sa.address || sa.line1 || sa.house)) {
-              const saPhone = String(sa.phone || o.phone || "").replace(/\D/g, "").slice(-10);
-              const saEmail = String(sa.email || o.email || "").trim().toLowerCase();
-              const matches = (user?.id && o.user_id === user.id) ||
-                              (userPhone && saPhone && saPhone === userPhone) ||
-                              (userEmail && saEmail && saEmail === userEmail.toLowerCase());
+        const orderQuery = supabase.from("orders").select("*");
+        let hasOrderFilter = false;
+        if (user?.id) {
+          orderQuery.or(`user_id.eq.${user.id},user_phone.eq.${userPhone}`);
+          hasOrderFilter = true;
+        } else if (userPhone) {
+          orderQuery.eq("user_phone", userPhone);
+          hasOrderFilter = true;
+        }
 
-              if (matches) {
-                const addrText = sa.address || sa.line1 || `${sa.house || ''}, ${sa.street || ''}`.trim();
-                const pinCode = sa.pincode || sa.pin || "";
-                if (addrText && !combined.some(existing => (existing.address || existing.line1) === addrText)) {
-                  combined.push({
-                    id: `order-addr-${o.id}`,
-                    user_id: user?.id || null,
-                    name: sa.full_name || sa.name || "Devotee",
-                    phone: saPhone || userPhone,
-                    email: saEmail || userEmail,
-                    address: addrText,
-                    line1: addrText,
-                    house: sa.house || "",
-                    street: sa.street || "",
-                    city: sa.city || "",
-                    state: sa.state || "",
-                    pincode: pinCode,
-                    pin: pinCode,
-                    address_type: sa.address_type || sa.addressType || "Home"
-                  });
+        if (hasOrderFilter) {
+          const { data: dbOrders } = await orderQuery;
+          if (dbOrders && dbOrders.length > 0) {
+            dbOrders.forEach((o: any) => {
+              const sa = o.shipping_address || o.address;
+              if (sa && (sa.address || sa.line1 || sa.house)) {
+                const saPhone = String(sa.phone || o.phone || "").replace(/\D/g, "").slice(-10);
+                const saEmail = String(sa.email || o.email || "").trim().toLowerCase();
+                const matches = (user?.id && String(o.user_id) === String(user.id)) ||
+                                (userPhone && saPhone && saPhone === userPhone) ||
+                                (userEmail && saEmail && saEmail === userEmail.toLowerCase());
+
+                if (matches) {
+                  const addrText = sa.address || sa.line1 || `${sa.house || ''}, ${sa.street || ''}`.trim();
+                  const pinCode = sa.pincode || sa.pin || "";
+                  if (addrText && !combined.some(existing => (existing.address || existing.line1) === addrText)) {
+                    combined.push({
+                      id: `order-addr-${o.id}`,
+                      user_id: user?.id || null,
+                      name: sa.full_name || sa.name || "Devotee",
+                      phone: saPhone || userPhone,
+                      email: saEmail || userEmail,
+                      address: addrText,
+                      line1: addrText,
+                      house: sa.house || "",
+                      street: sa.street || "",
+                      city: sa.city || "",
+                      state: sa.state || "",
+                      pincode: pinCode,
+                      pin: pinCode,
+                      address_type: sa.address_type || sa.addressType || "Home"
+                    });
+                  }
                 }
               }
-            }
-          });
+            });
+          }
         }
       } catch (e) {}
 
@@ -167,8 +190,11 @@ export function ShippingPage() {
 
         // Persist combined addresses in local storage
         try {
-          if (user?.id) localStorage.setItem(`aroham_user_addresses_${user.id}`, JSON.stringify(combined));
-          localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(combined));
+          if (user?.id) {
+            localStorage.setItem(`aroham_user_addresses_${user.id}`, JSON.stringify(combined));
+          } else {
+            localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(combined));
+          }
         } catch (e) {}
       } else {
         setShowForm(true);
@@ -255,7 +281,11 @@ export function ShippingPage() {
       setSavedAddresses(prev => {
         const filtered = prev.filter(a => a.id !== editingAddrId);
         const updated = [newAddrItem, ...filtered];
-        localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(updated));
+        if (user?.id) {
+          localStorage.setItem(`aroham_user_addresses_${user.id}`, JSON.stringify(updated));
+        } else {
+          localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(updated));
+        }
         return updated;
       });
       setSelectedAddr(typeof newAddrItem.id === "number" ? newAddrItem.id : Number(newAddrItem.id) || Date.now());
@@ -266,7 +296,7 @@ export function ShippingPage() {
         name: `${form.firstName} ${form.lastName}`.trim(),
         phone: form.phone.replace(/\D/g, "").slice(-10),
         email: form.email,
-        address: `${form.house}, ${form.street}${form.landmark ? ", " + form.landmark : ""}`.trim(),
+        address: `${form.house}${form.street ? ", " + form.street : ""}${form.landmark ? ", " + form.landmark : ""}`.trim(),
         city: form.city,
         state: form.state,
         pincode: form.pin,
@@ -274,16 +304,26 @@ export function ShippingPage() {
       };
 
       if (user?.id) {
-        Promise.resolve(supabase.from("addresses").upsert({
+        const dbPayload: any = {
           user_id: user.id,
+          user_phone: user?.user_metadata?.phone ? String(user.user_metadata.phone).replace(/\D/g, "").slice(-10) : form.phone.replace(/\D/g, "").slice(-10),
           name: `${form.firstName} ${form.lastName}`.trim(),
           phone: form.phone.replace(/\D/g, "").slice(-10),
           email: form.email,
-          address: `${form.house}, ${form.street}${form.landmark ? ", " + form.landmark : ""}`.trim(),
+          address: `${form.house}${form.street ? ", " + form.street : ""}${form.landmark ? ", " + form.landmark : ""}`.trim(),
           city: form.city,
           state: form.state,
-          pincode: form.pin
-        })).catch(err => console.warn("Supabase address save warning:", err));
+          pincode: form.pin,
+          house: form.house,
+          street: form.street,
+          landmark: form.landmark,
+          address_type: form.addressType
+        };
+        if (typeof editingAddrId === 'number') {
+          dbPayload.id = editingAddrId;
+        }
+        Promise.resolve(supabase.from("addresses").upsert(dbPayload))
+          .catch(err => console.warn("Supabase address save warning:", err));
       }
 
       let savedObj: any = null;
@@ -531,24 +571,31 @@ export function ShippingPage() {
     setSavedAddresses(prev => {
       const updated = [newAddressObj, ...prev.filter(a => String(a.id) !== String(newAddressObj.id))];
       try {
-        if (user?.id) localStorage.setItem(`aroham_user_addresses_${user.id}`, JSON.stringify(updated));
-        localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(updated));
+        if (user?.id) {
+          localStorage.setItem(`aroham_user_addresses_${user.id}`, JSON.stringify(updated));
+        } else {
+          localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(updated));
+        }
       } catch (e) {}
       return updated;
     });
 
-    const isValidUuid = (str: any) => typeof str === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
-    const cleanUserId = isValidUuid(user?.id) ? user.id : null;
+    const userPhone = user?.user_metadata?.phone ? String(user.user_metadata.phone).replace(/\D/g, "").slice(-10) : newAddressObj.phone;
 
     Promise.resolve(supabase.from("addresses").insert({
-      user_id: cleanUserId,
+      user_id: user?.id || null,
+      user_phone: userPhone,
       name: newAddressObj.name,
       phone: newAddressObj.phone,
       email: newAddressObj.email,
       address: newAddressObj.address_line1,
+      line1: newAddressObj.line1,
       city: newAddressObj.city,
       state: newAddressObj.state,
       pincode: newAddressObj.pincode,
+      house: form.house,
+      street: form.street,
+      landmark: form.landmark,
       address_type: newAddressObj.address_type || "Home"
     })).catch(err => console.warn("Supabase address auto-save warning:", err));
 

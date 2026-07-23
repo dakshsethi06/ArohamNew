@@ -95,8 +95,8 @@ export function ProfilePage() {
             const parsed = JSON.parse(uStr);
             if (Array.isArray(parsed) && parsed.length > 0) combined = [...parsed];
           }
-        }
-        if (combined.length === 0) {
+        } else {
+          // Only load guest list if not logged in
           const gStr = localStorage.getItem("aroham_saved_addresses_list");
           if (gStr) {
             const parsed = JSON.parse(gStr);
@@ -105,76 +105,105 @@ export function ProfilePage() {
         }
       } catch (e) {}
 
-      // 2. Fetch from Supabase addresses table
+      // 2. Fetch from Supabase addresses table matching this account
       try {
-        const { data: dbAddrs } = await supabase.from("addresses").select("*");
-        if (dbAddrs && dbAddrs.length > 0) {
-          dbAddrs.forEach((a: any) => {
-            const aPhone = String(a.phone || "").replace(/\D/g, "").slice(-10);
-            const aEmail = String(a.email || "").trim().toLowerCase();
-            const matches = (user?.id && a.user_id === user.id) ||
-                            (userPhone && aPhone && aPhone === userPhone) ||
-                            (userEmail && aEmail && aEmail === userEmail.toLowerCase());
+        const query = supabase.from("addresses").select("*");
+        let hasFilter = false;
+        if (user?.id) {
+          query.or(`user_id.eq.${user.id},user_phone.eq.${userPhone},phone.ilike.%${userPhone}%`);
+          hasFilter = true;
+        } else if (userPhone) {
+          query.or(`user_phone.eq.${userPhone},phone.ilike.%${userPhone}%`);
+          hasFilter = true;
+        }
+        
+        if (hasFilter) {
+          const { data: dbAddrs } = await query;
+          if (dbAddrs && dbAddrs.length > 0) {
+            dbAddrs.forEach((a: any) => {
+              const aPhone = String(a.phone || "").replace(/\D/g, "").slice(-10);
+              const aEmail = String(a.email || "").trim().toLowerCase();
+              const matches = (user?.id && String(a.user_id) === String(user.id)) ||
+                              (userPhone && aPhone && aPhone === userPhone) ||
+                              (userEmail && aEmail && aEmail === userEmail.toLowerCase());
 
-            if (matches) {
-              const fullAddr = a.address || a.line1 || "";
-              if (!combined.some(existing => String(existing.id) === String(a.id) || (existing.address === fullAddr && existing.pincode === a.pincode))) {
-                combined.push(a);
+              if (matches) {
+                const fullAddr = a.address || a.line1 || "";
+                if (!combined.some(existing => String(existing.id) === String(a.id) || (existing.address === fullAddr && existing.pincode === a.pincode))) {
+                  combined.push(a);
+                }
+                if (user?.id && (!a.user_id || a.user_id !== user.id)) {
+                  Promise.resolve(supabase.from("addresses").update({ user_id: user.id }).eq("id", a.id)).catch(() => {});
+                }
               }
-              if (user?.id && (!a.user_id || a.user_id !== user.id)) {
-                Promise.resolve(supabase.from("addresses").update({ user_id: user.id }).eq("id", a.id)).catch(() => {});
-              }
-            }
-          });
+            });
+          }
         }
       } catch (e) {}
 
       // 3. Extract addresses from past orders (guarantees addresses used in orders are never lost)
       try {
-        const { data: dbOrders } = await supabase.from("orders").select("*");
-        if (dbOrders && dbOrders.length > 0) {
-          dbOrders.forEach((o: any) => {
-            const sa = o.shipping_address || o.address;
-            if (sa && (sa.address || sa.line1 || sa.house)) {
-              const saPhone = String(sa.phone || o.phone || "").replace(/\D/g, "").slice(-10);
-              const saEmail = String(sa.email || o.email || "").trim().toLowerCase();
-              const matches = (user?.id && o.user_id === user.id) ||
-                              (userPhone && saPhone && saPhone === userPhone) ||
-                              (userEmail && saEmail && saEmail === userEmail.toLowerCase());
+        const orderQuery = supabase.from("orders").select("*");
+        let hasOrderFilter = false;
+        if (user?.id) {
+          orderQuery.or(`user_id.eq.${user.id},user_phone.eq.${userPhone}`);
+          hasOrderFilter = true;
+        } else if (userPhone) {
+          orderQuery.eq("user_phone", userPhone);
+          hasOrderFilter = true;
+        }
 
-              if (matches) {
-                const addrText = sa.address || sa.line1 || `${sa.house || ''}, ${sa.street || ''}`.trim();
-                const pinCode = sa.pincode || sa.pin || "";
-                if (addrText && !combined.some(existing => (existing.address || existing.line1) === addrText)) {
-                  combined.push({
-                    id: `order-addr-${o.id}`,
-                    user_id: user?.id || null,
-                    name: sa.full_name || sa.name || "Devotee",
-                    phone: saPhone || userPhone,
-                    email: saEmail || userEmail,
-                    address: addrText,
-                    line1: addrText,
-                    house: sa.house || "",
-                    street: sa.street || "",
-                    city: sa.city || "",
-                    state: sa.state || "",
-                    pincode: pinCode,
-                    pin: pinCode,
-                    address_type: sa.address_type || sa.addressType || "Home"
-                  });
+        if (hasOrderFilter) {
+          const { data: dbOrders } = await orderQuery;
+          if (dbOrders && dbOrders.length > 0) {
+            dbOrders.forEach((o: any) => {
+              const sa = o.shipping_address || o.address;
+              if (sa && (sa.address || sa.line1 || sa.house)) {
+                const saPhone = String(sa.phone || o.phone || "").replace(/\D/g, "").slice(-10);
+                const saEmail = String(sa.email || o.email || "").trim().toLowerCase();
+                const matches = (user?.id && String(o.user_id) === String(user.id)) ||
+                                (userPhone && saPhone && saPhone === userPhone) ||
+                                (userEmail && saEmail && saEmail === userEmail.toLowerCase());
+
+                if (matches) {
+                  const addrText = sa.address || sa.line1 || `${sa.house || ''}, ${sa.street || ''}`.trim();
+                  const pinCode = sa.pincode || sa.pin || "";
+                  if (addrText && !combined.some(existing => (existing.address || existing.line1) === addrText)) {
+                    combined.push({
+                      id: `order-addr-${o.id}`,
+                      user_id: user?.id || null,
+                      name: sa.full_name || sa.name || "Devotee",
+                      phone: saPhone || userPhone,
+                      email: saEmail || userEmail,
+                      address: addrText,
+                      line1: addrText,
+                      house: sa.house || "",
+                      street: sa.street || "",
+                      city: sa.city || "",
+                      state: sa.state || "",
+                      pincode: pinCode,
+                      pin: pinCode,
+                      address_type: sa.address_type || sa.addressType || "Home"
+                    });
+                  }
                 }
               }
-            }
-          });
+            });
+          }
         }
       } catch (e) {}
 
       if (combined.length > 0) {
         setProfileAddresses(combined);
         try {
-          if (user?.id) localStorage.setItem(`aroham_user_addresses_${user.id}`, JSON.stringify(combined));
-          localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(combined));
+          if (user?.id) {
+            localStorage.setItem(`aroham_user_addresses_${user.id}`, JSON.stringify(combined));
+          } else {
+            localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(combined));
+          }
         } catch (e) {}
+      } else {
+        setProfileAddresses([]);
       }
     };
 
@@ -245,22 +274,33 @@ export function ProfilePage() {
     setProfileAddresses(newList);
     if (user?.id) {
       try { localStorage.setItem(`aroham_user_addresses_${user.id}`, JSON.stringify(newList)); } catch (e) {}
+    } else {
+      try { localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(newList)); } catch (e) {}
     }
-    try { localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(newList)); } catch (e) {}
     setShowAddrForm(false);
     setEditingAddrId(null);
     setAddrForm({ name: "", phone: "", pin: "", house: "", street: "", landmark: "", city: "", state: "", addressType: "Home" });
 
     if (user?.id) {
-      Promise.resolve(supabase.from("addresses").upsert({
+      const dbPayload: any = {
         user_id: user.id,
+        user_phone: user?.user_metadata?.phone ? String(user.user_metadata.phone).replace(/\D/g, "").slice(-10) : newAddrObj.phone,
         name: newAddrObj.name,
         phone: newAddrObj.phone,
         address: newAddrObj.address,
         city: newAddrObj.city,
         state: newAddrObj.state,
-        pincode: newAddrObj.pincode
-      })).catch(err => console.warn("Supabase address save warning:", err));
+        pincode: newAddrObj.pincode,
+        house: newAddrObj.house,
+        street: newAddrObj.street,
+        landmark: newAddrObj.landmark,
+        address_type: newAddrObj.address_type
+      };
+      if (typeof editingAddrId === 'number') {
+        dbPayload.id = editingAddrId;
+      }
+      Promise.resolve(supabase.from("addresses").upsert(dbPayload))
+        .catch(err => console.warn("Supabase address save warning:", err));
     }
   };
 
@@ -302,9 +342,11 @@ export function ProfilePage() {
     if (!confirm("Remove this address?")) return;
     const newList = profileAddresses.filter(a => String(a.id) !== String(id));
     setProfileAddresses(newList);
-    localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(newList));
     if (user?.id) {
+      try { localStorage.setItem(`aroham_user_addresses_${user.id}`, JSON.stringify(newList)); } catch (e) {}
       Promise.resolve(supabase.from("addresses").delete().eq("id", id)).catch(() => {});
+    } else {
+      try { localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(newList)); } catch (e) {}
     }
   };
 
