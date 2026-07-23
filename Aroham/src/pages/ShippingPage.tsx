@@ -529,6 +529,29 @@ export function ShippingPage() {
       specialRequest: form.specialRequest,
     };
 
+    // Auto-save new address to savedAddresses list & local storage
+    setSavedAddresses(prev => {
+      const updated = [newAddressObj, ...prev.filter(a => String(a.id) !== String(newAddressObj.id))];
+      try {
+        if (user?.id) localStorage.setItem(`aroham_user_addresses_${user.id}`, JSON.stringify(updated));
+        localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    if (user?.id) {
+      Promise.resolve(supabase.from("addresses").upsert({
+        user_id: user.id,
+        name: newAddressObj.name,
+        phone: newAddressObj.phone,
+        email: newAddressObj.email,
+        address: newAddressObj.address_line1,
+        city: newAddressObj.city,
+        state: newAddressObj.state,
+        pincode: newAddressObj.pincode
+      })).catch(err => console.warn("Supabase address auto-save warning:", err));
+    }
+
     if (isLoggedIn) {
       try {
         await api("/addresses", {
@@ -541,7 +564,6 @@ export function ShippingPage() {
             city: newAddressObj.city,
             state: newAddressObj.state,
             pincode: newAddressObj.pincode,
-            address_type: newAddressObj.address_type,
           })
         });
       } catch (e) {
@@ -622,29 +644,11 @@ export function ShippingPage() {
                             const est = estimates[pin];
                             const dateStr = est?.deliveryDate || "3–5 business days";
                             return (
-                              <div className="mt-4 pt-3 flex flex-col gap-3" style={{ borderTop: "1px solid rgba(200,160,68,0.2)" }}>
-                                <div className="flex items-center gap-2">
-                                  <Truck size={14} style={{ color: "#4A8A4A", flexShrink: 0 }} />
-                                  <span className="text-xs font-semibold" style={{ color: "#4A8A4A" }}>
-                                    Expected delivery by <strong>{dateStr}</strong> · Free Shipping
-                                  </span>
-                                </div>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const finalObj = {
-                                      ...addr,
-                                      deliveryDate: dateStr,
-                                      specialRequest: form.specialRequest
-                                    };
-                                    sessionStorage.setItem("aroham_shipping_addr", JSON.stringify(finalObj));
-                                    navigate("/checkout/payment");
-                                  }}
-                                  className="w-full py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all hover:opacity-90 shadow-md"
-                                  style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}
-                                >
-                                  <CheckCircle size={15} /> Deliver to this Address
-                                </button>
+                              <div className="mt-3 pt-2.5 flex items-center gap-2" style={{ borderTop: "1px solid rgba(200,160,68,0.2)" }}>
+                                <Truck size={14} style={{ color: "#4A8A4A", flexShrink: 0 }} />
+                                <span className="text-xs font-semibold" style={{ color: "#4A8A4A" }}>
+                                  Expected delivery by <strong>{dateStr}</strong> · Free Shipping
+                                </span>
                               </div>
                             );
                           })()}
