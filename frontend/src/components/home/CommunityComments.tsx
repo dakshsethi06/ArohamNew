@@ -159,16 +159,6 @@ export function CommunityComments({ products = [] }: { products?: ArohamProduct[
             <p className="text-sm mt-1" style={{ color: "#7A6A58" }}>{allReviews.length} verified reviews · 4.8 average rating</p>
           </div>
           <div className="flex items-center gap-3 self-start">
-            <button aria-label="Previous review" onClick={() => scrollByAmount("left")}
-              className="hidden sm:flex w-10 h-10 rounded-full items-center justify-center transition-all hover:scale-105 active:scale-95 border shadow-sm"
-              style={{ background: "#FFFFFF", borderColor: "rgba(91,31,36,0.15)", color: MAROON }}>
-              <ChevronLeft size={18} />
-            </button>
-            <button aria-label="Next review" onClick={() => scrollByAmount("right")}
-              className="hidden sm:flex w-10 h-10 rounded-full items-center justify-center transition-all hover:scale-105 active:scale-95 border shadow-sm"
-              style={{ background: "#FFFFFF", borderColor: "rgba(91,31,36,0.15)", color: MAROON }}>
-              <ChevronRight size={18} />
-            </button>
             <button onClick={() => {
                 setShowForm(s => !s);
                 if (submitted) {
