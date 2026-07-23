@@ -375,7 +375,7 @@ export function ProfilePage() {
     });
   };
 
-  // Fetch real orders from DB with cancellation persistence and automatic guest linking
+  // Fetch real orders from DB with phone-primary matching so orders persist across sessions
   useEffect(() => {
     if (activeTab === "orders") {
       setLoadingOrders(true);
@@ -385,45 +385,43 @@ export function ProfilePage() {
         const userPhone = user?.user_metadata?.phone ? String(user.user_metadata.phone).replace(/\D/g, "").slice(-10) : "";
         const userEmail = user?.email || "";
 
-        // 1. Fetch from Supabase by user_id
-        if (user?.id) {
-          try {
-            const { data } = await supabase.from("orders").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
-            if (data && data.length > 0) {
-              fetchedOrders = [...data];
-            }
-          } catch (e) {
-            console.warn("Error fetching Supabase user orders:", e);
-          }
-        }
-
-        // 2. Fetch unlinked / guest orders from Supabase matching phone or email
+        // 1. Fetch ALL orders from Supabase and match by user_id OR phone OR email
         try {
           const { data: allOrders } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
           if (allOrders && allOrders.length > 0) {
             allOrders.forEach((o: any) => {
-              const addr = o.shipping_address || o.address || {};
-              const orderPhone = String(addr.phone || o.phone || "").replace(/\D/g, "").slice(-10);
-              const orderEmail = String(addr.email || o.email || "").trim().toLowerCase();
-
+              const matchesUserId = user?.id && o.user_id === user.id;
+              
+              // Match by phone stored in user_phone column
+              const orderPhone = String(o.user_phone || "").replace(/\D/g, "").slice(-10);
               const matchesPhone = userPhone && orderPhone && orderPhone === userPhone;
-              const matchesEmail = userEmail && orderEmail && orderEmail === userEmail.toLowerCase();
+              
+              // Match by phone/email in shipping_address
+              const addr = typeof o.shipping_address === "string" ? (() => { try { return JSON.parse(o.shipping_address); } catch { return {}; } })() : (o.shipping_address || {});
+              const addrPhone = String(addr.phone || "").replace(/\D/g, "").slice(-10);
+              const addrEmail = String(addr.email || "").trim().toLowerCase();
+              const matchesAddrPhone = userPhone && addrPhone && addrPhone === userPhone;
+              const matchesAddrEmail = userEmail && addrEmail && addrEmail === userEmail.toLowerCase();
 
-              if ((matchesPhone || matchesEmail) && !fetchedOrders.some(existing => String(existing.id) === String(o.id))) {
-                fetchedOrders.push(o);
+              if (matchesUserId || matchesPhone || matchesAddrPhone || matchesAddrEmail) {
+                if (!fetchedOrders.some(existing => String(existing.id) === String(o.id))) {
+                  fetchedOrders.push(o);
 
-                // Auto-link this order to user.id in Supabase if unlinked
-                if (user?.id && (!o.user_id || o.user_id !== user.id)) {
-                  Promise.resolve(
-                    supabase.from("orders").update({ user_id: user.id }).eq("id", o.id)
-                  ).catch(() => {});
+                  // Auto-link unlinked orders to current user_id
+                  if (user?.id && (!o.user_id || o.user_id !== user.id)) {
+                    Promise.resolve(
+                      supabase.from("orders").update({ user_id: user.id }).eq("id", o.id)
+                    ).catch(() => {});
+                  }
                 }
               }
             });
           }
-        } catch (e) {}
+        } catch (e) {
+          console.warn("Error fetching Supabase orders:", e);
+        }
 
-        // 3. Fetch from user-specific local storage
+        // 2. Fetch from user-specific local storage
         if (user?.id) {
           const userOrdersKey = `aroham_user_orders_${user.id}`;
           const localUserOrdersStr = localStorage.getItem(userOrdersKey);
@@ -439,7 +437,22 @@ export function ProfilePage() {
           }
         }
 
-        // 4. Fetch from guest local storage fallback
+        // 2b. Fetch from phone-keyed localStorage (survives user ID changes across sessions)
+        if (userPhone) {
+          const phoneOrdersStr = localStorage.getItem(`aroham_phone_orders_${userPhone}`);
+          if (phoneOrdersStr) {
+            try {
+              const parsedPhone = JSON.parse(phoneOrdersStr);
+              parsedPhone.forEach((po: any) => {
+                if (!fetchedOrders.some(o => String(o.id) === String(po.id))) {
+                  fetchedOrders.push(po);
+                }
+              });
+            } catch (e) {}
+          }
+        }
+
+        // 3. Fetch from guest local storage fallback
         const guestOrdersStr = localStorage.getItem("aroham_guest_orders");
         if (guestOrdersStr) {
           try {
@@ -452,7 +465,6 @@ export function ProfilePage() {
               const matchesPhone = userPhone && orderPhone && orderPhone === userPhone;
               const matchesEmail = userEmail && orderEmail && orderEmail === userEmail.toLowerCase();
 
-              // Include guest order if phone/email matches OR if user is guest OR if recently placed on device
               if (!fetchedOrders.some(o => String(o.id) === String(go.id))) {
                 if (!user?.id || matchesPhone || matchesEmail || !go.user_id) {
                   fetchedOrders.push({ ...go, user_id: user?.id || go.user_id });
@@ -462,7 +474,7 @@ export function ProfilePage() {
           } catch (e) {}
         }
 
-        // 5. Fetch from recent session order fallback
+        // 4. Fetch from recent session order fallback
         const localOrderId = sessionStorage.getItem("aroham_last_order_id");
         const localItemsStr = sessionStorage.getItem("aroham_last_order_items");
         const localTotalStr = sessionStorage.getItem("aroham_order_total");
@@ -501,6 +513,13 @@ export function ProfilePage() {
         if (user?.id && fetchedOrders.length > 0) {
           try {
             localStorage.setItem(`aroham_user_orders_${user.id}`, JSON.stringify(fetchedOrders));
+          } catch (e) {}
+        }
+
+        // Also cache into phone-keyed localStorage for cross-session persistence
+        if (userPhone && fetchedOrders.length > 0) {
+          try {
+            localStorage.setItem(`aroham_phone_orders_${userPhone}`, JSON.stringify(fetchedOrders));
           } catch (e) {}
         }
 

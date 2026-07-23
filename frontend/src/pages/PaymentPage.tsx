@@ -186,16 +186,15 @@ export function PaymentPage() {
                 shipping_address: shippingAddr || null
               };
 
-              // 1. Insert to Supabase orders DB with clean UUID and valid columns
+              // 1. Insert to Supabase orders DB — always store user_id and user_phone
               try {
                 const orderUuid = generateUUID();
-                const isValidUuid = (str: any) => typeof str === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
-                const cleanUserId = isValidUuid(user?.id) ? user.id : null;
+                const userPhone = shippingAddr?.phone || user?.user_metadata?.phone || "";
 
                 const sbPayload: any = {
                   id: orderUuid,
-                  user_id: cleanUserId,
-                  user_phone: shippingAddr?.phone || user?.user_metadata?.phone || "",
+                  user_id: user?.id || null,
+                  user_phone: String(userPhone).replace(/\D/g, "").slice(-10),
                   amount: total,
                   total_amount: total,
                   status: "CONFIRMED",
@@ -220,7 +219,19 @@ export function PaymentPage() {
                 } catch (e) {}
               }
 
-              // 3. Always save to guest orders fallback as backup
+              // 3. Save to phone-keyed localStorage for cross-session persistence
+              try {
+                const phoneKey = String(shippingAddr?.phone || user?.user_metadata?.phone || "").replace(/\D/g, "").slice(-10);
+                if (phoneKey) {
+                  const pKey = `aroham_phone_orders_${phoneKey}`;
+                  const pStr = localStorage.getItem(pKey);
+                  const pArr = pStr ? JSON.parse(pStr) : [];
+                  const pUpdated = [orderObj, ...pArr.filter((o: any) => String(o.id) !== String(orderId))];
+                  localStorage.setItem(pKey, JSON.stringify(pUpdated));
+                }
+              } catch (e) {}
+
+              // 4. Always save to guest orders fallback as backup
               try {
                 const gKey = "aroham_guest_orders";
                 const gStr = localStorage.getItem(gKey);
