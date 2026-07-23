@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
+import { getAuth, setPersistence, indexedDBLocalPersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 // Live Firebase configuration for Aroham (Project: aroham-ccfab)
@@ -19,12 +19,12 @@ const firebaseConfig = {
   measurementId: getEnv("VITE_FIREBASE_MEASUREMENT_ID", "G-RQBH4MTD6Q")
 };
 
-// Initialize Firebase App singleton with local persistent login state
+// Initialize Firebase App singleton with IndexedDB persistence (avoids Chrome credential management prompt)
 export const firebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 export const firebaseAuth = getAuth(firebaseApp);
 export const db = getFirestore(firebaseApp);
 
-// Enforce permanent local browser persistence until user explicitly clicks Logout
-setPersistence(firebaseAuth, browserLocalPersistence).catch(err => {
+// Use IndexedDB persistence - does NOT trigger Chrome's "Access other apps" permission dialog
+setPersistence(firebaseAuth, indexedDBLocalPersistence).catch(err => {
   console.error("Firebase persistence error:", err);
 });
