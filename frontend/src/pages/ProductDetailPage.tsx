@@ -338,22 +338,30 @@ export function ProductDetailPage() {
                 <span className="w-10 text-center font-semibold" style={{ color: MAROON, fontFamily: SERIF }}>{qty}</span>
                 <button aria-label="Increase quantity" onClick={() => setQty(q => q + 1)} className="w-10 h-10 flex items-center justify-center hover:bg-black/5" style={{ color: MAROON }}>+</button>
               </div>
-              <span className="text-xs" style={{ color: "#4A8A4A" }}>✓ In Stock</span>
+              <span className="text-xs font-semibold text-emerald-600">✓ In Stock</span>
             </div>
-            <div ref={mainButtonsRef} className="hidden lg:block space-y-3 mb-5">
-              <button onClick={() => addToCart(product, qty)}
-                className="w-full py-4 rounded-2xl text-sm font-semibold flex items-center justify-center transition-all hover:opacity-90 hover:shadow-lg uppercase"
-                style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
-                Add to Cart
+
+            {/* Inline Action Buttons visible on mobile & desktop */}
+            <div ref={mainButtonsRef} className="space-y-2.5 sm:space-y-3 mb-6">
+              <button
+                onClick={() => addToCart(product, qty)}
+                className="w-full py-3.5 sm:py-4 rounded-2xl text-xs sm:text-sm font-bold tracking-wider uppercase flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all active:scale-98"
+                style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)`, color: IVORY }}
+              >
+                <ShoppingCart size={16} />
+                <span>ADD TO CART</span>
               </button>
+              
               <button
                 onClick={async () => { 
                   await addToCart(product, qty); 
                   navigate("/checkout/shipping");
                   window.scrollTo({ top: 0, behavior: "instant" });
                 }}
-                className="w-full py-3.5 rounded-2xl text-sm font-semibold border transition-all hover:bg-amber-50 flex items-center justify-center gap-2"
-                style={{ borderColor: GOLD, color: MAROON }}>⚡ Buy Now
+                className="w-full py-3 sm:py-3.5 rounded-2xl text-xs sm:text-sm font-bold tracking-wide border transition-all hover:bg-amber-50/80 active:scale-98 flex items-center justify-center gap-2"
+                style={{ borderColor: GOLD, color: MAROON, background: "#FFFFFF" }}
+              >
+                <span>⚡ BUY NOW</span>
               </button>
             </div>
 
@@ -491,28 +499,28 @@ export function ProductDetailPage() {
         </div>
       </div>
       {/* Mobile sticky bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 px-4 py-3 border-t transition-transform duration-300 shadow-2xl"
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[100] px-4 py-3 border-t shadow-2xl transition-transform duration-300"
         style={{
-          background: "rgba(250,247,242,0.98)",
+          background: "rgba(255,255,255,0.98)",
           backdropFilter: "blur(16px)",
           WebkitBackdropFilter: "blur(16px)",
           borderColor: "rgba(91,31,36,0.12)",
-          boxShadow: "0 -4px 24px rgba(91,31,36,0.12)",
-          transform: "translateY(0)"
+          boxShadow: "0 -4px 24px rgba(91,31,36,0.14)",
         }}>
         <div className="flex items-center justify-between mb-1.5 px-1">
           <div className="flex items-baseline gap-2">
-            <span className="text-xl font-bold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{product.price.toLocaleString("en-IN")}</span>
+            <span className="text-lg font-bold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{product.price.toLocaleString("en-IN")}</span>
             <span className="text-xs line-through" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{Math.round(product.original).toLocaleString("en-IN")}</span>
-            <span className="text-xs font-bold" style={{ color: "#4A8A4A" }}>{Math.round((1 - product.price / product.original) * 100)}% off</span>
+            <span className="text-xs font-bold text-emerald-600">{Math.round((1 - product.price / product.original) * 100)}% off</span>
           </div>
           <span className="text-[10px] font-semibold text-emerald-600 flex items-center gap-1">✓ In Stock</span>
         </div>
         <div className="flex gap-2">
           <button onClick={() => addToCart(product, qty)}
-            className="flex-1 py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center shadow-md active:scale-95 transition-all"
+            className="flex-1 py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
             style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
-            Add to Cart
+            <ShoppingCart size={14} />
+            <span>Add to Cart</span>
           </button>
           <button
             onClick={async () => {
@@ -520,8 +528,11 @@ export function ProductDetailPage() {
               navigate("/checkout/shipping");
               window.scrollTo({ top: 0, behavior: "instant" });
             }}
-            className="px-6 py-3 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 active:scale-95 transition-all"
-            style={{ borderColor: GOLD, color: MAROON, background: "#FFFFFF" }}>⚡ Buy</button>
+            className="px-5 py-3 rounded-xl text-xs font-bold border flex items-center justify-center gap-1 active:scale-95 transition-all bg-white"
+            style={{ borderColor: GOLD, color: MAROON }}
+          >
+            ⚡ Buy
+          </button>
         </div>
       </div>
     </div>
