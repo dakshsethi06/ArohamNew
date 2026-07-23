@@ -78,7 +78,7 @@ export function HexPrismCarousel({ products, onProductClick }: { products: Aroha
         }
       `}</style>
       <div className="relative flex items-center justify-center w-full"
-        style={{ height: baseH + 40, marginTop: isMobile ? 15 : 20, marginBottom: 15, transform: expanded ? (isMobile ? "translateY(-30px) scale(0.9)" : "translateY(-50px) scale(0.9)") : "translateY(0px) scale(1)", transition: `all ${SMOOTH_EASE}` }}>
+        style={{ height: baseH + 30, marginTop: isMobile ? 25 : 35, marginBottom: 15, transform: expanded ? "translateY(-20px) scale(0.92)" : "translateY(0px) scale(1)", transition: `all ${SMOOTH_EASE}` }}>
         <button aria-label="Previous product" onClick={prev}
           className="absolute left-1 sm:left-2 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95"
           style={{ background: "rgba(200,160,68,0.18)", border: `1px solid rgba(200,160,68,0.35)`, color: GOLD, top: "50%", transform: "translateY(-50%)" }}>
@@ -141,7 +141,7 @@ export function HexPrismCarousel({ products, onProductClick }: { products: Aroha
         ))}
       </div>
 
-      <div style={{ position: isMobile ? "relative" : "absolute", bottom: isMobile ? undefined : "10px", marginTop: isMobile ? (expanded ? "-80px" : "0px") : undefined, left: "5%", right: "5%", width: "90%", zIndex: 50, overflow: "hidden", maxHeight: expanded ? 220 : 0, opacity: expanded ? 1 : 0, transition: `all ${SMOOTH_EASE}`, pointerEvents: expanded ? "auto" : "none" }}>
+      <div style={{ position: "relative", width: "94%", zIndex: 50, overflow: "hidden", maxHeight: expanded ? 220 : 0, opacity: expanded ? 1 : 0, marginTop: expanded ? 12 : 0, transition: `all ${SMOOTH_EASE}`, pointerEvents: expanded ? "auto" : "none" }}>
         <div className="rounded-2xl p-4 shadow-2xl mb-2" style={{ background: "rgba(30,10,12,0.95)", border: "1px solid rgba(200,160,68,0.3)" }}>
           <div className="flex gap-4 items-start">
             <div className="flex-1 min-w-0">

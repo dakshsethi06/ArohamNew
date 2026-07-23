@@ -79,10 +79,10 @@ export function ProductCard({ product: p, onProductClick, onAddToCart, wishKey =
           )}
         </div>
         {qty > 0 ? (
-          <div onClick={e => e.stopPropagation()} className="w-full py-1 px-2 rounded-xl flex items-center justify-between font-bold text-xs shadow-sm mt-0.5" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
-            <button aria-label="Decrease quantity" onClick={() => updateQty(p.id, -1)} className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold transition-all hover:bg-white/20 active:scale-95" style={{ color: GOLD }}>-</button>
-            <span className="text-xs font-bold tracking-wide" style={{ color: IVORY, fontFamily: SANS }}>{qty} in Cart</span>
-            <button aria-label="Increase quantity" onClick={() => updateQty(p.id, 1)} className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold transition-all hover:bg-white/20 active:scale-95" style={{ color: GOLD }}>+</button>
+          <div onClick={e => e.stopPropagation()} className="w-full py-1 px-3 rounded-xl flex items-center justify-between font-bold text-xs shadow-sm mt-0.5" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
+            <button aria-label="Decrease quantity" onClick={() => updateQty(p.id, -1)} className="w-7 h-7 rounded-lg flex items-center justify-center text-base font-bold transition-all hover:bg-white/20 active:scale-95" style={{ color: GOLD }}>-</button>
+            <span className="text-sm font-bold tracking-wider px-2" style={{ color: IVORY, fontFamily: SANS }}>{qty}</span>
+            <button aria-label="Increase quantity" onClick={() => updateQty(p.id, 1)} className="w-7 h-7 rounded-lg flex items-center justify-center text-base font-bold transition-all hover:bg-white/20 active:scale-95" style={{ color: GOLD }}>+</button>
           </div>
         ) : (
           <button aria-label={`Add ${p.name} to cart`}
