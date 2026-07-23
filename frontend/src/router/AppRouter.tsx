@@ -140,14 +140,14 @@ export function AppRouter() {
           <Route path="/checkout/payment" element={<PaymentPage />} />
           <Route path="/checkout/confirm" element={<ConfirmationPage />} />
           
-          <Route path="/auth" element={<AuthPage />} />
-          <Route path="/login" element={<AuthPage />} />
-          
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<ProfilePage />} />
           </Route>
         </Route>
         
+        {/* Standalone full-screen pages */}
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/login" element={<AuthPage />} />
         <Route path="/astrologer" element={<AstrologerDashboard />} />
       </Routes>
     </BrowserRouter>
