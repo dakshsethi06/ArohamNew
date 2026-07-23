@@ -268,7 +268,7 @@ export function AuthPage() {
         }
 
         if (isAstrologerMode) {
-          const astroId = `astro-${Date.now()}`;
+          const astroId = crypto.randomUUID();
           const newAstrologer = {
             id: astroId,
             name: name.trim() || "Acharya " + (phoneDigits.slice(-4) || "Ji"),
@@ -291,24 +291,24 @@ export function AuthPage() {
           } catch (e) {}
 
           try {
-            await supabase.from("astrologers").upsert({
+            const { data, error } = await supabase.from("astrologers").upsert({
               id: newAstrologer.id,
-              full_name: newAstrologer.name,
-              email: email.trim() || null,
-              phone: phoneDigits,
               title: newAstrologer.title,
               experience_years: parseInt(astroExperience) || 5,
               specialties: newAstrologer.specialties,
               languages: newAstrologer.languages,
               rating: 5.0,
-              consultations_count: 0,
               is_online: true,
-              bio: `Certified Vedic Astrologer specializing in ${astroSpecialty}`,
-              avatar_url: newAstrologer.avatar,
-              role: "astrologer"
-            });
+              avatar_url: newAstrologer.avatar
+            }).select();
+
+            if (error) {
+              console.error("Supabase astrologers upsert error:", error);
+            } else {
+              console.log("Supabase astrologer created successfully:", data);
+            }
           } catch (e) {
-            console.warn("Supabase astrologers table insert warning:", e);
+            console.error("Supabase astrologers table insert exception:", e);
           }
 
           setLoading(false);
