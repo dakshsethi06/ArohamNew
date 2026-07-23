@@ -77,6 +77,7 @@ export function AstrologerDashboard() {
   const [activeSession, setActiveSession] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [reply, setReply] = useState("");
+
   const [isChatOnline, setIsChatOnline] = useState(true);
   const [isCallOnline, setIsCallOnline] = useState(true);
   const [filterTab, setFilterTab] = useState<"all" | "active" | "completed">("all");
@@ -95,6 +96,15 @@ export function AstrologerDashboard() {
     bio: "Certified Vedic Astrologer with over 8+ years of experience in Prashna Kundali, Gemology & Vastu remedies. Over 9,500+ consultations guided successfully.",
     avatar: PRESET_AVATARS[0],
     pricePerMin: "20"
+  });
+
+  const [acceptedSessionIds, setAcceptedSessionIds] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem("aroham_accepted_session_ids");
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch (e) {
+      return new Set();
+    }
   });
 
   const getProfileCompletion = () => {
@@ -215,15 +225,6 @@ export function AstrologerDashboard() {
     setShowProfileWizard(false);
   };
 
-  const [acceptedSessionIds, setAcceptedSessionIds] = useState<Set<string>>(() => {
-    try {
-      const stored = localStorage.getItem("aroham_accepted_session_ids");
-      return stored ? new Set(JSON.parse(stored)) : new Set();
-    } catch (e) {
-      return new Set();
-    }
-  });
-
   const acceptSession = async (s: any) => {
     const updatedSet = new Set(acceptedSessionIds);
     updatedSet.add(s.id);
@@ -341,37 +342,38 @@ export function AstrologerDashboard() {
   const completionScore = getProfileCompletion();
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0D0507]" style={{ fontFamily: SANS, color: IVORY }}>
+    <div className="min-h-screen flex flex-col bg-[#FAF6F0]" style={{ fontFamily: SANS, color: "#4A3E31" }}>
       
-      <header className="px-6 py-3.5 bg-[#160B0E] border-b border-amber-900/20 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-40 shadow-2xl">
-        <div className="flex items-center gap-3">
+      <header className="px-6 py-4 border-b border-amber-900/15 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-40 shadow-xl" style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}>
+        <div className="flex items-center gap-3.5">
           <div className="relative">
-            <img src={profile.avatar} alt={profile.name} className="w-11 h-11 rounded-2xl object-cover border-2 border-amber-500/50 shadow-md" />
-            <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-[#160B0E] ${isChatOnline ? "bg-emerald-500 animate-pulse" : "bg-gray-500"}`} />
+            <img src={profile.avatar} alt={profile.name} className="w-12 h-12 rounded-2xl object-cover border-2 border-amber-300 shadow-md" />
+            <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-[#5B1F24] ${isChatOnline ? "bg-emerald-400 animate-pulse" : "bg-gray-400"}`} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-sm sm:text-base font-bold text-white tracking-wide" style={{ fontFamily: SERIF }}>{profile.name}</h1>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+              <h1 className="text-base font-bold text-white tracking-wide" style={{ fontFamily: SERIF }}>{profile.name}</h1>
+              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-400/20 text-amber-200 border border-amber-400/30 flex items-center gap-1">
                 <Award size={10} /> Verified Scholar
               </span>
             </div>
-            <p className="text-[11px] text-amber-200/70">{profile.title} • ₹{profile.pricePerMin}/min</p>
+            <p className="text-xs text-amber-200/80">{profile.title} • ₹{profile.pricePerMin}/min</p>
           </div>
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
-          <div className="px-3.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-1.5">
-            <Wallet size={14} className="text-emerald-400" />
+          
+          <div className="px-3.5 py-2 rounded-xl bg-amber-400/15 border border-amber-400/30 text-amber-200 text-xs font-bold flex items-center gap-1.5 shadow-xs">
+            <Wallet size={14} className="text-amber-300" />
             <span>Today: ₹3,850</span>
           </div>
 
           <button
             onClick={toggleChatOnline}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shadow-xs ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shadow-xs ${
               isChatOnline
-                ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30"
-                : "bg-gray-500/20 text-gray-400 border-gray-500/40 hover:bg-gray-500/30"
+                ? "bg-emerald-600/30 text-emerald-200 border-emerald-400/40 hover:bg-emerald-600/40"
+                : "bg-black/30 text-amber-200/60 border-white/20 hover:bg-black/40"
             }`}
           >
             <MessageSquare size={13} />
@@ -380,10 +382,10 @@ export function AstrologerDashboard() {
 
           <button
             onClick={toggleCallOnline}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shadow-xs ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shadow-xs ${
               isCallOnline
-                ? "bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30"
-                : "bg-gray-500/20 text-gray-400 border-gray-500/40 hover:bg-gray-500/30"
+                ? "bg-amber-400/20 text-amber-200 border-amber-400/40 hover:bg-amber-400/30"
+                : "bg-black/30 text-amber-200/60 border-white/20 hover:bg-black/40"
             }`}
           >
             <PhoneCall size={13} />
@@ -392,7 +394,7 @@ export function AstrologerDashboard() {
 
           <button
             onClick={() => navigate("/consult")}
-            className="px-3 py-1.5 rounded-xl text-xs font-bold border border-white/10 text-amber-100/70 hover:text-white hover:bg-white/5 transition-all"
+            className="px-3.5 py-2 rounded-xl text-xs font-bold border border-white/20 text-amber-100 hover:text-white hover:bg-white/10 transition-all"
           >
             User Directory
           </button>
@@ -401,7 +403,7 @@ export function AstrologerDashboard() {
 
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         
-        <aside className="w-full lg:w-64 bg-[#14090C] border-r border-amber-900/20 p-4 flex lg:flex-col justify-between overflow-x-auto lg:overflow-y-auto shrink-0">
+        <aside className="w-full lg:w-64 bg-[#F5EDE0] border-r border-amber-900/15 p-4 flex lg:flex-col justify-between overflow-x-auto lg:overflow-y-auto shrink-0">
           <div className="space-y-1 flex lg:flex-col gap-1 w-full">
             {[
               { id: "workstation", label: "Workstation & Queue", icon: MessageCircle },
@@ -416,51 +418,52 @@ export function AstrologerDashboard() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as MainTab)}
-                  className={`w-full px-3.5 py-3 rounded-2xl text-xs font-bold flex items-center gap-3 transition-all whitespace-nowrap ${
+                  className={`w-full px-4 py-3 rounded-2xl text-xs font-bold flex items-center gap-3 transition-all whitespace-nowrap ${
                     isActive
-                      ? "bg-gradient-to-r from-[#5B1F24] to-[#7A2A30] text-white border border-amber-500/30 shadow-md"
-                      : "text-amber-100/60 hover:text-white hover:bg-white/5"
+                      ? "text-white shadow-md"
+                      : "text-amber-900/80 hover:text-[#5B1F24] hover:bg-amber-900/10"
                   }`}
+                  style={isActive ? { background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` } : {}}
                 >
-                  <Icon size={16} className={isActive ? "text-amber-400" : "text-amber-100/40"} />
+                  <Icon size={16} className={isActive ? "text-amber-300" : "text-amber-900/60"} />
                   <span>{tab.label}</span>
                 </button>
               );
             })}
           </div>
 
-          <div className="hidden lg:block pt-6 border-t border-white/10 mt-6">
-            <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 text-xs">
-              <p className="text-[11px] font-bold text-amber-300 mb-1">Astrotalk Support</p>
-              <p className="text-[10px] text-amber-100/50">Need assistance? Contact scholar helpdesk 24x7.</p>
+          <div className="hidden lg:block pt-6 border-t border-amber-900/15 mt-6">
+            <div className="p-4 rounded-2xl bg-white/60 border border-amber-900/10 text-xs">
+              <p className="text-xs font-bold text-[#5B1F24] mb-1" style={{ fontFamily: SERIF }}>Aroham Scholar Helpline</p>
+              <p className="text-[11px] text-amber-900/70 leading-relaxed">Dedicated Astrologer support available 24x7 for Vedic consultations.</p>
             </div>
           </div>
         </aside>
 
-        <main className="flex-1 flex flex-col overflow-hidden bg-[#0D0507]">
+        <main className="flex-1 flex flex-col overflow-hidden bg-[#FAF6F0]">
           
           {activeTab === "workstation" && (
             <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
               
-              <div className="w-full md:w-1/3 border-r border-amber-900/20 p-5 bg-[#14090C] flex flex-col justify-between">
+              <div className="w-full md:w-1/3 border-r border-amber-900/15 p-5 bg-[#F7F0E6] flex flex-col justify-between">
                 <div>
-                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
-                    <h2 className="text-xs font-bold text-white tracking-wider uppercase flex items-center gap-2">
-                      <Sparkles size={15} className="text-amber-400" />
-                      <span>Live Request Queue</span>
+                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-amber-900/15">
+                    <h2 className="text-xs font-bold tracking-wider uppercase flex items-center gap-2" style={{ color: MAROON }}>
+                      <Sparkles size={15} className="text-amber-600" />
+                      <span>Live Consultation Queue</span>
                     </h2>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#5B1F24] text-amber-200">
                       {filteredSessions.length} Requests
                     </span>
                   </div>
 
-                  <div className="flex gap-1 mb-4 bg-black/40 p-1 rounded-xl border border-white/10">
+                  <div className="flex gap-1 mb-4 bg-white/70 p-1 rounded-xl border border-amber-900/15 shadow-xs">
                     {(["all", "active", "completed"] as const).map(tab => (
                       <button
                         key={tab}
                         onClick={() => setFilterTab(tab)}
                         className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all ${
-                          filterTab === tab ? "bg-amber-900/60 text-amber-200 shadow-xs" : "text-amber-100/50 hover:text-white"
+                          filterTab === tab ? "bg-[#5B1F24] text-white shadow-xs" : "text-amber-900/70 hover:text-[#5B1F24]"
                         }`}
                       >
                         {tab}
@@ -470,10 +473,10 @@ export function AstrologerDashboard() {
 
                   <div className="space-y-3 max-h-[calc(100vh-320px)] overflow-y-auto pr-1">
                     {filteredSessions.length === 0 ? (
-                      <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center text-xs text-amber-100/60 space-y-2">
-                        <Clock size={24} className="mx-auto text-amber-500/40" />
-                        <p className="font-semibold">No pending consultation requests.</p>
-                        <p className="text-[11px] text-amber-100/40">Users requesting consultations on /consult will appear here live.</p>
+                      <div className="p-6 rounded-2xl bg-white border border-amber-900/10 text-center text-xs text-amber-900/70 space-y-2 shadow-xs">
+                        <Clock size={24} className="mx-auto text-amber-700/50" />
+                        <p className="font-semibold text-[#5B1F24]">No pending requests right now.</p>
+                        <p className="text-[11px] text-amber-900/60">Users requesting consultations on /consult will appear here live.</p>
                       </div>
                     ) : (
                       filteredSessions.map(s => {
@@ -486,37 +489,38 @@ export function AstrologerDashboard() {
                             key={s.id}
                             className={`p-4 rounded-2xl border transition-all duration-300 flex flex-col justify-between gap-3 ${
                               isActive
-                                ? "bg-amber-900/30 border-amber-500/50 shadow-lg ring-1 ring-amber-500/30"
-                                : "bg-white/5 border-white/10 hover:bg-white/10"
+                                ? "bg-[#FFFDF9] border-amber-600/50 shadow-md ring-1 ring-amber-600/30"
+                                : "bg-white border-amber-900/10 hover:border-amber-900/25 shadow-xs"
                             }`}
                           >
                             <div className="flex items-start justify-between">
                               <div>
                                 <div className="flex items-center gap-2 mb-1">
-                                  <span className="font-bold text-xs text-amber-200">Seeker #{s.user_id?.slice(0, 8)}</span>
+                                  <span className="font-bold text-xs text-[#5B1F24]">Seeker #{s.user_id?.slice(0, 8)}</span>
                                   {isPending && (
-                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-amber-500 text-black animate-pulse">
+                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-600 text-white animate-pulse">
                                       Ringing
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-xs text-amber-100/70 font-semibold">{s.topic || "Vedic Kundali Consultation"}</p>
+                                <p className="text-xs text-amber-900/70 font-semibold">{s.topic || "Vedic Kundali Consultation"}</p>
                               </div>
-                              <span className="text-[10px] text-amber-100/50">{new Date(s.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                              <span className="text-[10px] text-amber-900/50">{new Date(s.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                             </div>
 
-                            <div className="flex items-center gap-2 pt-2 border-t border-white/10">
+                            <div className="flex items-center gap-2 pt-2 border-t border-amber-900/10">
                               {!isAccepted ? (
                                 <>
                                   <button
                                     onClick={() => acceptSession(s)}
-                                    className="flex-1 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs transition-all flex items-center justify-center gap-1.5 active:scale-95"
+                                    className="flex-1 py-2 rounded-xl text-xs font-bold text-white shadow-xs transition-all flex items-center justify-center gap-1.5 active:scale-95"
+                                    style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}
                                   >
                                     <Check size={14} /> Accept & Chat
                                   </button>
                                   <button
                                     onClick={() => rejectSession(s)}
-                                    className="px-3 py-2 rounded-xl text-xs font-bold bg-red-900/40 hover:bg-red-900/60 text-red-200 border border-red-500/30 transition-all flex items-center justify-center active:scale-95"
+                                    className="px-3 py-2 rounded-xl text-xs font-bold bg-amber-900/10 hover:bg-amber-900/20 text-amber-900 border border-amber-900/20 transition-all flex items-center justify-center active:scale-95"
                                   >
                                     <X size={14} /> Decline
                                   </button>
@@ -524,7 +528,7 @@ export function AstrologerDashboard() {
                               ) : (
                                 <button
                                   onClick={() => acceptSession(s)}
-                                  className="w-full py-2 rounded-xl text-xs font-bold bg-amber-900/40 hover:bg-amber-900/60 text-amber-200 border border-amber-500/30 transition-all flex items-center justify-center gap-1.5"
+                                  className="w-full py-2 rounded-xl text-xs font-bold bg-amber-900/10 text-[#5B1F24] border border-amber-900/20 hover:bg-amber-900/15 transition-all flex items-center justify-center gap-1.5"
                                 >
                                   <MessageCircle size={13} /> {isActive ? "Currently Active Room" : "Open Consultation Room"}
                                 </button>
@@ -538,44 +542,45 @@ export function AstrologerDashboard() {
                 </div>
               </div>
 
-              <div className="w-full md:w-2/3 p-6 flex flex-col justify-between bg-[#160B0E]">
+              <div className="w-full md:w-2/3 p-6 flex flex-col justify-between bg-[#FFFDF9]">
                 {activeSession ? (
                   <>
-                    <div className="flex justify-between items-center pb-4 border-b border-white/10 mb-4">
+                    <div className="flex justify-between items-center pb-4 border-b border-amber-900/15 mb-4">
                       <div>
                         <div className="flex items-center gap-2">
-                          <h2 className="text-base font-bold text-white" style={{ fontFamily: SERIF }}>Live Room #{activeSession.id?.slice(0, 8)}</h2>
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" /> Real-time Live
+                          <h2 className="text-base font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Live Consultation Room #{activeSession.id?.slice(0, 8)}</h2>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-ping" /> Real-time Live
                           </span>
                         </div>
-                        <p className="text-xs text-amber-200/60 mt-0.5">Topic: {activeSession.topic || "Vedic Horoscope & Sacred Remedies"}</p>
+                        <p className="text-xs text-amber-900/60 mt-0.5">Topic: {activeSession.topic || "Vedic Horoscope & Sacred Remedies"}</p>
                       </div>
 
                       <button
                         onClick={endSession}
-                        className="px-4 py-2 text-xs font-bold rounded-xl bg-red-900/40 text-red-200 border border-red-500/30 hover:bg-red-900/60 active:scale-95 transition-all"
+                        className="px-4 py-2 text-xs font-bold rounded-xl bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 active:scale-95 transition-all"
                       >
                         End Session
                       </button>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto mb-4 p-4 rounded-2xl bg-black/40 border border-white/10 space-y-3 min-h-[300px]">
+                    <div className="flex-1 overflow-y-auto mb-4 p-4 rounded-2xl bg-[#FAF6F0] border border-amber-900/15 space-y-3 min-h-[300px]">
                       {messages.map(m => (
                         <div
                           key={m.id}
                           className={`p-3.5 rounded-2xl max-w-[80%] text-xs leading-relaxed ${
                             m.sender === "astrologer"
-                              ? "ml-auto bg-gradient-to-r from-[#5B1F24] to-[#7A2A30] text-white rounded-tr-xs shadow-md"
-                              : "mr-auto bg-white/10 text-amber-100 border border-white/10 rounded-tl-xs"
+                              ? "ml-auto text-white rounded-tr-xs shadow-md"
+                              : "mr-auto bg-white text-[#4A3E31] border border-amber-900/15 rounded-tl-xs shadow-xs"
                           }`}
+                          style={m.sender === "astrologer" ? { background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` } : {}}
                         >
                           <p className="whitespace-pre-line">{m.text}</p>
                           {m.recommendedProduct && (
-                            <div className="mt-3 p-3 rounded-xl bg-black/50 border border-amber-500/30 text-amber-100 flex items-center gap-3">
-                              <img src={m.recommendedProduct.img} alt={m.recommendedProduct.name} className="w-10 h-10 rounded-lg object-cover border border-amber-500/30" />
+                            <div className="mt-3 p-3 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 text-white flex items-center gap-3">
+                              <img src={m.recommendedProduct.img} alt={m.recommendedProduct.name} className="w-10 h-10 rounded-lg object-cover border border-white/30" />
                               <div className="flex-1 min-w-0">
-                                <p className="text-[9px] font-extrabold uppercase text-amber-400">Recommended Sacred Remedy</p>
+                                <p className="text-[9px] font-extrabold uppercase text-amber-200">Recommended Sacred Remedy</p>
                                 <h4 className="font-bold text-xs truncate text-white">{m.recommendedProduct.name}</h4>
                                 <p className="text-xs font-bold text-amber-300">₹{m.recommendedProduct.price}</p>
                               </div>
@@ -590,15 +595,15 @@ export function AstrologerDashboard() {
                         <button
                           key={idx}
                           onClick={() => sendMessage(resp)}
-                          className="flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 transition-all"
+                          className="flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-amber-900/5 hover:bg-amber-900/10 text-[#5B1F24] border border-amber-900/15 transition-all"
                         >
                           {resp}
                         </button>
                       ))}
                     </div>
 
-                    <div className="mb-3 p-3 rounded-2xl bg-amber-900/20 border border-amber-500/20">
-                      <p className="text-[10px] font-extrabold uppercase text-amber-400 mb-2 flex items-center gap-1">
+                    <div className="mb-3 p-3 rounded-2xl bg-[#F7F0E6] border border-amber-900/15">
+                      <p className="text-[10px] font-extrabold uppercase text-[#5B1F24] mb-2 flex items-center gap-1">
                         <ShoppingBag size={12} /> Recommend Sacred Remedy Item:
                       </p>
                       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -606,7 +611,7 @@ export function AstrologerDashboard() {
                           <button
                             key={prod.slug}
                             onClick={() => sendMessage(`I recommend wearing this sacred item to balance your planetary stars:`, prod)}
-                            className="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 border border-white/10 text-white flex items-center gap-2 transition-all active:scale-95"
+                            className="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-amber-50 border border-amber-900/15 text-[#4A3E31] flex items-center gap-2 transition-all active:scale-95 shadow-xs"
                           >
                             <img src={prod.img} alt={prod.name} className="w-5 h-5 rounded-md object-cover" />
                             <span>{prod.name} (₹{prod.price})</span>
@@ -622,7 +627,7 @@ export function AstrologerDashboard() {
                         onChange={e => setReply(e.target.value)}
                         onKeyDown={e => e.key === "Enter" && sendMessage()}
                         placeholder="Type your astrological remedy or guidance..."
-                        className="flex-1 h-12 px-4 rounded-xl text-xs bg-white/10 border border-white/15 text-white outline-none focus:border-amber-400 transition-all"
+                        className="flex-1 h-12 px-4 rounded-xl text-xs bg-white border border-amber-900/20 text-[#4A3E31] outline-none focus:border-[#5B1F24] transition-all shadow-xs"
                       />
                       <button
                         onClick={() => sendMessage()}
@@ -636,12 +641,12 @@ export function AstrologerDashboard() {
                     </div>
                   </>
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-amber-100/40 space-y-4 p-8 text-center">
-                    <div className="p-5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                  <div className="flex flex-col items-center justify-center h-full text-amber-900/40 space-y-4 p-8 text-center">
+                    <div className="p-5 rounded-full bg-amber-900/10 border border-amber-900/20 text-[#5B1F24]">
                       <MessageCircle size={48} />
                     </div>
-                    <h3 className="text-lg font-bold text-white" style={{ fontFamily: SERIF }}>Astrotalk Workstation Ready</h3>
-                    <p className="text-xs max-w-sm text-amber-100/60 leading-relaxed">
+                    <h3 className="text-lg font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Astrologer Workstation Ready</h3>
+                    <p className="text-xs max-w-sm text-amber-900/60 leading-relaxed">
                       Select an incoming consultation request from the left queue to accept and begin live Vedic guidance.
                     </p>
                   </div>
@@ -654,43 +659,43 @@ export function AstrologerDashboard() {
             <div className="p-6 sm:p-8 space-y-6 max-w-5xl mx-auto w-full overflow-y-auto">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-white" style={{ fontFamily: SERIF }}>Earnings & Wallet Dashboard</h2>
-                  <p className="text-xs text-amber-200/70">Track your daily, monthly, and lifetime consultation payouts.</p>
+                  <h2 className="text-xl font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Earnings & Wallet Dashboard</h2>
+                  <p className="text-xs text-amber-900/70">Track your daily, monthly, and lifetime consultation payouts.</p>
                 </div>
                 <button
                   onClick={() => alert("Withdrawal request initiated via UPI / Netbanking. Settlement within 24 hours.")}
-                  className="px-5 py-3 rounded-2xl font-bold text-xs bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg active:scale-95 transition-all"
+                  className="px-5 py-3 rounded-2xl font-bold text-xs bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg active:scale-95 transition-all"
                 >
                   Withdraw Payout (₹3,850)
                 </button>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-5 rounded-3xl bg-gradient-to-br from-emerald-900/40 to-emerald-950/60 border border-emerald-500/30">
-                  <p className="text-xs text-emerald-300 font-bold uppercase tracking-wider mb-1">Today's Earnings</p>
-                  <h3 className="text-2xl font-black text-emerald-400">₹3,850</h3>
-                  <p className="text-[11px] text-emerald-200/60 mt-1">18 Live Consultation Mins</p>
+                <div className="p-5 rounded-3xl bg-white border border-emerald-200 shadow-xs">
+                  <p className="text-xs text-emerald-800 font-bold uppercase tracking-wider mb-1">Today's Earnings</p>
+                  <h3 className="text-2xl font-black text-emerald-600">₹3,850</h3>
+                  <p className="text-[11px] text-amber-900/60 mt-1">18 Live Consultation Mins</p>
                 </div>
 
-                <div className="p-5 rounded-3xl bg-gradient-to-br from-amber-900/40 to-amber-950/60 border border-amber-500/30">
-                  <p className="text-xs text-amber-300 font-bold uppercase tracking-wider mb-1">This Month (July)</p>
-                  <h3 className="text-2xl font-black text-amber-300">₹84,200</h3>
-                  <p className="text-[11px] text-amber-200/60 mt-1">412 Total Consultations</p>
+                <div className="p-5 rounded-3xl bg-white border border-amber-900/15 shadow-xs">
+                  <p className="text-xs text-[#5B1F24] font-bold uppercase tracking-wider mb-1">This Month (July)</p>
+                  <h3 className="text-2xl font-black text-[#5B1F24]">₹84,200</h3>
+                  <p className="text-[11px] text-amber-900/60 mt-1">412 Total Consultations</p>
                 </div>
 
-                <div className="p-5 rounded-3xl bg-gradient-to-br from-purple-900/40 to-purple-950/60 border border-purple-500/30">
-                  <p className="text-xs text-purple-300 font-bold uppercase tracking-wider mb-1">Lifetime Payouts</p>
-                  <h3 className="text-2xl font-black text-purple-300">₹4,12,000</h3>
-                  <p className="text-[11px] text-purple-200/60 mt-1">Direct Bank Transfers</p>
+                <div className="p-5 rounded-3xl bg-white border border-purple-200 shadow-xs">
+                  <p className="text-xs text-purple-800 font-bold uppercase tracking-wider mb-1">Lifetime Payouts</p>
+                  <h3 className="text-2xl font-black text-purple-700">₹4,12,000</h3>
+                  <p className="text-[11px] text-amber-900/60 mt-1">Direct Bank Transfers</p>
                 </div>
               </div>
 
-              <div className="bg-[#14090C] border border-amber-900/20 rounded-3xl p-6">
-                <h3 className="text-sm font-bold text-white mb-4">Recent Session Earnings</h3>
+              <div className="bg-white border border-amber-900/15 rounded-3xl p-6 shadow-xs">
+                <h3 className="text-sm font-bold text-[#5B1F24] mb-4" style={{ fontFamily: SERIF }}>Recent Session Earnings</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-white/10 text-amber-200/60 text-[11px]">
+                      <tr className="border-b border-amber-900/10 text-amber-900/60 text-[11px]">
                         <th className="pb-3 font-semibold">Transaction ID</th>
                         <th className="pb-3 font-semibold">Seeker Name</th>
                         <th className="pb-3 font-semibold">Session Type</th>
@@ -699,16 +704,16 @@ export function AstrologerDashboard() {
                         <th className="pb-3 font-semibold">Status</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5">
+                    <tbody className="divide-y divide-amber-900/5">
                       {MOCK_TRANSACTIONS.map(t => (
-                        <tr key={t.id} className="hover:bg-white/5">
-                          <td className="py-3.5 font-mono text-amber-300">{t.id}</td>
-                          <td className="py-3.5 font-bold text-white">{t.user}</td>
-                          <td className="py-3.5 text-amber-100/70">{t.type}</td>
-                          <td className="py-3.5 text-amber-100/70">{t.duration}</td>
-                          <td className="py-3.5 font-bold text-emerald-400">{t.amount}</td>
+                        <tr key={t.id} className="hover:bg-amber-50/50">
+                          <td className="py-3.5 font-mono text-[#5B1F24] font-bold">{t.id}</td>
+                          <td className="py-3.5 font-bold text-[#4A3E31]">{t.user}</td>
+                          <td className="py-3.5 text-amber-900/70">{t.type}</td>
+                          <td className="py-3.5 text-amber-900/70">{t.duration}</td>
+                          <td className="py-3.5 font-bold text-emerald-600">{t.amount}</td>
                           <td className="py-3.5">
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                               {t.status}
                             </span>
                           </td>
@@ -725,28 +730,28 @@ export function AstrologerDashboard() {
             <div className="p-6 sm:p-8 space-y-6 max-w-5xl mx-auto w-full overflow-y-auto">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-white" style={{ fontFamily: SERIF }}>Customer Reviews & Ratings</h2>
-                  <p className="text-xs text-amber-200/70">Seeker feedback and ratings from live Vedic consultations.</p>
+                  <h2 className="text-xl font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Customer Reviews & Ratings</h2>
+                  <p className="text-xs text-amber-900/70">Seeker feedback and ratings from live Vedic consultations.</p>
                 </div>
-                <div className="flex items-center gap-2 bg-amber-500/10 px-4 py-2 rounded-2xl border border-amber-500/30 text-amber-300 font-bold text-sm">
-                  <Star size={18} fill="#C8A044" />
+                <div className="flex items-center gap-2 bg-[#5B1F24] px-4 py-2 rounded-2xl text-amber-200 font-bold text-sm shadow-md">
+                  <Star size={18} fill="#C8A044" stroke="none" />
                   <span>4.95 ★ Rating (412 Reviews)</span>
                 </div>
               </div>
 
               <div className="space-y-4">
                 {MOCK_REVIEWS.map(r => (
-                  <div key={r.id} className="p-5 rounded-3xl bg-[#14090C] border border-amber-900/20 space-y-2">
+                  <div key={r.id} className="p-5 rounded-3xl bg-white border border-amber-900/15 space-y-2 shadow-xs">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-white">{r.user}</span>
-                        <span className="flex text-amber-400 text-xs">
+                        <span className="font-bold text-sm text-[#5B1F24]">{r.user}</span>
+                        <span className="flex text-amber-500 text-xs">
                           {"★".repeat(r.rating)}
                         </span>
                       </div>
-                      <span className="text-xs text-amber-100/40">{r.date}</span>
+                      <span className="text-xs text-amber-900/50">{r.date}</span>
                     </div>
-                    <p className="text-xs text-amber-100/80 leading-relaxed font-medium">"{r.text}"</p>
+                    <p className="text-xs text-amber-900/80 leading-relaxed font-medium">"{r.text}"</p>
                   </div>
                 ))}
               </div>
@@ -756,21 +761,21 @@ export function AstrologerDashboard() {
           {activeTab === "remedies" && (
             <div className="p-6 sm:p-8 space-y-6 max-w-5xl mx-auto w-full overflow-y-auto">
               <div>
-                <h2 className="text-xl font-bold text-white" style={{ fontFamily: SERIF }}>Sacred Remedies Catalog</h2>
-                <p className="text-xs text-amber-200/70">These temple-energized remedies can be recommended during live chats.</p>
+                <h2 className="text-xl font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Sacred Remedies Catalog</h2>
+                <p className="text-xs text-amber-900/70">These temple-energized remedies can be recommended during live chats.</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {REMEDY_PRODUCTS.map(prod => (
-                  <div key={prod.slug} className="p-4 rounded-3xl bg-[#14090C] border border-amber-900/20 space-y-3 flex flex-col justify-between">
+                  <div key={prod.slug} className="p-4 rounded-3xl bg-white border border-amber-900/15 space-y-3 flex flex-col justify-between shadow-xs">
                     <div>
-                      <img src={prod.img} alt={prod.name} className="w-full h-32 rounded-2xl object-cover border border-amber-900/20 mb-3" />
-                      <h4 className="font-bold text-xs text-white">{prod.name}</h4>
-                      <p className="text-xs font-bold text-amber-400 mt-1">₹{prod.price}</p>
+                      <img src={prod.img} alt={prod.name} className="w-full h-32 rounded-2xl object-cover border border-amber-900/10 mb-3" />
+                      <h4 className="font-bold text-xs text-[#5B1F24]">{prod.name}</h4>
+                      <p className="text-xs font-bold text-amber-700 mt-1">₹{prod.price}</p>
                     </div>
                     <button
                       onClick={() => alert(`Item "${prod.name}" ready to recommend during chat.`)}
-                      className="w-full py-2 rounded-xl text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-all"
+                      className="w-full py-2 rounded-xl text-xs font-bold bg-amber-900/10 hover:bg-amber-900/15 text-[#5B1F24] border border-amber-900/15 transition-all"
                     >
                       Active Remedy Item
                     </button>
@@ -784,67 +789,68 @@ export function AstrologerDashboard() {
             <div className="p-6 sm:p-8 space-y-6 max-w-3xl mx-auto w-full overflow-y-auto">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-white" style={{ fontFamily: SERIF }}>Astrologer Profile Settings</h2>
-                  <p className="text-xs text-amber-200/70">Update your qualifications, bio, and per-minute fee.</p>
+                  <h2 className="text-xl font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Astrologer Profile Settings</h2>
+                  <p className="text-xs text-amber-900/70">Update your qualifications, bio, and per-minute fee.</p>
                 </div>
                 <button
                   onClick={saveProfile}
-                  className="px-5 py-2.5 rounded-2xl text-xs font-bold bg-gradient-to-r from-amber-400 to-amber-500 text-black shadow-lg active:scale-95 transition-all"
+                  className="px-5 py-2.5 rounded-2xl text-xs font-bold text-white shadow-lg active:scale-95 transition-all"
+                  style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}
                 >
                   Save Profile Changes
                 </button>
               </div>
 
-              <div className="p-6 rounded-3xl bg-[#14090C] border border-amber-900/20 space-y-4">
+              <div className="p-6 rounded-3xl bg-white border border-amber-900/15 space-y-4 shadow-xs">
                 <div>
-                  <label className="block text-xs font-bold text-amber-300 mb-1">Full Name</label>
+                  <label className="block text-xs font-bold text-[#5B1F24] mb-1">Full Name</label>
                   <input
                     type="text"
                     value={profile.name}
                     onChange={e => setProfile(p => ({ ...p, name: e.target.value }))}
-                    className="w-full h-11 px-3.5 rounded-xl text-xs bg-white/10 border border-white/15 text-white outline-none focus:border-amber-400"
+                    className="w-full h-11 px-3.5 rounded-xl text-xs bg-amber-50/50 border border-amber-900/15 text-[#4A3E31] outline-none focus:border-[#5B1F24]"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-amber-300 mb-1">Per-Minute Rate (₹/min)</label>
+                    <label className="block text-xs font-bold text-[#5B1F24] mb-1">Per-Minute Rate (₹/min)</label>
                     <input
                       type="number"
                       value={profile.pricePerMin}
                       onChange={e => setProfile(p => ({ ...p, pricePerMin: e.target.value }))}
-                      className="w-full h-11 px-3.5 rounded-xl text-xs bg-white/10 border border-white/15 text-white outline-none focus:border-amber-400 font-bold text-emerald-400"
+                      className="w-full h-11 px-3.5 rounded-xl text-xs bg-amber-50/50 border border-amber-900/15 text-emerald-700 font-bold outline-none focus:border-[#5B1F24]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-amber-300 mb-1">Experience (Years)</label>
+                    <label className="block text-xs font-bold text-[#5B1F24] mb-1">Experience (Years)</label>
                     <input
                       type="number"
                       value={profile.experience}
                       onChange={e => setProfile(p => ({ ...p, experience: e.target.value }))}
-                      className="w-full h-11 px-3.5 rounded-xl text-xs bg-white/10 border border-white/15 text-white outline-none focus:border-amber-400"
+                      className="w-full h-11 px-3.5 rounded-xl text-xs bg-amber-50/50 border border-amber-900/15 text-[#4A3E31] outline-none focus:border-[#5B1F24]"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-amber-300 mb-1">Title Badge</label>
+                  <label className="block text-xs font-bold text-[#5B1F24] mb-1">Title Badge</label>
                   <input
                     type="text"
                     value={profile.title}
                     onChange={e => setProfile(p => ({ ...p, title: e.target.value }))}
-                    className="w-full h-11 px-3.5 rounded-xl text-xs bg-white/10 border border-white/15 text-white outline-none focus:border-amber-400"
+                    className="w-full h-11 px-3.5 rounded-xl text-xs bg-amber-50/50 border border-amber-900/15 text-[#4A3E31] outline-none focus:border-[#5B1F24]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-amber-300 mb-1">Bio & Vedic Practice Summary</label>
+                  <label className="block text-xs font-bold text-[#5B1F24] mb-1">Bio & Vedic Practice Summary</label>
                   <textarea
                     rows={4}
                     value={profile.bio}
                     onChange={e => setProfile(p => ({ ...p, bio: e.target.value }))}
-                    className="w-full p-3.5 rounded-xl text-xs bg-white/10 border border-white/15 text-white outline-none focus:border-amber-400 leading-relaxed"
+                    className="w-full p-3.5 rounded-xl text-xs bg-amber-50/50 border border-amber-900/15 text-[#4A3E31] outline-none focus:border-[#5B1F24] leading-relaxed"
                   />
                 </div>
               </div>
