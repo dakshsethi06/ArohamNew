@@ -245,6 +245,7 @@ export function ProfilePage() {
     if (!addrForm.phone.trim()) missing.push("Phone Number");
     if (!addrForm.pin.trim()) missing.push("PIN Code");
     if (!addrForm.house.trim()) missing.push("House / Flat No.");
+    if (!addrForm.street.trim()) missing.push("Street Address");
     if (!addrForm.city.trim()) missing.push("City");
 
     if (missing.length > 0) {
@@ -958,7 +959,7 @@ export function ProfilePage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold mb-1 text-gray-600">Street Address (Optional)</label>
+                  <label className="block text-xs font-semibold mb-1 text-gray-600">Street Address *</label>
                   <input type="text" value={addrForm.street} onChange={e => setAddrForm(p => ({ ...p, street: e.target.value }))}
                     className="w-full px-4 py-2.5 rounded-xl text-sm outline-none border border-black/15 bg-[#FAF7F2]" />
                 </div>
