@@ -1,10 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Outlet, useLocation, Navigate, useNavigationType } from "react-router";
 import { Nav } from "@/components/layout/Nav";
 import { Footer } from "@/components/layout/Footer";
 import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
 import { CartSidebar } from "@/components/cart/CartSidebar";
 import { AuthPage } from "@/components/auth/AuthPage";
+import { ArohamLogoLoader } from "@/components/layout/ArohamLogoLoader";
 import { HomePage } from "@/pages/HomePage";
 import { ShopPage } from "@/pages/ShopPage";
 import { ProductDetailPage } from "@/pages/ProductDetailPage";
@@ -49,15 +50,59 @@ function ScrollManager() {
 function MainLayout() {
   const { showCart } = useCart();
   const { showAuth } = useAuth();
+  const location = useLocation();
+
+  const [isRouteLoading, setIsRouteLoading] = useState(false);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  // Monitor network status for slow internet / offline
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  // Trigger smooth sacred logo transition on route change
+  useEffect(() => {
+    setIsRouteLoading(true);
+    const timer = setTimeout(() => {
+      setIsRouteLoading(false);
+    }, 280);
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
+
   return (
-    <>
+    <div className="min-h-screen flex flex-col justify-between relative overflow-x-hidden">
       <Nav />
       {showCart && <CartSidebar />}
       {showAuth && <AuthPage />}
-      <Outlet />
+      
+      {/* Slow network / Offline loader */}
+      {isOffline && (
+        <ArohamLogoLoader text="Connecting to Sacred Database... Please check internet connection" fullScreen={true} />
+      )}
+
+      {/* Route transition loader */}
+      {isRouteLoading && !isOffline && (
+        <div className="fixed top-0 left-0 right-0 z-[9999] h-1 overflow-hidden pointer-events-none">
+          <div className="h-full bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 animate-pulse" />
+        </div>
+      )}
+
+      {/* Main page content with smooth fade-in transition */}
+      <main key={location.pathname + location.search} className="page-transition-enter flex-1 w-full">
+        <Outlet />
+      </main>
+
       <Footer />
       <WhatsAppButton />
-    </>
+    </div>
   );
 }
 

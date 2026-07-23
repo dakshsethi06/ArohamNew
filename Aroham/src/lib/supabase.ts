@@ -5,4 +5,11 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://lzzdfsphevmzbk
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "sb_publishable_hXI5tCwU5jA3BQtdLxuXoQ_L69CcRaZ";
 
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storageKey: "aroham_supabase_auth",
+  },
+});

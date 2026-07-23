@@ -11,7 +11,7 @@ import { ArohamProduct } from "@/types/product";
 
 export function ShopPage() {
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { items, addToCart, updateQty } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const [searchParams] = useSearchParams();
   const titleParam = searchParams.get("title") || searchParams.get("collection") || "";
@@ -325,30 +325,34 @@ export function ShopPage() {
                             )}
                           </div>
 
-                          <button
-                            aria-label={`Add ${p.name} to cart`}
-                            onClick={e => {
-                              e.stopPropagation();
-                              addToCart({
-                                id: p.id,
-                                name: p.name,
-                                subtitle: p.subtitle,
-                                price: p.price,
-                                original: p.original,
-                                rating: p.rating,
-                                reviews: p.reviews,
-                                img: p.img,
-                                category: p.category,
-                                purpose: p.purpose,
-                                badges: p.badges,
-                                slug: p.slug
-                              });
-                            }}
-                            className="flex-shrink-0 px-2.5 py-1.5 rounded-xl text-[9px] sm:text-xs font-bold tracking-wide transition-all hover:opacity-90 active:scale-95 flex items-center justify-center shadow-sm uppercase whitespace-nowrap"
-                            style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}
-                          >
-                            <span>ADD TO CART</span>
-                          </button>
+                          {(() => {
+                            const itemInCart = items.find(i => i.product.id === p.id);
+                            const cartQty = itemInCart ? itemInCart.qty : 0;
+
+                            if (cartQty > 0) {
+                              return (
+                                <div onClick={e => e.stopPropagation()} className="flex-shrink-0 px-2 py-1 rounded-xl flex items-center gap-1.5 font-bold text-xs shadow-sm" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
+                                  <button aria-label="Decrease quantity" onClick={() => updateQty(p.id, -1)} className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center text-xs font-bold transition-all hover:bg-white/20 active:scale-95" style={{ color: GOLD }}>-</button>
+                                  <span className="text-[10px] sm:text-xs font-bold" style={{ color: IVORY, fontFamily: SANS }}>{cartQty}</span>
+                                  <button aria-label="Increase quantity" onClick={() => updateQty(p.id, 1)} className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center text-xs font-bold transition-all hover:bg-white/20 active:scale-95" style={{ color: GOLD }}>+</button>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <button
+                                aria-label={`Add ${p.name} to cart`}
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  addToCart(p, 1, false);
+                                }}
+                                className="flex-shrink-0 px-2.5 py-1.5 rounded-xl text-[9px] sm:text-xs font-bold tracking-wide transition-all hover:opacity-90 active:scale-95 flex items-center justify-center shadow-sm uppercase whitespace-nowrap"
+                                style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}
+                              >
+                                <span>ADD TO CART</span>
+                              </button>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>

@@ -4,6 +4,7 @@ import { Star, Heart, ShoppingCart } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
 import { ArohamProduct } from "@/types/product";
 import { useWishlist } from "@/context/WishlistContext";
+import { useCart } from "@/context/CartContext";
 
 export interface ProductCardProps {
   product: ArohamProduct;
@@ -17,7 +18,11 @@ export interface ProductCardProps {
 export function ProductCard({ product: p, onProductClick, onAddToCart, wishKey = "", wished: propWished, onToggleWish }: ProductCardProps) {
   const navigate = useNavigate();
   const { toggleWishlist, isInWishlist } = useWishlist();
+  const { items, addToCart, updateQty } = useCart();
+
   const isItemWished = propWished !== undefined ? propWished : isInWishlist(p.id);
+  const cartItem = items.find(item => item.product.id === p.id);
+  const qty = cartItem ? cartItem.qty : 0;
 
   const handleWishClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -73,9 +78,15 @@ export function ProductCard({ product: p, onProductClick, onAddToCart, wishKey =
             </span>
           )}
         </div>
-        {onAddToCart && (
+        {qty > 0 ? (
+          <div onClick={e => e.stopPropagation()} className="w-full py-1 px-2 rounded-xl flex items-center justify-between font-bold text-xs shadow-sm mt-0.5" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
+            <button aria-label="Decrease quantity" onClick={() => updateQty(p.id, -1)} className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold transition-all hover:bg-white/20 active:scale-95" style={{ color: GOLD }}>-</button>
+            <span className="text-xs font-bold tracking-wide" style={{ color: IVORY, fontFamily: SANS }}>{qty} in Cart</span>
+            <button aria-label="Increase quantity" onClick={() => updateQty(p.id, 1)} className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold transition-all hover:bg-white/20 active:scale-95" style={{ color: GOLD }}>+</button>
+          </div>
+        ) : (
           <button aria-label={`Add ${p.name} to cart`}
-            onClick={e => { e.stopPropagation(); onAddToCart(p); }}
+            onClick={e => { e.stopPropagation(); if (onAddToCart) onAddToCart(p); else addToCart(p, 1, false); }}
             className="w-full py-2 rounded-xl flex items-center justify-center text-[11px] font-bold tracking-wide transition-all hover:opacity-90 active:scale-95 shadow-sm uppercase mt-0.5"
             style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY, border: "none", cursor: "pointer", fontFamily: SANS }}>
             <span>Add to Cart</span>

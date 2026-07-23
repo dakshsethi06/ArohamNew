@@ -55,57 +55,127 @@ export function ShippingPage() {
   };
 
   // Pre-fill phone from user profile & load persistent saved address
+  // Pre-fill phone from user profile & load persistent saved addresses
   useEffect(() => {
-    let localAddrs: any[] = [];
-    try {
-      const savedForm = localStorage.getItem("aroham_saved_shipping_form");
-      if (savedForm) {
-        const parsed = JSON.parse(savedForm);
-        setForm(prev => ({ ...prev, ...parsed }));
-        if (parsed.pin) fetchEstimate(parsed.pin);
-      }
-      const savedList = localStorage.getItem("aroham_saved_addresses_list");
-      if (savedList) {
-        const parsedList = JSON.parse(savedList);
-        if (Array.isArray(parsedList) && parsedList.length > 0) {
-          localAddrs = parsedList;
-          setSavedAddresses(parsedList);
-          setSelectedAddr(parsedList[0].id);
-          setShowForm(false);
-          parsedList.forEach((a: any) => {
-            const p = String(a.pincode || a.pin || "");
-            if (p) fetchEstimate(p);
+    const loadAddresses = async () => {
+      let localAddrs: any[] = [];
+      const userPhone = user?.user_metadata?.phone ? String(user.user_metadata.phone).replace(/\D/g, "").slice(-10) : "";
+      const userEmail = user?.email || "";
+
+      // 1. Read pre-filled shipping form
+      try {
+        const savedForm = localStorage.getItem("aroham_saved_shipping_form");
+        if (savedForm) {
+          const parsed = JSON.parse(savedForm);
+          setForm(prev => ({ ...prev, ...parsed }));
+          if (parsed.pin) fetchEstimate(parsed.pin);
+        }
+      } catch (e) {}
+
+      // 2. Read local cache
+      try {
+        if (user?.id) {
+          const uStr = localStorage.getItem(`aroham_user_addresses_${user.id}`);
+          if (uStr) {
+            const parsed = JSON.parse(uStr);
+            if (Array.isArray(parsed) && parsed.length > 0) localAddrs = parsed;
+          }
+        }
+        if (localAddrs.length === 0) {
+          const gStr = localStorage.getItem("aroham_saved_addresses_list");
+          if (gStr) {
+            const parsed = JSON.parse(gStr);
+            if (Array.isArray(parsed) && parsed.length > 0) localAddrs = parsed;
+          }
+        }
+      } catch (e) {}
+
+      let combined: any[] = [...localAddrs];
+
+      // 3. Fetch from Supabase addresses table
+      try {
+        const { data: dbAddrs } = await supabase.from("addresses").select("*");
+        if (dbAddrs && dbAddrs.length > 0) {
+          dbAddrs.forEach((a: any) => {
+            const aPhone = String(a.phone || "").replace(/\D/g, "").slice(-10);
+            const aEmail = String(a.email || "").trim().toLowerCase();
+            const matches = (user?.id && a.user_id === user.id) ||
+                            (userPhone && aPhone && aPhone === userPhone) ||
+                            (userEmail && aEmail && aEmail === userEmail.toLowerCase());
+
+            if (matches) {
+              const fullAddr = a.address || a.line1 || "";
+              if (!combined.some(existing => String(existing.id) === String(a.id) || (existing.address === fullAddr && existing.pincode === a.pincode))) {
+                combined.push(a);
+              }
+              if (user?.id && (!a.user_id || a.user_id !== user.id)) {
+                Promise.resolve(supabase.from("addresses").update({ user_id: user.id }).eq("id", a.id)).catch(() => {});
+              }
+            }
           });
         }
-      }
-    } catch (e) {}
+      } catch (e) {}
 
-    if (user?.id) {
-      Promise.resolve(supabase.from("addresses").select("*").eq("user_id", user.id))
-        .then(({ data }) => {
-          if (Array.isArray(data) && data.length > 0) {
-            setSavedAddresses(data);
-            localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(data));
-            setSelectedAddr(data[0].id);
-            setShowForm(false);
-            data.forEach((a: any) => {
-              const p = String(a.pincode || a.pin || "");
-              if (p) fetchEstimate(p);
-            });
-          } else if (localAddrs.length === 0) {
-            setShowForm(true);
-          }
-        })
-        .catch(() => {
-          if (localAddrs.length === 0) {
-            setShowForm(true);
-          }
+      // 4. Extract addresses from past orders (guarantees order shipping addresses are never lost)
+      try {
+        const { data: dbOrders } = await supabase.from("orders").select("*");
+        if (dbOrders && dbOrders.length > 0) {
+          dbOrders.forEach((o: any) => {
+            const sa = o.shipping_address || o.address;
+            if (sa && (sa.address || sa.line1 || sa.house)) {
+              const saPhone = String(sa.phone || o.phone || "").replace(/\D/g, "").slice(-10);
+              const saEmail = String(sa.email || o.email || "").trim().toLowerCase();
+              const matches = (user?.id && o.user_id === user.id) ||
+                              (userPhone && saPhone && saPhone === userPhone) ||
+                              (userEmail && saEmail && saEmail === userEmail.toLowerCase());
+
+              if (matches) {
+                const addrText = sa.address || sa.line1 || `${sa.house || ''}, ${sa.street || ''}`.trim();
+                const pinCode = sa.pincode || sa.pin || "";
+                if (addrText && !combined.some(existing => (existing.address || existing.line1) === addrText)) {
+                  combined.push({
+                    id: `order-addr-${o.id}`,
+                    user_id: user?.id || null,
+                    name: sa.full_name || sa.name || "Devotee",
+                    phone: saPhone || userPhone,
+                    email: saEmail || userEmail,
+                    address: addrText,
+                    line1: addrText,
+                    house: sa.house || "",
+                    street: sa.street || "",
+                    city: sa.city || "",
+                    state: sa.state || "",
+                    pincode: pinCode,
+                    pin: pinCode,
+                    address_type: sa.address_type || sa.addressType || "Home"
+                  });
+                }
+              }
+            }
+          });
+        }
+      } catch (e) {}
+
+      if (combined.length > 0) {
+        setSavedAddresses(combined);
+        setSelectedAddr(combined[0].id);
+        setShowForm(false);
+        combined.forEach((a: any) => {
+          const p = String(a.pincode || a.pin || "");
+          if (p) fetchEstimate(p);
         });
-    } else {
-      if (localAddrs.length === 0) {
+
+        // Persist combined addresses in local storage
+        try {
+          if (user?.id) localStorage.setItem(`aroham_user_addresses_${user.id}`, JSON.stringify(combined));
+          localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(combined));
+        } catch (e) {}
+      } else {
         setShowForm(true);
       }
-    }
+    };
+
+    loadAddresses();
 
     if (user?.user_metadata?.phone) {
       const userPhone = String(user.user_metadata.phone).replace(/\D/g, "");
@@ -213,8 +283,7 @@ export function ShippingPage() {
           address: `${form.house}, ${form.street}${form.landmark ? ", " + form.landmark : ""}`.trim(),
           city: form.city,
           state: form.state,
-          pincode: form.pin,
-          address_type: form.addressType
+          pincode: form.pin
         })).catch(err => console.warn("Supabase address save warning:", err));
       }
 
@@ -596,7 +665,7 @@ export function ShippingPage() {
             )}
 
             {(showForm || savedAddresses.length === 0) && (
-              <div className="rounded-3xl overflow-hidden mt-4" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
+              <div className="rounded-3xl overflow-hidden mt-0" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 2px 20px rgba(91,31,36,0.04)" }}>
                 <div className="px-4 sm:px-6 pt-5 pb-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}>
                   <h2 className="text-base sm:text-lg font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>{editingAddrId ? "Edit Address" : "New Address"}</h2>
                   {savedAddresses.length > 0 && (

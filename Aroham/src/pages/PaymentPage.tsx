@@ -185,20 +185,40 @@ export function PaymentPage() {
                 shipping_address: shippingAddr || null
               };
 
+              // 1. Insert to Supabase orders DB (clean UUID and foreign key payload)
+              try {
+                const sbPayload: any = {
+                  amount: Math.round(total * 100),
+                  status: "Processing",
+                  address: shippingAddr || null,
+                  shipping_address: shippingAddr || null
+                };
+                if (user?.id) {
+                  sbPayload.user_id = user.id;
+                }
+                await Promise.resolve(
+                  supabase.from("orders").insert(sbPayload)
+                ).catch((err) => console.warn("Supabase order insert warning:", err));
+              } catch (e) {}
+
+              // 2. Save to user localStorage
               if (user?.id) {
                 try {
-                  await Promise.resolve(
-                    supabase.from("orders").insert(orderObj)
-                  ).catch(() => {});
+                  const uKey = `aroham_user_orders_${user.id}`;
+                  const uStr = localStorage.getItem(uKey);
+                  const uArr = uStr ? JSON.parse(uStr) : [];
+                  const uUpdated = [orderObj, ...uArr.filter((o: any) => String(o.id) !== String(orderId))];
+                  localStorage.setItem(uKey, JSON.stringify(uUpdated));
                 } catch (e) {}
               }
 
+              // 3. Always save to guest orders fallback as backup
               try {
-                const key = user?.id ? `aroham_user_orders_${user.id}` : "aroham_guest_orders";
-                const existingStr = localStorage.getItem(key);
-                const existing = existingStr ? JSON.parse(existingStr) : [];
-                const updated = [orderObj, ...existing.filter((o: any) => String(o.id) !== String(orderId))];
-                localStorage.setItem(key, JSON.stringify(updated));
+                const gKey = "aroham_guest_orders";
+                const gStr = localStorage.getItem(gKey);
+                const gArr = gStr ? JSON.parse(gStr) : [];
+                const gUpdated = [orderObj, ...gArr.filter((o: any) => String(o.id) !== String(orderId))];
+                localStorage.setItem(gKey, JSON.stringify(gUpdated));
               } catch (e) {}
             };
 

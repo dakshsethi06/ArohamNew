@@ -110,7 +110,7 @@ export function Nav() {
               {cartCount > 0 && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-white text-[10px] flex items-center justify-center font-semibold" style={{ background: GOLD }}>{cartCount}</span>}
             </button>
             {isLoggedIn ? (
-              <button onClick={() => navigate("/profile")}
+              <button onClick={() => navigate("/profile?tab=profile")}
                 className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all hover:opacity-90 hover:scale-105"
                 style={{ background: `linear-gradient(135deg,${MAROON},${SAFFRON})`, color: IVORY }}>
                 <User size={16} />
@@ -173,7 +173,7 @@ export function Nav() {
               <span>Wishlist</span>
             </button>
             {isLoggedIn ? (
-              <button onClick={() => { navigate("/profile"); setOpen(false); }} className="mt-2 py-3 rounded-full text-sm font-medium flex items-center justify-center gap-2" style={{ background: MAROON, color: IVORY }}><User size={15} />My Profile</button>
+              <button onClick={() => { navigate("/profile?tab=profile"); setOpen(false); }} className="mt-2 py-3 rounded-full text-sm font-medium flex items-center justify-center gap-2" style={{ background: MAROON, color: IVORY }}><User size={15} />My Profile</button>
             ) : (
               <button onClick={() => { openAuth(); setOpen(false); }} className="mt-2 py-3 rounded-full text-sm font-medium" style={{ background: MAROON, color: IVORY }}>Sign In</button>
             )}

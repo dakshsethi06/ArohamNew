@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { firebaseAuth } from "@/lib/firebase";
 import { onAuthStateChanged, signOut as firebaseSignOut, User as FirebaseUser } from "firebase/auth";
 import { api } from "@/lib/api";
+import { setCookie, getCookie, deleteCookie } from "@/lib/cookies";
 
 interface UnifiedUser {
   id: string;
@@ -30,19 +31,19 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UnifiedUser | null>(() => {
     try {
-      const mockSession = localStorage.getItem("aroham_mock_session");
+      const mockSession = localStorage.getItem("aroham_mock_session") || getCookie("aroham_session");
       return mockSession ? JSON.parse(mockSession) : null;
     } catch (e) {
       return null;
     }
   });
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
-    return !!localStorage.getItem("aroham_mock_session");
+    return !!(localStorage.getItem("aroham_mock_session") || getCookie("aroham_session"));
   });
   const [showAuth, setShowAuth] = useState(false);
   const [session, setSession] = useState<any | null>(() => {
     try {
-      const mockSession = localStorage.getItem("aroham_mock_session");
+      const mockSession = localStorage.getItem("aroham_mock_session") || getCookie("aroham_session");
       return mockSession ? { user: JSON.parse(mockSession) } : null;
     } catch (e) {
       return null;
@@ -50,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
   const [cartSynced, setCartSynced] = useState(false);
 
-  // Sync cart helper
+  // Sync cart and orders helper
   const handleCartSync = async () => {
     setCartSynced(false);
     const localCart = localStorage.getItem("aroham_cart");
@@ -73,17 +74,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setCartSynced(true);
   };
 
+  const handleOrderSync = (userId: string) => {
+    if (!userId) return;
+    try {
+      const guestOrdersStr = localStorage.getItem("aroham_guest_orders");
+      if (guestOrdersStr) {
+        const guestOrders = JSON.parse(guestOrdersStr);
+        if (Array.isArray(guestOrders) && guestOrders.length > 0) {
+          const userOrdersKey = `aroham_user_orders_${userId}`;
+          const existingUserOrdersStr = localStorage.getItem(userOrdersKey);
+          const existingUserOrders = existingUserOrdersStr ? JSON.parse(existingUserOrdersStr) : [];
+          const merged = [...existingUserOrders];
+
+          guestOrders.forEach((go: any) => {
+            if (!merged.some((u: any) => String(u.id) === String(go.id))) {
+              const updatedGo = { ...go, user_id: userId };
+              merged.push(updatedGo);
+              if (go.id) {
+                Promise.resolve(
+                  supabase.from("orders").update({ user_id: userId }).eq("id", go.id)
+                ).catch(() => {});
+              }
+            }
+          });
+          localStorage.setItem(userOrdersKey, JSON.stringify(merged));
+        }
+      }
+    } catch (e) {
+      console.error("Failed to migrate guest orders", e);
+    }
+  };
+
   useEffect(() => {
-    const mockSession = localStorage.getItem("aroham_mock_session");
-    if (mockSession) {
+    const rawSession = localStorage.getItem("aroham_mock_session") || getCookie("aroham_session");
+    if (rawSession) {
       try {
-        const parsed = JSON.parse(mockSession);
+        const parsed = JSON.parse(rawSession);
         setUser(parsed);
         setIsLoggedIn(true);
         setSession({ user: parsed });
+        // Sync cookie & local storage
+        localStorage.setItem("aroham_mock_session", JSON.stringify(parsed));
+        setCookie("aroham_session", JSON.stringify(parsed), 365);
+
         handleCartSync();
+        if (parsed?.id) handleOrderSync(parsed.id);
       } catch (e) {
         localStorage.removeItem("aroham_mock_session");
+        deleteCookie("aroham_session");
       }
     }
   }, []);
@@ -94,7 +132,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(userData);
       setSession({ user: userData });
       localStorage.setItem("aroham_mock_session", JSON.stringify(userData));
+      setCookie("aroham_session", JSON.stringify(userData), 365);
+
       handleCartSync();
+      if (userData?.id) handleOrderSync(userData.id);
     }
   };
   
@@ -102,6 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try { await firebaseSignOut(firebaseAuth); } catch (e) {}
     try { await supabase.auth.signOut(); } catch (e) {}
     localStorage.removeItem("aroham_mock_session");
+    deleteCookie("aroham_session");
     sessionStorage.removeItem("aroham_user_profile");
     setIsLoggedIn(false);
     setUser(null);

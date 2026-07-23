@@ -8,8 +8,8 @@ export function ShopConsultCards({ products, onShop, onProductClick }: { product
   return (
     <section className="py-10 lg:py-20 px-4 sm:px-6 lg:px-10" style={{ background: "#FAF7F2" }}>
       <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-6 min-w-0">
-        {/* Shop card */}
-        <div className="rounded-3xl overflow-hidden group transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl h-full min-w-0"
+        {/* Shop card (Hidden on mobile) */}
+        <div className="hidden md:block rounded-3xl overflow-hidden group transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl h-full min-w-0"
           style={{ background: `linear-gradient(160deg,${MAROON} 0%,#5C1B23 100%)`, boxShadow: "0 20px 50px rgba(92,27,35,0.35)" }}>
           <div className="p-6 sm:p-8 flex flex-col gap-4 sm:gap-5 relative h-full">
             <div className="absolute inset-0 opacity-5" style={{ backgroundImage: `radial-gradient(circle,${GOLD} 1px,transparent 1px)`, backgroundSize: "24px 24px" }} />

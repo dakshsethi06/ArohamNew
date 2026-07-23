@@ -32,7 +32,20 @@ console.error = (...args) => {
 
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
+
+// Standard Security & Cache-Control Headers Middleware
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  
+  if (req.path.startsWith("/api/products")) {
+    res.setHeader("Cache-Control", "public, max-age=300, stale-while-revalidate=600");
+  } else {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  }
+  next();
+});
 
 // Keep raw body for Razorpay webhook signature verification
 app.use(express.json({

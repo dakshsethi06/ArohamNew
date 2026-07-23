@@ -105,8 +105,6 @@ export function NavagrahaHero({ onShop, onConsult }: { onShop: () => void; onCon
               return (
                 <div key={g.name} className="absolute"
                   style={{ width: orbitSize, height: orbitSize, top: "50%", left: "30%", transform: "translate(-50%,-50%)", pointerEvents: "none" }}>
-                  {/* Orbital path ring */}
-                  <div className="absolute inset-0 rounded-full" style={{ border: "1px solid rgba(200,160,68,0.08)" }} />
                   <div className="absolute group pointer-events-auto"
                     style={{ top: "50%", left: "50%", ["--r" as string]: `${orbitR}px`,
                       animation: `orbitPlanet ${g.speed}s linear infinite`, animationDelay: `-${i * 1.5}s`,

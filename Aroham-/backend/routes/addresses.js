@@ -45,7 +45,7 @@ router.post("/", requireAuth, async (req, res) => {
 
     const { data, error } = await supabase
       .from("addresses")
-      .insert({ user_id: req.user.id, name, phone, email, address, city, state, pincode, address_type })
+      .insert({ user_id: req.user.id, name, phone, email, address, city, state, pincode })
       .select()
       .single();
 
@@ -58,11 +58,11 @@ router.post("/", requireAuth, async (req, res) => {
 
 // PUT /api/addresses/:id - Update an existing address
 router.put("/:id", requireAuth, async (req, res) => {
-  const { name, phone, email, address, city, state, pincode, address_type } = req.body;
+  const { name, phone, email, address, city, state, pincode } = req.body;
   try {
     const { data, error } = await supabase
       .from("addresses")
-      .update({ name, phone, email, address, city, state, pincode, address_type })
+      .update({ name, phone, email, address, city, state, pincode })
       .eq("id", req.params.id)
       .eq("user_id", req.user.id)
       .select()

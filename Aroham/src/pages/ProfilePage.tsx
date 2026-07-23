@@ -35,6 +35,16 @@ export function ProfilePage() {
   const [activeTab, setActiveTab] = useState<"profile" | "addresses" | "orders">(
     (searchParams.get("tab") as "profile" | "addresses" | "orders") || "profile"
   );
+
+  // Synchronize activeTab with URL search params whenever user clicks navbar header profile icon
+  useEffect(() => {
+    const tabParam = searchParams.get("tab") as "profile" | "addresses" | "orders" | null;
+    if (tabParam === "addresses" || tabParam === "orders" || tabParam === "profile") {
+      setActiveTab(tabParam);
+    } else {
+      setActiveTab("profile");
+    }
+  }, [searchParams]);
   const [orders, setOrders] = useState<any[]>([]);
   const [profile, setProfile] = useState<any>(null);
   const [loadingOrders, setLoadingOrders] = useState(false);
@@ -70,25 +80,106 @@ export function ProfilePage() {
     addressType: "Home"
   });
 
-  // Load profile addresses
+  // Load profile addresses with automatic order address recovery and phone/email matching
   useEffect(() => {
-    try {
-      const savedList = localStorage.getItem("aroham_saved_addresses_list");
-      if (savedList) {
-        setProfileAddresses(JSON.parse(savedList));
-      }
-    } catch (e) {}
+    const loadProfileAddresses = async () => {
+      let combined: any[] = [];
+      const userPhone = user?.user_metadata?.phone ? String(user.user_metadata.phone).replace(/\D/g, "").slice(-10) : "";
+      const userEmail = user?.email || "";
 
-    if (user?.id) {
-      Promise.resolve(supabase.from("addresses").select("*").eq("user_id", user.id))
-        .then(({ data }) => {
-          if (data && data.length > 0) {
-            setProfileAddresses(data);
-            localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(data));
+      // 1. Check local storage
+      try {
+        if (user?.id) {
+          const uStr = localStorage.getItem(`aroham_user_addresses_${user.id}`);
+          if (uStr) {
+            const parsed = JSON.parse(uStr);
+            if (Array.isArray(parsed) && parsed.length > 0) combined = [...parsed];
           }
-        }).catch(() => {});
-    }
-  }, [user?.id, activeTab]);
+        }
+        if (combined.length === 0) {
+          const gStr = localStorage.getItem("aroham_saved_addresses_list");
+          if (gStr) {
+            const parsed = JSON.parse(gStr);
+            if (Array.isArray(parsed) && parsed.length > 0) combined = [...parsed];
+          }
+        }
+      } catch (e) {}
+
+      // 2. Fetch from Supabase addresses table
+      try {
+        const { data: dbAddrs } = await supabase.from("addresses").select("*");
+        if (dbAddrs && dbAddrs.length > 0) {
+          dbAddrs.forEach((a: any) => {
+            const aPhone = String(a.phone || "").replace(/\D/g, "").slice(-10);
+            const aEmail = String(a.email || "").trim().toLowerCase();
+            const matches = (user?.id && a.user_id === user.id) ||
+                            (userPhone && aPhone && aPhone === userPhone) ||
+                            (userEmail && aEmail && aEmail === userEmail.toLowerCase());
+
+            if (matches) {
+              const fullAddr = a.address || a.line1 || "";
+              if (!combined.some(existing => String(existing.id) === String(a.id) || (existing.address === fullAddr && existing.pincode === a.pincode))) {
+                combined.push(a);
+              }
+              if (user?.id && (!a.user_id || a.user_id !== user.id)) {
+                Promise.resolve(supabase.from("addresses").update({ user_id: user.id }).eq("id", a.id)).catch(() => {});
+              }
+            }
+          });
+        }
+      } catch (e) {}
+
+      // 3. Extract addresses from past orders (guarantees addresses used in orders are never lost)
+      try {
+        const { data: dbOrders } = await supabase.from("orders").select("*");
+        if (dbOrders && dbOrders.length > 0) {
+          dbOrders.forEach((o: any) => {
+            const sa = o.shipping_address || o.address;
+            if (sa && (sa.address || sa.line1 || sa.house)) {
+              const saPhone = String(sa.phone || o.phone || "").replace(/\D/g, "").slice(-10);
+              const saEmail = String(sa.email || o.email || "").trim().toLowerCase();
+              const matches = (user?.id && o.user_id === user.id) ||
+                              (userPhone && saPhone && saPhone === userPhone) ||
+                              (userEmail && saEmail && saEmail === userEmail.toLowerCase());
+
+              if (matches) {
+                const addrText = sa.address || sa.line1 || `${sa.house || ''}, ${sa.street || ''}`.trim();
+                const pinCode = sa.pincode || sa.pin || "";
+                if (addrText && !combined.some(existing => (existing.address || existing.line1) === addrText)) {
+                  combined.push({
+                    id: `order-addr-${o.id}`,
+                    user_id: user?.id || null,
+                    name: sa.full_name || sa.name || "Devotee",
+                    phone: saPhone || userPhone,
+                    email: saEmail || userEmail,
+                    address: addrText,
+                    line1: addrText,
+                    house: sa.house || "",
+                    street: sa.street || "",
+                    city: sa.city || "",
+                    state: sa.state || "",
+                    pincode: pinCode,
+                    pin: pinCode,
+                    address_type: sa.address_type || sa.addressType || "Home"
+                  });
+                }
+              }
+            }
+          });
+        }
+      } catch (e) {}
+
+      if (combined.length > 0) {
+        setProfileAddresses(combined);
+        try {
+          if (user?.id) localStorage.setItem(`aroham_user_addresses_${user.id}`, JSON.stringify(combined));
+          localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(combined));
+        } catch (e) {}
+      }
+    };
+
+    loadProfileAddresses();
+  }, [user?.id, user?.email, user?.user_metadata?.phone, activeTab]);
 
   const handleSaveProfileAddress = async () => {
     const missing: string[] = [];
@@ -123,7 +214,10 @@ export function ProfilePage() {
     const updatedList = profileAddresses.filter(a => a.id !== editingAddrId);
     const newList = [newAddrObj, ...updatedList];
     setProfileAddresses(newList);
-    localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(newList));
+    if (user?.id) {
+      try { localStorage.setItem(`aroham_user_addresses_${user.id}`, JSON.stringify(newList)); } catch (e) {}
+    }
+    try { localStorage.setItem("aroham_saved_addresses_list", JSON.stringify(newList)); } catch (e) {}
     setShowAddrForm(false);
     setEditingAddrId(null);
     setAddrForm({ name: "", phone: "", pin: "", house: "", street: "", landmark: "", city: "", state: "", addressType: "Home" });
@@ -136,8 +230,7 @@ export function ProfilePage() {
         address: newAddrObj.address,
         city: newAddrObj.city,
         state: newAddrObj.state,
-        pincode: newAddrObj.pincode,
-        address_type: newAddrObj.address_type
+        pincode: newAddrObj.pincode
       })).catch(err => console.warn("Supabase address save warning:", err));
     }
   };
@@ -253,39 +346,94 @@ export function ProfilePage() {
     });
   };
 
-  // Fetch real orders from DB with cancellation persistence
+  // Fetch real orders from DB with cancellation persistence and automatic guest linking
   useEffect(() => {
     if (activeTab === "orders") {
       setLoadingOrders(true);
       
       const fetchOrders = async () => {
         let fetchedOrders: any[] = [];
+        const userPhone = user?.user_metadata?.phone ? String(user.user_metadata.phone).replace(/\D/g, "").slice(-10) : "";
+        const userEmail = user?.email || "";
 
+        // 1. Fetch from Supabase by user_id
         if (user?.id) {
           try {
             const { data } = await supabase.from("orders").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
             if (data && data.length > 0) {
-              fetchedOrders = data;
+              fetchedOrders = [...data];
             }
           } catch (e) {
-            console.warn("Error fetching Supabase orders:", e);
+            console.warn("Error fetching Supabase user orders:", e);
           }
         }
 
-        // Fetch from user-specific local storage
-        const userOrdersKey = user?.id ? `aroham_user_orders_${user.id}` : "aroham_guest_orders";
-        const localUserOrdersStr = localStorage.getItem(userOrdersKey);
-        if (localUserOrdersStr) {
+        // 2. Fetch unlinked / guest orders from Supabase matching phone or email
+        try {
+          const { data: allOrders } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
+          if (allOrders && allOrders.length > 0) {
+            allOrders.forEach((o: any) => {
+              const addr = o.shipping_address || o.address || {};
+              const orderPhone = String(addr.phone || o.phone || "").replace(/\D/g, "").slice(-10);
+              const orderEmail = String(addr.email || o.email || "").trim().toLowerCase();
+
+              const matchesPhone = userPhone && orderPhone && orderPhone === userPhone;
+              const matchesEmail = userEmail && orderEmail && orderEmail === userEmail.toLowerCase();
+
+              if ((matchesPhone || matchesEmail) && !fetchedOrders.some(existing => String(existing.id) === String(o.id))) {
+                fetchedOrders.push(o);
+
+                // Auto-link this order to user.id in Supabase if unlinked
+                if (user?.id && (!o.user_id || o.user_id !== user.id)) {
+                  Promise.resolve(
+                    supabase.from("orders").update({ user_id: user.id }).eq("id", o.id)
+                  ).catch(() => {});
+                }
+              }
+            });
+          }
+        } catch (e) {}
+
+        // 3. Fetch from user-specific local storage
+        if (user?.id) {
+          const userOrdersKey = `aroham_user_orders_${user.id}`;
+          const localUserOrdersStr = localStorage.getItem(userOrdersKey);
+          if (localUserOrdersStr) {
+            try {
+              const parsedLocal = JSON.parse(localUserOrdersStr);
+              parsedLocal.forEach((lo: any) => {
+                if (!fetchedOrders.some(o => String(o.id) === String(lo.id))) {
+                  fetchedOrders.push(lo);
+                }
+              });
+            } catch (e) {}
+          }
+        }
+
+        // 4. Fetch from guest local storage fallback
+        const guestOrdersStr = localStorage.getItem("aroham_guest_orders");
+        if (guestOrdersStr) {
           try {
-            const parsedLocal = JSON.parse(localUserOrdersStr);
-            parsedLocal.forEach((lo: any) => {
-              if (!fetchedOrders.some(o => String(o.id) === String(lo.id))) {
-                fetchedOrders.push(lo);
+            const parsedGuest = JSON.parse(guestOrdersStr);
+            parsedGuest.forEach((go: any) => {
+              const addr = go.shipping_address || go.address || {};
+              const orderPhone = String(addr.phone || go.phone || "").replace(/\D/g, "").slice(-10);
+              const orderEmail = String(addr.email || go.email || "").trim().toLowerCase();
+
+              const matchesPhone = userPhone && orderPhone && orderPhone === userPhone;
+              const matchesEmail = userEmail && orderEmail && orderEmail === userEmail.toLowerCase();
+
+              // Include guest order if phone/email matches OR if user is guest OR if recently placed on device
+              if (!fetchedOrders.some(o => String(o.id) === String(go.id))) {
+                if (!user?.id || matchesPhone || matchesEmail || !go.user_id) {
+                  fetchedOrders.push({ ...go, user_id: user?.id || go.user_id });
+                }
               }
             });
           } catch (e) {}
         }
 
+        // 5. Fetch from recent session order fallback
         const localOrderId = sessionStorage.getItem("aroham_last_order_id");
         const localItemsStr = sessionStorage.getItem("aroham_last_order_items");
         const localTotalStr = sessionStorage.getItem("aroham_order_total");
@@ -317,13 +465,23 @@ export function ProfilePage() {
           return overrideStatus ? { ...o, status: overrideStatus } : o;
         });
 
+        // Sort by creation date descending
+        fetchedOrders.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+
+        // Cache merged orders into user's localStorage
+        if (user?.id && fetchedOrders.length > 0) {
+          try {
+            localStorage.setItem(`aroham_user_orders_${user.id}`, JSON.stringify(fetchedOrders));
+          } catch (e) {}
+        }
+
         setOrders(fetchedOrders);
         setLoadingOrders(false);
       };
 
       fetchOrders();
     }
-  }, [activeTab, user?.id]);
+  }, [activeTab, user?.id, user?.email, user?.user_metadata?.phone]);
 
   const handleSaveProfile = async () => {
     if (!user?.id) return;

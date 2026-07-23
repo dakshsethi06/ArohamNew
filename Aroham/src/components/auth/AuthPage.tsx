@@ -8,7 +8,7 @@ import { Countdown } from "./Countdown";
 import { useAuth } from "@/context/AuthContext";
 import { firebaseAuth, db } from "@/lib/firebase";
 import { supabase } from "@/lib/supabase";
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { api } from "@/lib/api";
 import { doc, getDoc, setDoc, serverTimestamp, collection, query, where, getDocs } from "firebase/firestore";
 import * as Select from "@radix-ui/react-select";
 import * as Popover from "@radix-ui/react-popover";
@@ -191,67 +191,6 @@ export function AuthPage() {
     }, 600);
   };
 
-  const [googleLoading, setGoogleLoading] = useState(false);
-
-  // Google Sign-In handler
-  const handleGoogleSignIn = async () => {
-    setGoogleLoading(true);
-    setErrorMsg("");
-
-    try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(firebaseAuth, provider);
-      const user = result.user;
-
-      if (user) {
-        const displayName = user.displayName || "";
-        const gEmail = user.email || "";
-        const phoneDigits = user.phoneNumber?.replace(/\D/g, "") || "";
-
-        // Non-blocking save/update Firestore profile
-        setDoc(doc(db, "users", user.uid), {
-          fullName: displayName || "Devotee",
-          email: gEmail,
-          phone: phoneDigits,
-          updatedAt: serverTimestamp()
-        }, { merge: true }).catch(err => console.warn("Firestore setDoc warning:", err));
-
-        // Non-blocking save/update Supabase profile
-        Promise.resolve(supabase.from('users').upsert({
-          id: user.uid,
-          full_name: displayName || "Devotee",
-          email: gEmail,
-          phone: phoneDigits,
-          created_at: new Date().toISOString()
-        })).catch(err => console.warn("Supabase upsert warning:", err));
-
-        // Save local cache so future sign-ins retain profile
-        if (gEmail || phoneDigits) {
-          const userObj = { id: user.uid, fullName: displayName || "Devotee", email: gEmail, phone: phoneDigits };
-          if (gEmail) localStorage.setItem(`aroham_registered_user_email_${gEmail}`, JSON.stringify(userObj));
-          if (phoneDigits) localStorage.setItem(`aroham_registered_user_phone_${phoneDigits}`, JSON.stringify(userObj));
-        }
-
-        login({
-          id: user.uid,
-          email: gEmail,
-          user_metadata: { full_name: displayName || "Devotee", phone: phoneDigits }
-        });
-        setGoogleLoading(false);
-        handleAuthSuccess();
-      } else {
-        setGoogleLoading(false);
-      }
-    } catch (e: any) {
-      setGoogleLoading(false);
-      if (e.code === "auth/popup-closed-by-user") {
-        setErrorMsg("Sign-in cancelled. Please try again.");
-      } else {
-        setErrorMsg(e.message || "Failed to sign in with Google. Please try again.");
-      }
-    }
-  };
-
   // Verify OTP handler
   const handleVerifyOtp = async (autoFilledCode?: any) => {
     const joinedOtp = typeof autoFilledCode === 'string' ? autoFilledCode : otp.join("");
@@ -286,7 +225,7 @@ export function AuthPage() {
         // 2. Check Firestore
         if (!existingUser) {
           try {
-            const q = query(collection(db, "users"), where("phone", "==", phoneDigits));
+            const q = query(collection(db, "users"), where("phone", "in", [phoneDigits, `+91${phoneDigits}`, `91${phoneDigits}`]));
             const snapshot = await getDocs(q);
             if (!snapshot.empty) {
               const docData = snapshot.docs[0].data();
@@ -307,11 +246,15 @@ export function AuthPage() {
         // 3. Check Supabase
         if (!existingUser) {
           try {
-            const { data } = await supabase.from('users').select('*').eq('phone', phoneDigits).maybeSingle();
-            if (data && (data.full_name || data.fullName)) {
+            const { data } = await supabase
+              .from('users')
+              .select('*')
+              .or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits},phone.ilike.%${phoneDigits}%`)
+              .maybeSingle();
+            if (data && (data.full_name || data.fullName || data.id)) {
               existingUser = {
                 id: data.id,
-                fullName: data.full_name || data.fullName,
+                fullName: data.full_name || data.fullName || name.trim() || "Devotee",
                 email: data.email,
                 phone: data.phone || phoneDigits
               };
@@ -320,6 +263,18 @@ export function AuthPage() {
         }
 
         if (existingUser) {
+          // Update local cache so future lookups are fast
+          const userObj = {
+            id: existingUser.id,
+            fullName: existingUser.fullName,
+            email: existingUser.email || email.trim() || null,
+            phone: phoneDigits
+          };
+          localStorage.setItem(`aroham_registered_user_phone_${phoneDigits}`, JSON.stringify(userObj));
+          if (existingUser.email) {
+            localStorage.setItem(`aroham_registered_user_email_${existingUser.email}`, JSON.stringify(userObj));
+          }
+
           setLoading(false);
           login({
             id: existingUser.id,
@@ -328,10 +283,26 @@ export function AuthPage() {
           });
           handleAuthSuccess();
         } else if (name.trim()) {
-          // Account creation flow: Save profile now
-          const newUserId = crypto.randomUUID();
+          // Account creation flow: Sync profile via backend to ensure valid Supabase Auth user
+          let finalUserId = crypto.randomUUID();
+
+          try {
+            const signupRes = await api("/auth/signup", {
+              method: "POST",
+              body: JSON.stringify({
+                phone: phoneDigits,
+                fullName: name.trim(),
+                email: email.trim() || undefined
+              })
+            }).catch(() => null);
+
+            if (signupRes?.user?.id) {
+              finalUserId = signupRes.user.id;
+            }
+          } catch (e) {}
+
           const userProfile = {
-            id: newUserId,
+            id: finalUserId,
             fullName: name.trim(),
             email: email.trim() || null,
             phone: phoneDigits
@@ -341,30 +312,16 @@ export function AuthPage() {
           localStorage.setItem(`aroham_registered_user_phone_${phoneDigits}`, JSON.stringify(userProfile));
 
           // Save Firestore
-          setDoc(doc(db, "users", newUserId), {
+          setDoc(doc(db, "users", finalUserId), {
             fullName: name.trim(),
             email: email.trim() || null,
             phone: phoneDigits,
             createdAt: serverTimestamp()
           }, { merge: true }).catch(err => console.warn("Firestore setDoc warning:", err));
 
-          // Save Supabase
-          try {
-            const { error: sbErr } = await supabase.from('users').upsert({
-              id: newUserId,
-              full_name: name.trim(),
-              email: email.trim() || null,
-              phone: phoneDigits ? `+91${phoneDigits}` : null,
-              created_at: new Date().toISOString()
-            });
-            if (sbErr) console.warn("Supabase user insert error:", sbErr);
-          } catch (e) {
-            console.warn("Supabase user insert exception:", e);
-          }
-
           setLoading(false);
           login({
-            id: newUserId,
+            id: finalUserId,
             email: email.trim() || null,
             user_metadata: { full_name: name.trim(), phone: phoneDigits }
           });
@@ -391,10 +348,26 @@ export function AuthPage() {
     setErrorMsg("");
 
     try {
-      const newUserId = crypto.randomUUID();
       const phoneDigits = phone.replace(/\D/g, "");
+      let finalUserId = crypto.randomUUID();
+
+      try {
+        const signupRes = await api("/auth/signup", {
+          method: "POST",
+          body: JSON.stringify({
+            phone: phoneDigits,
+            fullName: name.trim(),
+            email: email.trim() || undefined
+          })
+        }).catch(() => null);
+
+        if (signupRes?.user?.id) {
+          finalUserId = signupRes.user.id;
+        }
+      } catch (e) {}
+
       const userProfile = {
-        id: newUserId,
+        id: finalUserId,
         fullName: name.trim(),
         email: email.trim() || null,
         phone: phoneDigits
@@ -404,24 +377,16 @@ export function AuthPage() {
         localStorage.setItem(`aroham_registered_user_phone_${phoneDigits}`, JSON.stringify(userProfile));
       }
 
-      setDoc(doc(db, "users", newUserId), {
+      setDoc(doc(db, "users", finalUserId), {
         fullName: name.trim(),
         email: email.trim() || null,
         phone: phoneDigits,
         createdAt: serverTimestamp()
       }, { merge: true }).catch(err => console.warn("Firestore setDoc warning:", err));
 
-      Promise.resolve(supabase.from('users').upsert({
-        id: newUserId,
-        full_name: name.trim(),
-        email: email.trim() || null,
-        phone: phoneDigits,
-        created_at: new Date().toISOString()
-      })).catch(err => console.warn("Supabase upsert warning:", err));
-
       setLoading(false);
       login({
-        id: newUserId,
+        id: finalUserId,
         email: email.trim() || null,
         user_metadata: { full_name: name.trim(), phone: phoneDigits }
       });
@@ -533,37 +498,7 @@ export function AuthPage() {
         )}
       </button>
 
-      <div className="flex items-center gap-3 py-1">
-        <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(91,31,36,0.18))" }} />
-        <span className="text-xs font-medium tracking-wide" style={{ color: "#9A8A78", fontFamily: SANS }}>or continue with</span>
-        <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, rgba(91,31,36,0.18), transparent)" }} />
-      </div>
 
-      {/* Google Sign-In Button */}
-      <button
-        onClick={handleGoogleSignIn}
-        disabled={loading || googleLoading}
-        className="group w-full py-4 rounded-2xl text-sm font-semibold tracking-wide transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 relative overflow-hidden disabled:opacity-50"
-        style={{ background: "#FFFFFF", border: "2px solid rgba(91,31,36,0.12)", color: MAROON }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
-        {googleLoading ? (
-          <>
-            <div className="w-5 h-5 rounded-full border-2 border-red-900/30 border-t-red-900 animate-spin" />
-            <span style={{ fontFamily: SANS }}>Signing in with Google...</span>
-          </>
-        ) : (
-          <>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-            </svg>
-            <span style={{ fontFamily: SANS }}>Continue with Google</span>
-          </>
-        )}
-      </button>
     </div>
   );
 

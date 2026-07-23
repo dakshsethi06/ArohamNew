@@ -113,14 +113,12 @@ export function CommunityComments({ products = [] }: { products?: ArohamProduct[
       await Promise.resolve(
         supabase.from("reviews").insert({
           name: newRev.name,
-          city: newRev.city,
           rating: newRev.rating,
           text: newRev.text,
           product: newRev.product,
-          likes: 0,
-          status: "approved"
+          likes: 0
         })
-      ).catch(() => {});
+      ).catch((err) => console.warn("Supabase review insert warning:", err));
 
       // Add to local state and localStorage immediately
       const updatedList = [newRev, ...customReviews];

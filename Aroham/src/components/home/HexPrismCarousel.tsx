@@ -15,9 +15,9 @@ export function HexPrismCarousel({ products, onProductClick }: { products: Aroha
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const baseW = isMobile ? 120 : 150;
-  const baseH = isMobile ? 160 : 200;
-  const baseTz = isMobile ? 130 : 190;
+  const baseW = isMobile ? 160 : 230;
+  const baseH = isMobile ? 220 : 310;
+  const baseTz = isMobile ? 160 : 250;
   const activeScale = 1.35;
   const SMOOTH_EASE = "0.7s cubic-bezier(0.25, 1, 0.5, 1)";
 
@@ -73,23 +73,23 @@ export function HexPrismCarousel({ products, onProductClick }: { products: Aroha
       <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: "80%", height: 120, background: "radial-gradient(ellipse at 50% 0%, rgba(91,31,36,0.28) 0%, transparent 72%)", pointerEvents: "none", zIndex: 0 }} />
       <style>{`
         @keyframes faceGlow {
-          0%,100% { box-shadow: 0 0 24px 6px rgba(200,160,68,0.22); }
-          50%      { box-shadow: 0 0 48px 14px rgba(200,160,68,0.38); }
+          0%,100% { box-shadow: 0 0 28px 8px rgba(200,160,68,0.25); }
+          50%      { box-shadow: 0 0 54px 18px rgba(200,160,68,0.42); }
         }
       `}</style>
       <div className="relative flex items-center justify-center w-full"
-        style={{ height: baseH + 80, marginTop: isMobile ? 40 : 85, marginBottom: 25, transform: expanded ? (isMobile ? "translateY(-40px) scale(0.85)" : "translateY(-70px) scale(0.85)") : "translateY(0px) scale(1)", transition: `all ${SMOOTH_EASE}` }}>
+        style={{ height: baseH + 40, marginTop: isMobile ? 15 : 20, marginBottom: 15, transform: expanded ? (isMobile ? "translateY(-30px) scale(0.9)" : "translateY(-50px) scale(0.9)") : "translateY(0px) scale(1)", transition: `all ${SMOOTH_EASE}` }}>
         <button aria-label="Previous product" onClick={prev}
-          className="absolute left-0 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95"
-          style={{ background: "rgba(200,160,68,0.13)", border: `1px solid rgba(200,160,68,0.3)`, color: GOLD, top: "50%", transform: "translateY(-50%)" }}>
-          <ChevronLeft size={18} />
+          className="absolute left-1 sm:left-2 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+          style={{ background: "rgba(200,160,68,0.18)", border: `1px solid rgba(200,160,68,0.35)`, color: GOLD, top: "50%", transform: "translateY(-50%)" }}>
+          <ChevronLeft size={20} />
         </button>
         <div
           onMouseDown={e => onDragStart(e.clientX)} onMouseUp={e => onDragEnd(e.clientX)}
           onMouseLeave={e => onDragEnd(e.clientX)}
           onTouchStart={e => onDragStart(e.touches[0].clientX)} onTouchEnd={e => onDragEnd(e.changedTouches[0].clientX)}
           onWheel={e => { e.preventDefault(); if (wheelCooldown.current) return; const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY; if (Math.abs(d) < 25) return; d > 0 ? next() : prev(); wheelCooldown.current = true; setTimeout(() => { wheelCooldown.current = false; }, 500); pauseAuto(); }}
-          style={{ perspective: 1100, width: "100%", height: baseH, display: "flex", alignItems: "center", justifyContent: "center", cursor: "grab", userSelect: "none" }}>
+          style={{ perspective: 1200, width: "100%", height: baseH, display: "flex", alignItems: "center", justifyContent: "center", cursor: "grab", userSelect: "none" }}>
           <div style={{ width: baseW, height: baseH, position: "relative", transformStyle: "preserve-3d", transform: `rotateY(${-current * (360 / n)}deg)`, transition: `transform ${SMOOTH_EASE}` }}>
             {products.map((prod, i) => {
               const angle = i * (360 / n);
@@ -97,10 +97,10 @@ export function HexPrismCarousel({ products, onProductClick }: { products: Aroha
               return (
                 <div key={prod.id}
                   onClick={() => { pauseAuto(); if (isActive) { setExpanded(e => !e); } else { onDotClick(i); } }}
-                  style={{ position: "absolute", width: baseW, height: baseH, transform: `rotateY(${angle}deg) translateZ(${baseTz}px)`, backfaceVisibility: "hidden", borderRadius: 22, overflow: "hidden", cursor: "pointer", display: "flex", flexDirection: "column",
+                  style={{ position: "absolute", width: baseW, height: baseH, transform: `rotateY(${angle}deg) translateZ(${baseTz}px)`, backfaceVisibility: "hidden", borderRadius: 24, overflow: "hidden", cursor: "pointer", display: "flex", flexDirection: "column",
                     background: isActive ? `linear-gradient(170deg,${MAROON} 0%,#2A0A0E 100%)` : `linear-gradient(170deg,#1A0808 0%,#0D0404 100%)`,
-                    border: `2px solid ${isActive ? GOLD : "rgba(200,160,68,0.12)"}`,
-                    boxShadow: isActive ? "0 0 0 1px rgba(200,160,68,0.15)" : "none",
+                    border: `2px solid ${isActive ? GOLD : "rgba(200,160,68,0.15)"}`,
+                    boxShadow: isActive ? "0 0 0 1px rgba(200,160,68,0.2)" : "none",
                     animation: isActive ? "faceGlow 2.8s ease-in-out infinite" : "none",
                     transition: `transform ${SMOOTH_EASE}, border ${SMOOTH_EASE}`,
                     zIndex: isActive ? 20 : 1 }}>
@@ -109,16 +109,16 @@ export function HexPrismCarousel({ products, onProductClick }: { products: Aroha
                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-110"
                       style={{ filter: isActive ? "brightness(1.1) contrast(1.1)" : "brightness(0.5) contrast(1.2)" }} />
                     <div className="absolute inset-0" style={{ background: isActive ? "linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(13,4,4,0.95) 100%)" : "linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(13,4,4,0.95) 100%)" }} />
-                    <div className="absolute top-2 left-2 flex flex-col gap-1.5">
-                      {prod.badges?.[0] && <span className="px-2 py-0.5 rounded-full text-[7px] font-bold tracking-widest uppercase shadow-lg" style={{ background: "rgba(107,35,43,0.95)", color: IVORY, border: "1px solid rgba(250,247,242,0.2)", backdropFilter: "blur(4px)" }}>{prod.badges[0]}</span>}
+                    <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5">
+                      {prod.badges?.[0] && <span className="px-2.5 py-1 rounded-full text-[9px] font-bold tracking-widest uppercase shadow-lg" style={{ background: "rgba(107,35,43,0.95)", color: IVORY, border: "1px solid rgba(250,247,242,0.25)", backdropFilter: "blur(4px)" }}>{prod.badges[0]}</span>}
                     </div>
                   </div>
-                  <div className="p-3 pt-1 flex flex-col items-center text-center relative z-10" style={{ background: isActive ? `linear-gradient(to top, rgba(26,8,8,1) 0%, rgba(26,8,8,0.8) 100%)` : "transparent" }}>
-                    <h3 className="font-semibold leading-tight line-clamp-1 w-full" style={{ fontFamily: SERIF, fontSize: 13, color: IVORY, textShadow: isActive ? "0 2px 4px rgba(0,0,0,0.5)" : "none" }}>{prod.name}</h3>
-                    <p className="text-[9px] mt-1 line-clamp-1 w-full" style={{ color: "rgba(250,247,242,0.6)", fontFamily: SANS }}>{prod.subtitle}</p>
+                  <div className="p-3.5 pt-1.5 flex flex-col items-center text-center relative z-10" style={{ background: isActive ? `linear-gradient(to top, rgba(26,8,8,1) 0%, rgba(26,8,8,0.85) 100%)` : "transparent" }}>
+                    <h3 className="font-semibold leading-tight line-clamp-1 w-full" style={{ fontFamily: SERIF, fontSize: isMobile ? 14 : 16, color: IVORY, textShadow: isActive ? "0 2px 4px rgba(0,0,0,0.5)" : "none" }}>{prod.name}</h3>
+                    <p className="text-[10px] sm:text-[11px] mt-1 line-clamp-1 w-full" style={{ color: "rgba(250,247,242,0.65)", fontFamily: SANS }}>{prod.subtitle}</p>
                   </div>
                   {isActive && (
-                    <div style={{ padding: "7px 10px", textAlign: "center", background: `linear-gradient(90deg,${GOLD} 0%,#E8B84B 100%)`, color: "#1A0D0E", fontSize: 6.5, fontWeight: 800, letterSpacing: "0.1em", flexShrink: 0 }}>
+                    <div style={{ padding: "8px 12px", textAlign: "center", background: `linear-gradient(90deg,${GOLD} 0%,#E8B84B 100%)`, color: "#1A0D0E", fontSize: 8, fontWeight: 800, letterSpacing: "0.1em", flexShrink: 0 }}>
                       {expanded ? "TAP TO CLOSE ✕" : "TAP TO EXPAND ↓"}
                     </div>
                   )}
@@ -128,9 +128,9 @@ export function HexPrismCarousel({ products, onProductClick }: { products: Aroha
           </div>
         </div>
         <button aria-label="Next product" onClick={next}
-          className="absolute right-0 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95"
-          style={{ background: "rgba(200,160,68,0.13)", border: `1px solid rgba(200,160,68,0.3)`, color: GOLD, top: "50%", transform: "translateY(-50%)" }}>
-          <ChevronRight size={18} />
+          className="absolute right-1 sm:right-2 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+          style={{ background: "rgba(200,160,68,0.18)", border: `1px solid rgba(200,160,68,0.35)`, color: GOLD, top: "50%", transform: "translateY(-50%)" }}>
+          <ChevronRight size={20} />
         </button>
       </div>
 
