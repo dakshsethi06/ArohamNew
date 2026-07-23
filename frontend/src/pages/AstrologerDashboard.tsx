@@ -208,6 +208,12 @@ export function AstrologerDashboard() {
     fetchSessions();
     fetchDatabaseData();
 
+    // 3-second heartbeat polling so incoming chat requests show instantly across devices
+    const pollInterval = setInterval(() => {
+      fetchSessions();
+      fetchDatabaseData();
+    }, 3000);
+
     const sub = supabase
       .channel(`incoming-requests-${currentAstroId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "chat_sessions", filter: `astrologer_id=eq.${currentAstroId}` }, () => {
@@ -217,6 +223,7 @@ export function AstrologerDashboard() {
       .subscribe();
 
     return () => {
+      clearInterval(pollInterval);
       window.removeEventListener("storage", syncAll);
       window.removeEventListener("focus", syncAll);
       supabase.removeChannel(sub);
