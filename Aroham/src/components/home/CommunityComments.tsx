@@ -116,6 +116,8 @@ export function CommunityComments({ products = [] }: { products?: ArohamProduct[
           rating: newRev.rating,
           text: newRev.text,
           product: newRev.product,
+          city: newRev.city || "Verified Buyer",
+          status: "Approved",
           likes: 0
         })
       ).catch((err) => console.warn("Supabase review insert warning:", err));

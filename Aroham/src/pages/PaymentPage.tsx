@@ -185,13 +185,19 @@ export function PaymentPage() {
                 shipping_address: shippingAddr || null
               };
 
-              // 1. Insert to Supabase orders DB (clean UUID and foreign key payload)
+              // 1. Insert to Supabase orders DB with clean UUID and valid columns
               try {
+                const orderUuid = crypto.randomUUID();
                 const sbPayload: any = {
-                  amount: Math.round(total * 100),
-                  status: "Processing",
-                  address: shippingAddr || null,
-                  shipping_address: shippingAddr || null
+                  id: orderUuid,
+                  user_phone: shippingAddr?.phone || user?.user_metadata?.phone || "",
+                  amount: total,
+                  total_amount: total,
+                  status: "CONFIRMED",
+                  payment_method: "Razorpay",
+                  payment_status: "PAID",
+                  address: `${shippingAddr?.line1 || shippingAddr?.address || ""}, ${shippingAddr?.city || ""}, ${shippingAddr?.state || ""} - ${shippingAddr?.pin || shippingAddr?.pincode || ""}`,
+                  shipping_address: JSON.stringify(shippingAddr)
                 };
                 if (user?.id) {
                   sbPayload.user_id = user.id;

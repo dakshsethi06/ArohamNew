@@ -540,7 +540,7 @@ export function ShippingPage() {
     });
 
     if (user?.id) {
-      Promise.resolve(supabase.from("addresses").upsert({
+      Promise.resolve(supabase.from("addresses").insert({
         user_id: user.id,
         name: newAddressObj.name,
         phone: newAddressObj.phone,
@@ -548,7 +548,8 @@ export function ShippingPage() {
         address: newAddressObj.address_line1,
         city: newAddressObj.city,
         state: newAddressObj.state,
-        pincode: newAddressObj.pincode
+        pincode: newAddressObj.pincode,
+        address_type: newAddressObj.address_type || "Home"
       })).catch(err => console.warn("Supabase address auto-save warning:", err));
     }
 
