@@ -188,8 +188,12 @@ export function PaymentPage() {
               // 1. Insert to Supabase orders DB with clean UUID and valid columns
               try {
                 const orderUuid = crypto.randomUUID();
+                const isValidUuid = (str: any) => typeof str === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+                const cleanUserId = isValidUuid(user?.id) ? user.id : null;
+
                 const sbPayload: any = {
                   id: orderUuid,
+                  user_id: cleanUserId,
                   user_phone: shippingAddr?.phone || user?.user_metadata?.phone || "",
                   amount: total,
                   total_amount: total,
@@ -199,9 +203,6 @@ export function PaymentPage() {
                   address: `${shippingAddr?.line1 || shippingAddr?.address || ""}, ${shippingAddr?.city || ""}, ${shippingAddr?.state || ""} - ${shippingAddr?.pin || shippingAddr?.pincode || ""}`,
                   shipping_address: JSON.stringify(shippingAddr)
                 };
-                if (user?.id) {
-                  sbPayload.user_id = user.id;
-                }
                 await Promise.resolve(
                   supabase.from("orders").insert(sbPayload)
                 ).catch((err) => console.warn("Supabase order insert warning:", err));

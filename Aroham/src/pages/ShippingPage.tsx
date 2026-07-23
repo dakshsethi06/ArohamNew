@@ -539,19 +539,20 @@ export function ShippingPage() {
       return updated;
     });
 
-    if (user?.id) {
-      Promise.resolve(supabase.from("addresses").insert({
-        user_id: user.id,
-        name: newAddressObj.name,
-        phone: newAddressObj.phone,
-        email: newAddressObj.email,
-        address: newAddressObj.address_line1,
-        city: newAddressObj.city,
-        state: newAddressObj.state,
-        pincode: newAddressObj.pincode,
-        address_type: newAddressObj.address_type || "Home"
-      })).catch(err => console.warn("Supabase address auto-save warning:", err));
-    }
+    const isValidUuid = (str: any) => typeof str === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+    const cleanUserId = isValidUuid(user?.id) ? user.id : null;
+
+    Promise.resolve(supabase.from("addresses").insert({
+      user_id: cleanUserId,
+      name: newAddressObj.name,
+      phone: newAddressObj.phone,
+      email: newAddressObj.email,
+      address: newAddressObj.address_line1,
+      city: newAddressObj.city,
+      state: newAddressObj.state,
+      pincode: newAddressObj.pincode,
+      address_type: newAddressObj.address_type || "Home"
+    })).catch(err => console.warn("Supabase address auto-save warning:", err));
 
     if (isLoggedIn) {
       try {
