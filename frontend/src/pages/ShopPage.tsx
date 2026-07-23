@@ -119,7 +119,7 @@ export function ShopPage() {
   const togglePrp = (p: string) => setPrps(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
   const toggleCol = (c: string) => setCols(prev => prev[0] === c ? [] : [c]);
   const clearAll = () => { setCats([]); setPrps([]); setCols([]); setMaxPrice(30000); };
-  const hasActiveFilters = cats.length > 0 || prps.length > 0 || cols.length > 0 || maxPrice < 30000;
+  const hasActiveFilters = cats.length > 0 || prps.length > 0 || (cols.length > 0 && cols[0] !== titleParam) || maxPrice < 30000;
 
   const FilterPanel = () => (
     <div className="space-y-6">
@@ -310,9 +310,9 @@ export function ShopPage() {
       {/* Main Content Area */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-8">
         
-        {/* Active Filters Bar */}
+        {/* Active Filters Bar (Hidden on mobile, only shown on tablet/desktop if user manually filtered) */}
         {hasActiveFilters && (
-          <div className="flex flex-wrap items-center gap-2 mb-6 p-2.5 sm:p-3 rounded-2xl bg-white border border-amber-900/10 shadow-xs">
+          <div className="hidden sm:flex flex-wrap items-center gap-2 mb-6 p-2.5 sm:p-3 rounded-2xl bg-white border border-amber-900/10 shadow-xs">
             <span className="text-xs font-bold uppercase tracking-wider text-amber-900/70 mr-1 flex items-center gap-1.5">
               <Filter size={12} /> Active Filters:
             </span>
@@ -328,7 +328,7 @@ export function ShopPage() {
                 <button onClick={() => togglePrp(p)} className="hover:bg-amber-900/10 rounded-full p-0.5 transition-all"><X size={11} /></button>
               </span>
             ))}
-            {cols.map(c => (
+            {cols.filter(c => c !== titleParam).map(c => (
               <span key={c} className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold shadow-xs" style={{ background: "rgba(91,31,36,0.08)", color: MAROON }}>
                 {c}
                 <button onClick={() => toggleCol(c)} className="hover:bg-amber-900/10 rounded-full p-0.5 transition-all"><X size={11} /></button>
@@ -361,14 +361,14 @@ export function ShopPage() {
           {/* Product Listing Main Section */}
           <div className="flex-1 min-w-0">
             
-            {/* Redesigned Filter Toolbar: Sleek, Borderless & Unified */}
-            <div className="flex items-center justify-between gap-3 mb-6 pb-4 border-b border-amber-900/10">
+            {/* Redesigned Filter Toolbar: Ultra clean on Mobile */}
+            <div className="flex items-center justify-between gap-2 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-amber-900/10">
               
               {/* Left Controls: Filter Drawer Button & Product Count */}
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => setSidebarOpen(true)}
-                  className="lg:hidden flex items-center gap-2 h-9 px-3.5 rounded-xl text-xs font-bold transition-all border shadow-2xs hover:bg-amber-900/5 active:scale-95 bg-white"
+                  className="lg:hidden flex items-center gap-1.5 h-9 px-3 rounded-xl text-xs font-bold transition-all border shadow-2xs hover:bg-amber-900/5 active:scale-95 bg-white"
                   style={{ borderColor: "rgba(91,31,36,0.18)", color: MAROON }}
                 >
                   <Filter size={13} />
@@ -378,15 +378,15 @@ export function ShopPage() {
                   )}
                 </button>
 
-                <div className="text-xs sm:text-sm font-medium" style={{ color: "#7A6A58" }}>
-                  Showing <strong className="font-bold text-sm sm:text-base" style={{ color: MAROON }}>{filtered.length}</strong> products
+                <div className="text-xs font-medium" style={{ color: "#7A6A58" }}>
+                  <span className="hidden sm:inline">Showing </span><strong className="font-bold text-xs sm:text-sm" style={{ color: MAROON }}>{filtered.length}</strong> products
                 </div>
               </div>
 
-              {/* Right Controls: View Switcher & Sort Dropdown */}
-              <div className="flex items-center gap-2 sm:gap-3">
-                {/* View Switcher (Sleek Segmented Toggle) */}
-                <div className="flex items-center p-0.5 rounded-xl bg-black/[0.04] border border-black/5">
+              {/* Right Controls: View Switcher (Desktop only) & Sort Dropdown */}
+              <div className="flex items-center gap-2">
+                {/* View Switcher (Hidden on mobile for ultra clean UI) */}
+                <div className="hidden sm:flex items-center p-0.5 rounded-xl bg-black/[0.04] border border-black/5">
                   <button
                     aria-label="Grid View"
                     onClick={() => setViewMode("grid")}
@@ -415,10 +415,9 @@ export function ShopPage() {
                 <Select.Root value={sort} onValueChange={setSort}>
                   <Select.Trigger asChild>
                     <button
-                      className="h-9 px-3 sm:px-4 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs outline-none bg-white border hover:border-amber-900/30"
+                      className="h-9 px-2.5 sm:px-4 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition-all shadow-2xs outline-none bg-white border hover:border-amber-900/30"
                       style={{ borderColor: "rgba(91,31,36,0.18)", color: MAROON, fontFamily: SANS }}
                     >
-                      <span className="hidden sm:inline text-amber-900/60 font-normal">Sort by:</span>
                       <Select.Value />
                       <ChevronDown size={13} style={{ color: MAROON }} />
                     </button>
