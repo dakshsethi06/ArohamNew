@@ -686,6 +686,7 @@ export function ShippingPage() {
                         </span>
                         <input
                           type="tel"
+                          autoComplete="off"
                           placeholder="10-digit mobile number"
                           maxLength={10}
                           value={form.phone}
@@ -700,6 +701,7 @@ export function ShippingPage() {
                       <div className="rounded-2xl overflow-hidden" style={{ background: "#FFFFFF", border: fieldBorder("email") || "1.5px solid rgba(91,31,36,0.14)" }}>
                         <input
                           type="email"
+                          autoComplete="off"
                           placeholder="name@example.com"
                           value={form.email}
                           onChange={e => (set("email") as (v: string) => void)(e.target.value)}

@@ -9,22 +9,8 @@ export function AuthInput({ label, type = "text", value, onChange, right, name, 
   const [focused, setFocused] = useState(false);
   const active = focused || value.length > 0;
 
-  let inferredAutoComplete = autoComplete;
+  let inferredAutoComplete = autoComplete || "off";
   let inferredName = name;
-  const labelLower = label.toLowerCase();
-
-  if (!inferredAutoComplete) {
-    if (type === "tel" || labelLower.includes("phone") || labelLower.includes("mobile")) {
-      inferredAutoComplete = "tel";
-      inferredName = inferredName || "tel";
-    } else if (type === "email" || labelLower.includes("email")) {
-      inferredAutoComplete = "email";
-      inferredName = inferredName || "email";
-    } else if (labelLower.includes("name")) {
-      inferredAutoComplete = "name";
-      inferredName = inferredName || "name";
-    }
-  }
 
   const inputId = `auth-input-${label.toLowerCase().replace(/\s+/g, '-')}`;
 

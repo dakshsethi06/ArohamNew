@@ -21,7 +21,7 @@ export function OtpBoxes({ value, onChange, onComplete }: { value:string[]; onCh
   return(
     <div className="flex gap-1.5 sm:gap-2.5 justify-center w-full my-2">
       {Array.from({length:6}).map((_,i)=>(
-        <input key={i} ref={refs[i]} type="text" inputMode="numeric" maxLength={1} autoComplete="off"
+        <input key={i} ref={refs[i]} type="text" pattern="[0-9]*" maxLength={1} autoComplete="off"
           value={value[i]||""} onKeyDown={e=>handleKey(i,e)} onChange={e=>handleChange(i,e.target.value)}
           onPaste={e => {
             e.preventDefault();
