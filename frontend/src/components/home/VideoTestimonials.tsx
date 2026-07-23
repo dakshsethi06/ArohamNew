@@ -26,18 +26,28 @@ export function VideoTestimonials() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const isScrollingRef = useRef(false);
+
   const scrollToIndex = (idx: number, smooth = true) => {
     const el = scrollRef.current;
     if (!el) return;
     const child = el.children[idx] as HTMLElement | undefined;
     if (!child) return;
-    el.scrollTo({ left: child.offsetLeft - el.clientWidth / 2 + child.offsetWidth / 2, behavior: smooth ? "smooth" : "instant" });
+    if (smooth) isScrollingRef.current = true;
+    const targetLeft = child.offsetLeft - el.clientWidth / 2 + child.offsetWidth / 2;
+    el.scrollTo({ left: targetLeft, behavior: smooth ? "smooth" : "instant" });
+
+    if (smooth) {
+      setTimeout(() => {
+        isScrollingRef.current = false;
+      }, 500);
+    }
   };
 
   const scrollTo = (i: number) => {
     const mid = n + i;
     setActive(i);
-    scrollToIndex(mid);
+    scrollToIndex(mid, true);
   };
 
   const prev = () => scrollTo((active - 1 + n) % n);
@@ -52,12 +62,12 @@ export function VideoTestimonials() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 2-second auto-slide timer with hover pause
+  // 3.5-second smooth auto-slide timer with hover pause
   useEffect(() => {
     if (isPaused) return;
     const timer = setInterval(() => {
       next();
-    }, 2000);
+    }, 3500);
     return () => clearInterval(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPaused, active, n]);
@@ -68,6 +78,7 @@ export function VideoTestimonials() {
     let snapTimer: ReturnType<typeof setTimeout>;
 
     const onScroll = () => {
+      if (isScrollingRef.current) return;
       const center = el.scrollLeft + el.clientWidth / 2;
       let closest = 0, minDist = Infinity;
       Array.from(el.children).forEach((child, ci) => {
@@ -81,9 +92,11 @@ export function VideoTestimonials() {
 
       clearTimeout(snapTimer);
       snapTimer = setTimeout(() => {
-        if (closest < n) { scrollToIndex(n + realIdx, false); }
-        else if (closest >= n * 2) { scrollToIndex(n + realIdx, false); }
-      }, 100);
+        if (!isScrollingRef.current) {
+          if (closest < n) { scrollToIndex(n + realIdx, false); }
+          else if (closest >= n * 2) { scrollToIndex(n + realIdx, false); }
+        }
+      }, 150);
     };
 
     el.addEventListener("scroll", onScroll, { passive: true });
@@ -121,7 +134,7 @@ export function VideoTestimonials() {
 
         <div ref={scrollRef}
           className="reel-scroll flex items-center gap-5 overflow-x-auto px-6 sm:px-12 lg:px-20"
-          style={{ scrollSnapType: "x mandatory", paddingBottom: "12px", minHeight: isMobile ? 440 : 470 }}>
+          style={{ paddingBottom: "12px", minHeight: isMobile ? 440 : 470 }}>
           {ALL_REELS.map((v, i) => {
             const isActive = (i % n) === active;
 
@@ -131,7 +144,6 @@ export function VideoTestimonials() {
                 style={{
                   width: isMobile ? 260 : 280,
                   height: isMobile ? 410 : 440,
-                  scrollSnapAlign: "center",
                   border: isActive ? `2px solid ${GOLD}` : "1px solid rgba(200,160,68,0.18)",
                   boxShadow: isActive
                     ? `0 0 30px rgba(200,160,68,0.35), 0 20px 50px rgba(0,0,0,0.85)`
