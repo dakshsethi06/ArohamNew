@@ -74,28 +74,22 @@ export function ProductDetailPage() {
   };
 
   const handleShare = async () => {
-    if (!product) return;
-    const shareData = {
-      title: product.name,
-      text: `Check out ${product.name} on Aroham!`,
-      url: window.location.href,
-    };
-
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-        return;
-      } catch (err) {
-        // Fallback to clipboard if share was cancelled or failed
-      }
-    }
-
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(window.location.href);
+      } else {
+        const dummy = document.createElement("input");
+        document.body.appendChild(dummy);
+        dummy.value = window.location.href;
+        dummy.select();
+        document.execCommand("copy");
+        document.body.removeChild(dummy);
+      }
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     } catch (err) {
-      alert("Link copied: " + window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
     }
   };
 
