@@ -245,8 +245,8 @@ export function ConsultPage() {
         if (payload.new) {
           const newMsg = {
             id: payload.new.id,
-            sender: payload.new.sender,
-            text: payload.new.text,
+            sender: payload.new.sender || payload.new.sender_type,
+            text: payload.new.text || payload.new.message_text,
             timestamp: new Date(payload.new.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           };
           setMessages(prev => prev.some(m => m.id === newMsg.id) ? prev : [...prev, newMsg]);
@@ -278,7 +278,9 @@ export function ConsultPage() {
       await supabase.from("chat_messages").insert({
         session_id: session.id,
         sender: "user",
-        text: messageText
+        sender_type: "user",
+        text: messageText,
+        message_text: messageText
       });
     } catch (e) {}
 

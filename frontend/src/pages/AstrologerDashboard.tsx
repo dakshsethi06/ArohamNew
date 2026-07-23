@@ -473,7 +473,9 @@ export function AstrologerDashboard() {
       await supabase.from("chat_messages").insert({
         session_id: activeSession.id,
         sender: "astrologer",
+        sender_type: "astrologer",
         text: messageText,
+        message_text: messageText,
         recommended_product_slug: productRemedy?.slug || null
       });
     } catch (e) {}
