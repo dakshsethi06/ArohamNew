@@ -9,6 +9,7 @@ import { GOLD, IVORY, SANS, SERIF, MAROON } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/lib/supabase";
+import { DEFAULT_PRODUCTS } from "@/constants/products";
 
 interface Astrologer {
   id: string;
@@ -221,18 +222,6 @@ export function ConsultPage() {
         .from("chat_sessions")
         .insert({ id: sessionUuid, user_id: activeUser.id, status: "pending", astrologer_id: astro.id, topic: "Vedic Kundali & Horoscope" });
     } catch {}
-
-    if (createdSession.id && !createdSession.id.startsWith("demo-")) {
-      supabase
-        .channel(`messages-${createdSession.id}`)
-        .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages", filter: `session_id=eq.${createdSession.id}` }, payload => {
-          setMessages(prev => {
-            if (prev.some(m => m.id === payload.new.id)) return prev;
-            return [...prev, payload.new];
-          });
-        })
-        .subscribe();
-    }
   };
 
   useEffect(() => {
@@ -307,6 +296,61 @@ export function ConsultPage() {
       localStorage.setItem(existingKey, JSON.stringify(updated));
       window.dispatchEvent(new Event("storage"));
     } catch (e) {}
+
+    // Auto-respond if astrologer is offline, busy, or simulated demo
+    if (selectedAstrologer.status !== "online" || selectedAstrologer.id.startsWith("demo-") || selectedAstrologer.id === "astro-custom" || selectedAstrologer.id === "astro-1") {
+      setIsTyping(true);
+      setTimeout(async () => {
+        const lowerText = messageText.toLowerCase();
+        let replyText = "";
+        let recProd: any = null;
+
+        if (lowerText.match(/money|career|business|wealth|job|finance/)) {
+          recProd = DEFAULT_PRODUCTS.find(p => p.id === 3) || DEFAULT_PRODUCTS[2]; // Citrine Sun Ring
+          replyText = `Hari Om. To strengthen your Jupiter (Guru) energies and open pathways for professional advancement and financial abundance, I recommend the Citrine Sun Ring. Wear it on your index finger on a Thursday morning after energizing it with the mantra 'Om Brim Brihaspataye Namah'.`;
+        } else if (lowerText.match(/love|marriage|relationship|family|partner/)) {
+          recProd = DEFAULT_PRODUCTS.find(p => p.id === 2) || DEFAULT_PRODUCTS[1]; // Love & Money Metal Bracelet
+          replyText = `Spiritual blessings. For harmony in family life, strengthening emotional bonds, and balancing your Venus (Shukra) cosmic vibrations, I recommend the Triple Metal Synergy Bracelet. It helps channel loving and grounding energies.`;
+        } else if (lowerText.match(/health|peace|fear|anxiety|depression|focus|mind/)) {
+          recProd = DEFAULT_PRODUCTS.find(p => p.id === 4) || DEFAULT_PRODUCTS[3]; // 1 Mukhi Rudraksha
+          replyText = `Blessings to you. For inner peace, eliminating anxiety, and achieving supreme mental focus, a genuine Nepal 1 Mukhi Rudraksha is highly recommended. It connects your Sahasrara chakra directly with Shiva energy.`;
+        } else {
+          recProd = DEFAULT_PRODUCTS.find(p => p.id === 1) || DEFAULT_PRODUCTS[0]; // Bagla Mukhi Yantra
+          replyText = `Pranam. For removing obstacles, protection from negative vibes, and aligning your energies with divine protection, I recommend placing an energized Bagla Mukhi Yantra in your home pooja room or wallet.`;
+        }
+
+        const botMsg = {
+          id: "bot-" + Date.now(),
+          session_id: session.id,
+          sender: "astrologer",
+          text: replyText,
+          recommendedProduct: recProd,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+
+        setIsTyping(false);
+        setMessages(prev => [...prev, botMsg]);
+
+        // Save to LocalStorage
+        try {
+          const existingKey = `aroham_live_chat_${session.id}`;
+          const existing = JSON.parse(localStorage.getItem(existingKey) || "[]");
+          localStorage.setItem(existingKey, JSON.stringify([...existing, botMsg]));
+          window.dispatchEvent(new Event("storage"));
+        } catch (e) {}
+
+        // Save to Supabase
+        try {
+          await supabase.from("chat_messages").insert({
+            session_id: session.id,
+            sender: "astrologer",
+            text: replyText,
+            recommended_product_slug: recProd?.slug || null
+          });
+        } catch (e) {}
+      }, 2000);
+    }
+  };
   const endSession = () => {
     setSession(null);
     setSelectedAstrologer(null);
@@ -315,81 +359,88 @@ export function ConsultPage() {
 
   if (session && selectedAstrologer) {
     return (
-      <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4" style={{ fontFamily: SANS }}>
-        <div className="w-full max-w-5xl bg-white rounded-3xl border border-amber-900/20 shadow-2xl flex flex-col h-[94vh] max-h-[920px] overflow-hidden relative animate-in fade-in zoom-in-95 duration-200">
+      <div className="fixed inset-0 z-50 bg-[#1C0608]/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4" style={{ fontFamily: SANS }}>
+        {/* Animated Main Chat Container */}
+        <div className="w-full max-w-5xl bg-[#FCFAF7] rounded-[32px] border-2 border-amber-900/15 shadow-2xl flex flex-col h-[90vh] max-h-[880px] overflow-hidden relative animate-in fade-in zoom-in-95 duration-300">
           
-          {/* Top Bar Header */}
-          <div className="p-4 sm:px-6 border-b border-amber-900/15 flex items-center justify-between shadow-md shrink-0" style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}>
+          {/* Subtle spiritual background mandala pattern */}
+          <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: `radial-gradient(circle at 50% 50%, ${MAROON} 1px, transparent 1px), radial-gradient(circle at 0 0, ${MAROON} 1px, transparent 1px)`, backgroundSize: "40px 40px" }} />
+          
+          {/* Luxury Top Bar Header */}
+          <div className="p-4 sm:px-6 border-b border-amber-900/15 flex items-center justify-between shadow-lg shrink-0 z-10" style={{ background: `linear-gradient(135deg, ${MAROON} 0%, #4D1418 100%)` }}>
             <div className="flex items-center gap-3">
               <button
                 onClick={endSession}
-                className="p-2 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all active:scale-95"
+                className="p-2 rounded-2xl bg-white/10 text-white hover:bg-white/20 transition-all active:scale-95 border border-white/10"
                 title="Back to Consultations"
               >
                 <ChevronLeft size={20} />
               </button>
               
               <div className="relative">
-                <img src={selectedAstrologer.avatar} alt={selectedAstrologer.name} className="w-11 h-11 rounded-2xl object-cover border-2 border-amber-300 shadow-xs" />
-                <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-[#5B1F24] bg-emerald-400 animate-pulse" />
+                <img src={selectedAstrologer.avatar} alt={selectedAstrologer.name} className="w-12 h-12 rounded-2xl object-cover border-2 border-amber-300 shadow-md" />
+                <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#4D1418] bg-emerald-400 animate-pulse shadow-sm" />
               </div>
               
               <div>
                 <h3 className="font-bold text-sm sm:text-base text-white flex items-center gap-1.5" style={{ fontFamily: SERIF }}>
                   {selectedAstrologer.name}
-                  <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-400/20 text-amber-200 border border-amber-400/30">
-                    Verified
+                  <span className="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-400/20 text-amber-200 border border-amber-400/40 tracking-wider uppercase">
+                    Vedic Certified
                   </span>
                 </h3>
-                <p className="text-[11px] text-amber-200/80">{selectedAstrologer.title}</p>
+                <p className="text-[11px] text-amber-200/80 font-medium flex items-center gap-1">
+                  <Sparkles size={11} className="text-amber-400" />
+                  {selectedAstrologer.title}
+                </p>
               </div>
             </div>
 
             <button
               onClick={endSession}
-              className="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-red-900/40 text-red-200 border border-red-500/30 hover:bg-red-900/60 active:scale-95"
+              className="px-4.5 py-2 rounded-2xl text-xs font-bold transition-all bg-red-950/40 text-red-200 border border-red-500/30 hover:bg-red-950/70 hover:border-red-400/50 active:scale-95"
             >
               End Chat
             </button>
           </div>
 
-          {/* Chat Messages Body */}
-          <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 bg-[#FAF6F0]/60">
+          {/* Premium Chat Messages Body */}
+          <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 bg-[#F8F4ED]/60 relative z-10 scrollbar-thin">
             <div className="text-center my-2">
-              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-bold bg-amber-900/5 text-amber-900/80 border border-amber-900/10 shadow-xs">
-                <Lock size={11} /> End-to-End Encrypted Sacred Vedic Session
+              <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-amber-900/5 text-[#5B1F24] border border-amber-900/10 shadow-xs">
+                <Lock size={11} className="text-amber-700" /> Secure Live consultation
               </span>
             </div>
 
             {messages.map(m => {
               const isUser = m.sender === "user";
               return (
-                <div key={m.id} className={`flex flex-col ${isUser ? "items-end" : "items-start"} space-y-1`}>
+                <div key={m.id} className={`flex flex-col ${isUser ? "items-end" : "items-start"} space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-300`}>
                   <div
-                    className={`max-w-[85%] sm:max-w-[75%] p-3.5 sm:p-4 rounded-2xl text-xs sm:text-sm shadow-xs leading-relaxed ${
+                    className={`max-w-[85%] sm:max-w-[75%] p-4 rounded-3xl text-xs sm:text-sm shadow-xs leading-relaxed ${
                       isUser
                         ? "rounded-tr-xs text-white"
-                        : "rounded-tl-xs bg-white text-[#4A3E31] border border-amber-900/15"
+                        : "rounded-tl-xs bg-white text-[#3E3125] border border-amber-900/10"
                     }`}
-                    style={isUser ? { background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` } : {}}
+                    style={isUser ? { background: `linear-gradient(135deg, ${MAROON} 0%, #802B31 100%)`, boxShadow: "0 4px 15px rgba(91,31,36,0.08)" } : { boxShadow: "0 4px 12px rgba(45,11,14,0.02)" }}
                   >
-                    <p className="whitespace-pre-line">{m.text}</p>
+                    <p className="whitespace-pre-line font-medium">{m.text}</p>
                     
                     {m.recommendedProduct && (
-                      <div className="mt-3 p-3 rounded-xl bg-[#FAF6F0] border border-amber-900/15 text-[#4A3E31]">
-                        <p className="text-[10px] font-extrabold uppercase tracking-wider text-[#5B1F24] mb-1.5 flex items-center gap-1">
-                          <Sparkles size={12} style={{ color: GOLD }} /> Recommended Remedy Item
+                      <div className="mt-3.5 p-3.5 rounded-2xl bg-[#FCFAF7] border border-amber-400/40 text-[#4A3E31] shadow-sm hover:border-amber-400 transition-all duration-300 group/prod">
+                        <p className="text-[9px] font-extrabold uppercase tracking-wider text-amber-700 mb-2 flex items-center gap-1 border-b border-amber-900/5 pb-1">
+                          <Sparkles size={12} className="text-amber-500 fill-amber-500" /> Sacred Prescribed Remedy
                         </p>
                         <div className="flex items-center gap-3">
-                          <img src={m.recommendedProduct.img} alt={m.recommendedProduct.name} className="w-12 h-12 rounded-lg object-cover border border-amber-900/10" />
+                          <img src={m.recommendedProduct.img} alt={m.recommendedProduct.name} className="w-14 h-14 rounded-xl object-cover border border-amber-900/10 group-hover/prod:scale-105 transition-transform duration-300" />
                           <div className="flex-1 min-w-0">
                             <h4 className="font-bold text-xs truncate text-[#5B1F24]">{m.recommendedProduct.name}</h4>
-                            <p className="text-xs font-bold text-amber-900">₹{m.recommendedProduct.price.toLocaleString("en-IN")}</p>
+                            <p className="text-xs font-extrabold text-amber-700 mt-0.5">₹{m.recommendedProduct.price.toLocaleString("en-IN")}</p>
+                            <p className="text-[10px] text-amber-900/60 truncate font-semibold mt-0.5">⭐ {m.recommendedProduct.rating} ({m.recommendedProduct.reviews} reviews)</p>
                           </div>
                           <button
                             onClick={() => addToCart(m.recommendedProduct, 1)}
-                            className="px-3 py-1.5 rounded-xl text-[11px] font-bold text-white shadow-xs active:scale-95 transition-all flex items-center gap-1 whitespace-nowrap"
-                            style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}
+                            className="px-3.5 py-2 rounded-xl text-[11px] font-extrabold text-white shadow-md active:scale-95 transition-all flex items-center gap-1.5 whitespace-nowrap bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110 hover:shadow-[#6D2025]/20"
                           >
                             <ShoppingBag size={11} /> Add to Cart
                           </button>
@@ -397,28 +448,28 @@ export function ConsultPage() {
                       </div>
                     )}
                   </div>
-                  <span className="text-[10px] font-semibold text-amber-900/50 px-1">{m.timestamp || "Just now"}</span>
+                  <span className="text-[10px] font-bold text-amber-900/40 px-2">{m.timestamp || "Just now"}</span>
                 </div>
               );
             })}
 
             {isTyping && (
-              <div className="flex items-center gap-2 text-xs font-semibold text-amber-900/60 p-2.5 bg-white/90 rounded-2xl w-fit border border-amber-900/15 shadow-xs">
+              <div className="flex items-center gap-2 text-xs font-semibold text-amber-900/70 p-3 bg-white/95 rounded-2xl w-fit border border-amber-900/10 shadow-md animate-pulse">
                 <RefreshCw size={13} className="animate-spin text-amber-600" />
-                <span>{selectedAstrologer.name} is typing...</span>
+                <span>{selectedAstrologer.name} is consulting charts...</span>
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick Questions Pills - Wrap without ugly scrollbar slider */}
+          {/* Quick Questions Pills */}
           {messages.length < 3 && (
-            <div className="px-4 py-3 border-t border-amber-900/10 bg-white flex flex-wrap gap-2 shrink-0">
+            <div className="px-5 py-3.5 border-t border-amber-900/10 bg-[#FAF8F5] flex flex-wrap gap-2 shrink-0 z-10">
               {STARTER_QUESTIONS.map((q, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleSendMessage(q)}
-                  className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all border border-amber-900/15 bg-amber-900/5 hover:bg-amber-900/10 text-[#5B1F24] active:scale-95 shadow-xs"
+                  className="px-4 py-2 rounded-full text-xs font-bold transition-all border border-amber-900/15 bg-white hover:bg-amber-900/5 hover:border-amber-600 text-[#5B1F24] active:scale-95 shadow-xs"
                 >
                   {q}
                 </button>
@@ -427,29 +478,27 @@ export function ConsultPage() {
           )}
 
           {/* Input Box Footer Bar */}
-          <div className="p-3.5 sm:p-5 border-t border-amber-900/15 bg-white flex items-center gap-3 shrink-0">
+          <div className="p-4 sm:p-5 border-t border-amber-900/15 bg-white flex items-center gap-3 shrink-0 z-10 shadow-[0_-5px_15px_rgba(45,11,14,0.02)]">
             <input
               type="text"
               value={inputMessage}
               onChange={e => setInputMessage(e.target.value)}
               onKeyDown={e => e.key === "Enter" && handleSendMessage()}
               placeholder="Ask about Kundali, Rudraksha, Gemstones or Vastu..."
-              className="flex-1 h-12 px-4 rounded-2xl text-xs sm:text-sm border border-amber-900/20 outline-none focus:border-[#5B1F24] transition-all bg-[#FAF6F0]/60 text-[#4A3E31]"
+              className="flex-1 h-12.5 px-4.5 rounded-2xl text-xs sm:text-sm border border-amber-900/20 outline-none focus:border-[#5B1F24] focus:ring-2 focus:ring-[#5B1F24]/10 transition-all bg-[#FAF6F0]/50 text-[#3C3024] font-medium"
             />
             <button
               onClick={() => handleSendMessage()}
               disabled={!inputMessage.trim()}
-              className="h-12 px-6 rounded-2xl font-bold text-xs sm:text-sm text-white flex items-center gap-2 shadow-md active:scale-95 transition-all disabled:opacity-50 shrink-0"
-              style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}
+              className="h-12.5 px-6 rounded-2xl font-bold text-xs sm:text-sm text-white flex items-center gap-2 shadow-lg active:scale-95 transition-all disabled:opacity-50 shrink-0 bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110 shadow-[#6D2025]/20"
             >
-              <span>Send</span>
+              <span>Ask Scholar</span>
               <Send size={14} />
             </button>
           </div>
         </div>
       </div>
     );
-  };
   }
 
   // Filter Astrologers strictly from DB
@@ -472,64 +521,69 @@ export function ConsultPage() {
   const onlineCount = astrologers.filter(a => a.status === "online").length;
 
   return (
-    <div className="bg-[#FAF6F0] min-h-screen" style={{ fontFamily: SANS, color: "#4A3E31" }}>
+    <div className="bg-[#FCFAF7] min-h-screen" style={{ fontFamily: SANS, color: "#3E3125" }}>
       
-      {/* Sacred Ivory & Royal Maroon Hero Header */}
-      <div className="relative pt-10 sm:pt-14 pb-10 px-4 sm:px-6 lg:px-10 border-b border-amber-900/15" style={{ background: "linear-gradient(135deg, #FAF6F0 0%, #F5EDE0 100%)" }}>
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-2 mb-3 text-xs font-medium text-amber-900/60">
-            <button onClick={() => navigate("/")} className="hover:underline text-[#5B1F24]">Home</button>
+      {/* Luxury Sacred Hero Header with radial starry glow */}
+      <div className="relative pt-12 sm:pt-16 pb-12 px-4 sm:px-6 lg:px-10 border-b border-amber-900/10 overflow-hidden" style={{ background: "linear-gradient(180deg, #F8F4ED 0%, #FCFAF7 100%)" }}>
+        
+        {/* Decorative Golden Ambient Orbs */}
+        <div className="absolute top-12 right-1/4 w-80 h-80 rounded-full bg-amber-200/20 blur-[100px] pointer-events-none" />
+        <div className="absolute -bottom-10 left-10 w-60 h-60 rounded-full bg-red-100/30 blur-[80px] pointer-events-none" />
+        
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="flex items-center gap-2 mb-4 text-xs font-semibold text-amber-900/50">
+            <button onClick={() => navigate("/")} className="hover:underline hover:text-[#5B1F24] transition-colors">Home</button>
             <span>/</span>
-            <span className="font-semibold text-[#5B1F24]">Database Astrologers</span>
+            <span className="font-bold text-[#5B1F24]">Vedic Consultations</span>
           </div>
 
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold mb-3 border border-amber-900/15 bg-amber-900/5 text-[#5B1F24]">
-                <Sparkles size={14} style={{ color: GOLD }} />
-                <span>Verified Database Vedic Scholars</span>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider mb-4 border border-amber-400/30 bg-amber-400/10 text-amber-800">
+                <Sparkles size={13} className="text-amber-600 fill-amber-600/30 animate-pulse" />
+                <span>Verified Temple Scholars</span>
               </div>
-              <h1 className="tracking-tight text-[#5B1F24]" style={{ fontFamily: SERIF, fontSize: "clamp(2rem, 4vw, 3.2rem)", fontWeight: 700 }}>
-                Consult Verified <span style={{ color: GOLD }}>Vedic Astrologers</span>
+              <h1 className="tracking-tight text-[#5B1F24]" style={{ fontFamily: SERIF, fontSize: "clamp(2.2rem, 5vw, 3.6rem)", fontWeight: 800 }}>
+                Consult Verified <span className="bg-gradient-to-r from-amber-600 to-amber-800 bg-clip-text text-transparent">Vedic Acharyas</span>
               </h1>
-              <p className="text-xs sm:text-sm mt-2 max-w-xl font-medium text-amber-900/70 leading-relaxed">
-                Connect live with certified Vedic Astrologers registered in the Aroham database for Kundali, Gemstones, Rudraksha & Vastu remedies.
+              <p className="text-xs sm:text-sm mt-3 max-w-2xl font-medium text-amber-950/70 leading-relaxed">
+                Connect live with certified Vedic Astrologers and scholars registered in the Aroham database for Kundali, Gemstone prescriptions, Rudraksha analysis, and authentic remedies.
               </p>
             </div>
 
-            <div className="flex items-center gap-4 bg-white/80 backdrop-blur-md p-4 rounded-3xl border border-amber-900/15 shadow-xs">
-              <div className="flex -space-x-2">
-                {astrologers.slice(0, 4).map(a => (
-                  <img key={a.id} src={a.avatar} alt={a.name} className="w-10 h-10 rounded-full object-cover border-2 border-amber-300" />
+            <div className="flex items-center gap-4 bg-white/70 backdrop-blur-md p-4.5 rounded-3xl border border-amber-900/10 shadow-[0_8px_30px_rgb(91,31,36,0.02)] shrink-0 self-start lg:self-auto">
+              <div className="flex -space-x-3">
+                {astrologers.slice(0, 4).map((a, i) => (
+                  <img key={a.id} src={a.avatar} alt={a.name} className="w-10.5 h-10.5 rounded-full object-cover border-2 border-white shadow-md z-10" style={{ zIndex: 40 - i }} />
                 ))}
               </div>
               <div>
-                <p className="font-bold text-emerald-700 text-sm flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse" />
-                  {onlineCount} Online Now
+                <p className="font-extrabold text-emerald-600 text-sm flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  {onlineCount} Scholars Active
                 </p>
-                <p className="text-[11px] text-amber-900/60 font-semibold">Available for Instant Consultation</p>
+                <p className="text-[11px] text-amber-900/60 font-bold">Instant live chat available</p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Body Controls */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-8 space-y-6">
+      {/* Main Container */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-10 space-y-8">
         
         {/* Search & Topic Filters Bar */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white p-4 rounded-3xl border border-amber-900/15 shadow-xs">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-white p-4.5 rounded-3xl border border-amber-900/10 shadow-[0_4px_25px_rgba(91,31,36,0.02)]">
           
           {/* Search Box */}
           <div className="relative flex-1 max-w-md">
-            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-900/50" />
+            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-900/40" />
             <input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search astrologer by name, title or specialty..."
-              className="w-full h-11 pl-10 pr-4 rounded-2xl text-xs bg-amber-50/50 border border-amber-900/15 outline-none focus:border-[#5B1F24] transition-all text-[#4A3E31]"
+              placeholder="Search scholar by name, specialty..."
+              className="w-full h-11.5 pl-11 pr-4 rounded-2xl text-xs bg-amber-50/20 border border-amber-900/10 outline-none focus:border-[#5B1F24] focus:ring-2 focus:ring-[#5B1F24]/5 focus:bg-white transition-all text-[#3C3024] font-medium"
             />
           </div>
 
@@ -539,10 +593,10 @@ export function ConsultPage() {
               <button
                 key={topic}
                 onClick={() => setSelectedTopic(topic)}
-                className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all whitespace-nowrap border ${
+                className={`px-4.5 py-2 rounded-2xl text-xs font-bold transition-all whitespace-nowrap border ${
                   selectedTopic === topic
-                    ? "bg-[#5B1F24] text-white border-[#5B1F24] shadow-xs"
-                    : "bg-amber-50/50 text-[#4A3E31] border-amber-900/15 hover:bg-amber-900/10"
+                    ? "bg-[#5B1F24] text-white border-[#5B1F24] shadow-md shadow-[#5B1F24]/10"
+                    : "bg-[#FAF8F5] text-[#4A3E31] border-amber-900/10 hover:bg-amber-900/5 hover:border-amber-900/20"
                 }`}
               >
                 {topic}
@@ -552,74 +606,77 @@ export function ConsultPage() {
         </div>
 
         {/* Database Astrologers Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6.5">
           {filteredAstrologers.length === 0 ? (
-            <div className="col-span-full p-12 rounded-3xl bg-white border border-amber-900/15 text-center space-y-3 shadow-xs">
-              <User size={36} className="mx-auto text-amber-900/40" />
-              <h3 className="text-base font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>No Astrologers Match Your Search</h3>
-              <p className="text-xs text-amber-900/60 max-w-sm mx-auto">
-                No active astrologers found matching "{searchQuery || selectedTopic}". Try resetting your filter.
-              </p>
+            <div className="col-span-full p-16 rounded-[32px] bg-white border border-amber-900/10 text-center space-y-4 shadow-sm max-w-md mx-auto">
+              <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mx-auto text-amber-900/30">
+                <User size={32} />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-[#5B1F24]" style={{ fontFamily: SERIF }}>No Scholars Found</h3>
+                <p className="text-xs text-amber-900/60 mt-1 max-w-sm mx-auto font-medium leading-relaxed">
+                  No active Vedic Astrologers match "{searchQuery || selectedTopic}". Try adjusting your filters.
+                </p>
+              </div>
               <button
                 onClick={() => { setSelectedTopic("All"); setSearchQuery(""); }}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-900/10 text-[#5B1F24] border border-amber-900/15"
+                className="px-5 py-2.5 rounded-2xl text-xs font-bold bg-[#5B1F24] text-white hover:bg-[#72272D] transition-colors shadow-sm"
               >
-                Reset Filters
+                Clear All Filters
               </button>
             </div>
           ) : (
             filteredAstrologers.map(astro => (
               <div
                 key={astro.id}
-                className="bg-white rounded-3xl p-5 border border-amber-900/15 shadow-[0_4px_20px_rgba(91,31,36,0.04)] hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
+                className="bg-white rounded-3xl p-5 border border-amber-900/10 shadow-[0_4px_22px_rgba(91,31,36,0.02)] hover:shadow-xl hover:border-amber-500/20 transition-all duration-300 flex flex-col justify-between group hover:-translate-y-1"
               >
                 <div>
-                  <div className="relative mb-4 overflow-hidden rounded-2xl aspect-[4/3]">
-                    <img src={astro.avatar} alt={astro.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <div className="relative mb-4.5 overflow-hidden rounded-2xl aspect-[4/3] shadow-xs">
+                    <img src={astro.avatar} alt={astro.name} className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500" />
                     
                     {/* Live Online Badge */}
                     {astro.status === "online" ? (
-                      <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase bg-emerald-600 text-white shadow-xs flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" /> Online Now
+                      <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-[9px] font-extrabold uppercase bg-emerald-600 text-white shadow-md flex items-center gap-1.5 tracking-wider">
+                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" /> Online
                       </div>
                     ) : (
-                      <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase bg-gray-600 text-white shadow-xs flex items-center gap-1.5">
+                      <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-[9px] font-extrabold uppercase bg-gray-500/80 text-white shadow-md flex items-center gap-1.5 tracking-wider backdrop-blur-xs">
                         <span className="w-1.5 h-1.5 rounded-full bg-gray-300" /> Offline
                       </div>
                     )}
 
-                    <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full text-xs font-bold bg-black/70 text-amber-300 border border-white/20 flex items-center gap-1">
-                      <Star size={12} fill="#C8A044" stroke="none" /> {astro.rating}
+                    <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold bg-black/65 text-amber-300 border border-white/10 flex items-center gap-1 backdrop-blur-xs shadow-md">
+                      <Star size={11} fill="#C8A044" stroke="none" /> {astro.rating.toFixed(2)}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <h3 className="font-bold text-base truncate" style={{ color: MAROON, fontFamily: SERIF }}>{astro.name}</h3>
-                    <Award size={14} className="text-amber-600 shrink-0" />
+                  <div className="flex items-center gap-1.5 mb-1 justify-between">
+                    <h3 className="font-bold text-base truncate pr-1" style={{ color: MAROON, fontFamily: SERIF }}>{astro.name}</h3>
+                    <Award size={15} className="text-amber-500 shrink-0" />
                   </div>
-                  <p className="text-xs font-semibold mb-3 text-amber-900/70">{astro.title}</p>
+                  <p className="text-[11px] font-semibold text-amber-900/60 mb-3.5 tracking-wide leading-relaxed">{astro.title}</p>
                   
-                  <div className="flex items-center justify-between text-xs font-medium text-amber-900/60 mb-4 pb-3 border-b border-amber-900/10">
-                    <span className="flex items-center gap-1"><Clock size={13} /> {astro.experience}</span>
-                    <span className="flex items-center gap-1 font-bold text-emerald-700">₹{astro.pricePerMin || 20}/min</span>
+                  <div className="flex items-center justify-between text-xs font-semibold text-amber-950/70 mb-4 pb-3 border-b border-amber-900/5">
+                    <span className="flex items-center gap-1 text-amber-900/60"><Clock size={13.5} /> {astro.experience}</span>
+                    <span className="flex items-center gap-1 font-extrabold text-emerald-700">₹{astro.pricePerMin || 20}/min</span>
                   </div>
 
                   <div className="flex flex-wrap gap-1.5 mb-5">
                     {astro.specialties.map((spec, i) => (
-                      <span key={i} className="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-amber-900/5 text-[#5B1F24] border border-amber-900/10">
+                      <span key={i} className="px-2.5 py-1 rounded-xl text-[10px] font-bold bg-amber-900/5 text-[#5B1F24] border border-amber-900/5">
                         {spec}
                       </span>
                     ))}
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-amber-900/10">
+                <div className="pt-3 border-t border-amber-900/5">
                   <button
                     onClick={() => startConsultation(astro)}
-                    className="w-full py-3 rounded-2xl text-xs font-bold uppercase tracking-wider text-white shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
-                    style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}
+                    className="w-full py-3.5 rounded-2xl text-xs font-extrabold uppercase tracking-wider text-white shadow-md active:scale-98 transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110 shadow-[#6D2025]/15 hover:shadow-[#6D2025]/25"
                   >
-                    <MessageSquare size={14} />
+                    <MessageSquare size={14.5} />
                     <span>Start Live Chat</span>
                   </button>
                 </div>
@@ -629,19 +686,19 @@ export function ConsultPage() {
         </div>
 
         {/* Authentic Guidance Guarantee Footer Banner */}
-        <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-white to-[#F5EDE0] border border-amber-900/15 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xs">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-amber-900/10 text-[#5B1F24] flex-shrink-0">
-              <ShieldCheck size={28} />
+        <div className="p-6 sm:p-8 rounded-[32px] bg-gradient-to-r from-white via-white to-[#F6F1EA] border border-amber-900/10 flex flex-col lg:flex-row items-center justify-between gap-6 shadow-[0_4px_25px_rgba(91,31,36,0.01)]">
+          <div className="flex items-center gap-4.5">
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-amber-400/10 text-amber-800 border border-amber-400/20 flex-shrink-0 shadow-sm">
+              <ShieldCheck size={28} className="text-amber-700" />
             </div>
             <div>
-              <h3 className="font-bold text-base sm:text-lg" style={{ color: MAROON, fontFamily: SERIF }}>100% Temple-Energized Authentic Recommendations</h3>
-              <p className="text-xs text-amber-900/70 mt-1">Our astrologers prescribe only genuine Vedic gemstones & energized Rudrakshas with certificates.</p>
+              <h3 className="font-bold text-base sm:text-lg" style={{ color: MAROON, fontFamily: SERIF }}>100% Temple-Energized Remedial Guarantee</h3>
+              <p className="text-xs text-amber-900/60 mt-1 font-semibold">Our registered scholars prescribe only genuine Vedic gemstones & energized Rudrakshas with certificates.</p>
             </div>
           </div>
           <button
             onClick={() => navigate("/shop")}
-            className="px-6 py-3 rounded-2xl text-xs font-bold uppercase tracking-wider text-[#5B1F24] border border-amber-900/20 bg-white hover:bg-amber-900/5 active:scale-95 transition-all whitespace-nowrap shadow-xs"
+            className="px-6 py-3 rounded-2xl text-xs font-extrabold uppercase tracking-wider text-[#5B1F24] border border-amber-900/20 bg-white hover:bg-amber-950/5 active:scale-95 transition-all whitespace-nowrap shadow-xs"
           >
             Explore Sacred Shop
           </button>
