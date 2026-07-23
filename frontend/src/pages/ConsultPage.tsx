@@ -53,7 +53,7 @@ const getDatabaseAstrologers = (): Astrologer[] => {
   try {
     const customRegistered = JSON.parse(localStorage.getItem("aroham_registered_astrologers") || "[]");
     if (Array.isArray(customRegistered) && customRegistered.length > 0) {
-      list = [...customRegistered];
+      list = customRegistered.filter((a: any) => a.bio && a.bio !== "PENDING_WIZARD_COMPLETION" && a.bio.trim() !== "");
     }
   } catch (e) {}
 
@@ -129,7 +129,8 @@ export function ConsultPage() {
       try {
         const { data } = await supabase.from("astrologers").select("*");
         if (data && data.length > 0) {
-          const dbFormatted: Astrologer[] = data.map(liveData => ({
+          const completedData = data.filter(liveData => liveData.bio && liveData.bio !== "PENDING_WIZARD_COMPLETION" && liveData.bio.trim() !== "");
+          const dbFormatted: Astrologer[] = completedData.map(liveData => ({
             id: liveData.id,
             name: liveData.full_name || liveData.name || "Acharya Astrologer",
             title: liveData.title || "Senior Vedic Jyotish Master",
@@ -194,10 +195,10 @@ export function ConsultPage() {
     setSession(createdSession);
 
     const initialMsg = {
-      id: "init-" + Date.now(),
-      session_id: createdSession.id,
+      id: "initial-" + Date.now(),
+      session_id: sessionUuid,
       sender: "astrologer",
-      text: `Hari Om ${activeUser.user_metadata?.full_name || "Ji"} 🙏 I am ${astro.name}. Welcome to Aroham Sacred Consultations. How may I guide your spiritual path today?`,
+      text: "Namaste! Astrologer will join your chat soon.",
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
@@ -289,59 +290,6 @@ export function ConsultPage() {
       window.dispatchEvent(new Event("storage"));
     } catch (e) {}
 
-    // Auto-respond if astrologer is offline, busy, or simulated demo
-    if (selectedAstrologer.status !== "online" || selectedAstrologer.id.startsWith("demo-") || selectedAstrologer.id === "astro-custom" || selectedAstrologer.id === "astro-1") {
-      setIsTyping(true);
-      setTimeout(async () => {
-        const lowerText = messageText.toLowerCase();
-        let replyText = "";
-        let recProd: any = null;
-
-        if (lowerText.match(/money|career|business|wealth|job|finance/)) {
-          recProd = DEFAULT_PRODUCTS.find(p => p.id === 3) || DEFAULT_PRODUCTS[2]; // Citrine Sun Ring
-          replyText = `Hari Om. To strengthen your Jupiter (Guru) energies and open pathways for professional advancement and financial abundance, I recommend the Citrine Sun Ring. Wear it on your index finger on a Thursday morning after energizing it with the mantra 'Om Brim Brihaspataye Namah'.`;
-        } else if (lowerText.match(/love|marriage|relationship|family|partner/)) {
-          recProd = DEFAULT_PRODUCTS.find(p => p.id === 2) || DEFAULT_PRODUCTS[1]; // Love & Money Metal Bracelet
-          replyText = `Spiritual blessings. For harmony in family life, strengthening emotional bonds, and balancing your Venus (Shukra) cosmic vibrations, I recommend the Triple Metal Synergy Bracelet. It helps channel loving and grounding energies.`;
-        } else if (lowerText.match(/health|peace|fear|anxiety|depression|focus|mind/)) {
-          recProd = DEFAULT_PRODUCTS.find(p => p.id === 4) || DEFAULT_PRODUCTS[3]; // 1 Mukhi Rudraksha
-          replyText = `Blessings to you. For inner peace, eliminating anxiety, and achieving supreme mental focus, a genuine Nepal 1 Mukhi Rudraksha is highly recommended. It connects your Sahasrara chakra directly with Shiva energy.`;
-        } else {
-          recProd = DEFAULT_PRODUCTS.find(p => p.id === 1) || DEFAULT_PRODUCTS[0]; // Bagla Mukhi Yantra
-          replyText = `Pranam. For removing obstacles, protection from negative vibes, and aligning your energies with divine protection, I recommend placing an energized Bagla Mukhi Yantra in your home pooja room or wallet.`;
-        }
-
-        const botMsg = {
-          id: "bot-" + Date.now(),
-          session_id: session.id,
-          sender: "astrologer",
-          text: replyText,
-          recommendedProduct: recProd,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-
-        setIsTyping(false);
-        setMessages(prev => [...prev, botMsg]);
-
-        // Save to LocalStorage
-        try {
-          const existingKey = `aroham_live_chat_${session.id}`;
-          const existing = JSON.parse(localStorage.getItem(existingKey) || "[]");
-          localStorage.setItem(existingKey, JSON.stringify([...existing, botMsg]));
-          window.dispatchEvent(new Event("storage"));
-        } catch (e) {}
-
-        // Save to Supabase
-        try {
-          await supabase.from("chat_messages").insert({
-            session_id: session.id,
-            sender: "astrologer",
-            text: replyText,
-            recommended_product_slug: recProd?.slug || null
-          });
-        } catch (e) {}
-      }, 2000);
-    }
   };
   const endSession = () => {
     setSession(null);
