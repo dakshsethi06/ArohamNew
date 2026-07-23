@@ -90,7 +90,7 @@ import { generateUUID } from "@/utils/uuid";
 
 export function ConsultPage() {
   const navigate = useNavigate();
-  const { user, openAuth } = useAuth();
+  const { isLoggedIn, user, openAuth } = useAuth();
   const { addToCart } = useCart();
 
   const [selectedTopic, setSelectedTopic] = useState<string>("All");
@@ -172,21 +172,12 @@ export function ConsultPage() {
   }, [messages, isTyping]);
 
   const startConsultation = async (astro: Astrologer) => {
-    let activeUser = user;
-    if (!activeUser) {
-      try {
-        const storedMock = localStorage.getItem("aroham_mock_session");
-        if (storedMock) activeUser = JSON.parse(storedMock);
-      } catch (e) {}
+    if (!isLoggedIn || !user?.id) {
+      openAuth();
+      return;
     }
 
-    if (!activeUser) {
-      const guestId = "seeker-" + Math.floor(100000 + Math.random() * 900000);
-      activeUser = {
-        id: guestId,
-        user_metadata: { full_name: "Devotee Seeker (" + guestId.slice(-4) + ")" }
-      } as any;
-    }
+    const activeUser = user;
 
     const sessionUuid = generateUUID();
     let createdSession: any = {
