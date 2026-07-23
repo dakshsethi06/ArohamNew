@@ -194,16 +194,45 @@ export function AstrologerDashboard() {
     setShowProfileWizard(false);
   };
 
+  const [acceptedSessionIds, setAcceptedSessionIds] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem("aroham_accepted_session_ids");
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch (e) {
+      return new Set();
+    }
+  });
+
   const acceptSession = async (s: any) => {
-    setActiveSession(s);
+    const updatedSet = new Set(acceptedSessionIds);
+    updatedSet.add(s.id);
+    setAcceptedSessionIds(updatedSet);
+    try {
+      localStorage.setItem("aroham_accepted_session_ids", JSON.stringify(Array.from(updatedSet)));
+    } catch (e) {}
+
+    const activeObj = { ...s, status: "active" };
+    setActiveSession(activeObj);
+
+    setSessions(prev => prev.map(item => item.id === s.id ? { ...item, status: "active" } : item));
+
+    try {
+      const latestLocal = localStorage.getItem("aroham_latest_live_session");
+      if (latestLocal) {
+        const parsed = JSON.parse(latestLocal);
+        if (parsed.id === s.id) {
+          parsed.status = "active";
+          localStorage.setItem("aroham_latest_live_session", JSON.stringify(parsed));
+          window.dispatchEvent(new Event("storage"));
+        }
+      }
+    } catch (e) {}
+
     try {
       await supabase.from("chat_sessions").update({ status: "active", astrologer_id: user?.id || "astro-1" }).eq("id", s.id);
-      setSessions(prev => prev.map(item => item.id === s.id ? { ...item, status: "active" } : item));
-      fetchMessages(s.id);
-    } catch {
-      setSessions(prev => prev.map(item => item.id === s.id ? { ...item, status: "active" } : item));
-      fetchMessages(s.id);
-    }
+    } catch (e) {}
+
+    fetchMessages(s.id);
   };
 
   const rejectSession = async (s: any) => {
@@ -439,7 +468,8 @@ export function AstrologerDashboard() {
               ) : (
                 filteredSessions.map(s => {
                   const isActive = activeSession?.id === s.id;
-                  const isPending = s.status === "pending";
+                  const isAccepted = s.status === "active" || acceptedSessionIds.has(s.id) || isActive;
+                  const isPending = s.status === "pending" && !isAccepted;
 
                   return (
                     <div
@@ -467,7 +497,7 @@ export function AstrologerDashboard() {
 
                       {/* Accept / Decline Action Buttons */}
                       <div className="flex items-center gap-2 pt-2 border-t border-white/10">
-                        {s.status === "pending" ? (
+                        {!isAccepted ? (
                           <>
                             <button
                               onClick={() => acceptSession(s)}
