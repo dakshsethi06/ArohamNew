@@ -124,7 +124,8 @@ export function PaymentPage() {
 
       let rzpKey = RAZORPAY_KEY_ID;
       let rzpOrderId: string | undefined = undefined;
-      let internalOrderId = `ORD-${Date.now()}`;
+      const orderUuid = generateUUID();
+      let internalOrderId = orderUuid;
       let amountPaisa = Math.round(total * 100);
 
       // Attempt backend order creation with graceful fallback
@@ -187,15 +188,14 @@ export function PaymentPage() {
 
               // 1. Insert to Supabase orders DB — always store user_id and user_phone
               try {
-                const orderUuid = generateUUID();
                 const userPhone = shippingAddr?.phone || user?.user_metadata?.phone || "";
 
                 const sbPayload: any = {
-                  id: orderUuid,
+                  id: orderId,
                   user_id: user?.id || null,
                   user_phone: String(userPhone).replace(/\D/g, "").slice(-10),
-                  amount: total,
-                  total_amount: total,
+                  amount: Math.round(total * 100),
+                  total_amount: Math.round(total * 100),
                   status: "CONFIRMED",
                   payment_method: "Razorpay",
                   payment_status: "PAID",
