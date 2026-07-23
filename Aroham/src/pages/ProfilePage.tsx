@@ -579,18 +579,21 @@ export function ProfilePage() {
         new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2500))
       ]).catch(err => console.warn("Firestore save profile warning:", err));
 
-      Promise.race([
-        supabase.from("users").upsert({
+      // Direct Supabase DB upsert
+      try {
+        await supabase.from("users").upsert({
           id: user.id,
           full_name: editForm.fullName,
-          email: editForm.email,
-          phone: editForm.phone,
-          gender: editForm.gender,
-          dob: editForm.dob,
-          created_at: profile?.created_at || new Date().toISOString()
-        }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2500))
-      ]).catch(err => console.warn("Supabase profile save warning:", err));
+          email: editForm.email || null,
+          phone: editForm.phone || null,
+          gender: editForm.gender || "Other",
+          dob: editForm.dob || "2000-01-01",
+          pob_city: editForm.pobCity || null,
+          updated_at: new Date().toISOString()
+        });
+      } catch (supaErr) {
+        console.warn("Supabase profile save warning:", supaErr);
+      }
 
     } catch (e: any) {
       alert("Failed to save profile: " + (e.message || "Please try again."));
