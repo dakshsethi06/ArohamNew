@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
+import { createPortal } from "react-dom";
 import {
   ChevronLeft, Send, Sparkles, Star, MessageSquare, ShieldCheck,
   Clock, CheckCircle2, User, RefreshCw, ShoppingBag, PhoneCall,
@@ -358,7 +359,7 @@ export function ConsultPage() {
   };
 
   if (session && selectedAstrologer) {
-    return (
+    return createPortal(
       <div className="fixed top-0 left-0 w-screen h-screen z-[9999] bg-[#1C0608]/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4" style={{ fontFamily: SANS }}>
         {/* Animated Main Chat Container */}
         <div className="w-full max-w-5xl bg-[#FCFAF7] rounded-[32px] border-2 border-amber-900/15 shadow-2xl flex flex-col h-[90vh] max-h-[880px] overflow-hidden relative animate-in fade-in zoom-in-95 duration-300">
@@ -432,7 +433,7 @@ export function ConsultPage() {
                           <Sparkles size={12} className="text-amber-500 fill-amber-500" /> Sacred Prescribed Remedy
                         </p>
                         <div className="flex items-center gap-3">
-                          <img src={m.recommendedProduct.img} alt={m.recommendedProduct.name} className="w-14 h-14 rounded-xl object-cover border border-amber-900/10 group-hover/prod:scale-105 transition-transform duration-300" />
+                          <img src={m.recommendedProduct.img} alt={m.recommendedProduct.name} className="w-14 h-14 rounded-xl object-cover border-amber-900/10 group-hover/prod:scale-105 transition-transform duration-300" />
                           <div className="flex-1 min-w-0">
                             <h4 className="font-bold text-xs truncate text-[#5B1F24]">{m.recommendedProduct.name}</h4>
                             <p className="text-xs font-extrabold text-amber-700 mt-0.5">₹{m.recommendedProduct.price.toLocaleString("en-IN")}</p>
@@ -497,7 +498,8 @@ export function ConsultPage() {
             </button>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
