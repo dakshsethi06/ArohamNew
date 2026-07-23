@@ -522,6 +522,19 @@ export function AuthPage() {
         )}
       </button>
 
+      {/* Astrologer Login / Registration Callout */}
+      <div className="pt-4 border-t border-amber-900/10 text-center">
+        <button
+          onClick={() => {
+            closeAuth();
+            navigate("/astrologer");
+          }}
+          className="text-xs font-bold text-amber-900 hover:underline inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-amber-900/5 hover:bg-amber-900/10 border border-amber-900/15 transition-all active:scale-95"
+        >
+          <span>🔮 Are you a Certified Astrologer? Click here to Login / Join</span>
+        </button>
+      </div>
+
 
     </div>
   );

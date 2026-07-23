@@ -93,12 +93,49 @@ export function ConsultPage() {
   const { addToCart } = useCart();
 
   const [selectedTopic, setSelectedTopic] = useState<string>("All");
+  const [astrologers, setAstrologers] = useState<Astrologer[]>(FEATURED_ASTROLOGERS);
   const [selectedAstrologer, setSelectedAstrologer] = useState<Astrologer | null>(null);
   const [session, setSession] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Subscribe to real-time status changes from Supabase astrologers table
+  useEffect(() => {
+    const fetchRealtimeAstrologers = async () => {
+      try {
+        const { data } = await supabase.from("astrologers").select("*");
+        if (data && data.length > 0) {
+          setAstrologers(prev => {
+            return prev.map(a => {
+              const liveData = data.find(d => d.id === a.id);
+              if (liveData) {
+                return { ...a, status: liveData.is_online ? "online" : "offline" };
+              }
+              return a;
+            });
+          });
+        }
+      } catch (err) {}
+    };
+
+    fetchRealtimeAstrologers();
+
+    const channel = supabase
+      .channel("public:astrologers-status")
+      .on("postgres_changes", { event: "*", schema: "public", table: "astrologers" }, payload => {
+        if (payload.new && (payload.new as any).id) {
+          const updated = payload.new as any;
+          setAstrologers(prev => prev.map(a => a.id === updated.id ? { ...a, status: updated.is_online ? "online" : "offline" } : a));
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -377,8 +414,10 @@ export function ConsultPage() {
 
   // Main Consultation Landing Page
   const filteredAstrologers = selectedTopic === "All"
-    ? FEATURED_ASTROLOGERS
-    : FEATURED_ASTROLOGERS.filter(a => a.specialties.some(s => s.toLowerCase().includes(selectedTopic.toLowerCase())));
+    ? astrologers
+    : astrologers.filter(a => a.specialties.some(s => s.toLowerCase().includes(selectedTopic.toLowerCase())));
+
+  const onlineCount = astrologers.filter(a => a.status === "online").length;
 
   return (
     <div style={{ background: "#FAF7F2", minHeight: "100vh", fontFamily: SANS }}>
@@ -408,13 +447,16 @@ export function ConsultPage() {
 
             <div className="flex items-center gap-4 bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10 text-amber-100/90 text-xs">
               <div className="flex -space-x-2">
-                {FEATURED_ASTROLOGERS.map(a => (
+                {astrologers.map(a => (
                   <img key={a.id} src={a.avatar} alt={a.name} className="w-9 h-9 rounded-full object-cover border-2 border-amber-900" />
                 ))}
               </div>
               <div>
-                <p className="font-bold text-white text-sm">4.9 ★ Rating</p>
-                <p className="text-[11px] text-amber-200/60">Over 9,500+ consultations</p>
+                <p className="font-bold text-emerald-400 text-sm flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  {onlineCount} Astrologers Online Now
+                </p>
+                <p className="text-[11px] text-amber-200/60">Over 9,500+ verified sessions</p>
               </div>
             </div>
           </div>
@@ -423,6 +465,13 @@ export function ConsultPage() {
 
       {/* Filter Topics */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-amber-900/80">Available Astrologers ({filteredAstrologers.length})</h2>
+          <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-ping" /> Realtime Status Sync
+          </span>
+        </div>
+
         <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-6 scrollbar-none">
           {["All", "Kundali", "Rudraksha", "Gemstone", "Vastu", "Career", "Marriage"].map(topic => (
             <button
@@ -449,9 +498,18 @@ export function ConsultPage() {
               <div>
                 <div className="relative mb-4 overflow-hidden rounded-2xl aspect-[4/3]">
                   <img src={astro.avatar} alt={astro.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-emerald-600 text-white shadow-xs flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" /> Online Now
-                  </div>
+                  
+                  {/* Live Status Badge */}
+                  {astro.status === "online" ? (
+                    <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-emerald-600 text-white shadow-xs flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" /> Online Now
+                    </div>
+                  ) : (
+                    <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-gray-600 text-white shadow-xs flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-gray-300" /> Offline
+                    </div>
+                  )}
+
                   <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full text-xs font-bold bg-black/60 backdrop-blur-md text-amber-300 border border-white/20 flex items-center gap-1">
                     <Star size={12} fill="#C8A044" stroke="none" /> {astro.rating}
                   </div>

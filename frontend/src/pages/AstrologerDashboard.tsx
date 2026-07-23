@@ -9,7 +9,24 @@ export function AstrologerDashboard() {
   const [activeSession, setActiveSession] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [reply, setReply] = useState("");
+  const [isOnline, setIsOnline] = useState(true);
+  const [astroId, setAstroId] = useState("astro-1");
   const { user } = useAuth();
+
+  const toggleOnlineStatus = async () => {
+    const nextStatus = !isOnline;
+    setIsOnline(nextStatus);
+
+    try {
+      if (user?.id) {
+        await supabase.from("astrologers").update({ is_online: nextStatus }).eq("id", user.id);
+      } else {
+        await supabase.from("astrologers").update({ is_online: nextStatus }).eq("id", astroId);
+      }
+    } catch (e) {
+      console.warn("Status toggle warning:", e);
+    }
+  };
 
   useEffect(() => {
     fetchSessions();
@@ -74,18 +91,33 @@ export function AstrologerDashboard() {
   };
 
   return (
-    <div className="min-h-screen flex" style={{ fontFamily: SANS, background: "#1A0D10", color: IVORY }}>
+    <div className="min-h-screen flex flex-col md:flex-row" style={{ fontFamily: SANS, background: "#1A0D10", color: IVORY }}>
       
       {/* Sidebar Consultation Requests List */}
-      <div className="w-1/3 border-r p-6 bg-[#0D0508]" style={{ borderColor: "rgba(200,160,68,0.2)" }}>
-        <div className="flex items-center gap-2 mb-6">
-          <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400">
-            <Sparkles size={20} />
+      <div className="w-full md:w-1/3 border-r p-6 bg-[#0D0508]" style={{ borderColor: "rgba(200,160,68,0.2)" }}>
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400">
+              <Sparkles size={20} />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-white" style={{ fontFamily: SERIF }}>Astrologer Portal</h2>
+              <p className="text-xs text-amber-200/60">Live User Requests</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-lg font-bold text-white" style={{ fontFamily: SERIF }}>Astrologer Portal</h2>
-            <p className="text-xs text-amber-200/60">Live User Requests</p>
-          </div>
+
+          {/* Real-time Status Toggle Button */}
+          <button
+            onClick={toggleOnlineStatus}
+            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 border shadow-sm ${
+              isOnline
+                ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30"
+                : "bg-gray-500/20 text-gray-400 border-gray-500/40 hover:bg-gray-500/30"
+            }`}
+          >
+            <span className={`w-2 h-2 rounded-full ${isOnline ? "bg-emerald-400 animate-ping" : "bg-gray-400"}`} />
+            <span>{isOnline ? "ONLINE" : "OFFLINE"}</span>
+          </button>
         </div>
 
         <div className="space-y-3">
