@@ -59,9 +59,15 @@ export function AuthPage() {
   const [agreed, setAgreed] = useState(false);
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
   const [canResend, setCanResend] = useState(false);
-  const [panelVisible, setPanelVisible] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [authNotice, setAuthNotice] = useState<string>(() => {
+    try {
+      return sessionStorage.getItem("aroham_auth_notice") || "";
+    } catch (e) {
+      return "";
+    }
+  });
 
   const panelKey = authState;
   const panel = LEFT_PANELS[panelKey] || LEFT_PANELS.signin;
@@ -572,6 +578,22 @@ export function AuthPage() {
   // 1. Unified Auth JSX - Sign In & Create Account Tabs
   const signinJsx = (
     <div style={formStyle} className="space-y-6">
+      {authNotice && (
+        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 to-amber-600/15 border border-amber-500/30 text-[#5B1F24] text-xs font-bold flex items-center justify-between gap-3 shadow-xs animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <Lock size={15} className="text-[#5B1F24] shrink-0" />
+            <span>{authNotice}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => { setAuthNotice(""); sessionStorage.removeItem("aroham_auth_notice"); }}
+            className="p-1 text-amber-900/60 hover:text-[#5B1F24]"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
       {/* Auth Tab Switcher */}
       <div className="flex rounded-2xl p-1 mb-2" style={{ background: "rgba(91,31,36,0.06)", border: "1px solid rgba(91,31,36,0.1)" }}>
         <button

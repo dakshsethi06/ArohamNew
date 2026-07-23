@@ -168,19 +168,21 @@ export function ConsultPage() {
   }, [messages, isTyping]);
 
   const startConsultation = async (astro: Astrologer) => {
-    let activeUser = user;
-    if (!activeUser) {
-      const guestId = "seeker-" + Math.floor(100000 + Math.random() * 900000);
-      activeUser = {
-        id: guestId,
-        user_metadata: { full_name: "Seeker #" + guestId.slice(-4) }
-      } as any;
+    if (!user) {
+      try {
+        sessionStorage.setItem(
+          "aroham_auth_notice",
+          `Please Sign In or Register first to start your live consultation with ${astro.name}`
+        );
+      } catch (e) {}
+      openAuth();
+      return;
     }
 
     const sessionUuid = crypto.randomUUID();
     let createdSession: any = {
       id: sessionUuid,
-      user_id: activeUser.id,
+      user_id: user.id,
       astrologer_id: astro.id,
       status: "pending",
       topic: "Vedic Kundali & Horoscope",
