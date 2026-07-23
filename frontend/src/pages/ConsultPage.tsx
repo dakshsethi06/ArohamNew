@@ -220,6 +220,38 @@ export function ConsultPage() {
   useEffect(() => {
     if (!session?.id) return;
 
+    const fetchLiveMessages = async () => {
+      try {
+        const { data } = await supabase
+          .from("chat_messages")
+          .select("*")
+          .eq("session_id", session.id)
+          .order("created_at", { ascending: true });
+
+        if (data && data.length > 0) {
+          const dbFormatted = data.map(m => ({
+            id: m.id,
+            sender: m.sender || m.sender_type,
+            text: m.text || m.message_text,
+            timestamp: new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }));
+
+          setMessages(prev => {
+            const merged = [...prev];
+            dbFormatted.forEach(dm => {
+              if (!merged.some(p => p.id === dm.id || (p.text === dm.text && p.sender === dm.sender))) {
+                merged.push(dm);
+              }
+            });
+            return merged;
+          });
+        }
+      } catch (e) {}
+    };
+
+    fetchLiveMessages();
+    const pollInterval = setInterval(fetchLiveMessages, 2000);
+
     const syncLiveMessages = () => {
       try {
         const stored = JSON.parse(localStorage.getItem(`aroham_live_chat_${session.id}`) || "[]");
@@ -227,7 +259,7 @@ export function ConsultPage() {
           setMessages(prev => {
             const merged = [...prev];
             stored.forEach(m => {
-              if (!merged.some(p => p.id === m.id || p.text === m.text)) {
+              if (!merged.some(p => p.id === m.id || (p.text === m.text && p.sender === m.sender))) {
                 merged.push(m);
               }
             });
@@ -255,6 +287,7 @@ export function ConsultPage() {
       .subscribe();
 
     return () => {
+      clearInterval(pollInterval);
       window.removeEventListener("storage", syncLiveMessages);
       supabase.removeChannel(channel);
     };

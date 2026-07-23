@@ -230,6 +230,37 @@ export function AstrologerDashboard() {
     };
   }, [user, currentAstroId]);
 
+  useEffect(() => {
+    if (!activeSession?.id) return;
+
+    fetchMessages(activeSession.id);
+
+    const activeMsgInterval = setInterval(() => {
+      fetchMessages(activeSession.id);
+    }, 2000);
+
+    const channel = supabase
+      .channel(`astro-messages-${activeSession.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages", filter: `session_id=eq.${activeSession.id}` }, payload => {
+        if (payload.new) {
+          const newMsg = {
+            id: payload.new.id,
+            session_id: payload.new.session_id,
+            sender: payload.new.sender || payload.new.sender_type,
+            text: payload.new.text || payload.new.message_text,
+            created_at: payload.new.created_at || new Date().toISOString()
+          };
+          setMessages(prev => prev.some(m => m.id === newMsg.id) ? prev : [...prev, newMsg]);
+        }
+      })
+      .subscribe();
+
+    return () => {
+      clearInterval(activeMsgInterval);
+      supabase.removeChannel(channel);
+    };
+  }, [activeSession?.id]);
+
   const fetchDatabaseData = async () => {
     try {
       const { data: txns } = await supabase
@@ -435,7 +466,13 @@ export function AstrologerDashboard() {
     let loadedMsgs: any[] = [];
     try {
       const { data } = await supabase.from("chat_messages").select("*").eq("session_id", sessionId).order("created_at", { ascending: true });
-      if (data && data.length > 0) loadedMsgs = data;
+      if (data && data.length > 0) {
+        loadedMsgs = data.map(m => ({
+          ...m,
+          sender: m.sender || m.sender_type,
+          text: m.text || m.message_text
+        }));
+      }
     } catch (e) {}
 
     try {
