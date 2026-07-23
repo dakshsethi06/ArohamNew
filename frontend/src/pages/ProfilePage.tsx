@@ -508,7 +508,7 @@ export function ProfilePage() {
               const matchesEmail = userEmail && orderEmail && orderEmail === userEmail.toLowerCase();
 
               if (!fetchedOrders.some(o => String(o.id) === String(go.id))) {
-                if (!user?.id || matchesPhone || matchesEmail || !go.user_id) {
+                if (!user?.id || matchesPhone || matchesEmail) {
                   fetchedOrders.push({ ...go, user_id: user?.id || go.user_id });
                 }
               }

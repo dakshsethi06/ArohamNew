@@ -73,7 +73,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setCartSynced(true);
   };
 
-  const handleOrderSync = (userId: string) => {
+  const handleOrderSync = (userData: any) => {
+    const userId = userData?.id;
     if (!userId) return;
     try {
       const guestOrdersStr = localStorage.getItem("aroham_guest_orders");
@@ -85,14 +86,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const existingUserOrders = existingUserOrdersStr ? JSON.parse(existingUserOrdersStr) : [];
           const merged = [...existingUserOrders];
 
+          const userPhone = userData.user_metadata?.phone ? String(userData.user_metadata.phone).replace(/\D/g, "").slice(-10) : "";
+          const userEmail = String(userData.email || "").trim().toLowerCase();
+
           guestOrders.forEach((go: any) => {
-            if (!merged.some((u: any) => String(u.id) === String(go.id))) {
-              const updatedGo = { ...go, user_id: userId };
-              merged.push(updatedGo);
-              if (go.id) {
-                Promise.resolve(
-                  supabase.from("orders").update({ user_id: userId }).eq("id", go.id)
-                ).catch(() => {});
+            const addr = go.shipping_address || go.address || {};
+            const orderPhone = String(addr.phone || go.phone || "").replace(/\D/g, "").slice(-10);
+            const orderEmail = String(addr.email || go.email || "").trim().toLowerCase();
+
+            const matchesPhone = userPhone && orderPhone && orderPhone === userPhone;
+            const matchesEmail = userEmail && orderEmail && orderEmail === userEmail;
+
+            // Only migrate guest orders that belong to this phone or email
+            if (matchesPhone || matchesEmail) {
+              if (!merged.some((u: any) => String(u.id) === String(go.id))) {
+                const updatedGo = { ...go, user_id: userId };
+                merged.push(updatedGo);
+                if (go.id) {
+                  Promise.resolve(
+                    supabase.from("orders").update({ user_id: userId }).eq("id", go.id)
+                  ).catch(() => {});
+                }
               }
             }
           });
@@ -136,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         handleCartSync();
         if (parsed?.id) {
-          handleOrderSync(parsed.id);
+          handleOrderSync(parsed);
           handleUserSupabaseSync(parsed);
         }
       } catch (e) {
@@ -156,7 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       handleCartSync();
       if (userData?.id) {
-        handleOrderSync(userData.id);
+        handleOrderSync(userData);
         handleUserSupabaseSync(userData);
       }
     }
