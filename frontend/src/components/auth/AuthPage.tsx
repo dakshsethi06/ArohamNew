@@ -1005,6 +1005,13 @@ export function AuthPage() {
     </div>
   );
 
+  const handleClose = () => {
+    closeAuth();
+    if (window.location.pathname === "/login" || window.location.pathname === "/auth") {
+      navigate("/");
+    }
+  };
+
   return (
     <div role="dialog" aria-modal="true" aria-label="Sign in" className="fixed inset-0 z-50 flex flex-col" style={{ background: IVORY, fontFamily: SANS }}>
       <style>{`
@@ -1021,13 +1028,13 @@ export function AuthPage() {
       <div className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0 relative z-50 shadow-sm" style={{ borderColor: "rgba(91,31,36,0.3)", background: "rgba(250,247,242,0.95)", backdropFilter: "blur(12px)" }}>
         <Link
           to="/"
-          onClick={() => closeAuth()}
+          onClick={handleClose}
           className="flex items-center gap-2 group cursor-pointer transition-transform hover:opacity-90"
         >
           <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-sm transition-transform group-hover:scale-105" style={{ background: `linear-gradient(135deg,${SAFFRON},${GOLD})`, color: "#1A0D0E" }}>ॐ</div>
           <span className="font-semibold text-lg" style={{ fontFamily: SERIF, color: MAROON }}>Aroham</span>
         </Link>
-        <button onClick={() => closeAuth()} className="p-2 rounded-full hover:bg-black/5 text-gray-500 transition-colors" aria-label="Close">
+        <button onClick={handleClose} className="p-2 rounded-full hover:bg-black/5 text-gray-500 transition-colors" aria-label="Close">
           <X size={20} />
         </button>
       </div>
