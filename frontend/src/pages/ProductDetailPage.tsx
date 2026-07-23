@@ -297,37 +297,19 @@ export function ProductDetailPage() {
       </div>
       <div className="px-4 sm:px-6 lg:px-10 pb-28 lg:pb-10">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[48%_32%_20%] gap-6 lg:gap-8">
-          {/* Gallery with Slider Controls & Responsive Proportions */}
+          {/* Gallery with Touch Swipe Slider (Clean & No Arrow Buttons) */}
           <div>
             <div
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
-              className="max-w-md mx-auto sm:max-w-none rounded-3xl overflow-hidden aspect-[4/3] sm:aspect-square max-h-[380px] sm:max-h-[440px] bg-[#FAF7F2] mb-3 relative group flex items-center justify-center p-3 border border-amber-900/10 shadow-[0_4px_24px_rgba(91,31,36,0.06)] select-none"
+              className="max-w-md mx-auto sm:max-w-none rounded-3xl overflow-hidden aspect-[4/3] sm:aspect-square max-h-[380px] sm:max-h-[440px] bg-[#FAF7F2] mb-3 relative group flex items-center justify-center p-3 border border-amber-900/10 shadow-[0_4px_24px_rgba(91,31,36,0.06)] select-none cursor-grab active:cursor-grabbing"
             >
               <img
                 src={product.img}
                 alt={`${product.name} - ${imgViews[selectedImg]}`}
-                className="max-h-full max-w-full w-auto h-auto object-contain transition-all duration-500"
+                className="max-h-full max-w-full w-auto h-auto object-contain transition-all duration-300 pointer-events-none"
               />
-
-              {/* Slider Left Arrow */}
-              <button
-                aria-label="Previous photo"
-                onClick={prevImg}
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center backdrop-blur-md bg-white/85 border border-white/60 shadow-md text-[#5B1F24] hover:bg-white hover:scale-105 active:scale-95 transition-all z-10"
-              >
-                <ChevronLeft size={18} />
-              </button>
-
-              {/* Slider Right Arrow */}
-              <button
-                aria-label="Next photo"
-                onClick={nextImg}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center backdrop-blur-md bg-white/85 border border-white/60 shadow-md text-[#5B1F24] hover:bg-white hover:scale-105 active:scale-95 transition-all z-10"
-              >
-                <ChevronRight size={18} />
-              </button>
 
               {/* Wishlist & Share Buttons */}
               <div className="absolute top-3 right-3 flex gap-2 z-10">
@@ -352,7 +334,7 @@ export function ProductDetailPage() {
                 {imgViews[selectedImg]}
               </div>
 
-              {/* Slider Dots Indicator */}
+              {/* Touch Slider Dots Indicator */}
               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10 bg-black/25 backdrop-blur-md px-3 py-1 rounded-full border border-white/20">
                 {imgViews.map((_, i) => (
                   <button
