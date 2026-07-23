@@ -294,12 +294,12 @@ export function ShopPage() {
               </h1>
               <p className="text-xs sm:text-sm mt-1 sm:mt-1.5 max-w-xl font-medium" style={{ color: "#7A6A58" }}>
                 {isCustom 
-                  ? `Explore our authentic, temple-energized selection of ${displayTitle.toLowerCase()} products.`
+                  ? `Explore our authentic, temple-energized selection of ${displayTitle.toLowerCase().replace(/products?$/i, "").trim()} products.`
                   : "Handcrafted, temple-energized & astrologer-recommended sacred essentials for spiritual harmony."}
               </p>
             </div>
             
-            <div className="flex items-center gap-2 text-xs font-bold text-amber-900/80 bg-white/70 backdrop-blur-sm px-3.5 py-2 rounded-2xl border border-amber-900/10 shadow-xs w-fit">
+            <div className="flex items-center gap-2 text-xs font-bold text-amber-900/80 bg-white/80 backdrop-blur-sm px-3.5 py-2 rounded-xl border border-amber-900/10 shadow-xs w-fit">
               <Sparkles size={14} style={{ color: GOLD }} />
               <span>100% Authentic & Vedic Energized</span>
             </div>
@@ -308,11 +308,11 @@ export function ShopPage() {
       </div>
 
       {/* Main Content Area */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-8">
         
         {/* Active Filters Bar */}
         {hasActiveFilters && (
-          <div className="flex flex-wrap items-center gap-2 mb-6 p-3 rounded-2xl bg-white border border-amber-900/10 shadow-xs">
+          <div className="flex flex-wrap items-center gap-2 mb-6 p-2.5 sm:p-3 rounded-2xl bg-white border border-amber-900/10 shadow-xs">
             <span className="text-xs font-bold uppercase tracking-wider text-amber-900/70 mr-1 flex items-center gap-1.5">
               <Filter size={12} /> Active Filters:
             </span>
@@ -342,7 +342,7 @@ export function ShopPage() {
             )}
             <button
               onClick={clearAll}
-              className="ml-auto text-xs font-bold hover:underline px-2.5 py-1 text-red-700"
+              className="ml-auto text-xs font-bold hover:underline px-2 py-1 text-red-700"
             >
               Clear All
             </button>
@@ -361,95 +361,95 @@ export function ShopPage() {
           {/* Product Listing Main Section */}
           <div className="flex-1 min-w-0">
             
-            {/* Toolbar: Filter Toggle, Item Count, View Switcher & Sort */}
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-6 bg-white p-3 sm:p-4 rounded-2xl border border-amber-900/10 shadow-xs">
-              <div className="flex items-center gap-3">
-                {/* Mobile Filter Drawer Button */}
+            {/* Redesigned Filter Toolbar: Sleek, Borderless & Unified */}
+            <div className="flex items-center justify-between gap-3 mb-6 pb-4 border-b border-amber-900/10">
+              
+              {/* Left Controls: Filter Drawer Button & Product Count */}
+              <div className="flex items-center gap-2.5">
                 <button
                   onClick={() => setSidebarOpen(true)}
-                  className="lg:hidden flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all hover:bg-amber-900/5 active:scale-95 shadow-xs"
-                  style={{ borderColor: "rgba(91,31,36,0.2)", color: MAROON, background: "#FFFFFF" }}
+                  className="lg:hidden flex items-center gap-2 h-9 px-3.5 rounded-xl text-xs font-bold transition-all border shadow-2xs hover:bg-amber-900/5 active:scale-95 bg-white"
+                  style={{ borderColor: "rgba(91,31,36,0.18)", color: MAROON }}
                 >
-                  <Filter size={14} />
+                  <Filter size={13} />
                   <span>Filters</span>
                   {hasActiveFilters && (
-                    <span className="w-2 h-2 rounded-full bg-[#5B1F24]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#5B1F24]" />
                   )}
                 </button>
 
-                <p className="text-xs sm:text-sm font-semibold" style={{ color: "#6A5A48" }}>
-                  Showing <strong className="text-sm sm:text-base font-bold" style={{ color: MAROON }}>{filtered.length}</strong> products
-                </p>
+                <div className="text-xs sm:text-sm font-medium" style={{ color: "#7A6A58" }}>
+                  Showing <strong className="font-bold text-sm sm:text-base" style={{ color: MAROON }}>{filtered.length}</strong> products
+                </div>
               </div>
 
-              <div className="flex items-center gap-2 sm:gap-3 ml-auto">
-                {/* View Mode Switcher */}
-                <div className="flex items-center p-1 rounded-xl bg-amber-100/60 border border-amber-900/10">
+              {/* Right Controls: View Switcher & Sort Dropdown */}
+              <div className="flex items-center gap-2 sm:gap-3">
+                {/* View Switcher (Sleek Segmented Toggle) */}
+                <div className="flex items-center p-0.5 rounded-xl bg-black/[0.04] border border-black/5">
                   <button
                     aria-label="Grid View"
                     onClick={() => setViewMode("grid")}
-                    className={`p-1.5 sm:p-2 rounded-lg transition-all ${
+                    className={`h-8 w-8 sm:w-9 rounded-lg flex items-center justify-center transition-all ${
                       viewMode === "grid"
-                        ? "bg-white shadow-xs text-[#5B1F24]"
-                        : "text-amber-900/60 hover:text-amber-900"
+                        ? "bg-white shadow-2xs text-[#5B1F24]"
+                        : "text-amber-900/50 hover:text-amber-900"
                     }`}
                   >
-                    <LayoutGrid size={16} />
+                    <LayoutGrid size={15} />
                   </button>
                   <button
                     aria-label="List View"
                     onClick={() => setViewMode("list")}
-                    className={`p-1.5 sm:p-2 rounded-lg transition-all ${
+                    className={`h-8 w-8 sm:w-9 rounded-lg flex items-center justify-center transition-all ${
                       viewMode === "list"
-                        ? "bg-white shadow-xs text-[#5B1F24]"
-                        : "text-amber-900/60 hover:text-amber-900"
+                        ? "bg-white shadow-2xs text-[#5B1F24]"
+                        : "text-amber-900/50 hover:text-amber-900"
                     }`}
                   >
-                    <List size={16} />
+                    <List size={15} />
                   </button>
                 </div>
 
                 {/* Sort Dropdown */}
-                <div className="flex items-center gap-1.5">
-                  <Select.Root value={sort} onValueChange={setSort}>
-                    <Select.Trigger asChild>
-                      <button
-                        className="px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all shadow-xs outline-none hover:border-amber-900/30"
-                        style={{ border: `1px solid rgba(91,31,36,0.2)`, background: "#FFFFFF", color: MAROON, fontFamily: SANS }}
-                      >
-                        <span className="hidden sm:inline text-amber-900/70 font-normal">Sort:</span>
-                        <Select.Value />
-                        <ChevronDown size={14} style={{ color: MAROON }} />
-                      </button>
-                    </Select.Trigger>
-                    <Select.Portal>
-                      <Select.Content
-                        position="popper"
-                        align="end"
-                        sideOffset={6}
-                        className="z-[200] rounded-2xl shadow-2xl border overflow-hidden p-1.5 min-w-[185px] bg-white border-amber-900/15"
-                      >
-                        <Select.Viewport className="space-y-1">
-                          {[
-                            { v: "popular", l: "Most Popular" },
-                            { v: "price-asc", l: "Price: Low to High" },
-                            { v: "price-desc", l: "Price: High to Low" },
-                            { v: "rating", l: "Highest Rated" }
-                          ].map(opt => (
-                            <Select.Item
-                              key={opt.v}
-                              value={opt.v}
-                              className="px-3.5 py-2.5 text-xs font-semibold rounded-xl cursor-pointer outline-none transition-colors data-[highlighted]:bg-amber-900/10 data-[state=checked]:bg-amber-900/15 data-[state=checked]:text-[#5B1F24]"
-                              style={{ color: MAROON, fontFamily: SANS }}
-                            >
-                              <Select.ItemText>{opt.l}</Select.ItemText>
-                            </Select.Item>
-                          ))}
-                        </Select.Viewport>
-                      </Select.Content>
-                    </Select.Portal>
-                  </Select.Root>
-                </div>
+                <Select.Root value={sort} onValueChange={setSort}>
+                  <Select.Trigger asChild>
+                    <button
+                      className="h-9 px-3 sm:px-4 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs outline-none bg-white border hover:border-amber-900/30"
+                      style={{ borderColor: "rgba(91,31,36,0.18)", color: MAROON, fontFamily: SANS }}
+                    >
+                      <span className="hidden sm:inline text-amber-900/60 font-normal">Sort by:</span>
+                      <Select.Value />
+                      <ChevronDown size={13} style={{ color: MAROON }} />
+                    </button>
+                  </Select.Trigger>
+                  <Select.Portal>
+                    <Select.Content
+                      position="popper"
+                      align="end"
+                      sideOffset={6}
+                      className="z-[200] rounded-2xl shadow-2xl border overflow-hidden p-1.5 min-w-[185px] bg-white border-amber-900/15"
+                    >
+                      <Select.Viewport className="space-y-1">
+                        {[
+                          { v: "popular", l: "Most Popular" },
+                          { v: "price-asc", l: "Price: Low to High" },
+                          { v: "price-desc", l: "Price: High to Low" },
+                          { v: "rating", l: "Highest Rated" }
+                        ].map(opt => (
+                          <Select.Item
+                            key={opt.v}
+                            value={opt.v}
+                            className="px-3.5 py-2 text-xs font-semibold rounded-xl cursor-pointer outline-none transition-colors data-[highlighted]:bg-amber-900/10 data-[state=checked]:bg-amber-900/15 data-[state=checked]:text-[#5B1F24]"
+                            style={{ color: MAROON, fontFamily: SANS }}
+                          >
+                            <Select.ItemText>{opt.l}</Select.ItemText>
+                          </Select.Item>
+                        ))}
+                      </Select.Viewport>
+                    </Select.Content>
+                  </Select.Portal>
+                </Select.Root>
               </div>
             </div>
 
