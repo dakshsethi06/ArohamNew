@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, setPersistence, indexedDBLocalPersistence } from "firebase/auth";
+import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 // Live Firebase configuration for Aroham (Project: aroham-ccfab)
@@ -19,12 +19,14 @@ const firebaseConfig = {
   measurementId: getEnv("VITE_FIREBASE_MEASUREMENT_ID", "G-RQBH4MTD6Q")
 };
 
-// Initialize Firebase App singleton with IndexedDB persistence (avoids Chrome credential management prompt)
+// Initialize Firebase App singleton
 export const firebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 export const firebaseAuth = getAuth(firebaseApp);
 export const db = getFirestore(firebaseApp);
 
-// Use IndexedDB persistence - does NOT trigger Chrome's "Access other apps" permission dialog
-setPersistence(firebaseAuth, indexedDBLocalPersistence).catch(err => {
+// Use browserLocalPersistence (localStorage-based) — does NOT trigger Chrome's
+// "Access other apps and services on this device" permission dialog.
+// The previous indexedDBLocalPersistence was still causing the prompt in certain Chrome versions.
+setPersistence(firebaseAuth, browserLocalPersistence).catch(err => {
   console.error("Firebase persistence error:", err);
 });
