@@ -109,11 +109,66 @@ export function AstrologerDashboard() {
 
   const currentAstroId = user?.id || "astro-1";
 
+  const syncProfileToDBAndLocal = async (p: typeof profile) => {
+    if (!user?.id) return;
+    const formattedObj = {
+      id: user.id,
+      name: p.name,
+      title: p.title,
+      experience: `${p.experience}+ Years Exp`,
+      rating: 4.95,
+      consultations: 0,
+      specialties: p.specialty ? [p.specialty, "Vedic Kundali"] : ["Vedic Kundali"],
+      languages: p.languages.split(",").map(l => l.trim()),
+      avatar: p.avatar,
+      status: isChatOnline ? "online" : "offline",
+      pricePerMin: parseFloat(p.pricePerMin) || 20
+    };
+
+    try {
+      const existing = JSON.parse(localStorage.getItem("aroham_registered_astrologers") || "[]");
+      const idx = existing.findIndex((a: any) => a.id === user.id);
+      let updated = [...existing];
+      if (idx !== -1) {
+        updated[idx] = { ...updated[idx], ...formattedObj };
+      } else {
+        updated.unshift(formattedObj);
+      }
+      localStorage.setItem("aroham_registered_astrologers", JSON.stringify(updated));
+      window.dispatchEvent(new Event("storage"));
+    } catch (e) {}
+
+    try {
+      await supabase.from("astrologers").upsert({
+        id: user.id,
+        full_name: p.name,
+        email: p.email,
+        phone: p.phone,
+        title: p.title,
+        experience_years: parseInt(p.experience) || 5,
+        specialties: [p.specialty, "Vedic Kundali"],
+        languages: p.languages.split(",").map(l => l.trim()),
+        bio: p.bio,
+        avatar_url: p.avatar,
+        price_per_min: parseFloat(p.pricePerMin) || 20,
+        is_online: isChatOnline,
+        role: "astrologer"
+      });
+    } catch (e) {}
+  };
+
   useEffect(() => {
+    let currentP = { ...profile };
     try {
       const cached = localStorage.getItem(`aroham_astro_profile_${user?.id}`);
-      if (cached) setProfile(prev => ({ ...prev, ...JSON.parse(cached) }));
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        currentP = { ...currentP, ...parsed };
+        setProfile(currentP);
+      }
     } catch (e) {}
+
+    syncProfileToDBAndLocal(currentP);
 
     const syncAll = () => {
       fetchSessions();
@@ -288,26 +343,10 @@ export function AstrologerDashboard() {
     try {
       const updatedProfile = { ...profile };
       localStorage.setItem(`aroham_astro_profile_${user?.id}`, JSON.stringify(updatedProfile));
-      
-      if (user?.id) {
-        await supabase.from("astrologers").upsert({
-          id: user.id,
-          full_name: profile.name,
-          email: profile.email,
-          phone: profile.phone,
-          title: profile.title,
-          experience_years: parseInt(profile.experience) || 5,
-          specialties: [profile.specialty, "Vedic Kundali"],
-          languages: profile.languages.split(",").map(l => l.trim()),
-          bio: profile.bio,
-          avatar_url: profile.avatar,
-          price_per_min: parseFloat(profile.pricePerMin) || 20,
-          is_online: isChatOnline,
-          role: "astrologer"
-        });
-      }
+      await syncProfileToDBAndLocal(updatedProfile);
     } catch (e) {}
 
+    setShowProfileWizard(false);
     setActiveTab("overview");
   };
 
@@ -572,9 +611,43 @@ export function AstrologerDashboard() {
         </aside>
 
         <main className="flex-1 flex flex-col overflow-hidden bg-[#FAF6F0]">
-          
+              {/* TAB 0: DASHBOARD & ANALYTICS OVERVIEW */}
           {activeTab === "overview" && (
             <div className="p-6 sm:p-8 space-y-6 max-w-6xl mx-auto w-full overflow-y-auto">
+              
+              {/* Profile Completion Alert Banner */}
+              <div className="p-5 rounded-3xl bg-gradient-to-r from-amber-500/10 via-amber-400/20 to-amber-500/10 border border-amber-500/30 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xs">
+                <div className="flex items-center gap-3.5">
+                  <div className="p-3 rounded-2xl bg-amber-500 text-black shrink-0 font-extrabold shadow-sm">
+                    <Sparkles size={20} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-[#5B1F24]" style={{ fontFamily: SERIF }}>
+                      Complete Your Scholar Profile & Practice Details
+                    </h3>
+                    <p className="text-xs text-amber-900/70 mt-0.5">
+                      Upload your photo, set per-minute consultation rate (₹/min), languages & bio so users can book you on the Consult page.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0 w-full md:w-auto">
+                  <button
+                    onClick={() => setShowProfileWizard(true)}
+                    className="flex-1 md:flex-none px-5 py-2.5 rounded-2xl text-xs font-bold text-white shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
+                    style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}
+                  >
+                    <User size={14} />
+                    <span>Complete Profile Now</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("profile")}
+                    className="px-4 py-2.5 rounded-2xl text-xs font-bold bg-white text-[#5B1F24] border border-amber-900/15 hover:bg-amber-50"
+                  >
+                    Quick Settings
+                  </button>
+                </div>
+              </div>
+
               <div>
                 <h2 className="text-xl font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Professional Scholar Control Center</h2>
                 <p className="text-xs text-amber-900/70">Overview of active consultations, seeker metrics, and total database payouts.</p>
@@ -1155,6 +1228,148 @@ export function AstrologerDashboard() {
 
         </main>
       </div>
+
+      {/* Profile Completion Modal Wizard Overlay */}
+      {showProfileWizard && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-[#FAF6F0] w-full max-w-2xl rounded-3xl border border-amber-900/20 shadow-2xl p-6 sm:p-8 space-y-6 relative max-h-[90vh] overflow-y-auto">
+            
+            <div className="flex items-center justify-between pb-4 border-b border-amber-900/15">
+              <div>
+                <h2 className="text-lg font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Complete Astrologer Profile</h2>
+                <p className="text-xs text-amber-900/70">Fill out your professional credentials to appear live in the User Consult Directory.</p>
+              </div>
+              <button
+                onClick={() => setShowProfileWizard(false)}
+                className="p-2 rounded-xl bg-amber-900/10 hover:bg-amber-900/20 text-[#5B1F24]"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Avatar Selection */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-[#5B1F24]">Choose Profile Photo</label>
+              <div className="flex items-center gap-3 flex-wrap">
+                {PRESET_AVATARS.map((av, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setProfile(p => ({ ...p, avatar: av }))}
+                    className={`relative rounded-2xl overflow-hidden border-2 transition-all ${
+                      profile.avatar === av ? "border-amber-600 ring-2 ring-amber-600/40 scale-105" : "border-transparent opacity-70 hover:opacity-100"
+                    }`}
+                  >
+                    <img src={av} alt="Avatar option" className="w-14 h-14 object-cover" />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Form Fields */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[#5B1F24] mb-1">Full Name</label>
+                <input
+                  type="text"
+                  value={profile.name}
+                  onChange={e => setProfile(p => ({ ...p, name: e.target.value }))}
+                  className="w-full h-11 px-3.5 rounded-xl text-xs bg-white border border-amber-900/15 text-[#4A3E31] outline-none focus:border-[#5B1F24]"
+                  placeholder="e.g. Acharya Devrat Sharma"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-[#5B1F24] mb-1">Per-Minute Rate (₹/min)</label>
+                  <input
+                    type="number"
+                    value={profile.pricePerMin}
+                    onChange={e => setProfile(p => ({ ...p, pricePerMin: e.target.value }))}
+                    className="w-full h-11 px-3.5 rounded-xl text-xs bg-white border border-amber-900/15 text-emerald-700 font-bold outline-none focus:border-[#5B1F24]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#5B1F24] mb-1">Experience (Years)</label>
+                  <input
+                    type="number"
+                    value={profile.experience}
+                    onChange={e => setProfile(p => ({ ...p, experience: e.target.value }))}
+                    className="w-full h-11 px-3.5 rounded-xl text-xs bg-white border border-amber-900/15 text-[#4A3E31] outline-none focus:border-[#5B1F24]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#5B1F24] mb-1">Professional Title</label>
+                <input
+                  type="text"
+                  value={profile.title}
+                  onChange={e => setProfile(p => ({ ...p, title: e.target.value }))}
+                  className="w-full h-11 px-3.5 rounded-xl text-xs bg-white border border-amber-900/15 text-[#4A3E31] outline-none focus:border-[#5B1F24]"
+                  placeholder="e.g. Senior Vedic Jyotish & Prashna Kundali Master"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-[#5B1F24] mb-1">Primary Specialty</label>
+                  <input
+                    type="text"
+                    value={profile.specialty}
+                    onChange={e => setProfile(p => ({ ...p, specialty: e.target.value }))}
+                    className="w-full h-11 px-3.5 rounded-xl text-xs bg-white border border-amber-900/15 text-[#4A3E31] outline-none focus:border-[#5B1F24]"
+                    placeholder="e.g. Vedic Kundali, Gemstone Remedies"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#5B1F24] mb-1">Languages Spoken</label>
+                  <input
+                    type="text"
+                    value={profile.languages}
+                    onChange={e => setProfile(p => ({ ...p, languages: e.target.value }))}
+                    className="w-full h-11 px-3.5 rounded-xl text-xs bg-white border border-amber-900/15 text-[#4A3E31] outline-none focus:border-[#5B1F24]"
+                    placeholder="e.g. Hindi, English, Sanskrit"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#5B1F24] mb-1">Bio & Practice Summary</label>
+                <textarea
+                  rows={3}
+                  value={profile.bio}
+                  onChange={e => setProfile(p => ({ ...p, bio: e.target.value }))}
+                  className="w-full p-3.5 rounded-xl text-xs bg-white border border-amber-900/15 text-[#4A3E31] outline-none focus:border-[#5B1F24] leading-relaxed"
+                  placeholder="Describe your experience, credentials, and astrological guidance style..."
+                />
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-amber-900/15 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowProfileWizard(false)}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold bg-amber-900/10 text-amber-900"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={saveProfile}
+                className="px-6 py-2.5 rounded-xl text-xs font-bold text-white shadow-lg active:scale-95 transition-all flex items-center gap-2"
+                style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}
+              >
+                <Check size={14} />
+                <span>Save & Publish Profile Live</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
     </div>
   );

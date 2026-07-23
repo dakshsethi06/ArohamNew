@@ -47,13 +47,41 @@ const STARTER_QUESTIONS = [
 
 // Strictly fetch database & registered astrologers
 const getDatabaseAstrologers = (): Astrologer[] => {
+  let list: Astrologer[] = [];
   try {
     const customRegistered = JSON.parse(localStorage.getItem("aroham_registered_astrologers") || "[]");
     if (Array.isArray(customRegistered) && customRegistered.length > 0) {
-      return customRegistered;
+      list = [...customRegistered];
     }
   } catch (e) {}
-  return [DEFAULT_DB_ASTROLOGER];
+
+  try {
+    const sessionStr = localStorage.getItem("aroham_mock_session");
+    if (sessionStr) {
+      const parsed = JSON.parse(sessionStr);
+      if (parsed && (parsed.role === "astrologer" || parsed.user_metadata?.role === "astrologer")) {
+        const id = parsed.id || "astro-custom";
+        if (!list.some(a => a.id === id)) {
+          list.unshift({
+            id: id,
+            name: parsed.user_metadata?.full_name || parsed.name || "Acharya Astrologer",
+            title: "Senior Vedic Jyotish Master",
+            experience: "5+ Years Exp",
+            rating: 4.95,
+            consultations: 0,
+            specialties: ["Vedic Kundali", "Sacred Remedies"],
+            languages: ["Hindi", "English"],
+            avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
+            status: "online",
+            pricePerMin: 20
+          });
+        }
+      }
+    }
+  } catch (e) {}
+
+  if (list.length === 0) list = [DEFAULT_DB_ASTROLOGER];
+  return list;
 };
 
 export function ConsultPage() {
