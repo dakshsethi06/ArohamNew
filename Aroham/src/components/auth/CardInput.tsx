@@ -6,7 +6,7 @@ export function CardInput({value,onChange,placeholder,maxLength,type="text"}:{va
   return(
     <input type={type} value={value} onChange={e=>onChange(e.target.value)}
       onFocus={()=>setFocused(true)} onBlur={()=>setFocused(false)}
-      placeholder={placeholder} maxLength={maxLength}
+      placeholder={placeholder} maxLength={maxLength} autoComplete="off"
       className="w-full px-4 py-3.5 rounded-2xl text-sm outline-none transition-all duration-200"
       style={{ border:`1.5px solid ${focused?GOLD:"rgba(91,31,36,0.14)"}`,
         boxShadow:focused?`0 0 0 3px rgba(200,160,68,0.1)`:"none",

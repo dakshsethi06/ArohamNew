@@ -73,7 +73,7 @@ export function Newsletter() {
           </div>
         ) : (
           <form className="flex gap-3 flex-col sm:flex-row" onSubmit={handleSubmit}>
-            <input type="email" placeholder="Enter your email address" value={email} onChange={e => setEmail(e.target.value)} required
+            <input type="email" placeholder="Enter your email address" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="off"
               className="flex-1 px-5 py-3.5 rounded-full text-sm outline-none"
               style={{ background: "#FFFFFF", border: `1px solid rgba(91,31,36,0.15)`, color: MAROON, fontFamily: SANS }}
               onFocus={e => { e.target.style.borderColor = GOLD; }} onBlur={e => { e.target.style.borderColor = "rgba(91,31,36,0.15)"; }} />
