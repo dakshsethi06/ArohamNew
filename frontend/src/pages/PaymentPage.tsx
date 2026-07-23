@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { Lock, ChevronLeft, ChevronRight, ShieldCheck, Tag, ChevronDown } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
 import { CheckoutProgress } from "@/components/checkout/CheckoutProgress";
+import { generateUUID } from "@/utils/uuid";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
@@ -187,7 +188,7 @@ export function PaymentPage() {
 
               // 1. Insert to Supabase orders DB with clean UUID and valid columns
               try {
-                const orderUuid = crypto.randomUUID();
+                const orderUuid = generateUUID();
                 const isValidUuid = (str: any) => typeof str === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
                 const cleanUserId = isValidUuid(user?.id) ? user.id : null;
 

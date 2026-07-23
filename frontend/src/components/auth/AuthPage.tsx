@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { firebaseAuth, db } from "@/lib/firebase";
 import { supabase } from "@/lib/supabase";
 import { api } from "@/lib/api";
+import { generateUUID } from "@/utils/uuid";
 import { doc, getDoc, setDoc, serverTimestamp, collection, query, where, getDocs } from "firebase/firestore";
 import * as Select from "@radix-ui/react-select";
 import * as Popover from "@radix-ui/react-popover";
@@ -275,7 +276,7 @@ export function AuthPage() {
         }
 
         if (isAstrologerMode) {
-          const astroId = crypto.randomUUID();
+          const astroId = generateUUID();
           const astroFullName = name.trim() || "Acharya " + (phoneDigits.slice(-4) || "Ji");
           const newAstrologer = {
             id: astroId,
@@ -371,7 +372,7 @@ export function AuthPage() {
           handleAuthSuccess();
         } else if (name.trim()) {
           // Account creation flow: Sync profile via backend to ensure valid Supabase Auth user
-          let finalUserId = crypto.randomUUID();
+          let finalUserId = generateUUID();
 
           try {
             const signupRes = await api("/auth/signup", {
@@ -448,7 +449,7 @@ export function AuthPage() {
 
     try {
       const phoneDigits = phone.replace(/\D/g, "");
-      let finalUserId = crypto.randomUUID();
+      let finalUserId = generateUUID();
 
       if (isAstrologerMode) {
         const astroFullName = name.trim() || "Acharya " + (phoneDigits.slice(-4) || "Ji");

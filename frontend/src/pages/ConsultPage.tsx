@@ -84,6 +84,8 @@ const getDatabaseAstrologers = (): Astrologer[] => {
   return list;
 };
 
+import { generateUUID } from "@/utils/uuid";
+
 export function ConsultPage() {
   const navigate = useNavigate();
   const { user, openAuth } = useAuth();
@@ -184,7 +186,7 @@ export function ConsultPage() {
       } as any;
     }
 
-    const sessionUuid = crypto.randomUUID();
+    const sessionUuid = generateUUID();
     let createdSession: any = {
       id: sessionUuid,
       user_id: activeUser.id,
