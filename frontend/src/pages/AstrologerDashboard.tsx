@@ -94,7 +94,15 @@ export function AstrologerDashboard() {
       }
     } catch (e) {}
 
+    const syncSessions = () => {
+      fetchSessions();
+    };
+
+    window.addEventListener("storage", syncSessions);
+    window.addEventListener("focus", syncSessions);
+
     fetchSessions();
+
     const sub = supabase
       .channel("incoming-requests-channel")
       .on("postgres_changes", { event: "*", schema: "public", table: "chat_sessions" }, () => {
@@ -103,6 +111,8 @@ export function AstrologerDashboard() {
       .subscribe();
 
     return () => {
+      window.removeEventListener("storage", syncSessions);
+      window.removeEventListener("focus", syncSessions);
       supabase.removeChannel(sub);
     };
   }, [user]);
@@ -121,20 +131,23 @@ export function AstrologerDashboard() {
   };
 
   const fetchSessions = async () => {
+    let sessionList: any[] = [];
     try {
       const { data } = await supabase.from("chat_sessions").select("*").order("created_at", { ascending: false });
-      if (data && data.length > 0) {
-        setSessions(data);
-      } else {
-        // Fallback demo requests
-        setSessions([
-          { id: "demo-sess-1", user_id: "usr-9812", status: "pending", topic: "Kundali & Marriage", created_at: new Date().toISOString() },
-          { id: "demo-sess-2", user_id: "usr-4410", status: "active", topic: "Career & Gemstones", created_at: new Date(Date.now() - 300000).toISOString() }
-        ]);
+      if (data && data.length > 0) sessionList = data;
+    } catch (e) {}
+
+    try {
+      const latestLocal = localStorage.getItem("aroham_latest_live_session");
+      if (latestLocal) {
+        const parsed = JSON.parse(latestLocal);
+        if (!sessionList.some(s => s.id === parsed.id)) {
+          sessionList.unshift(parsed);
+        }
       }
-    } catch {
-      // Fallback
-    }
+    } catch (e) {}
+
+    setSessions(sessionList);
   };
 
   const saveProfile = async () => {
@@ -171,6 +184,7 @@ export function AstrologerDashboard() {
       fetchMessages(s.id);
     } catch {
       setSessions(prev => prev.map(item => item.id === s.id ? { ...item, status: "active" } : item));
+      fetchMessages(s.id);
     }
   };
 
@@ -185,14 +199,24 @@ export function AstrologerDashboard() {
   };
 
   const fetchMessages = async (sessionId: string) => {
+    let loadedMsgs: any[] = [];
     try {
       const { data } = await supabase.from("chat_messages").select("*").eq("session_id", sessionId).order("created_at", { ascending: true });
-      if (data) setMessages(data);
-    } catch {
-      setMessages([
-        { id: "m-1", sender: "user", text: "Pranam Guruji! Please guide me regarding my career & Gemstone remedy." }
-      ]);
-    }
+      if (data && data.length > 0) loadedMsgs = data;
+    } catch (e) {}
+
+    try {
+      const localMsgs = JSON.parse(localStorage.getItem(`aroham_live_chat_${sessionId}`) || "[]");
+      if (Array.isArray(localMsgs) && localMsgs.length > 0) {
+        localMsgs.forEach(lm => {
+          if (!loadedMsgs.some(m => m.id === lm.id || (m.text === lm.text && m.sender === lm.sender))) {
+            loadedMsgs.push(lm);
+          }
+        });
+      }
+    } catch (e) {}
+
+    setMessages(loadedMsgs);
   };
 
   const sendMessage = async (customText?: string, productRemedy?: any) => {
@@ -209,6 +233,9 @@ export function AstrologerDashboard() {
       created_at: new Date().toISOString()
     };
 
+    setMessages(prev => [...prev, newMsg]);
+    if (!customText) setReply("");
+
     try {
       await supabase.from("chat_messages").insert({
         session_id: activeSession.id,
@@ -216,10 +243,15 @@ export function AstrologerDashboard() {
         text: messageText,
         recommended_product_slug: productRemedy?.slug || null
       });
-    } catch {}
+    } catch (e) {}
 
-    setMessages(prev => [...prev, newMsg]);
-    if (!customText) setReply("");
+    try {
+      const existingKey = `aroham_live_chat_${activeSession.id}`;
+      const existing = JSON.parse(localStorage.getItem(existingKey) || "[]");
+      const updated = [...existing, newMsg];
+      localStorage.setItem(existingKey, JSON.stringify(updated));
+      window.dispatchEvent(new Event("storage"));
+    } catch (e) {}
   };
 
   const endSession = async () => {

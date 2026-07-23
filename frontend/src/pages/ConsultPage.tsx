@@ -214,39 +214,50 @@ export function ConsultPage() {
 
     setSelectedAstrologer(astro);
 
-    let createdSession = null;
+    const sessionUuid = crypto.randomUUID();
+    let createdSession: any = {
+      id: sessionUuid,
+      user_id: user.id,
+      astrologer_id: astro.id,
+      status: "pending",
+      topic: "Vedic Kundali & Horoscope",
+      created_at: new Date().toISOString()
+    };
+
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("chat_sessions")
-        .insert({ user_id: user.id, status: "active", astrologer_id: astro.id })
+        .insert({ id: sessionUuid, user_id: user.id, status: "pending", astrologer_id: astro.id, topic: "Vedic Kundali & Horoscope" })
         .select("*")
         .single();
       
       if (data) createdSession = data;
     } catch {
-      // Supabase fallback mode for offline/demo
+      // Supabase fallback mode
     }
 
-    if (!createdSession) {
-      createdSession = {
-        id: "demo-session-" + Date.now(),
-        user_id: user.id,
-        astrologer_id: astro.id,
-        status: "active"
-      };
-    }
+    try {
+      localStorage.setItem("aroham_latest_live_session", JSON.stringify(createdSession));
+      window.dispatchEvent(new Event("storage"));
+    } catch (e) {}
 
     setSession(createdSession);
 
     // Initial greeting message from Astrologer
     const initialMsg = {
-      id: "init-1",
+      id: "init-" + Date.now(),
+      session_id: createdSession.id,
       sender: "astrologer",
       text: `Hari Om ${user.user_metadata?.full_name || "Ji"} 🙏 I am ${astro.name}. Welcome to Aroham Sacred Consultations. How may I guide your spiritual path today?`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
     setMessages([initialMsg]);
+
+    try {
+      localStorage.setItem(`aroham_live_chat_${createdSession.id}`, JSON.stringify([initialMsg]));
+      window.dispatchEvent(new Event("storage"));
+    } catch (e) {}
 
     // Subscribe to Supabase real-time if session exists
     if (createdSession.id && !createdSession.id.startsWith("demo-")) {
