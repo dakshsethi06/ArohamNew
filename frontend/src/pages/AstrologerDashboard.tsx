@@ -93,12 +93,18 @@ export function AstrologerDashboard() {
     specialty: "Vedic Kundali",
     languages: "Hindi, English, Sanskrit, Gujarati",
     degree: "Jyotish Acharya (BHU, Varanasi)",
-    bio: "Certified Vedic Astrologer with over 8+ years of experience in Prashna Kundali, Gemology & Vastu remedies. Over 9,500+ consultations guided successfully.",
+    bio: "PENDING_WIZARD_COMPLETION",
     avatar: PRESET_AVATARS[0],
     pricePerMin: "20"
   });
 
   const [showProfileWizard, setShowProfileWizard] = useState(false);
+
+  useEffect(() => {
+    if (!profile.bio || profile.bio === "PENDING_WIZARD_COMPLETION" || profile.bio.trim() === "") {
+      setShowProfileWizard(true);
+    }
+  }, [profile.bio]);
 
   const [acceptedSessionIds, setAcceptedSessionIds] = useState<Set<string>>(() => {
     try {
@@ -110,6 +116,7 @@ export function AstrologerDashboard() {
   });
 
   const currentAstroId = user?.id || "astro-1";
+  const pendingSession = sessions.find(s => s.status === "pending" && !acceptedSessionIds.has(s.id));
 
   const syncProfileToDBAndLocal = async (p: typeof profile) => {
     if (!user?.id) return;
@@ -634,38 +641,40 @@ export function AstrologerDashboard() {
           {activeTab === "overview" && (
             <div className="p-6 sm:p-8 space-y-6 max-w-6xl mx-auto w-full overflow-y-auto">
               
-              {/* Profile Completion Alert Banner */}
-              <div className="p-5 rounded-3xl bg-gradient-to-r from-amber-500/10 via-amber-400/20 to-amber-500/10 border border-amber-500/30 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xs">
-                <div className="flex items-center gap-3.5">
-                  <div className="p-3 rounded-2xl bg-amber-500 text-black shrink-0 font-extrabold shadow-sm">
-                    <Sparkles size={20} />
+               {/* Profile Completion Alert Banner */}
+              {(!profile.bio || profile.bio === "PENDING_WIZARD_COMPLETION" || profile.bio.trim() === "") && (
+                <div className="p-5 rounded-3xl bg-gradient-to-r from-amber-500/10 via-amber-400/20 to-amber-500/10 border border-amber-500/30 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xs">
+                  <div className="flex items-center gap-3.5">
+                    <div className="p-3 rounded-2xl bg-amber-500 text-black shrink-0 font-extrabold shadow-sm">
+                      <Sparkles size={20} />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-sm text-[#5B1F24]" style={{ fontFamily: SERIF }}>
+                        Complete Your Scholar Profile & Practice Details
+                      </h3>
+                      <p className="text-xs text-amber-900/70 mt-0.5">
+                        Upload your photo, set per-minute consultation rate (₹/min), languages & bio so users can book you on the Consult page.
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-sm text-[#5B1F24]" style={{ fontFamily: SERIF }}>
-                      Complete Your Scholar Profile & Practice Details
-                    </h3>
-                    <p className="text-xs text-amber-900/70 mt-0.5">
-                      Upload your photo, set per-minute consultation rate (₹/min), languages & bio so users can book you on the Consult page.
-                    </p>
+                  <div className="flex items-center gap-2 shrink-0 w-full md:w-auto">
+                    <button
+                      onClick={() => setShowProfileWizard(true)}
+                      className="flex-1 md:flex-none px-5 py-2.5 rounded-2xl text-xs font-bold text-white shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
+                      style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}
+                    >
+                      <User size={14} />
+                      <span>Complete Profile Now</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("profile")}
+                      className="px-4 py-2.5 rounded-2xl text-xs font-bold bg-white text-[#5B1F24] border border-amber-900/15 hover:bg-amber-50"
+                    >
+                      Quick Settings
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0 w-full md:w-auto">
-                  <button
-                    onClick={() => setShowProfileWizard(true)}
-                    className="flex-1 md:flex-none px-5 py-2.5 rounded-2xl text-xs font-bold text-white shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
-                    style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}
-                  >
-                    <User size={14} />
-                    <span>Complete Profile Now</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("profile")}
-                    className="px-4 py-2.5 rounded-2xl text-xs font-bold bg-white text-[#5B1F24] border border-amber-900/15 hover:bg-amber-50"
-                  >
-                    Quick Settings
-                  </button>
-                </div>
-              </div>
+              )}
 
               <div>
                 <h2 className="text-xl font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Professional Scholar Control Center</h2>
@@ -1236,7 +1245,7 @@ export function AstrologerDashboard() {
                   <label className="block text-xs font-bold text-[#5B1F24] mb-1">Bio & Vedic Practice Summary</label>
                   <textarea
                     rows={4}
-                    value={profile.bio}
+                    value={profile.bio === "PENDING_WIZARD_COMPLETION" ? "" : profile.bio}
                     onChange={e => setProfile(p => ({ ...p, bio: e.target.value }))}
                     className="w-full p-3.5 rounded-xl text-xs bg-amber-50/50 border border-amber-900/15 text-[#4A3E31] outline-none focus:border-[#5B1F24] leading-relaxed"
                   />
@@ -1359,7 +1368,7 @@ export function AstrologerDashboard() {
                 <label className="block text-xs font-bold text-[#5B1F24] mb-1">Bio & Practice Summary</label>
                 <textarea
                   rows={3}
-                  value={profile.bio}
+                  value={profile.bio === "PENDING_WIZARD_COMPLETION" ? "" : profile.bio}
                   onChange={e => setProfile(p => ({ ...p, bio: e.target.value }))}
                   className="w-full p-3.5 rounded-xl text-xs bg-white border border-amber-900/15 text-[#4A3E31] outline-none focus:border-[#5B1F24] leading-relaxed"
                   placeholder="Describe your experience, credentials, and astrological guidance style..."
@@ -1386,6 +1395,48 @@ export function AstrologerDashboard() {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Floating Incoming Consultation Request Banner (Ringing Toast) */}
+      {pendingSession && (
+        <div className="fixed bottom-6 right-6 z-50 w-full max-w-sm bg-white rounded-3xl border-2 border-amber-500 shadow-2xl p-5 space-y-4 animate-bounce" style={{ fontFamily: SANS }}>
+          {/* Glowing pulse ring */}
+          <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-4 w-4 bg-amber-500"></span>
+          </span>
+
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-amber-400/10 text-amber-700 flex items-center justify-center border border-amber-400/20 shrink-0">
+              <Bell size={20} className="animate-pulse" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-extrabold text-xs text-amber-800 uppercase tracking-wider">Incoming Consultation</h3>
+              <p className="text-sm font-bold text-[#5B1F24] truncate" style={{ fontFamily: SERIF }}>
+                Seeker #{pendingSession.user_id?.slice(-6) || "Devotee"}
+              </p>
+              <p className="text-[11px] text-amber-900/60 font-semibold truncate mt-0.5">
+                Topic: {pendingSession.topic || "Vedic Guidance"}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => rejectSession(pendingSession)}
+              className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-amber-900/5 text-[#5B1F24] border border-amber-900/10 hover:bg-amber-900/10 transition-all active:scale-95"
+            >
+              Decline
+            </button>
+            <button
+              onClick={() => acceptSession(pendingSession)}
+              className="flex-1 py-2.5 rounded-xl text-xs font-extrabold text-white shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+              style={{ background: `linear-gradient(135deg, ${MAROON}, #8C1D24)` }}
+            >
+              <Check size={14} /> Accept Request
+            </button>
           </div>
         </div>
       )}
