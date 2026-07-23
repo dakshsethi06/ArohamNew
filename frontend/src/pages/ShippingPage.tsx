@@ -62,9 +62,10 @@ export function ShippingPage() {
       const userPhone = user?.user_metadata?.phone ? String(user.user_metadata.phone).replace(/\D/g, "").slice(-10) : "";
       const userEmail = user?.email || "";
 
-      // 1. Read pre-filled shipping form
+      // 1. Read pre-filled shipping form (account-separated)
       try {
-        const savedForm = localStorage.getItem("aroham_saved_shipping_form");
+        const formKey = user?.id ? `aroham_saved_shipping_form_${user.id}` : "aroham_saved_shipping_form_guest";
+        const savedForm = localStorage.getItem(formKey);
         if (savedForm) {
           const parsed = JSON.parse(savedForm);
           setForm(prev => ({ ...prev, ...parsed }));
@@ -255,9 +256,10 @@ export function ShippingPage() {
     setSavingAddress(true);
     const est = estimates[form.pin];
 
-    // Save to LocalStorage for automatic pre-fill next time
+    // Save to LocalStorage for automatic pre-fill next time (account-separated)
     try {
-      localStorage.setItem("aroham_saved_shipping_form", JSON.stringify(form));
+      const formKey = user?.id ? `aroham_saved_shipping_form_${user.id}` : "aroham_saved_shipping_form_guest";
+      localStorage.setItem(formKey, JSON.stringify(form));
       const newAddrItem = {
         id: editingAddrId || Date.now(),
         full_name: `${form.firstName} ${form.lastName}`.trim(),
