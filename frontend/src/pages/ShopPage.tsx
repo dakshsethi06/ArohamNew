@@ -11,7 +11,7 @@ import { ArohamProduct } from "@/types/product";
 
 export function ShopPage() {
   const navigate = useNavigate();
-  const { items, addToCart, updateQty } = useCart();
+  const { items, addToCart, updateQty, removeFromCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const [searchParams] = useSearchParams();
   const titleParam = searchParams.get("title") || searchParams.get("collection") || "";
@@ -332,7 +332,21 @@ export function ShopPage() {
                             if (cartQty > 0) {
                               return (
                                 <div onClick={e => e.stopPropagation()} className="flex-shrink-0 px-2 py-1 rounded-xl flex items-center gap-1.5 font-bold text-xs shadow-sm" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
-                                  <button aria-label="Decrease quantity" onClick={() => updateQty(p.id, -1)} className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center text-xs font-bold transition-all hover:bg-white/20 active:scale-95" style={{ color: GOLD }}>-</button>
+                                  <button
+                                    aria-label="Decrease quantity"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (cartQty <= 1) {
+                                        removeFromCart(p.id);
+                                      } else {
+                                        updateQty(p.id, -1);
+                                      }
+                                    }}
+                                    className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center text-xs font-bold transition-all hover:bg-white/20 active:scale-95"
+                                    style={{ color: GOLD }}
+                                  >
+                                    -
+                                  </button>
                                   <span className="text-[10px] sm:text-xs font-bold" style={{ color: IVORY, fontFamily: SANS }}>{cartQty}</span>
                                   <button aria-label="Increase quantity" onClick={() => updateQty(p.id, 1)} className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center text-xs font-bold transition-all hover:bg-white/20 active:scale-95" style={{ color: GOLD }}>+</button>
                                 </div>

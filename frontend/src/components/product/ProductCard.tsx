@@ -18,7 +18,7 @@ export interface ProductCardProps {
 export function ProductCard({ product: p, onProductClick, onAddToCart, wishKey = "", wished: propWished, onToggleWish }: ProductCardProps) {
   const navigate = useNavigate();
   const { toggleWishlist, isInWishlist } = useWishlist();
-  const { items, addToCart, updateQty } = useCart();
+  const { items, addToCart, updateQty, removeFromCart } = useCart();
 
   const isItemWished = propWished !== undefined ? propWished : isInWishlist(p.id);
   const cartItem = items.find(item => item.product.id === p.id);
@@ -80,7 +80,21 @@ export function ProductCard({ product: p, onProductClick, onAddToCart, wishKey =
         </div>
         {qty > 0 ? (
           <div onClick={e => e.stopPropagation()} className="w-full py-1 px-3 rounded-xl flex items-center justify-between font-bold text-xs shadow-sm mt-0.5" style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
-            <button aria-label="Decrease quantity" onClick={() => updateQty(p.id, -1)} className="w-7 h-7 rounded-lg flex items-center justify-center text-base font-bold transition-all hover:bg-white/20 active:scale-95" style={{ color: GOLD }}>-</button>
+            <button
+              aria-label="Decrease quantity"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (qty <= 1) {
+                  removeFromCart(p.id);
+                } else {
+                  updateQty(p.id, -1);
+                }
+              }}
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-base font-bold transition-all hover:bg-white/20 active:scale-95"
+              style={{ color: GOLD }}
+            >
+              -
+            </button>
             <span className="text-sm font-bold tracking-wider px-2" style={{ color: IVORY, fontFamily: SANS }}>{qty}</span>
             <button aria-label="Increase quantity" onClick={() => updateQty(p.id, 1)} className="w-7 h-7 rounded-lg flex items-center justify-center text-base font-bold transition-all hover:bg-white/20 active:scale-95" style={{ color: GOLD }}>+</button>
           </div>
