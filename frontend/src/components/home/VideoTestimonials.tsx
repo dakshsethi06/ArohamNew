@@ -26,10 +26,10 @@ export function VideoTestimonials() {
   const next = useCallback(() => goTo(active + 1), [active, goTo]);
   const prev = useCallback(() => goTo(active - 1), [active, goTo]);
 
-  // Auto-slide every 4s
+  // Auto-slide every 4.5s
   useEffect(() => {
     if (isPaused) return;
-    const timer = setInterval(next, 4000);
+    const timer = setInterval(next, 4500);
     return () => clearInterval(timer);
   }, [isPaused, next]);
 
@@ -55,12 +55,6 @@ export function VideoTestimonials() {
     setIsSwiping(false);
     setTimeout(() => setIsPaused(false), 2000);
   };
-
-  // Determine visible cards: prev, current, next (only 3 in DOM at a time)
-  const getIndex = (offset: number) => ((active + offset) % n + n) % n;
-  const prevIdx = getIndex(-1);
-  const nextIdx = getIndex(1);
-  const visibleIndices = [getIndex(-2), prevIdx, active, nextIdx, getIndex(2)];
 
   return (
     <section
@@ -96,36 +90,41 @@ export function VideoTestimonials() {
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
         >
-          {visibleIndices.map((reelIdx, posIdx) => {
-            const v = BASE_REELS[reelIdx];
-            // posIdx: 0=far-left, 1=left, 2=center, 3=right, 4=far-right
-            const offset = posIdx - 2;
+          {BASE_REELS.map((v, i) => {
+            // Calculate circular offset distance (-n/2 to +n/2)
+            let offset = i - active;
+            if (offset > n / 2) offset -= n;
+            if (offset < -n / 2) offset += n;
+
             const isCenter = offset === 0;
             const cardWidth = typeof window !== "undefined" && window.innerWidth < 640 ? 260 : 280;
             const gap = typeof window !== "undefined" && window.innerWidth < 640 ? 16 : 24;
+            
             let translateX = offset * (cardWidth + gap);
-
-            // Add swipe delta only if swiping
             if (isSwiping) {
               translateX += touchDelta;
             }
 
             const scale = isCenter ? 1.03 : Math.abs(offset) === 1 ? 0.92 : 0.82;
-            const opacity = isCenter ? 1 : Math.abs(offset) === 1 ? 0.6 : 0.3;
+            const opacity = isCenter ? 1 : Math.abs(offset) === 1 ? 0.6 : 0.2;
             const zIndex = isCenter ? 10 : Math.abs(offset) === 1 ? 5 : 1;
+
+            // Hide cards that are too far away to prevent overlapping transitions
+            const isVisible = Math.abs(offset) <= 2;
 
             return (
               <div
-                key={`${reelIdx}-${posIdx}`}
-                onClick={() => { if (!isCenter) goTo(reelIdx); }}
+                key={v.name} // Stable key prevents DOM recreation
+                onClick={() => { if (!isCenter) goTo(i); }}
                 className="absolute rounded-3xl overflow-hidden"
                 style={{
                   width: cardWidth,
                   height: typeof window !== "undefined" && window.innerWidth < 640 ? 400 : 440,
                   transform: `translateX(${translateX}px) scale(${scale})`,
-                  opacity,
+                  opacity: isVisible ? opacity : 0,
                   zIndex,
-                  transition: isSwiping ? "none" : "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                  pointerEvents: isVisible ? "auto" : "none",
+                  transition: isSwiping ? "none" : "all 0.5s cubic-bezier(0.25, 1, 0.5, 1)",
                   cursor: isCenter ? "default" : "pointer",
                   border: isCenter ? `2px solid ${GOLD}` : "1px solid rgba(200,160,68,0.18)",
                   boxShadow: isCenter
