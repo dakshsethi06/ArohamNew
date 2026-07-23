@@ -262,6 +262,50 @@ export function ConsultPage() {
     }
   };
 
+  // Live listener for real-time human astrologer messages
+  useEffect(() => {
+    if (!session?.id) return;
+
+    const syncLiveMessages = () => {
+      try {
+        const stored = JSON.parse(localStorage.getItem(`aroham_live_chat_${session.id}`) || "[]");
+        if (Array.isArray(stored) && stored.length > 0) {
+          setMessages(prev => {
+            const merged = [...prev];
+            stored.forEach(m => {
+              if (!merged.some(p => p.id === m.id || p.text === m.text)) {
+                merged.push(m);
+              }
+            });
+            return merged;
+          });
+        }
+      } catch (e) {}
+    };
+
+    window.addEventListener("storage", syncLiveMessages);
+
+    const channel = supabase
+      .channel(`live-session-${session.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages", filter: `session_id=eq.${session.id}` }, payload => {
+        if (payload.new) {
+          const newMsg = {
+            id: payload.new.id,
+            sender: payload.new.sender,
+            text: payload.new.text,
+            timestamp: new Date(payload.new.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+          setMessages(prev => prev.some(m => m.id === newMsg.id) ? prev : [...prev, newMsg]);
+        }
+      })
+      .subscribe();
+
+    return () => {
+      window.removeEventListener("storage", syncLiveMessages);
+      supabase.removeChannel(channel);
+    };
+  }, [session?.id]);
+
   const handleSendMessage = async (textToSend?: string) => {
     const messageText = textToSend || inputMessage;
     if (!messageText.trim() || !session || !selectedAstrologer) return;
@@ -276,60 +320,23 @@ export function ConsultPage() {
     setMessages(prev => [...prev, userMsg]);
     if (!textToSend) setInputMessage("");
 
-    // Send to Supabase DB if live
-    if (!session.id.startsWith("demo-")) {
-      try {
-        await supabase.from("chat_messages").insert({
-          session_id: session.id,
-          sender: "user",
-          text: messageText
-        });
-      } catch (err) {
-        console.error("Supabase insert error:", err);
-      }
+    // Send to Supabase DB and local cross-tab sync if live
+    try {
+      await supabase.from("chat_messages").insert({
+        session_id: session.id,
+        sender: "user",
+        text: messageText
+      });
+    } catch (err) {
+      console.warn("Supabase insert error:", err);
     }
 
-    // Simulated Astrologer AI response
-    setIsTyping(true);
-    setTimeout(() => {
-      setIsTyping(false);
-      
-      let replyText = "";
-      let recommendedProduct = null;
-
-      const lower = messageText.toLowerCase();
-
-      if (lower.includes("rudraksha") || lower.includes("rashi")) {
-        replyText = `Based on Vedic astrology, the 1 Mukhi Nepal Rudraksha is supreme for spiritual awakening and clearing mental anxiety. I recommend wearing a temple-energized 1 Mukhi Rudraksha with silver casing.`;
-        recommendedProduct = DEFAULT_PRODUCTS.find(p => p.slug === "1-mukhi-rudraksha") || DEFAULT_PRODUCTS[0];
-      } else if (lower.includes("gemstone") || lower.includes("career") || lower.includes("wealth")) {
-        replyText = `For career growth and planetary alignment, wearing a certified Natural Blue Sapphire or Yellow Sapphire energized with Beej Mantras will activate your 10th House.`;
-        recommendedProduct = DEFAULT_PRODUCTS.find(p => p.slug === "natural-blue-sapphire") || DEFAULT_PRODUCTS[1];
-      } else if (lower.includes("vastu") || lower.includes("home") || lower.includes("peace")) {
-        replyText = `To ward off evil eye (Nazar) and balance Vastu energy in your home entrance, place a handcrafted Mahakala Vastu Wall Mask energized at Ujjain temple.`;
-        recommendedProduct = DEFAULT_PRODUCTS.find(p => p.slug === "mahakala-vastu-wall-mask") || DEFAULT_PRODUCTS[2];
-      } else {
-        replyText = `Pranam! Your planetary positions show great potential. Performing regular Abhishekam and meditating with sacred beads will align your Mahadasha favorably. Would you like a specific gemstone or Rudraksha recommendation?`;
-      }
-
-      const astroReply = {
-        id: "msg-reply-" + Date.now(),
-        sender: "astrologer",
-        text: replyText,
-        recommendedProduct: recommendedProduct,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-
-      setMessages(prev => [...prev, astroReply]);
-
-      if (!session.id.startsWith("demo-")) {
-        supabase.from("chat_messages").insert({
-          session_id: session.id,
-          sender: "astrologer",
-          text: replyText
-        });
-      }
-    }, 1800);
+    try {
+      const existingMsgs = JSON.parse(localStorage.getItem(`aroham_live_chat_${session.id}`) || "[]");
+      const updatedMsgs = [...existingMsgs, userMsg];
+      localStorage.setItem(`aroham_live_chat_${session.id}`, JSON.stringify(updatedMsgs));
+      window.dispatchEvent(new Event("storage"));
+    } catch (e) {}
   };
 
   const endSession = () => {
