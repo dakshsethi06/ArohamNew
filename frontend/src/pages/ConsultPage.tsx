@@ -168,54 +168,50 @@ export function ConsultPage() {
   }, [messages, isTyping]);
 
   const startConsultation = async (astro: Astrologer) => {
-    if (!user) {
-      openAuth();
-      return;
+    let activeUser = user;
+    if (!activeUser) {
+      const guestId = "seeker-" + Math.floor(100000 + Math.random() * 900000);
+      activeUser = {
+        id: guestId,
+        user_metadata: { full_name: "Seeker #" + guestId.slice(-4) }
+      } as any;
     }
-
-    setSelectedAstrologer(astro);
 
     const sessionUuid = crypto.randomUUID();
     let createdSession: any = {
       id: sessionUuid,
-      user_id: user.id,
+      user_id: activeUser.id,
       astrologer_id: astro.id,
       status: "pending",
       topic: "Vedic Kundali & Horoscope",
       created_at: new Date().toISOString()
     };
 
-    try {
-      const { data } = await supabase
-        .from("chat_sessions")
-        .insert({ id: sessionUuid, user_id: user.id, status: "pending", astrologer_id: astro.id, topic: "Vedic Kundali & Horoscope" })
-        .select("*")
-        .single();
-      
-      if (data) createdSession = data;
-    } catch {}
-
-    try {
-      localStorage.setItem("aroham_latest_live_session", JSON.stringify(createdSession));
-      window.dispatchEvent(new Event("storage"));
-    } catch (e) {}
-
+    // Open chat UI instantly for 0ms latency
+    setSelectedAstrologer(astro);
     setSession(createdSession);
 
     const initialMsg = {
       id: "init-" + Date.now(),
       session_id: createdSession.id,
       sender: "astrologer",
-      text: `Hari Om ${user.user_metadata?.full_name || "Ji"} 🙏 I am ${astro.name}. Welcome to Aroham Sacred Consultations. How may I guide your spiritual path today?`,
+      text: `Hari Om ${activeUser.user_metadata?.full_name || "Ji"} 🙏 I am ${astro.name}. Welcome to Aroham Sacred Consultations. How may I guide your spiritual path today?`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
     setMessages([initialMsg]);
 
     try {
+      localStorage.setItem("aroham_latest_live_session", JSON.stringify(createdSession));
       localStorage.setItem(`aroham_live_chat_${createdSession.id}`, JSON.stringify([initialMsg]));
       window.dispatchEvent(new Event("storage"));
     } catch (e) {}
+
+    try {
+      await supabase
+        .from("chat_sessions")
+        .insert({ id: sessionUuid, user_id: activeUser.id, status: "pending", astrologer_id: astro.id, topic: "Vedic Kundali & Horoscope" });
+    } catch {}
 
     if (createdSession.id && !createdSession.id.startsWith("demo-")) {
       supabase
