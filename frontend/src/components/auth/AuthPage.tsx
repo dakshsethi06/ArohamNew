@@ -267,6 +267,56 @@ export function AuthPage() {
           } catch (e) {}
         }
 
+        if (isAstrologerMode) {
+          const astroId = `astro-${Date.now()}`;
+          const newAstrologer = {
+            id: astroId,
+            name: name.trim() || "Acharya " + (phoneDigits.slice(-4) || "Ji"),
+            title: `Vedic Jyotish & ${astroSpecialty} Specialist`,
+            experience: `${astroExperience}+ Years Exp`,
+            rating: 5.0,
+            consultations: 0,
+            specialties: [astroSpecialty, "Vedic Kundali", "Sacred Remedies"],
+            languages: ["Hindi", "English"],
+            avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
+            status: "online",
+            pricePerMin: 0
+          };
+
+          try {
+            const existingAstros = JSON.parse(localStorage.getItem("aroham_registered_astrologers") || "[]");
+            const updatedAstros = [newAstrologer, ...existingAstros.filter((a: any) => a.id !== newAstrologer.id)];
+            localStorage.setItem("aroham_registered_astrologers", JSON.stringify(updatedAstros));
+            window.dispatchEvent(new Event("storage"));
+          } catch (e) {}
+
+          try {
+            await supabase.from("astrologers").upsert({
+              id: newAstrologer.id,
+              full_name: newAstrologer.name,
+              title: newAstrologer.title,
+              experience_years: parseInt(astroExperience) || 5,
+              specialties: newAstrologer.specialties,
+              rating: 5.0,
+              is_online: true,
+              avatar_url: newAstrologer.avatar
+            });
+          } catch (e) {}
+
+          setLoading(false);
+          login({
+            id: newAstrologer.id,
+            email: email.trim() || null,
+            user_metadata: { full_name: newAstrologer.name, phone: phoneDigits },
+            role: "astrologer",
+            astrologerProfile: newAstrologer
+          });
+
+          closeAuth(true);
+          navigate("/astrologer");
+          return;
+        }
+
         if (existingUser) {
           // Update local cache so future lookups are fast
           const userObj = {

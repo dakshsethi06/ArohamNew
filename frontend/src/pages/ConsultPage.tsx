@@ -87,13 +87,27 @@ const STARTER_QUESTIONS = [
   "Which Vastu product will bring peace to my home?"
 ];
 
+const getMergedAstrologers = (): Astrologer[] => {
+  try {
+    const customRegistered = JSON.parse(localStorage.getItem("aroham_registered_astrologers") || "[]");
+    if (Array.isArray(customRegistered) && customRegistered.length > 0) {
+      const merged = [...customRegistered];
+      FEATURED_ASTROLOGERS.forEach(fa => {
+        if (!merged.some(m => m.id === fa.id)) merged.push(fa);
+      });
+      return merged;
+    }
+  } catch (e) {}
+  return FEATURED_ASTROLOGERS;
+};
+
 export function ConsultPage() {
   const navigate = useNavigate();
   const { user, openAuth } = useAuth();
   const { addToCart } = useCart();
 
   const [selectedTopic, setSelectedTopic] = useState<string>("All");
-  const [astrologers, setAstrologers] = useState<Astrologer[]>(FEATURED_ASTROLOGERS);
+  const [astrologers, setAstrologers] = useState<Astrologer[]>(getMergedAstrologers);
   const [selectedAstrologer, setSelectedAstrologer] = useState<Astrologer | null>(null);
   const [session, setSession] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
@@ -101,20 +115,43 @@ export function ConsultPage() {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Subscribe to real-time status changes from Supabase astrologers table
+  // Subscribe to real-time status changes and sync newly registered astrologers
   useEffect(() => {
+    const syncAstrologers = () => {
+      setAstrologers(getMergedAstrologers());
+    };
+
+    window.addEventListener("storage", syncAstrologers);
+    window.addEventListener("focus", syncAstrologers);
+
     const fetchRealtimeAstrologers = async () => {
       try {
         const { data } = await supabase.from("astrologers").select("*");
         if (data && data.length > 0) {
           setAstrologers(prev => {
-            return prev.map(a => {
-              const liveData = data.find(d => d.id === a.id);
-              if (liveData) {
-                return { ...a, status: liveData.is_online ? "online" : "offline" };
+            const updatedList = [...prev];
+            data.forEach(liveData => {
+              const idx = updatedList.findIndex(d => d.id === liveData.id);
+              if (idx !== -1) {
+                updatedList[idx] = { ...updatedList[idx], status: liveData.is_online ? "online" : "offline" };
+              } else {
+                // Add newly registered astrologer from Supabase
+                updatedList.unshift({
+                  id: liveData.id,
+                  name: liveData.full_name || liveData.name || "Acharya Astrologer",
+                  title: liveData.title || "Vedic Jyotish Specialist",
+                  experience: `${liveData.experience_years || 5}+ Years Exp`,
+                  rating: Number(liveData.rating) || 5.0,
+                  consultations: liveData.consultations_count || 0,
+                  specialties: liveData.specialties || ["Vedic Kundali", "Gemstones"],
+                  languages: liveData.languages || ["Hindi", "English"],
+                  avatar: liveData.avatar_url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
+                  status: liveData.is_online ? "online" : "offline",
+                  pricePerMin: 0
+                });
               }
-              return a;
             });
+            return updatedList;
           });
         }
       } catch (err) {}
@@ -127,12 +164,36 @@ export function ConsultPage() {
       .on("postgres_changes", { event: "*", schema: "public", table: "astrologers" }, payload => {
         if (payload.new && (payload.new as any).id) {
           const updated = payload.new as any;
-          setAstrologers(prev => prev.map(a => a.id === updated.id ? { ...a, status: updated.is_online ? "online" : "offline" } : a));
+          setAstrologers(prev => {
+            const exists = prev.some(a => a.id === updated.id);
+            if (exists) {
+              return prev.map(a => a.id === updated.id ? { ...a, status: updated.is_online ? "online" : "offline" } : a);
+            } else {
+              return [
+                {
+                  id: updated.id,
+                  name: updated.full_name || updated.name || "Acharya Astrologer",
+                  title: updated.title || "Vedic Jyotish Specialist",
+                  experience: `${updated.experience_years || 5}+ Years Exp`,
+                  rating: 5.0,
+                  consultations: 0,
+                  specialties: updated.specialties || ["Vedic Kundali"],
+                  languages: ["Hindi", "English"],
+                  avatar: updated.avatar_url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
+                  status: updated.is_online ? "online" : "offline",
+                  pricePerMin: 0
+                },
+                ...prev
+              ];
+            }
+          });
         }
       })
       .subscribe();
 
     return () => {
+      window.removeEventListener("storage", syncAstrologers);
+      window.removeEventListener("focus", syncAstrologers);
       supabase.removeChannel(channel);
     };
   }, []);
