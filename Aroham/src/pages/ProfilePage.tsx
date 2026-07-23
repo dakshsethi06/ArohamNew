@@ -181,6 +181,35 @@ export function ProfilePage() {
     loadProfileAddresses();
   }, [user?.id, user?.email, user?.user_metadata?.phone, activeTab]);
 
+  const [pincodeLoading, setPincodeLoading] = useState(false);
+
+  const handleProfilePinChange = async (val: string) => {
+    const cleanVal = val.replace(/\D/g, "").slice(0, 6);
+    setAddrForm(p => ({ ...p, pin: cleanVal }));
+
+    if (cleanVal.length === 6) {
+      setPincodeLoading(true);
+      try {
+        const res = await fetch(`https://api.postalpincode.in/pincode/${cleanVal}`);
+        const data = await res.json();
+        if (data && data[0] && data[0].Status === "Success") {
+          const postOffice = data[0].PostOffice[0];
+          const city = postOffice.District || postOffice.Block || postOffice.Name || "";
+          const state = postOffice.State || "";
+          setAddrForm(p => ({
+            ...p,
+            city: city || p.city,
+            state: state || p.state
+          }));
+        }
+      } catch (e) {
+        console.error("Failed to auto-fetch city/state from pincode", e);
+      } finally {
+        setPincodeLoading(false);
+      }
+    }
+  };
+
   const handleSaveProfileAddress = async () => {
     const missing: string[] = [];
     if (!addrForm.name.trim()) missing.push("Name");
@@ -850,8 +879,13 @@ export function ProfilePage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold mb-1 text-gray-600">PIN Code *</label>
-                    <input type="text" maxLength={6} value={addrForm.pin} onChange={e => setAddrForm(p => ({ ...p, pin: e.target.value.replace(/\D/g, "") }))}
-                      className="w-full px-4 py-2.5 rounded-xl text-sm outline-none border border-black/15 bg-[#FAF7F2]" />
+                    <div className="relative">
+                      <input type="text" maxLength={6} placeholder="6-digit PIN" value={addrForm.pin} onChange={e => handleProfilePinChange(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl text-sm outline-none border border-black/15 bg-[#FAF7F2]" />
+                      {pincodeLoading && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-amber-700 animate-pulse">Auto-filling...</span>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <label className="block text-xs font-semibold mb-1 text-gray-600">House / Flat No. *</label>
