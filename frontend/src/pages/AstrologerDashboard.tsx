@@ -119,6 +119,8 @@ export function AstrologerDashboard() {
     return Math.min(score, 100);
   };
 
+  const currentAstroId = user?.id || "astro-1";
+
   useEffect(() => {
     try {
       const cached = localStorage.getItem(`aroham_astro_profile_${user?.id}`);
@@ -132,8 +134,8 @@ export function AstrologerDashboard() {
     fetchSessions();
 
     const sub = supabase
-      .channel("incoming-requests-channel")
-      .on("postgres_changes", { event: "*", schema: "public", table: "chat_sessions" }, () => {
+      .channel(`incoming-requests-${currentAstroId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "chat_sessions", filter: `astrologer_id=eq.${currentAstroId}` }, () => {
         fetchSessions();
       })
       .subscribe();
@@ -143,7 +145,7 @@ export function AstrologerDashboard() {
       window.removeEventListener("focus", syncSessions);
       supabase.removeChannel(sub);
     };
-  }, [user]);
+  }, [user, currentAstroId]);
 
   const toggleChatOnline = async () => {
     const nextStatus = !isChatOnline;
@@ -159,12 +161,17 @@ export function AstrologerDashboard() {
     try {
       const existing = JSON.parse(localStorage.getItem("aroham_registered_astrologers") || "[]");
       if (Array.isArray(existing) && existing.length > 0) {
-        const updated = existing.map((a: any) => ({ ...a, status: statusBool ? "online" : "offline" }));
+        const updated = existing.map((a: any) => {
+          if (a.id === currentAstroId || !user?.id) {
+            return { ...a, status: statusBool ? "online" : "offline" };
+          }
+          return a;
+        });
         localStorage.setItem("aroham_registered_astrologers", JSON.stringify(updated));
       }
 
       localStorage.setItem("aroham_global_online_status", JSON.stringify({
-        userId: user?.id || "astro-1",
+        userId: currentAstroId,
         isOnline: statusBool,
         timestamp: Date.now()
       }));
@@ -182,7 +189,11 @@ export function AstrologerDashboard() {
   const fetchSessions = async () => {
     let sessionList: any[] = [];
     try {
-      const { data } = await supabase.from("chat_sessions").select("*").order("created_at", { ascending: false });
+      const { data } = await supabase
+        .from("chat_sessions")
+        .select("*")
+        .or(`astrologer_id.eq.${currentAstroId},astrologer_id.eq.astro-1`)
+        .order("created_at", { ascending: false });
       if (data && data.length > 0) sessionList = data;
     } catch (e) {}
 
@@ -190,8 +201,11 @@ export function AstrologerDashboard() {
       const latestLocal = localStorage.getItem("aroham_latest_live_session");
       if (latestLocal) {
         const parsed = JSON.parse(latestLocal);
-        if (!sessionList.some(s => s.id === parsed.id)) {
-          sessionList.unshift(parsed);
+        // Only include if targeted specifically for this astrologer
+        if (parsed.astrologer_id === currentAstroId || parsed.astrologer_id === "astro-1" || !parsed.astrologer_id) {
+          if (!sessionList.some(s => s.id === parsed.id)) {
+            sessionList.unshift(parsed);
+          }
         }
       }
     } catch (e) {}
