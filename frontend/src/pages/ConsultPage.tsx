@@ -168,21 +168,26 @@ export function ConsultPage() {
   }, [messages, isTyping]);
 
   const startConsultation = async (astro: Astrologer) => {
-    if (!user) {
+    let activeUser = user;
+    if (!activeUser) {
       try {
-        sessionStorage.setItem(
-          "aroham_auth_notice",
-          `Please Sign In or Register first to start your live consultation with ${astro.name}`
-        );
+        const storedMock = localStorage.getItem("aroham_mock_session");
+        if (storedMock) activeUser = JSON.parse(storedMock);
       } catch (e) {}
-      openAuth();
-      return;
+    }
+
+    if (!activeUser) {
+      const guestId = "seeker-" + Math.floor(100000 + Math.random() * 900000);
+      activeUser = {
+        id: guestId,
+        user_metadata: { full_name: "Devotee Seeker (" + guestId.slice(-4) + ")" }
+      } as any;
     }
 
     const sessionUuid = crypto.randomUUID();
     let createdSession: any = {
       id: sessionUuid,
-      user_id: user.id,
+      user_id: activeUser.id,
       astrologer_id: astro.id,
       status: "pending",
       topic: "Vedic Kundali & Horoscope",
@@ -197,7 +202,7 @@ export function ConsultPage() {
       id: "init-" + Date.now(),
       session_id: createdSession.id,
       sender: "astrologer",
-      text: `Hari Om ${user.user_metadata?.full_name || "Ji"} 🙏 I am ${astro.name}. Welcome to Aroham Sacred Consultations. How may I guide your spiritual path today?`,
+      text: `Hari Om ${activeUser.user_metadata?.full_name || "Ji"} 🙏 I am ${astro.name}. Welcome to Aroham Sacred Consultations. How may I guide your spiritual path today?`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
@@ -212,7 +217,7 @@ export function ConsultPage() {
     try {
       await supabase
         .from("chat_sessions")
-        .insert({ id: sessionUuid, user_id: user.id, status: "pending", astrologer_id: astro.id, topic: "Vedic Kundali & Horoscope" });
+        .insert({ id: sessionUuid, user_id: activeUser.id, status: "pending", astrologer_id: astro.id, topic: "Vedic Kundali & Horoscope" });
     } catch {}
 
     if (createdSession.id && !createdSession.id.startsWith("demo-")) {

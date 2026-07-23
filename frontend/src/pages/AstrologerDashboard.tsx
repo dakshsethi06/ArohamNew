@@ -160,8 +160,19 @@ export function AstrologerDashboard() {
   };
 
   useEffect(() => {
-    const isAstroRole = (user as any)?.role === "astrologer" || (user?.user_metadata as any)?.role === "astrologer";
-    if (!user || !isAstroRole) {
+    let mockSession: any = null;
+    try {
+      const stored = localStorage.getItem("aroham_mock_session");
+      if (stored) mockSession = JSON.parse(stored);
+    } catch (e) {}
+
+    const currentUser = user || mockSession;
+    const isAstroRole =
+      (currentUser as any)?.role === "astrologer" ||
+      (currentUser?.user_metadata as any)?.role === "astrologer" ||
+      mockSession?.role === "astrologer";
+
+    if (!currentUser || !isAstroRole) {
       navigate("/auth?role=astrologer", { replace: true });
       return;
     }
