@@ -359,7 +359,7 @@ export function ConsultPage() {
 
   if (session && selectedAstrologer) {
     return (
-      <div className="fixed inset-0 z-50 bg-[#1C0608]/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4" style={{ fontFamily: SANS }}>
+      <div className="fixed top-0 left-0 w-screen h-screen z-[9999] bg-[#1C0608]/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4" style={{ fontFamily: SANS }}>
         {/* Animated Main Chat Container */}
         <div className="w-full max-w-5xl bg-[#FCFAF7] rounded-[32px] border-2 border-amber-900/15 shadow-2xl flex flex-col h-[90vh] max-h-[880px] overflow-hidden relative animate-in fade-in zoom-in-95 duration-300">
           
