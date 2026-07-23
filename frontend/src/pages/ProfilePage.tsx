@@ -516,12 +516,12 @@ export function ProfilePage() {
           } catch (e) {}
         }
 
-        // 4. Fetch from recent session order fallback
+        // 4. Fetch from recent session order fallback (guests only)
         const localOrderId = sessionStorage.getItem("aroham_last_order_id");
         const localItemsStr = sessionStorage.getItem("aroham_last_order_items");
         const localTotalStr = sessionStorage.getItem("aroham_order_total");
 
-        if (localOrderId && localItemsStr && !fetchedOrders.some(o => String(o.id) === String(localOrderId))) {
+        if (!user?.id && localOrderId && localItemsStr && !fetchedOrders.some(o => String(o.id) === String(localOrderId))) {
           try {
             const parsedItems = JSON.parse(localItemsStr);
             const savedStatus = localStorage.getItem(`aroham_order_status_${localOrderId}`) || "Processing";
