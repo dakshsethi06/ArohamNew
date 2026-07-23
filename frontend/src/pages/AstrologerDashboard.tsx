@@ -131,7 +131,8 @@ export function AstrologerDashboard() {
       languages: p.languages.split(",").map(l => l.trim()),
       avatar: p.avatar,
       status: isChatOnline ? "online" : "offline",
-      pricePerMin: parseFloat(p.pricePerMin) || 20
+      pricePerMin: parseFloat(p.pricePerMin) || 20,
+      bio: p.bio
     };
 
     try {
@@ -368,6 +369,10 @@ export function AstrologerDashboard() {
   const saveProfile = async () => {
     try {
       const updatedProfile = { ...profile };
+      if (!updatedProfile.bio || updatedProfile.bio === "PENDING_WIZARD_COMPLETION" || updatedProfile.bio.trim() === "") {
+        updatedProfile.bio = "Certified Vedic Astrologer guiding seekers with sacred remedies, Kundali readings, and traditional wisdom.";
+      }
+      setProfile(updatedProfile);
       localStorage.setItem(`aroham_astro_profile_${user?.id}`, JSON.stringify(updatedProfile));
       await syncProfileToDBAndLocal(updatedProfile);
     } catch (e) {}
