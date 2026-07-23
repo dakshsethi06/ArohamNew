@@ -118,8 +118,8 @@ export function Nav() {
             ) : (
               <div className="flex items-center gap-2">
                 <button onClick={openAuth} className="px-5 py-2 rounded-full text-sm font-medium tracking-wide transition-all duration-200 hover:opacity-90 shadow-2xs" style={{ background: MAROON, color: IVORY }}>Sign In</button>
-                <button onClick={() => { openAuth(); navigate("?role=astrologer", { replace: true }); }} className="px-4 py-2 rounded-full text-xs font-bold tracking-wide transition-all duration-200 hover:bg-amber-900/10 border flex items-center gap-1" style={{ borderColor: solid ? "rgba(91,31,36,0.3)" : "rgba(200,160,68,0.4)", color: solid ? MAROON : GOLD }}>
-                  <span>Astrologer?</span>
+                <button onClick={() => { navigate("/auth?role=astrologer"); }} className="px-4 py-2 rounded-full text-xs font-bold tracking-wide transition-all duration-200 hover:bg-amber-900/10 border flex items-center gap-1" style={{ borderColor: solid ? "rgba(91,31,36,0.3)" : "rgba(200,160,68,0.4)", color: solid ? MAROON : GOLD }}>
+                  <span>Astrologer? Sign In / Join</span>
                 </button>
               </div>
             )}

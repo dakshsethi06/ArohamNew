@@ -158,6 +158,12 @@ export function AstrologerDashboard() {
   };
 
   useEffect(() => {
+    const isAstroRole = user?.role === "astrologer" || user?.user_metadata?.role === "astrologer";
+    if (!user || !isAstroRole) {
+      navigate("/auth?role=astrologer", { replace: true });
+      return;
+    }
+
     let currentP = { ...profile };
     try {
       const cached = localStorage.getItem(`aroham_astro_profile_${user?.id}`);
