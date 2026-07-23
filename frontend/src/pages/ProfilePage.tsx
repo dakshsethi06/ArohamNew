@@ -231,8 +231,8 @@ export function ProfilePage() {
       house: addrForm.house,
       street: addrForm.street,
       landmark: addrForm.landmark,
-      address: `${addrForm.house}, ${addrForm.street}${addrForm.landmark ? ", " + addrForm.landmark : ""}`.trim(),
-      line1: `${addrForm.house}, ${addrForm.street}${addrForm.landmark ? ", " + addrForm.landmark : ""}`.trim(),
+      address: `${addrForm.house}${addrForm.street ? ", " + addrForm.street : ""}${addrForm.landmark ? ", " + addrForm.landmark : ""}`.trim(),
+      line1: `${addrForm.house}${addrForm.street ? ", " + addrForm.street : ""}${addrForm.landmark ? ", " + addrForm.landmark : ""}`.trim(),
       city: addrForm.city,
       state: addrForm.state,
       pincode: addrForm.pin,
@@ -916,7 +916,7 @@ export function ProfilePage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold mb-1 text-gray-600">Street Address</label>
+                  <label className="block text-xs font-semibold mb-1 text-gray-600">Street Address (Optional)</label>
                   <input type="text" value={addrForm.street} onChange={e => setAddrForm(p => ({ ...p, street: e.target.value }))}
                     className="w-full px-4 py-2.5 rounded-xl text-sm outline-none border border-black/15 bg-[#FAF7F2]" />
                 </div>

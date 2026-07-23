@@ -218,7 +218,6 @@ export function ShippingPage() {
     if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 10) { errors.phone = true; missing.push("Mobile Phone Number"); }
     if (!form.pin.trim() || form.pin.replace(/\D/g, "").length !== 6) { errors.pin = true; missing.push("6-Digit PIN Code"); }
     if (!form.house.trim()) { errors.house = true; missing.push("House / Flat No."); }
-    if (!form.street.trim()) { errors.street = true; missing.push("Street Address"); }
     if (!form.city.trim()) { errors.city = true; missing.push("City"); }
 
     if (missing.length > 0) {
@@ -242,8 +241,8 @@ export function ShippingPage() {
         house: form.house,
         street: form.street,
         landmark: form.landmark,
-        line1: `${form.house}, ${form.street}${form.landmark ? ", " + form.landmark : ""}`.trim(),
-        address: `${form.house}, ${form.street}${form.landmark ? ", " + form.landmark : ""}`.trim(),
+        line1: `${form.house}${form.street ? ", " + form.street : ""}${form.landmark ? ", " + form.landmark : ""}`.trim(),
+        address: `${form.house}${form.street ? ", " + form.street : ""}${form.landmark ? ", " + form.landmark : ""}`.trim(),
         city: form.city,
         state: form.state,
         pin: form.pin,
@@ -499,7 +498,6 @@ export function ShippingPage() {
     if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 10) { errors.phone = true; missing.push("Mobile Phone Number"); }
     if (!form.pin.trim() || form.pin.replace(/\D/g, "").length !== 6) { errors.pin = true; missing.push("6-Digit PIN Code"); }
     if (!form.house.trim()) { errors.house = true; missing.push("House / Flat No."); }
-    if (!form.street.trim()) { errors.street = true; missing.push("Street Address"); }
     if (!form.city.trim()) { errors.city = true; missing.push("City"); }
 
     if (missing.length > 0) {
@@ -517,8 +515,8 @@ export function ShippingPage() {
       name: `${form.firstName} ${form.lastName}`.trim(),
       phone: form.phone.replace(/\D/g, "").slice(-10),
       email: form.email,
-      address_line1: `${form.house}, ${form.street}${form.landmark ? ", " + form.landmark : ""}`.trim(),
-      line1: `${form.house}, ${form.street}${form.landmark ? ", " + form.landmark : ""}`.trim(),
+      address_line1: `${form.house}${form.street ? ", " + form.street : ""}${form.landmark ? ", " + form.landmark : ""}`.trim(),
+      line1: `${form.house}${form.street ? ", " + form.street : ""}${form.landmark ? ", " + form.landmark : ""}`.trim(),
       city: form.city,
       state: form.state,
       pincode: form.pin,
@@ -722,7 +720,7 @@ export function ShippingPage() {
                     <div style={{ border: fieldBorder("house"), borderRadius: 16 }}><FloatingInput label="House / Flat No." value={form.house} onChange={set("house") as (v: string) => void} required /></div>
                   </div>
                   <div style={{ border: fieldBorder("street"), borderRadius: 16 }}>
-                    <FloatingInput label="Street Address" value={form.street} onChange={set("street") as (v: string) => void} required />
+                    <FloatingInput label="Street Address (Optional)" value={form.street} onChange={set("street") as (v: string) => void} />
                   </div>
                   <FloatingInput label="Landmark (Optional)" value={form.landmark} onChange={set("landmark") as (v: string) => void} />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
