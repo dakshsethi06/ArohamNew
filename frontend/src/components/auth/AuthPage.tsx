@@ -269,9 +269,10 @@ export function AuthPage() {
 
         if (isAstrologerMode) {
           const astroId = crypto.randomUUID();
+          const astroFullName = name.trim() || "Acharya " + (phoneDigits.slice(-4) || "Ji");
           const newAstrologer = {
             id: astroId,
-            name: name.trim() || "Acharya " + (phoneDigits.slice(-4) || "Ji"),
+            name: astroFullName,
             title: `Vedic Jyotish & ${astroSpecialty} Specialist`,
             experience: `${astroExperience}+ Years Exp`,
             rating: 5.0,
@@ -280,7 +281,7 @@ export function AuthPage() {
             languages: ["Hindi", "English"],
             avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
             status: "online",
-            pricePerMin: 0
+            pricePerMin: 20
           };
 
           try {
@@ -290,16 +291,22 @@ export function AuthPage() {
             window.dispatchEvent(new Event("storage"));
           } catch (e) {}
 
+          // Save strictly into Supabase 'astrologers' table
           try {
             const { data, error } = await supabase.from("astrologers").upsert({
               id: newAstrologer.id,
+              full_name: astroFullName,
+              email: email.trim() || null,
+              phone: phoneDigits,
               title: newAstrologer.title,
               experience_years: parseInt(astroExperience) || 5,
               specialties: newAstrologer.specialties,
               languages: newAstrologer.languages,
               rating: 5.0,
               is_online: true,
-              avatar_url: newAstrologer.avatar
+              avatar_url: newAstrologer.avatar,
+              price_per_min: 20,
+              role: "astrologer"
             }).select();
 
             if (error) {
@@ -311,11 +318,21 @@ export function AuthPage() {
             console.error("Supabase astrologers table insert exception:", e);
           }
 
+          // Save to Firestore 'astrologers' collection
+          setDoc(doc(db, "astrologers", newAstrologer.id), {
+            fullName: astroFullName,
+            email: email.trim() || null,
+            phone: phoneDigits,
+            title: newAstrologer.title,
+            role: "astrologer",
+            createdAt: serverTimestamp()
+          }, { merge: true }).catch(err => console.warn("Firestore setDoc warning:", err));
+
           setLoading(false);
           login({
             id: newAstrologer.id,
             email: email.trim() || null,
-            user_metadata: { full_name: newAstrologer.name, phone: phoneDigits },
+            user_metadata: { full_name: astroFullName, phone: phoneDigits, role: "astrologer" },
             role: "astrologer",
             astrologerProfile: newAstrologer
           });
@@ -426,6 +443,74 @@ export function AuthPage() {
       const phoneDigits = phone.replace(/\D/g, "");
       let finalUserId = crypto.randomUUID();
 
+      if (isAstrologerMode) {
+        const astroFullName = name.trim() || "Acharya " + (phoneDigits.slice(-4) || "Ji");
+        const newAstrologer = {
+          id: finalUserId,
+          name: astroFullName,
+          title: `Vedic Jyotish & ${astroSpecialty} Specialist`,
+          experience: `${astroExperience}+ Years Exp`,
+          rating: 5.0,
+          consultations: 0,
+          specialties: [astroSpecialty, "Vedic Kundali", "Sacred Remedies"],
+          languages: ["Hindi", "English"],
+          avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
+          status: "online",
+          pricePerMin: 20
+        };
+
+        try {
+          const existingAstros = JSON.parse(localStorage.getItem("aroham_registered_astrologers") || "[]");
+          const updatedAstros = [newAstrologer, ...existingAstros.filter((a: any) => a.id !== newAstrologer.id)];
+          localStorage.setItem("aroham_registered_astrologers", JSON.stringify(updatedAstros));
+          window.dispatchEvent(new Event("storage"));
+        } catch (e) {}
+
+        // Save strictly into Supabase 'astrologers' table
+        try {
+          await supabase.from("astrologers").upsert({
+            id: finalUserId,
+            full_name: astroFullName,
+            email: email.trim() || null,
+            phone: phoneDigits,
+            title: newAstrologer.title,
+            experience_years: parseInt(astroExperience) || 5,
+            specialties: newAstrologer.specialties,
+            languages: newAstrologer.languages,
+            rating: 5.0,
+            is_online: true,
+            avatar_url: newAstrologer.avatar,
+            price_per_min: 20,
+            role: "astrologer"
+          });
+        } catch (supaErr) {
+          console.warn("Direct Supabase astrologers upsert warning:", supaErr);
+        }
+
+        // Save to Firestore 'astrologers' collection
+        setDoc(doc(db, "astrologers", finalUserId), {
+          fullName: astroFullName,
+          email: email.trim() || null,
+          phone: phoneDigits,
+          title: newAstrologer.title,
+          role: "astrologer",
+          createdAt: serverTimestamp()
+        }, { merge: true }).catch(err => console.warn("Firestore setDoc warning:", err));
+
+        setLoading(false);
+        login({
+          id: finalUserId,
+          email: email.trim() || null,
+          user_metadata: { full_name: astroFullName, phone: phoneDigits, role: "astrologer" },
+          role: "astrologer",
+          astrologerProfile: newAstrologer
+        });
+
+        closeAuth(true);
+        navigate("/astrologer");
+        return;
+      }
+
       try {
         const signupRes = await api("/auth/signup", {
           method: "POST",
@@ -452,7 +537,7 @@ export function AuthPage() {
         localStorage.setItem(`aroham_registered_user_phone_${phoneDigits}`, JSON.stringify(userProfile));
       }
 
-      // Direct client-side Supabase DB upsert to guarantee persistence in users table
+      // Direct client-side Supabase DB upsert to guarantee persistence in users table for normal seekers
       try {
         await supabase.from("users").upsert({
           id: finalUserId,
