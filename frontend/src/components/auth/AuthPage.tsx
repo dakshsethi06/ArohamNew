@@ -294,14 +294,22 @@ export function AuthPage() {
             await supabase.from("astrologers").upsert({
               id: newAstrologer.id,
               full_name: newAstrologer.name,
+              email: email.trim() || null,
+              phone: phoneDigits,
               title: newAstrologer.title,
               experience_years: parseInt(astroExperience) || 5,
               specialties: newAstrologer.specialties,
+              languages: newAstrologer.languages,
               rating: 5.0,
+              consultations_count: 0,
               is_online: true,
-              avatar_url: newAstrologer.avatar
+              bio: `Certified Vedic Astrologer specializing in ${astroSpecialty}`,
+              avatar_url: newAstrologer.avatar,
+              role: "astrologer"
             });
-          } catch (e) {}
+          } catch (e) {
+            console.warn("Supabase astrologers table insert warning:", e);
+          }
 
           setLoading(false);
           login({

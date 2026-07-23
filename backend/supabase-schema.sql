@@ -95,6 +95,59 @@ create table if not exists users (
   full_name text not null, phone text not null, email text, gender text not null, dob date not null,
   tob time, pob_city text, pob_state text, pob_country text, address text, created_at timestamptz default now()
 );
-alter table cart_items enable row level security; alter table addresses enable row level security; alter table users enable row level security;
+
+-- Dedicated Astrologers Table (Separate from Customer Users Table)
+create table if not exists astrologers (
+  id text primary key,
+  full_name text not null,
+  email text,
+  phone text,
+  title text default 'Vedic Jyotish Acharya',
+  experience_years int default 5,
+  specialties text[] default array['Kundali', 'Gemstones', 'Vastu'],
+  languages text[] default array['Hindi', 'English'],
+  rating numeric(2,1) default 5.0,
+  consultations_count int default 0,
+  is_online boolean default true,
+  bio text,
+  avatar_url text,
+  role text default 'astrologer',
+  created_at timestamptz default now()
+);
+
+-- Real-time Consultation Chat Tables
+create table if not exists chat_sessions (
+  id uuid default gen_random_uuid() primary key,
+  user_id text not null,
+  astrologer_id text not null,
+  status text default 'active',
+  created_at timestamptz default now()
+);
+
+create table if not exists chat_messages (
+  id uuid default gen_random_uuid() primary key,
+  session_id uuid references chat_sessions on delete cascade,
+  sender text not null,
+  text text not null,
+  recommended_product_slug text,
+  created_at timestamptz default now()
+);
+
+alter table cart_items enable row level security;
+alter table addresses enable row level security;
+alter table users enable row level security;
+alter table astrologers enable row level security;
+alter table chat_sessions enable row level security;
+alter table chat_messages enable row level security;
+
 create policy "Allow user insert" on users for insert with check (true);
 create policy "Allow user select own" on users for select using (auth.uid() = id);
+
+create policy "Public read astrologers" on astrologers for select using (true);
+create policy "Allow astrologer upsert" on astrologers for insert with check (true);
+create policy "Allow astrologer update" on astrologers for update using (true);
+
+create policy "Public read chat_sessions" on chat_sessions for select using (true);
+create policy "Allow chat_sessions insert" on chat_sessions for insert with check (true);
+create policy "Public read chat_messages" on chat_messages for select using (true);
+create policy "Allow chat_messages insert" on chat_messages for insert with check (true);
