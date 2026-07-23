@@ -500,7 +500,7 @@ export function ConsultPage() {
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse" />
                   {onlineCount} Online Now
                 </p>
-                <p className="text-[11px] text-amber-900/60 font-semibold">Real-time DB Status Sync</p>
+                <p className="text-[11px] text-amber-900/60 font-semibold">Available for Instant Consultation</p>
               </div>
             </div>
           </div>
