@@ -427,25 +427,25 @@ export function ProfilePage() {
         const userPhone = user?.user_metadata?.phone ? String(user.user_metadata.phone).replace(/\D/g, "").slice(-10) : "";
         const userEmail = user?.email || "";
 
-        // 1. Fetch ALL orders from Supabase and match by user_id OR phone OR email
+        // 1. Fetch orders from Supabase filtered by user_id OR phone
         try {
-          const { data: allOrders } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
-          if (allOrders && allOrders.length > 0) {
-            allOrders.forEach((o: any) => {
-              const matchesUserId = user?.id && o.user_id === user.id;
-              
-              // Match by phone stored in user_phone column
-              const orderPhone = String(o.user_phone || "").replace(/\D/g, "").slice(-10);
-              const matchesPhone = userPhone && orderPhone && orderPhone === userPhone;
-              
-              // Match by phone/email in shipping_address
-              const addr = typeof o.shipping_address === "string" ? (() => { try { return JSON.parse(o.shipping_address); } catch { return {}; } })() : (o.shipping_address || {});
-              const addrPhone = String(addr.phone || "").replace(/\D/g, "").slice(-10);
-              const addrEmail = String(addr.email || "").trim().toLowerCase();
-              const matchesAddrPhone = userPhone && addrPhone && addrPhone === userPhone;
-              const matchesAddrEmail = userEmail && addrEmail && addrEmail === userEmail.toLowerCase();
+          const query = supabase.from("orders").select("*").order("created_at", { ascending: false });
+          let hasFilter = false;
+          if (user?.id && userPhone) {
+            query.or(`user_id.eq.${user.id},user_phone.eq.${userPhone}`);
+            hasFilter = true;
+          } else if (user?.id) {
+            query.eq("user_id", user.id);
+            hasFilter = true;
+          } else if (userPhone) {
+            query.eq("user_phone", userPhone);
+            hasFilter = true;
+          }
 
-              if (matchesUserId || matchesPhone || matchesAddrPhone || matchesAddrEmail) {
+          if (hasFilter) {
+            const { data: dbOrders } = await query;
+            if (dbOrders && dbOrders.length > 0) {
+              dbOrders.forEach((o: any) => {
                 if (!fetchedOrders.some(existing => String(existing.id) === String(o.id))) {
                   fetchedOrders.push(o);
 
@@ -456,8 +456,8 @@ export function ProfilePage() {
                     ).catch(() => {});
                   }
                 }
-              }
-            });
+              });
+            }
           }
         } catch (e) {
           console.warn("Error fetching Supabase orders:", e);

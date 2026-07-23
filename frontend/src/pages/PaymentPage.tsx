@@ -201,12 +201,13 @@ export function PaymentPage() {
                   payment_method: "Razorpay",
                   payment_status: "PAID",
                   address: `${shippingAddr?.line1 || shippingAddr?.address || ""}, ${shippingAddr?.city || ""}, ${shippingAddr?.state || ""} - ${shippingAddr?.pin || shippingAddr?.pincode || ""}`,
-                  shipping_address: JSON.stringify(shippingAddr)
+                  shipping_address: shippingAddr || {}
                 };
-                await Promise.resolve(
-                  supabase.from("orders").insert(sbPayload)
-                ).catch((err) => console.warn("Supabase order insert warning:", err));
-              } catch (e) {}
+                const { error: sbError } = await supabase.from("orders").insert(sbPayload);
+                if (sbError) console.error("Supabase order insert error:", sbError);
+              } catch (e) {
+                console.error("Supabase order insert exception:", e);
+              }
 
               // 2. Save to user localStorage
               if (user?.id) {
