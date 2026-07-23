@@ -476,7 +476,7 @@ export function ShopPage() {
               /* Products Grid or List View */
               viewMode === "grid" ? (
                 /* GRID VIEW CARDS */
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 items-stretch">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 lg:gap-6 items-stretch">
                   {filtered.map(p => {
                     const discountPct = p.original > p.price ? Math.round((1 - p.price / p.original) * 100) : 0;
                     const itemInCart = items.find(i => i.product.id === p.id);
@@ -487,21 +487,21 @@ export function ShopPage() {
                       <div
                         key={p.id}
                         onClick={() => navigate(`/shop/${p.slug}`)}
-                        className="group rounded-3xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1.5 bg-white flex flex-col justify-between border border-amber-900/10 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_16px_36px_rgba(91,31,36,0.12)]"
+                        className="group rounded-none sm:rounded-3xl overflow-hidden cursor-pointer transition-all duration-300 sm:hover:-translate-y-1.5 bg-white flex flex-col justify-between border-b sm:border border-gray-200 sm:border-amber-900/10 sm:shadow-[0_2px_12px_rgba(0,0,0,0.03)] sm:hover:shadow-[0_16px_36px_rgba(91,31,36,0.12)]"
                       >
-                        {/* Image Frame Box */}
-                        <div className="relative aspect-[4/3] bg-[#FAF7F2] overflow-hidden flex items-center justify-center p-4">
+                        {/* Image — Myntra-style: tall aspect, no padding on mobile */}
+                        <div className="relative aspect-[3/4] sm:aspect-[4/3] bg-[#F5F5F6] sm:bg-[#FAF7F2] overflow-hidden flex items-center justify-center sm:p-4">
                           <img
                             src={p.img}
                             alt={`${p.name} - ${p.subtitle}`}
-                            className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-108"
+                            className="w-full h-full object-cover sm:object-contain transition-transform duration-700 group-hover:scale-108"
                           />
 
-                          {/* Top Badges overlay */}
-                          <div className="absolute top-3 left-3 flex flex-col gap-1 z-10 pointer-events-none">
+                          {/* Badge — compact on mobile */}
+                          <div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex flex-col gap-1 z-10 pointer-events-none">
                             {p.badges && p.badges.length > 0 && (
                               <span
-                                className="px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-wider uppercase backdrop-blur-md shadow-xs"
+                                className="px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-sm sm:rounded-full text-[8px] sm:text-[10px] font-extrabold tracking-wider uppercase backdrop-blur-md shadow-xs"
                                 style={{ background: "rgba(91,31,36,0.88)", color: GOLD }}
                               >
                                 {p.badges[0]}
@@ -509,17 +509,18 @@ export function ShopPage() {
                             )}
                           </div>
 
-                          {/* Wishlist Floating Button */}
+                          {/* Wishlist — smaller on mobile */}
                           <button
                             aria-label="Add to wishlist"
                             onClick={e => {
                               e.stopPropagation();
                               toggleWishlist(p);
                             }}
-                            className="absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md bg-white/80 border border-white/60 shadow-sm transition-transform duration-200 hover:scale-110 active:scale-90 z-10"
+                            className="absolute top-2 right-2 sm:top-3 sm:right-3 w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center backdrop-blur-md bg-white/80 border border-white/60 shadow-sm transition-transform duration-200 hover:scale-110 active:scale-90 z-10"
                           >
                             <Heart
-                              size={15}
+                              size={13}
+                              className="sm:w-[15px] sm:h-[15px]"
                               style={{
                                 color: isWish ? "#E74C3C" : "#7A6A58",
                                 fill: isWish ? "#E74C3C" : "none"
@@ -527,67 +528,71 @@ export function ShopPage() {
                             />
                           </button>
 
-                          {/* Quick View Hover Strip */}
+                          {/* Quick View — desktop only */}
                           <div className="hidden sm:flex absolute inset-x-0 bottom-0 py-2.5 items-center justify-center gap-2 text-xs font-bold translate-y-full group-hover:translate-y-0 transition-transform duration-300 shadow-md"
                             style={{ background: "rgba(91,31,36,0.92)", color: GOLD }}>
                             <Eye size={14} /> Quick View
                           </div>
                         </div>
 
-                        {/* Details Content Box */}
-                        <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between gap-3">
-                          <div className="space-y-1.5">
+                        {/* Details — compact Myntra-style on mobile */}
+                        <div className="p-2.5 sm:p-5 flex-1 flex flex-col justify-between gap-1.5 sm:gap-3">
+                          <div className="space-y-0.5 sm:space-y-1.5">
+                            {/* Category + Rating row */}
                             <div className="flex items-center justify-between">
-                              <span className="text-[10px] uppercase font-extrabold tracking-wider" style={{ color: "#8A7A68" }}>
+                              <span className="text-[9px] sm:text-[10px] uppercase font-extrabold tracking-wider" style={{ color: "#8A7A68" }}>
                                 {p.category || "Sacred Item"}
                               </span>
                               {p.rating && (
-                                <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-900/10">
-                                  <Star size={11} fill={GOLD} stroke={GOLD} />
-                                  <span className="text-[11px] font-bold" style={{ color: MAROON }}>{p.rating}</span>
-                                  {p.reviews && <span className="text-[9px]" style={{ color: "#8A7A68" }}>({p.reviews})</span>}
+                                <div className="flex items-center gap-0.5 sm:gap-1 sm:bg-amber-50 sm:px-2 sm:py-0.5 sm:rounded-full sm:border sm:border-amber-900/10">
+                                  <Star size={10} className="sm:w-[11px] sm:h-[11px]" fill={GOLD} stroke={GOLD} />
+                                  <span className="text-[10px] sm:text-[11px] font-bold" style={{ color: MAROON }}>{p.rating}</span>
+                                  {p.reviews && <span className="text-[8px] sm:text-[9px]" style={{ color: "#8A7A68" }}>({p.reviews})</span>}
                                 </div>
                               )}
                             </div>
 
+                            {/* Product name — 1 line on mobile, 2 on desktop */}
                             <h3
-                              className="text-sm sm:text-base font-bold leading-snug line-clamp-2 transition-colors group-hover:text-[#7A2A30]"
+                              className="text-xs sm:text-base font-bold leading-tight sm:leading-snug line-clamp-1 sm:line-clamp-2 transition-colors group-hover:text-[#7A2A30]"
                               style={{ fontFamily: SERIF, color: MAROON }}
                             >
                               {p.name}
                             </h3>
 
-                            <p className="text-xs line-clamp-1 font-medium" style={{ color: "#7A6A58" }}>
+                            {/* Subtitle — hidden on mobile for Myntra-like compactness */}
+                            <p className="hidden sm:block text-xs line-clamp-1 font-medium" style={{ color: "#7A6A58" }}>
                               {p.subtitle}
                             </p>
                           </div>
 
-                          {/* Pricing & Cart Action Area */}
-                          <div className="pt-3 border-t border-amber-900/10 space-y-3">
-                            <div className="flex items-baseline justify-between gap-2">
-                              <div className="flex items-baseline gap-2 flex-wrap">
-                                <span className="text-lg sm:text-xl font-extrabold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>
+                          {/* Price + Cart */}
+                          <div className="pt-1.5 sm:pt-3 sm:border-t sm:border-amber-900/10 space-y-1.5 sm:space-y-3">
+                            {/* Pricing row */}
+                            <div className="flex items-baseline gap-1 sm:gap-2 flex-wrap sm:justify-between">
+                              <div className="flex items-baseline gap-1 sm:gap-2 flex-wrap">
+                                <span className="text-sm sm:text-xl font-extrabold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>
                                   ₹{p.price.toLocaleString("en-IN")}
                                 </span>
                                 {p.original > p.price && (
-                                  <span className="text-xs line-through opacity-60 font-semibold" style={{ fontFamily: PRICE_FONT, color: "#8A7A68" }}>
+                                  <span className="text-[10px] sm:text-xs line-through opacity-60 font-semibold" style={{ fontFamily: PRICE_FONT, color: "#8A7A68" }}>
                                     ₹{p.original.toLocaleString("en-IN")}
                                   </span>
                                 )}
                               </div>
 
                               {discountPct > 0 && (
-                                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <span className="text-[9px] sm:text-[10px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-sm sm:rounded-full bg-orange-50 sm:bg-emerald-50 text-orange-600 sm:text-emerald-700 sm:border sm:border-emerald-200">
                                   {discountPct}% OFF
                                 </span>
                               )}
                             </div>
 
-                            {/* Add to Cart / Qty selector button */}
+                            {/* Add to Cart */}
                             {cartQty > 0 ? (
                               <div
                                 onClick={e => e.stopPropagation()}
-                                className="w-full py-1.5 px-3 rounded-2xl flex items-center justify-between font-bold text-xs shadow-sm"
+                                className="w-full py-1 sm:py-1.5 px-2 sm:px-3 rounded-lg sm:rounded-2xl flex items-center justify-between font-bold text-[10px] sm:text-xs shadow-sm"
                                 style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)`, color: IVORY }}
                               >
                                 <button
@@ -597,13 +602,13 @@ export function ShopPage() {
                                     if (cartQty <= 1) removeFromCart(p.id);
                                     else updateQty(p.id, -1);
                                   }}
-                                  className="w-7 h-7 rounded-xl flex items-center justify-center transition-all hover:bg-white/20 active:scale-90"
+                                  className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg sm:rounded-xl flex items-center justify-center transition-all hover:bg-white/20 active:scale-90"
                                   style={{ color: GOLD }}
                                 >
-                                  <Minus size={13} strokeWidth={3} />
+                                  <Minus size={11} strokeWidth={3} />
                                 </button>
                                 
-                                <span className="text-xs font-extrabold tracking-wider" style={{ color: IVORY }}>
+                                <span className="text-[10px] sm:text-xs font-extrabold tracking-wider" style={{ color: IVORY }}>
                                   {cartQty} IN CART
                                 </span>
 
@@ -613,10 +618,10 @@ export function ShopPage() {
                                     e.stopPropagation();
                                     updateQty(p.id, 1);
                                   }}
-                                  className="w-7 h-7 rounded-xl flex items-center justify-center transition-all hover:bg-white/20 active:scale-90"
+                                  className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg sm:rounded-xl flex items-center justify-center transition-all hover:bg-white/20 active:scale-90"
                                   style={{ color: GOLD }}
                                 >
-                                  <Plus size={13} strokeWidth={3} />
+                                  <Plus size={11} strokeWidth={3} />
                                 </button>
                               </div>
                             ) : (
@@ -626,10 +631,9 @@ export function ShopPage() {
                                   e.stopPropagation();
                                   addToCart(p, 1, false);
                                 }}
-                                className="w-full py-2.5 px-4 rounded-2xl text-xs font-bold tracking-wider transition-all duration-200 flex items-center justify-center gap-2 shadow-xs hover:shadow-md hover:opacity-95 active:scale-98 uppercase"
-                                style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)`, color: IVORY }}
+                                className="w-full py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg sm:rounded-2xl text-[10px] sm:text-xs font-bold tracking-wider transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 shadow-xs hover:shadow-md hover:opacity-95 active:scale-98 uppercase border border-[#5B1F24] sm:border-0 bg-transparent sm:bg-[linear-gradient(135deg,#5B1F24,#7A2A30)] text-[#5B1F24] sm:text-[#FAF7F2]"
                               >
-                                <ShoppingCart size={14} />
+                                <ShoppingCart size={12} className="sm:w-[14px] sm:h-[14px]" />
                                 <span>ADD TO CART</span>
                               </button>
                             )}
