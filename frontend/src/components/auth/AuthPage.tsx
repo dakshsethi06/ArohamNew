@@ -44,6 +44,11 @@ export function AuthPage() {
   const initialTabFromUrl = searchParams.get("tab") || searchParams.get("mode") || sessionStorage.getItem("aroham_auth_tab");
   const initialTab = initialTabFromUrl === "signup" ? "signup" : "signin";
 
+  const initialRoleFromUrl = searchParams.get("role") === "astrologer" || searchParams.get("mode") === "astrologer";
+  const [isAstrologerMode, setIsAstrologerMode] = useState<boolean>(initialRoleFromUrl);
+  const [astroSpecialty, setAstroSpecialty] = useState("Vedic Kundali");
+  const [astroExperience, setAstroExperience] = useState("5");
+
   const [authState, setAuthState] = useState<AuthState>(initialTab);
   const [activeTab, setActiveTab] = useState<"signin" | "signup">(initialTab);
   const [phone, setPhone] = useState("");
@@ -453,13 +458,25 @@ export function AuthPage() {
       </div>
 
       <div className="text-center space-y-2">
+        {isAstrologerMode && (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-900/10 text-amber-900 border border-amber-900/20 mb-1">
+            <Sparkles size={13} style={{ color: GOLD }} />
+            <span>Certified Astrologer Portal</span>
+          </div>
+        )}
         <h2 className="mb-2" style={{ fontFamily: SERIF, fontSize: "1.85rem", fontWeight: 600, color: MAROON }}>
-          {activeTab === "signin" ? "Welcome Back" : "Create Account"}
+          {isAstrologerMode
+            ? (activeTab === "signin" ? "Astrologer Sign In" : "Register as Astrologer")
+            : (activeTab === "signin" ? "Welcome Back" : "Create Account")}
         </h2>
         <p className="text-sm leading-relaxed" style={{ color: "#7A6A58", fontFamily: SANS }}>
-          {activeTab === "signin"
-            ? "Enter your mobile number to sign in to your account"
-            : "Enter your full name and mobile number to get started"}
+          {isAstrologerMode
+            ? (activeTab === "signin"
+                ? "Enter your details to access your live consultation workstation"
+                : "Register your profile as a certified Vedic Astrologer")
+            : (activeTab === "signin"
+                ? "Enter your mobile number to sign in to your account"
+                : "Enter your full name and mobile number to get started")}
         </p>
       </div>
 
@@ -474,7 +491,40 @@ export function AuthPage() {
       )}
 
       {activeTab === "signup" && (
-        <AuthInput label="Full Name" value={name} onChange={setName} />
+        <AuthInput label={isAstrologerMode ? "Astrologer Full Name" : "Full Name"} value={name} onChange={setName} />
+      )}
+
+      {activeTab === "signup" && isAstrologerMode && (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold mb-1" style={{ color: MAROON, fontFamily: SANS }}>Primary Specialty</label>
+            <select
+              value={astroSpecialty}
+              onChange={e => setAstroSpecialty(e.target.value)}
+              className="w-full h-11 px-3 rounded-2xl text-xs font-bold border border-amber-900/20 bg-white outline-none"
+              style={{ color: MAROON }}
+            >
+              <option value="Vedic Kundali">Vedic Kundali & Matchmaking</option>
+              <option value="Astro-Gemology">Astro-Gemology & Crystals</option>
+              <option value="Vastu Shastra">Vastu Shastra & Remedies</option>
+              <option value="Rudraksha Remedy">Rudraksha & Yantra Healing</option>
+              <option value="Numerology">Numerology & Tarot</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold mb-1" style={{ color: MAROON, fontFamily: SANS }}>Experience (Years)</label>
+            <input
+              type="number"
+              min="1"
+              max="50"
+              value={astroExperience}
+              onChange={e => setAstroExperience(e.target.value)}
+              className="w-full h-11 px-3.5 rounded-2xl text-xs font-bold border border-amber-900/20 bg-white outline-none"
+              style={{ color: MAROON }}
+            />
+          </div>
+        </div>
       )}
 
       <div>
@@ -517,22 +567,32 @@ export function AuthPage() {
         ) : (
           <>
             <Lock size={16} />
-            <span>{activeTab === "signin" ? "Sign In with OTP" : "Get OTP & Create Account"}</span>
+            <span>
+              {isAstrologerMode
+                ? (activeTab === "signin" ? "Sign In to Astrologer Portal" : "Create Astrologer Account")
+                : (activeTab === "signin" ? "Sign In with OTP" : "Get OTP & Create Account")}
+            </span>
           </>
         )}
       </button>
 
-      {/* Astrologer Login / Registration Callout */}
+      {/* Astrologer / Customer Toggle Switcher */}
       <div className="pt-4 border-t border-amber-900/10 text-center">
-        <button
-          onClick={() => {
-            closeAuth();
-            navigate("/astrologer");
-          }}
-          className="text-xs font-bold text-amber-900 hover:underline inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-amber-900/5 hover:bg-amber-900/10 border border-amber-900/15 transition-all active:scale-95"
-        >
-          <span>🔮 Are you a Certified Astrologer? Click here to Login / Join</span>
-        </button>
+        {isAstrologerMode ? (
+          <button
+            onClick={() => setIsAstrologerMode(false)}
+            className="text-xs font-bold text-amber-900 hover:underline inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-amber-900/5 hover:bg-amber-900/10 border border-amber-900/15 transition-all active:scale-95"
+          >
+            <span>← Looking for Customer Login? Click here</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => setIsAstrologerMode(true)}
+            className="text-xs font-bold text-amber-900 hover:underline inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-amber-900/5 hover:bg-amber-900/10 border border-amber-900/15 transition-all active:scale-95"
+          >
+            <span>🔮 Are you a Certified Astrologer? Click here to Login / Join</span>
+          </button>
+        )}
       </div>
 
 

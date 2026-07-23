@@ -118,7 +118,9 @@ export function Nav() {
             ) : (
               <div className="flex items-center gap-2">
                 <button onClick={openAuth} className="px-5 py-2 rounded-full text-sm font-medium tracking-wide transition-all duration-200 hover:opacity-90 shadow-2xs" style={{ background: MAROON, color: IVORY }}>Sign In</button>
-                <button onClick={() => navigate("/astrologer")} className="px-4 py-2 rounded-full text-xs font-bold tracking-wide transition-all duration-200 hover:bg-amber-900/10 border" style={{ borderColor: solid ? "rgba(91,31,36,0.3)" : "rgba(200,160,68,0.4)", color: solid ? MAROON : GOLD }}>Astrologer Portal</button>
+                <button onClick={() => { openAuth(); navigate("?role=astrologer", { replace: true }); }} className="px-4 py-2 rounded-full text-xs font-bold tracking-wide transition-all duration-200 hover:bg-amber-900/10 border flex items-center gap-1" style={{ borderColor: solid ? "rgba(91,31,36,0.3)" : "rgba(200,160,68,0.4)", color: solid ? MAROON : GOLD }}>
+                  <span>Astrologer?</span>
+                </button>
               </div>
             )}
           </div>
@@ -175,8 +177,8 @@ export function Nav() {
             <button onClick={() => { navigate("/wishlist"); setOpen(false); }} className="py-2 text-sm font-medium border-b text-left flex items-center justify-between" style={{ color: MAROON, borderColor: "rgba(91,31,36,0.08)" }}>
               <span>Wishlist</span>
             </button>
-            <button onClick={() => { navigate("/astrologer"); setOpen(false); }} className="py-2 text-sm font-semibold border-b text-left text-amber-900 flex items-center justify-between" style={{ borderColor: "rgba(91,31,36,0.08)" }}>
-              <span>Astrologer Portal / Login</span>
+            <button onClick={() => { openAuth(); navigate("?role=astrologer", { replace: true }); setOpen(false); }} className="py-2 text-sm font-semibold border-b text-left text-amber-900 flex items-center justify-between" style={{ borderColor: "rgba(91,31,36,0.08)" }}>
+              <span>Astrologer? Sign In / Join</span>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold">Vedic Portal</span>
             </button>
             {isLoggedIn ? (
