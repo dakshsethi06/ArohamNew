@@ -181,7 +181,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try { await supabase.auth.signOut(); } catch (e) {}
     localStorage.removeItem("aroham_mock_session");
     deleteCookie("aroham_session");
+    
+    // Clear all user-specific data from sessionStorage to prevent cross-account leakage
     sessionStorage.removeItem("aroham_user_profile");
+    sessionStorage.removeItem("aroham_shipping_addr");
+    sessionStorage.removeItem("aroham_last_order_id");
+    sessionStorage.removeItem("aroham_last_order_items");
+    sessionStorage.removeItem("aroham_order_total");
+    sessionStorage.removeItem("aroham_payment_mode");
+    
+    // Clear live chat/consultation fallback states
+    localStorage.removeItem("aroham_latest_live_session");
+    localStorage.removeItem("aroham_accepted_session_ids");
+    
     setIsLoggedIn(false);
     setUser(null);
     setSession(null);
