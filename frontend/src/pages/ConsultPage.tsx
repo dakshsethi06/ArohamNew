@@ -197,7 +197,7 @@ export function ConsultPage() {
       id: "init-" + Date.now(),
       session_id: createdSession.id,
       sender: "astrologer",
-      text: `Hari Om ${activeUser.user_metadata?.full_name || "Ji"} 🙏 I am ${astro.name}. Welcome to Aroham Sacred Consultations. How may I guide your spiritual path today?`,
+      text: `Hari Om ${user.user_metadata?.full_name || "Ji"} 🙏 I am ${astro.name}. Welcome to Aroham Sacred Consultations. How may I guide your spiritual path today?`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
@@ -212,7 +212,7 @@ export function ConsultPage() {
     try {
       await supabase
         .from("chat_sessions")
-        .insert({ id: sessionUuid, user_id: activeUser.id, status: "pending", astrologer_id: astro.id, topic: "Vedic Kundali & Horoscope" });
+        .insert({ id: sessionUuid, user_id: user.id, status: "pending", astrologer_id: astro.id, topic: "Vedic Kundali & Horoscope" });
     } catch {}
 
     if (createdSession.id && !createdSession.id.startsWith("demo-")) {

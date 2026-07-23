@@ -59,6 +59,7 @@ export function AuthPage() {
   const [agreed, setAgreed] = useState(false);
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
   const [canResend, setCanResend] = useState(false);
+  const [panelVisible, setPanelVisible] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [authNotice, setAuthNotice] = useState<string>(() => {

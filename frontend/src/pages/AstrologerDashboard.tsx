@@ -98,6 +98,8 @@ export function AstrologerDashboard() {
     pricePerMin: "20"
   });
 
+  const [showProfileWizard, setShowProfileWizard] = useState(false);
+
   const [acceptedSessionIds, setAcceptedSessionIds] = useState<Set<string>>(() => {
     try {
       const stored = localStorage.getItem("aroham_accepted_session_ids");
@@ -158,7 +160,7 @@ export function AstrologerDashboard() {
   };
 
   useEffect(() => {
-    const isAstroRole = user?.role === "astrologer" || user?.user_metadata?.role === "astrologer";
+    const isAstroRole = (user as any)?.role === "astrologer" || (user?.user_metadata as any)?.role === "astrologer";
     if (!user || !isAstroRole) {
       navigate("/auth?role=astrologer", { replace: true });
       return;

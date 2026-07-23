@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { 
-  Star, Heart, Eye, Filter, X, CheckRight, ChevronRight, ChevronDown, 
+  Star, Heart, Eye, Filter, X, ChevronRight, ChevronDown, 
   ShoppingCart, LayoutGrid, List, Sparkles, Check, Plus, Minus, RotateCcw
 } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
