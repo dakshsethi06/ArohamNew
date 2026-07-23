@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { supabase } from "@/lib/supabase";
 import { MAROON, GOLD, IVORY, SANS, SERIF } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
+import { DEFAULT_PRODUCTS } from "@/constants/products";
 import {
   Send,
   UserCheck,
@@ -40,13 +41,6 @@ import {
   Activity
 } from "lucide-react";
 
-const REMEDY_PRODUCTS = [
-  { slug: "5-mukhi-rudraksha", name: "5 Mukhi Nepali Rudraksha", price: 1499, img: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=200&q=80" },
-  { slug: "yellow-sapphire-pukhraj", name: "Certified Yellow Sapphire (Pukhraj)", price: 8999, img: "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?auto=format&fit=crop&w=200&q=80" },
-  { slug: "shree-yantra-brass", name: "Energized Brass Shree Yantra", price: 2499, img: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=200&q=80" },
-  { slug: "seven-chakra-bracelet", name: "7-Chakra Crystal Gemstone Bracelet", price: 999, img: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=200&q=80" }
-];
-
 const PRESET_AVATARS = [
   "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
   "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
@@ -59,23 +53,6 @@ const QUICK_ASTRO_RESPONSES = [
   "I am analyzing your Prashna Kundali planetary positions right now.",
   "Your Rahu Mahadasha is active. I recommend wearing a 5 Mukhi Rudraksha.",
   "According to your 7th House position, Jupiter brings strong marriage prospects."
-];
-
-const MOCK_REVIEWS = [
-  { id: 1, user: "Rahul Sharma", rating: 5, date: "Today", text: "Acharya Ji gave very accurate Kundali analysis. Recommended 5 Mukhi Rudraksha which brought immense mental peace." },
-  { id: 2, user: "Priya Malhotra", rating: 5, date: "Yesterday", text: "Extremely insightful consultation regarding my career change & gemstone selection!" },
-  { id: 3, user: "Vikram Patel", rating: 5, date: "2 days ago", text: "Prashna Kundali remedy for business growth worked wonders. Grateful!" }
-];
-
-const MOCK_TRANSACTIONS = [
-  { id: "TXN-8812", user: "Daksh Sethi", type: "Live Chat", duration: "18 mins", rate: "₹20/min", amount: "₹360", status: "Settled", date: "Today, 02:45 PM" },
-  { id: "TXN-8811", user: "Priya M.", type: "Live Chat", duration: "25 mins", rate: "₹20/min", amount: "₹500", status: "Settled", date: "Today, 01:15 PM" },
-  { id: "TXN-8810", user: "Anand Verma", type: "Audio Call", duration: "30 mins", rate: "₹25/min", amount: "₹750", status: "Settled", date: "Yesterday" }
-];
-
-const MOCK_CALL_LOGS = [
-  { id: "CALL-101", user: "Sneha Reddy", duration: "12 mins", status: "Completed", amount: "₹240", time: "Today, 11:20 AM" },
-  { id: "CALL-102", user: "Amitabh K.", duration: "20 mins", status: "Completed", amount: "₹400", time: "Yesterday, 06:15 PM" }
 ];
 
 type MainTab = "overview" | "workstation" | "calls" | "wallet" | "reviews" | "remedies" | "profile";
@@ -94,7 +71,18 @@ export function AstrologerDashboard() {
   const [isCallOnline, setIsCallOnline] = useState(true);
   const [filterTab, setFilterTab] = useState<"all" | "active" | "completed">("all");
 
-  const [showProfileWizard, setShowProfileWizard] = useState(false);
+  const [dbTransactions, setDbTransactions] = useState<any[]>([]);
+  const [dbReviews, setDbReviews] = useState<any[]>([]);
+  const [dbCallLogs, setDbCallLogs] = useState<any[]>([]);
+  const [remedyProducts, setRemedyProducts] = useState<any[]>(DEFAULT_PRODUCTS || []);
+  const [financialStats, setFinancialStats] = useState({
+    todayEarnings: 0,
+    monthlyEarnings: 0,
+    lifetimeEarnings: 0,
+    totalConsultations: 0,
+    averageRating: 4.95
+  });
+
   const [profile, setProfile] = useState({
     name: user?.user_metadata?.full_name || "Acharya Astrologer",
     email: user?.email || "acharya.vedic@aroham.com",
@@ -127,25 +115,101 @@ export function AstrologerDashboard() {
       if (cached) setProfile(prev => ({ ...prev, ...JSON.parse(cached) }));
     } catch (e) {}
 
-    const syncSessions = () => { fetchSessions(); };
-    window.addEventListener("storage", syncSessions);
-    window.addEventListener("focus", syncSessions);
+    const syncAll = () => {
+      fetchSessions();
+      fetchDatabaseData();
+    };
+
+    window.addEventListener("storage", syncAll);
+    window.addEventListener("focus", syncAll);
 
     fetchSessions();
+    fetchDatabaseData();
 
     const sub = supabase
       .channel(`incoming-requests-${currentAstroId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "chat_sessions", filter: `astrologer_id=eq.${currentAstroId}` }, () => {
         fetchSessions();
+        fetchDatabaseData();
       })
       .subscribe();
 
     return () => {
-      window.removeEventListener("storage", syncSessions);
-      window.removeEventListener("focus", syncSessions);
+      window.removeEventListener("storage", syncAll);
+      window.removeEventListener("focus", syncAll);
       supabase.removeChannel(sub);
     };
   }, [user, currentAstroId]);
+
+  const fetchDatabaseData = async () => {
+    try {
+      const { data: txns } = await supabase
+        .from("astrologer_transactions")
+        .select("*")
+        .eq("astrologer_id", currentAstroId)
+        .order("created_at", { ascending: false });
+
+      let loadedTxns = txns || [];
+
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
+      const monthStart = new Date();
+      monthStart.setDate(1);
+      monthStart.setHours(0, 0, 0, 0);
+
+      let todaySum = 0;
+      let monthSum = 0;
+      let lifetimeSum = 0;
+
+      loadedTxns.forEach(t => {
+        const amount = Number(t.amount) || 0;
+        const created = new Date(t.created_at || Date.now()).getTime();
+        lifetimeSum += amount;
+        if (created >= todayStart.getTime()) todaySum += amount;
+        if (created >= monthStart.getTime()) monthSum += amount;
+      });
+
+      setDbTransactions(loadedTxns);
+      setFinancialStats(prev => ({
+        ...prev,
+        todayEarnings: todaySum,
+        monthlyEarnings: monthSum,
+        lifetimeEarnings: lifetimeSum,
+        totalConsultations: loadedTxns.length
+      }));
+    } catch (e) {}
+
+    try {
+      const { data: revs } = await supabase
+        .from("astrologer_reviews")
+        .select("*")
+        .eq("astrologer_id", currentAstroId)
+        .order("created_at", { ascending: false });
+
+      if (revs && revs.length > 0) {
+        setDbReviews(revs);
+        const avg = revs.reduce((acc, r) => acc + (Number(r.rating) || 5), 0) / revs.length;
+        setFinancialStats(prev => ({ ...prev, averageRating: Number(avg.toFixed(2)) }));
+      }
+    } catch (e) {}
+
+    try {
+      const { data: calls } = await supabase
+        .from("chat_sessions")
+        .select("*")
+        .eq("astrologer_id", currentAstroId)
+        .eq("session_type", "Audio Call")
+        .order("created_at", { ascending: false });
+
+      if (calls && calls.length > 0) setDbCallLogs(calls);
+    } catch (e) {}
+
+    try {
+      const { data: prods } = await supabase.from("products").select("*").limit(8);
+      if (prods && prods.length > 0) setRemedyProducts(prods);
+    } catch (e) {}
+  };
 
   const handleLogout = async () => {
     await broadcastStatus(false);
@@ -237,13 +301,14 @@ export function AstrologerDashboard() {
           languages: profile.languages.split(",").map(l => l.trim()),
           bio: profile.bio,
           avatar_url: profile.avatar,
+          price_per_min: parseFloat(profile.pricePerMin) || 20,
           is_online: isChatOnline,
           role: "astrologer"
         });
       }
     } catch (e) {}
 
-    setShowProfileWizard(false);
+    setActiveTab("overview");
   };
 
   const acceptSession = async (s: any) => {
@@ -347,12 +412,40 @@ export function AstrologerDashboard() {
 
   const endSession = async () => {
     if (!activeSession) return;
+
+    const endedAt = new Date().toISOString();
+    const startTime = new Date(activeSession.created_at || Date.now()).getTime();
+    const endTime = Date.now();
+    const durationMins = Math.max(1, Math.round((endTime - startTime) / (1000 * 60)));
+    const ratePerMin = parseFloat(profile.pricePerMin) || 20;
+    const totalAmount = durationMins * ratePerMin;
+
     try {
-      await supabase.from("chat_sessions").update({ status: "completed" }).eq("id", activeSession.id);
+      await supabase.from("chat_sessions").update({
+        status: "completed",
+        ended_at: endedAt,
+        duration_mins: durationMins,
+        total_amount: totalAmount
+      }).eq("id", activeSession.id);
     } catch {}
+
+    try {
+      await supabase.from("astrologer_transactions").insert({
+        astrologer_id: user?.id || "astro-1",
+        session_id: activeSession.id,
+        user_name: `Seeker #${activeSession.user_id?.slice(0, 6) || "Guest"}`,
+        session_type: "Live Chat",
+        duration_mins: durationMins,
+        rate_per_min: ratePerMin,
+        amount: totalAmount,
+        status: "Settled"
+      });
+    } catch {}
+
     setSessions(prev => prev.map(item => item.id === activeSession.id ? { ...item, status: "completed" } : item));
     setActiveSession(null);
     setMessages([]);
+    fetchDatabaseData();
   };
 
   const filteredSessions = sessions.filter(s => {
@@ -397,7 +490,7 @@ export function AstrologerDashboard() {
 
           <div className="px-3 py-1.5 rounded-xl bg-amber-400/15 border border-amber-400/30 text-amber-200 text-xs font-bold flex items-center gap-1.5 shadow-xs">
             <Wallet size={14} className="text-amber-300" />
-            <span>Today: ₹3,850</span>
+            <span>Today: ₹{financialStats.todayEarnings.toLocaleString("en-IN")}</span>
           </div>
 
           <button
@@ -484,7 +577,7 @@ export function AstrologerDashboard() {
             <div className="p-6 sm:p-8 space-y-6 max-w-6xl mx-auto w-full overflow-y-auto">
               <div>
                 <h2 className="text-xl font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Professional Scholar Control Center</h2>
-                <p className="text-xs text-amber-900/70">Overview of active consultations, seeker metrics, and total payouts.</p>
+                <p className="text-xs text-amber-900/70">Overview of active consultations, seeker metrics, and total database payouts.</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -493,9 +586,9 @@ export function AstrologerDashboard() {
                     <span>Total Consultations</span>
                     <MessageSquare size={16} className="text-[#5B1F24]" />
                   </div>
-                  <h3 className="text-2xl font-black text-[#5B1F24]">412 Sessions</h3>
+                  <h3 className="text-2xl font-black text-[#5B1F24]">{financialStats.totalConsultations} Sessions</h3>
                   <p className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-                    <TrendingUp size={11} /> +18% from last month
+                    <TrendingUp size={11} /> Realtime Database Log
                   </p>
                 </div>
 
@@ -504,7 +597,7 @@ export function AstrologerDashboard() {
                     <span>Monthly Earnings</span>
                     <DollarSign size={16} className="text-emerald-600" />
                   </div>
-                  <h3 className="text-2xl font-black text-emerald-600">₹84,200</h3>
+                  <h3 className="text-2xl font-black text-emerald-600">₹{financialStats.monthlyEarnings.toLocaleString("en-IN")}</h3>
                   <p className="text-[10px] text-emerald-600 font-bold">Settled to Bank Account</p>
                 </div>
 
@@ -513,40 +606,42 @@ export function AstrologerDashboard() {
                     <span>Seeker Satisfaction</span>
                     <Star size={16} fill="#C8A044" stroke="none" />
                   </div>
-                  <h3 className="text-2xl font-black text-[#5B1F24]">4.95 ★</h3>
-                  <p className="text-[10px] text-amber-900/60">Based on 412 Verified Ratings</p>
+                  <h3 className="text-2xl font-black text-[#5B1F24]">{financialStats.averageRating} ★</h3>
+                  <p className="text-[10px] text-amber-900/60">Based on Verified Ratings</p>
                 </div>
 
                 <div className="p-5 rounded-3xl bg-white border border-purple-200 shadow-xs space-y-2">
                   <div className="flex items-center justify-between text-purple-800 text-xs font-bold">
-                    <span>Repeat Seekers</span>
-                    <Users size={16} className="text-purple-600" />
+                    <span>Lifetime Payouts</span>
+                    <Wallet size={16} className="text-purple-600" />
                   </div>
-                  <h3 className="text-2xl font-black text-purple-700">86.4%</h3>
-                  <p className="text-[10px] text-purple-600 font-bold">High Client Retention</p>
+                  <h3 className="text-2xl font-black text-purple-700">₹{financialStats.lifetimeEarnings.toLocaleString("en-IN")}</h3>
+                  <p className="text-[10px] text-purple-600 font-bold">Total Settled Earnings</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 p-6 rounded-3xl bg-white border border-amber-900/15 shadow-xs space-y-4">
-                  <h3 className="text-sm font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Weekly Consultation Volume</h3>
-                  <div className="h-44 flex items-end justify-between gap-3 pt-6 pb-2 border-b border-amber-900/10 px-2">
-                    {[
-                      { day: "Mon", count: 12, height: "60%" },
-                      { day: "Tue", count: 18, height: "85%" },
-                      { day: "Wed", count: 15, height: "70%" },
-                      { day: "Thu", count: 22, height: "100%" },
-                      { day: "Fri", count: 19, height: "90%" },
-                      { day: "Sat", count: 25, height: "100%" },
-                      { day: "Sun", count: 21, height: "95%" }
-                    ].map(d => (
-                      <div key={d.day} className="flex-1 flex flex-col items-center gap-2 group">
-                        <span className="text-[10px] font-bold text-amber-900/60">{d.count}</span>
-                        <div className="w-full rounded-t-xl bg-gradient-to-t from-[#5B1F24] to-[#7A2A30] group-hover:from-amber-600 group-hover:to-amber-500 transition-all shadow-xs" style={{ height: d.height }} />
-                        <span className="text-[10px] font-bold text-[#4A3E31]">{d.day}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <h3 className="text-sm font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Recent Completed Consultations</h3>
+                  {sessions.filter(s => s.status === "completed").length === 0 ? (
+                    <div className="p-8 text-center text-xs text-amber-900/60 bg-amber-50/50 rounded-2xl border border-amber-900/10">
+                      No completed session records in database yet. Completed sessions will show here.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {sessions.filter(s => s.status === "completed").slice(0, 4).map(s => (
+                        <div key={s.id} className="p-3.5 rounded-2xl bg-[#FAF6F0] border border-amber-900/10 flex items-center justify-between text-xs">
+                          <div>
+                            <p className="font-bold text-[#5B1F24]">Seeker #{s.user_id?.slice(0, 8) || "Client"}</p>
+                            <p className="text-[11px] text-amber-900/60">{s.topic || "Vedic Consultation"} • {new Date(s.created_at || Date.now()).toLocaleDateString()}</p>
+                          </div>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            Completed
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="p-6 rounded-3xl bg-white border border-amber-900/15 shadow-xs space-y-4">
@@ -715,7 +810,7 @@ export function AstrologerDashboard() {
                           <p className="whitespace-pre-line">{m.text}</p>
                           {m.recommendedProduct && (
                             <div className="mt-3 p-3 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 text-white flex items-center gap-3">
-                              <img src={m.recommendedProduct.img} alt={m.recommendedProduct.name} className="w-10 h-10 rounded-lg object-cover border border-white/30" />
+                              <img src={m.recommendedProduct.image || m.recommendedProduct.img} alt={m.recommendedProduct.name} className="w-10 h-10 rounded-lg object-cover border border-white/30" />
                               <div className="flex-1 min-w-0">
                                 <p className="text-[9px] font-extrabold uppercase text-amber-200">Recommended Sacred Remedy</p>
                                 <h4 className="font-bold text-xs truncate text-white">{m.recommendedProduct.name}</h4>
@@ -744,13 +839,13 @@ export function AstrologerDashboard() {
                         <ShoppingBag size={12} /> Recommend Sacred Remedy Item:
                       </p>
                       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-                        {REMEDY_PRODUCTS.map(prod => (
+                        {remedyProducts.map(prod => (
                           <button
-                            key={prod.slug}
+                            key={prod.slug || prod.id}
                             onClick={() => sendMessage(`I recommend wearing this sacred item to balance your planetary stars:`, prod)}
                             className="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-amber-50 border border-amber-900/15 text-[#4A3E31] flex items-center gap-2 transition-all active:scale-95 shadow-xs"
                           >
-                            <img src={prod.img} alt={prod.name} className="w-5 h-5 rounded-md object-cover" />
+                            <img src={prod.image || prod.img} alt={prod.name} className="w-5 h-5 rounded-md object-cover" />
                             <span>{prod.name} (₹{prod.price})</span>
                           </button>
                         ))}
@@ -810,28 +905,34 @@ export function AstrologerDashboard() {
               </div>
 
               <div className="bg-white border border-amber-900/15 rounded-3xl p-6 shadow-xs">
-                <h3 className="text-sm font-bold text-[#5B1F24] mb-4" style={{ fontFamily: SERIF }}>Call History & Logs</h3>
-                <div className="space-y-3">
-                  {MOCK_CALL_LOGS.map(call => (
-                    <div key={call.id} className="p-4 rounded-2xl bg-[#FAF6F0] border border-amber-900/10 flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2.5 rounded-xl bg-amber-900/10 text-[#5B1F24]">
-                          <PhoneCall size={16} />
+                <h3 className="text-sm font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Call History & Database Logs</h3>
+                {dbCallLogs.length === 0 ? (
+                  <div className="p-8 text-center text-xs text-amber-900/60 mt-4 bg-amber-50/50 rounded-2xl border border-amber-900/10">
+                    No completed audio call records in database yet.
+                  </div>
+                ) : (
+                  <div className="space-y-3 mt-4">
+                    {dbCallLogs.map(call => (
+                      <div key={call.id} className="p-4 rounded-2xl bg-[#FAF6F0] border border-amber-900/10 flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2.5 rounded-xl bg-amber-900/10 text-[#5B1F24]">
+                            <PhoneCall size={16} />
+                          </div>
+                          <div>
+                            <p className="font-bold text-[#5B1F24] text-sm">Seeker #{call.user_id?.slice(0, 6) || "Client"}</p>
+                            <p className="text-amber-900/60 text-[11px]">{new Date(call.created_at).toLocaleString()} • Duration: {call.duration_mins || 15} mins</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-bold text-[#5B1F24] text-sm">{call.user}</p>
-                          <p className="text-amber-900/60 text-[11px]">{call.time} • Duration: {call.duration}</p>
+                        <div className="text-right">
+                          <p className="font-bold text-emerald-700 text-sm">₹{call.total_amount || 300}</p>
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            {call.status}
+                          </span>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-bold text-emerald-700 text-sm">{call.amount}</p>
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                          {call.status}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -841,68 +942,74 @@ export function AstrologerDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Earnings & Wallet Dashboard</h2>
-                  <p className="text-xs text-amber-900/70">Track your daily, monthly, and lifetime consultation payouts.</p>
+                  <p className="text-xs text-amber-900/70">Track your daily, monthly, and lifetime database consultation payouts.</p>
                 </div>
                 <button
-                  onClick={() => alert("Withdrawal request initiated via UPI / Netbanking. Settlement within 24 hours.")}
+                  onClick={() => alert(`Withdrawal request for ₹${financialStats.todayEarnings} initiated via UPI / Netbanking. Settlement within 24 hours.`)}
                   className="px-5 py-3 rounded-2xl font-bold text-xs bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg active:scale-95 transition-all"
                 >
-                  Withdraw Payout (₹3,850)
+                  Withdraw Payout (₹{financialStats.todayEarnings.toLocaleString("en-IN")})
                 </button>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="p-5 rounded-3xl bg-white border border-emerald-200 shadow-xs">
                   <p className="text-xs text-emerald-800 font-bold uppercase tracking-wider mb-1">Today's Earnings</p>
-                  <h3 className="text-2xl font-black text-emerald-600">₹3,850</h3>
-                  <p className="text-[11px] text-amber-900/60 mt-1">18 Live Consultation Mins</p>
+                  <h3 className="text-2xl font-black text-emerald-600">₹{financialStats.todayEarnings.toLocaleString("en-IN")}</h3>
+                  <p className="text-[11px] text-amber-900/60 mt-1">Live Database Settlement</p>
                 </div>
 
                 <div className="p-5 rounded-3xl bg-white border border-amber-900/15 shadow-xs">
-                  <p className="text-xs text-[#5B1F24] font-bold uppercase tracking-wider mb-1">This Month (July)</p>
-                  <h3 className="text-2xl font-black text-[#5B1F24]">₹84,200</h3>
-                  <p className="text-[11px] text-amber-900/60 mt-1">412 Total Consultations</p>
+                  <p className="text-xs text-[#5B1F24] font-bold uppercase tracking-wider mb-1">This Month</p>
+                  <h3 className="text-2xl font-black text-[#5B1F24]">₹{financialStats.monthlyEarnings.toLocaleString("en-IN")}</h3>
+                  <p className="text-[11px] text-amber-900/60 mt-1">{financialStats.totalConsultations} Consultations</p>
                 </div>
 
                 <div className="p-5 rounded-3xl bg-white border border-purple-200 shadow-xs">
                   <p className="text-xs text-purple-800 font-bold uppercase tracking-wider mb-1">Lifetime Payouts</p>
-                  <h3 className="text-2xl font-black text-purple-700">₹4,12,000</h3>
+                  <h3 className="text-2xl font-black text-purple-700">₹{financialStats.lifetimeEarnings.toLocaleString("en-IN")}</h3>
                   <p className="text-[11px] text-amber-900/60 mt-1">Direct Bank Transfers</p>
                 </div>
               </div>
 
               <div className="bg-white border border-amber-900/15 rounded-3xl p-6 shadow-xs">
-                <h3 className="text-sm font-bold text-[#5B1F24] mb-4" style={{ fontFamily: SERIF }}>Recent Session Earnings</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead>
-                      <tr className="border-b border-amber-900/10 text-amber-900/60 text-[11px]">
-                        <th className="pb-3 font-semibold">Transaction ID</th>
-                        <th className="pb-3 font-semibold">Seeker Name</th>
-                        <th className="pb-3 font-semibold">Session Type</th>
-                        <th className="pb-3 font-semibold">Duration</th>
-                        <th className="pb-3 font-semibold">Earnings</th>
-                        <th className="pb-3 font-semibold">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-amber-900/5">
-                      {MOCK_TRANSACTIONS.map(t => (
-                        <tr key={t.id} className="hover:bg-amber-50/50">
-                          <td className="py-3.5 font-mono text-[#5B1F24] font-bold">{t.id}</td>
-                          <td className="py-3.5 font-bold text-[#4A3E31]">{t.user}</td>
-                          <td className="py-3.5 text-amber-900/70">{t.type}</td>
-                          <td className="py-3.5 text-amber-900/70">{t.duration}</td>
-                          <td className="py-3.5 font-bold text-emerald-600">{t.amount}</td>
-                          <td className="py-3.5">
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                              {t.status}
-                            </span>
-                          </td>
+                <h3 className="text-sm font-bold text-[#5B1F24] mb-4" style={{ fontFamily: SERIF }}>Recent Database Session Earnings</h3>
+                {dbTransactions.length === 0 ? (
+                  <div className="p-8 text-center text-xs text-amber-900/60 bg-amber-50/50 rounded-2xl border border-amber-900/10">
+                    No transactions recorded in database yet. Completed sessions will automatically populate here.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-amber-900/10 text-amber-900/60 text-[11px]">
+                          <th className="pb-3 font-semibold">Transaction ID</th>
+                          <th className="pb-3 font-semibold">Seeker Name</th>
+                          <th className="pb-3 font-semibold">Session Type</th>
+                          <th className="pb-3 font-semibold">Duration</th>
+                          <th className="pb-3 font-semibold">Earnings</th>
+                          <th className="pb-3 font-semibold">Status</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-amber-900/5">
+                        {dbTransactions.map(t => (
+                          <tr key={t.id} className="hover:bg-amber-50/50">
+                            <td className="py-3.5 font-mono text-[#5B1F24] font-bold">{t.id?.slice(0, 8)}</td>
+                            <td className="py-3.5 font-bold text-[#4A3E31]">{t.user_name || "Seeker"}</td>
+                            <td className="py-3.5 text-amber-900/70">{t.session_type || "Live Chat"}</td>
+                            <td className="py-3.5 text-amber-900/70">{t.duration_mins || 1} mins</td>
+                            <td className="py-3.5 font-bold text-emerald-600">₹{t.amount}</td>
+                            <td className="py-3.5">
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                {t.status || "Settled"}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -916,26 +1023,34 @@ export function AstrologerDashboard() {
                 </div>
                 <div className="flex items-center gap-2 bg-[#5B1F24] px-4 py-2 rounded-2xl text-amber-200 font-bold text-sm shadow-md">
                   <Star size={18} fill="#C8A044" stroke="none" />
-                  <span>4.95 ★ Rating (412 Reviews)</span>
+                  <span>{financialStats.averageRating} ★ Rating ({dbReviews.length} Reviews)</span>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                {MOCK_REVIEWS.map(r => (
-                  <div key={r.id} className="p-5 rounded-3xl bg-white border border-amber-900/15 space-y-2 shadow-xs">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-[#5B1F24]">{r.user}</span>
-                        <span className="flex text-amber-500 text-xs">
-                          {"★".repeat(r.rating)}
-                        </span>
+              {dbReviews.length === 0 ? (
+                <div className="p-12 text-center text-xs text-amber-900/60 bg-white rounded-3xl border border-amber-900/15 shadow-xs">
+                  <Star size={32} className="mx-auto text-amber-400 mb-2" />
+                  <p className="font-bold text-[#5B1F24]">No Database Reviews Yet</p>
+                  <p className="text-[11px] text-amber-900/60 mt-1">Ratings submitted by users after consultations will show here.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {dbReviews.map(r => (
+                    <div key={r.id} className="p-5 rounded-3xl bg-white border border-amber-900/15 space-y-2 shadow-xs">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-sm text-[#5B1F24]">{r.user_name || "Seeker"}</span>
+                          <span className="flex text-amber-500 text-xs">
+                            {"★".repeat(r.rating || 5)}
+                          </span>
+                        </div>
+                        <span className="text-xs text-amber-900/50">{new Date(r.created_at || Date.now()).toLocaleDateString()}</span>
                       </div>
-                      <span className="text-xs text-amber-900/50">{r.date}</span>
+                      <p className="text-xs text-amber-900/80 leading-relaxed font-medium">"{r.text}"</p>
                     </div>
-                    <p className="text-xs text-amber-900/80 leading-relaxed font-medium">"{r.text}"</p>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -943,14 +1058,14 @@ export function AstrologerDashboard() {
             <div className="p-6 sm:p-8 space-y-6 max-w-5xl mx-auto w-full overflow-y-auto">
               <div>
                 <h2 className="text-xl font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Sacred Remedies Catalog</h2>
-                <p className="text-xs text-amber-900/70">These temple-energized remedies can be recommended during live chats.</p>
+                <p className="text-xs text-amber-900/70">These active remedies can be recommended during live chats.</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {REMEDY_PRODUCTS.map(prod => (
-                  <div key={prod.slug} className="p-4 rounded-3xl bg-white border border-amber-900/15 space-y-3 flex flex-col justify-between shadow-xs">
+                {remedyProducts.map(prod => (
+                  <div key={prod.slug || prod.id} className="p-4 rounded-3xl bg-white border border-amber-900/15 space-y-3 flex flex-col justify-between shadow-xs">
                     <div>
-                      <img src={prod.img} alt={prod.name} className="w-full h-32 rounded-2xl object-cover border border-amber-900/10 mb-3" />
+                      <img src={prod.image || prod.img} alt={prod.name} className="w-full h-32 rounded-2xl object-cover border border-amber-900/10 mb-3" />
                       <h4 className="font-bold text-xs text-[#5B1F24]">{prod.name}</h4>
                       <p className="text-xs font-bold text-amber-700 mt-1">₹{prod.price}</p>
                     </div>
@@ -971,7 +1086,7 @@ export function AstrologerDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Astrologer Profile Settings</h2>
-                  <p className="text-xs text-amber-900/70">Update your qualifications, bio, and per-minute fee.</p>
+                  <p className="text-xs text-amber-900/70">Update your qualifications, bio, and per-minute fee in Supabase.</p>
                 </div>
                 <button
                   onClick={saveProfile}
