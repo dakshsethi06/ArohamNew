@@ -311,6 +311,18 @@ export function AuthPage() {
           // Save local cache
           localStorage.setItem(`aroham_registered_user_phone_${phoneDigits}`, JSON.stringify(userProfile));
 
+          // Direct client-side Supabase DB upsert to guarantee persistence in users table
+          try {
+            await supabase.from("users").upsert({
+              id: finalUserId,
+              full_name: name.trim(),
+              email: email.trim() || null,
+              phone: phoneDigits
+            });
+          } catch (supaErr) {
+            console.warn("Direct Supabase user upsert warning:", supaErr);
+          }
+
           // Save Firestore
           setDoc(doc(db, "users", finalUserId), {
             fullName: name.trim(),
@@ -375,6 +387,18 @@ export function AuthPage() {
 
       if (phoneDigits) {
         localStorage.setItem(`aroham_registered_user_phone_${phoneDigits}`, JSON.stringify(userProfile));
+      }
+
+      // Direct client-side Supabase DB upsert to guarantee persistence in users table
+      try {
+        await supabase.from("users").upsert({
+          id: finalUserId,
+          full_name: name.trim(),
+          email: email.trim() || null,
+          phone: phoneDigits
+        });
+      } catch (supaErr) {
+        console.warn("Direct Supabase user upsert warning:", supaErr);
       }
 
       setDoc(doc(db, "users", finalUserId), {

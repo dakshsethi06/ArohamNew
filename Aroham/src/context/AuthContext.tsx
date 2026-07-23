@@ -105,6 +105,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const handleUserSupabaseSync = (userData: any) => {
+    if (!userData?.id) return;
+    const fullName = userData.user_metadata?.full_name || userData.fullName || userData.name || null;
+    const phone = userData.user_metadata?.phone || userData.phone || null;
+    const email = userData.email || null;
+
+    if (fullName || phone || email) {
+      Promise.resolve(
+        supabase.from("users").upsert({
+          id: userData.id,
+          full_name: fullName,
+          phone: phone,
+          email: email
+        })
+      ).catch(err => console.warn("Supabase user sync error:", err));
+    }
+  };
+
   useEffect(() => {
     const rawSession = localStorage.getItem("aroham_mock_session") || getCookie("aroham_session");
     if (rawSession) {
@@ -118,7 +136,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setCookie("aroham_session", JSON.stringify(parsed), 365);
 
         handleCartSync();
-        if (parsed?.id) handleOrderSync(parsed.id);
+        if (parsed?.id) {
+          handleOrderSync(parsed.id);
+          handleUserSupabaseSync(parsed);
+        }
       } catch (e) {
         localStorage.removeItem("aroham_mock_session");
         deleteCookie("aroham_session");
@@ -135,7 +156,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCookie("aroham_session", JSON.stringify(userData), 365);
 
       handleCartSync();
-      if (userData?.id) handleOrderSync(userData.id);
+      if (userData?.id) {
+        handleOrderSync(userData.id);
+        handleUserSupabaseSync(userData);
+      }
     }
   };
   
