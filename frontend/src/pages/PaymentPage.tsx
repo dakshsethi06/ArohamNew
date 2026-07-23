@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { Lock, ChevronLeft, ChevronRight, ShieldCheck, Tag, ChevronDown } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@/constants/theme";
-import { CheckoutProgress } from "@/components/checkout/CheckoutProgress";
 import { generateUUID } from "@/utils/uuid";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
@@ -473,7 +472,6 @@ export function PaymentPage() {
 
           {/* Right sidebar – order summary / payment breakdown */}
           <div className="lg:sticky lg:top-24">
-            <CheckoutProgress step={2} />
             <div className="rounded-3xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 4px 30px rgba(91,31,36,0.07)" }}>
               <div className="px-6 pt-6 pb-4 lg:pt-4 lg:pb-3" style={{ borderBottom: "1px solid rgba(91,31,36,0.06)" }}><h2 className="text-lg font-semibold" style={{ fontFamily: SERIF, color: MAROON }}>Order Summary</h2></div>
               
