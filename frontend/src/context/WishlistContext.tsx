@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 import { ArohamProduct } from "@/types/product";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "./AuthContext";
 
 interface WishlistContextValue {
   wishlist: ArohamProduct[];
@@ -13,37 +14,84 @@ interface WishlistContextValue {
 const WishlistContext = createContext<WishlistContextValue | null>(null);
 
 export function WishlistProvider({ children }: { children: ReactNode }) {
-  const [wishlist, setWishlist] = useState<ArohamProduct[]>(() => {
-    try {
-      const saved = localStorage.getItem("aroham_wishlist");
-      return saved ? JSON.parse(saved) : [];
-    } catch (e) {
-      return [];
-    }
-  });
+  const { isLoggedIn, user } = useAuth();
+  const [wishlist, setWishlist] = useState<ArohamProduct[]>([]);
+  
+  // Track previous login state to detect logout
+  const prevIsLoggedIn = useRef<boolean | null>(null);
+  const isLoggingOut = useRef(false);
 
+  // Load wishlist from local storage/db based on login status
   useEffect(() => {
-    try {
-      localStorage.setItem("aroham_wishlist", JSON.stringify(wishlist));
-    } catch (e) {}
+    const justLoggedOut = prevIsLoggedIn.current === true && !isLoggedIn;
+    if (justLoggedOut) isLoggingOut.current = true;
+    prevIsLoggedIn.current = isLoggedIn;
 
-    // Persist wishlist items to Supabase DB if user is logged in
-    try {
-      const cachedUser = localStorage.getItem("aroham_user_profile");
-      if (cachedUser) {
-        const u = JSON.parse(cachedUser);
-        if (u?.id && wishlist.length > 0) {
-          Promise.resolve(
-            supabase.from("user_wishlists").upsert({
-              user_id: u.id,
-              items: wishlist,
-              updated_at: new Date().toISOString()
-            })
-          ).catch(() => {});
+    if (justLoggedOut) {
+      setWishlist([]);
+      localStorage.removeItem("aroham_wishlist");
+      setTimeout(() => { isLoggingOut.current = false; }, 100);
+    } else if (user?.id) {
+      // 1. Load user-specific local storage cache first for instant load
+      const userKey = `aroham_user_wishlist_${user.id}`;
+      const userCached = localStorage.getItem(userKey);
+      let initialList: ArohamProduct[] = [];
+      if (userCached) {
+        try { initialList = JSON.parse(userCached); } catch (e) {}
+      } else {
+        // Fallback to guest list to carry it over on login
+        const guestCached = localStorage.getItem("aroham_wishlist");
+        if (guestCached) {
+          try { initialList = JSON.parse(guestCached); } catch (e) {}
         }
       }
-    } catch (e) {}
-  }, [wishlist]);
+      setWishlist(initialList);
+
+      // 2. Fetch real-time wishlist from Supabase database to sync across devices
+      supabase.from("user_wishlists")
+        .select("items")
+        .eq("user_id", user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data && Array.isArray(data.items)) {
+            // Merge local and remote wishlists, unique by ID
+            setWishlist(prev => {
+              const combined = [...prev];
+              data.items.forEach((item: any) => {
+                if (!combined.some(p => p.id === item.id)) {
+                  combined.push(item);
+                }
+              });
+              return combined;
+            });
+          }
+        }).catch(() => {});
+    } else {
+      // Load guest wishlist
+      const guestCached = localStorage.getItem("aroham_wishlist");
+      if (guestCached) {
+        try { setWishlist(JSON.parse(guestCached)); } catch (e) {}
+      }
+    }
+  }, [isLoggedIn, user?.id]);
+
+  // Persist changes
+  useEffect(() => {
+    if (isLoggingOut.current) return;
+
+    localStorage.setItem("aroham_wishlist", JSON.stringify(wishlist));
+    if (user?.id) {
+      localStorage.setItem(`aroham_user_wishlist_${user.id}`, JSON.stringify(wishlist));
+      // Upsert to Supabase
+      Promise.resolve(
+        supabase.from("user_wishlists").upsert({
+          user_id: user.id,
+          items: wishlist,
+          updated_at: new Date().toISOString()
+        })
+      ).catch(() => {});
+    }
+  }, [wishlist, user?.id]);
 
   const addToWishlist = (product: ArohamProduct) => {
     setWishlist(prev => {
