@@ -386,30 +386,46 @@ export function ProductDetailPage() {
               </div>
               <span className="text-xs whitespace-nowrap" style={{ color: "#4A8A4A" }}>· 120+ bought this month</span>
             </div>
-            <div className="flex flex-wrap items-baseline gap-3 mb-1">
-              <span className="text-3xl font-semibold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{product.price.toLocaleString("en-IN")}</span>
-              <span className="text-base line-through" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{Math.round(product.original).toLocaleString("en-IN")}</span>
-              <span className="text-sm font-bold whitespace-nowrap" style={{ color: "#4A8A4A" }}>{Math.round((1 - product.price / product.original) * 100)}% off</span>
-            </div>
-            <p className="text-[11px] mb-5" style={{ color: "#9A8A78" }}>Inclusive of GST · Free shipping · Temple energized</p>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center rounded-full overflow-hidden" style={{ border: `1.5px solid rgba(91,31,36,0.15)` }}>
-                <button aria-label="Decrease quantity" onClick={() => setQty(q => Math.max(1, q - 1))} className="w-10 h-10 flex items-center justify-center hover:bg-black/5" style={{ color: MAROON }}>−</button>
-                <span className="w-10 text-center font-semibold" style={{ color: MAROON, fontFamily: SERIF }}>{qty}</span>
-                <button aria-label="Increase quantity" onClick={() => setQty(q => q + 1)} className="w-10 h-10 flex items-center justify-center hover:bg-black/5" style={{ color: MAROON }}>+</button>
+            {/* Price & Quantity Row */}
+            <div className="flex items-center justify-between gap-3 mb-2 flex-wrap sm:flex-nowrap">
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <span className="text-2xl sm:text-3xl font-extrabold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>
+                  ₹{(product.price * qty).toLocaleString("en-IN")}
+                </span>
+                {product.original > product.price && (
+                  <span className="text-sm sm:text-base line-through opacity-60 font-semibold" style={{ fontFamily: PRICE_FONT, color: "#8A7A68" }}>
+                    ₹{Math.round(product.original * qty).toLocaleString("en-IN")}
+                  </span>
+                )}
+                {product.original > product.price && (
+                  <span className="text-xs sm:text-sm font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    {Math.round((1 - product.price / product.original) * 100)}% OFF
+                  </span>
+                )}
               </div>
-              <span className="text-xs font-semibold text-emerald-600">✓ In Stock</span>
+
+              {/* Quantity Counter Box */}
+              <div className="flex items-center gap-2">
+                <div className="flex items-center rounded-2xl overflow-hidden bg-white border border-amber-900/20 shadow-2xs">
+                  <button aria-label="Decrease quantity" onClick={() => setQty(q => Math.max(1, q - 1))} className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center hover:bg-black/5 font-bold transition-all text-amber-900">−</button>
+                  <span className="w-8 sm:w-10 text-center font-bold text-sm text-[#5B1F24]" style={{ fontFamily: SANS }}>{qty}</span>
+                  <button aria-label="Increase quantity" onClick={() => setQty(q => q + 1)} className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center hover:bg-black/5 font-bold transition-all text-amber-900">+</button>
+                </div>
+                <span className="text-xs font-semibold text-emerald-600 hidden sm:inline">✓ In Stock</span>
+              </div>
             </div>
 
-            {/* Inline Action Buttons (Visible on mobile & desktop) */}
-            <div ref={mainButtonsRef} className="space-y-2.5 sm:space-y-3 mb-6">
+            <p className="text-[11px] mb-4 font-medium text-amber-900/70">INCL. OF ALL TAXES · FREE SHIPPING · TEMPLE ENERGIZED</p>
+
+            {/* Sticky Action Button Container (Glides in page flow and sticks to screen bottom when scrolling on mobile) */}
+            <div className="sticky bottom-0 z-50 -mx-4 px-4 py-3 bg-[#FAF7F2]/95 backdrop-blur-md border-t border-amber-900/15 shadow-[0_-4px_24px_rgba(91,31,36,0.12)] sm:static sm:mx-0 sm:px-0 sm:py-0 sm:bg-transparent sm:border-0 sm:shadow-none space-y-2 mb-6">
               <button
                 onClick={() => addToCart(product, qty)}
                 className="w-full py-3.5 sm:py-4 rounded-2xl text-xs sm:text-sm font-bold tracking-wider uppercase flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all active:scale-98"
                 style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)`, color: IVORY }}
               >
                 <ShoppingCart size={16} />
-                <span>ADD TO CART</span>
+                <span>ADD TO CART - ₹{(product.price * qty).toLocaleString("en-IN")}</span>
               </button>
               
               <button
@@ -418,8 +434,8 @@ export function ProductDetailPage() {
                   navigate("/checkout/shipping");
                   window.scrollTo({ top: 0, behavior: "instant" });
                 }}
-                className="w-full py-3 sm:py-3.5 rounded-2xl text-xs sm:text-sm font-bold tracking-wide border transition-all hover:bg-amber-50/80 active:scale-98 flex items-center justify-center gap-2"
-                style={{ borderColor: GOLD, color: MAROON, background: "#FFFFFF" }}
+                className="w-full py-3 sm:py-3.5 rounded-2xl text-xs sm:text-sm font-bold tracking-wide border transition-all hover:bg-amber-50/80 active:scale-98 flex items-center justify-center gap-2 bg-white"
+                style={{ borderColor: GOLD, color: MAROON }}
               >
                 <span>⚡ BUY NOW</span>
               </button>
@@ -556,43 +572,6 @@ export function ProductDetailPage() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
-      {/* Mobile sticky bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[100] px-4 py-3 border-t shadow-2xl transition-transform duration-300"
-        style={{
-          background: "rgba(255,255,255,0.98)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          borderColor: "rgba(91,31,36,0.12)",
-          boxShadow: "0 -4px 24px rgba(91,31,36,0.14)",
-        }}>
-        <div className="flex items-center justify-between mb-1.5 px-1">
-          <div className="flex items-baseline gap-2">
-            <span className="text-lg font-bold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{product.price.toLocaleString("en-IN")}</span>
-            <span className="text-xs line-through" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{Math.round(product.original).toLocaleString("en-IN")}</span>
-            <span className="text-xs font-bold text-emerald-600">{Math.round((1 - product.price / product.original) * 100)}% off</span>
-          </div>
-          <span className="text-[10px] font-semibold text-emerald-600 flex items-center gap-1">✓ In Stock</span>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={() => addToCart(product, qty)}
-            className="flex-1 py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
-            style={{ background: `linear-gradient(135deg,${MAROON},#7A2A30)`, color: IVORY }}>
-            <ShoppingCart size={14} />
-            <span>Add to Cart</span>
-          </button>
-          <button
-            onClick={async () => {
-              await addToCart(product, qty);
-              navigate("/checkout/shipping");
-              window.scrollTo({ top: 0, behavior: "instant" });
-            }}
-            className="px-5 py-3 rounded-xl text-xs font-bold border flex items-center justify-center gap-1 active:scale-95 transition-all bg-white"
-            style={{ borderColor: GOLD, color: MAROON }}
-          >
-            ⚡ Buy
-          </button>
         </div>
       </div>
     </div>
