@@ -51,6 +51,28 @@ export function ProductDetailPage() {
   const [copied, setCopied] = useState(false);
   const mainButtonsRef = useRef<HTMLDivElement>(null);
 
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  const imgViews = ["Front View", "Detail View", "In Use", "Packaging", "Certificate"];
+
+  const nextImg = () => setSelectedImg(prev => (prev + 1) % imgViews.length);
+  const prevImg = () => setSelectedImg(prev => (prev - 1 + imgViews.length) % imgViews.length);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+  const handleTouchMove = (e: React.TouchEvent) => setTouchEnd(e.targetTouches[0].clientX);
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    if (distance > 40) nextImg();
+    if (distance < -40) prevImg();
+    setTouchStart(null);
+    setTouchEnd(null);
+  };
+
   const handleShare = async () => {
     if (!product) return;
     const shareData = {
@@ -156,8 +178,6 @@ export function ProductDetailPage() {
       </div>
     );
   }
-
-  const imgViews = ["Front View", "Detail View", "In Use", "Packaging", "Certificate"];
 
   const tabContent = [
     <div className="space-y-5">
@@ -277,24 +297,74 @@ export function ProductDetailPage() {
       </div>
       <div className="px-4 sm:px-6 lg:px-10 pb-10">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[48%_32%_20%] gap-6 lg:gap-8">
-          {/* Gallery */}
+          {/* Gallery with Slider Controls & Responsive Proportions */}
           <div>
-            <div className="rounded-3xl overflow-hidden aspect-square bg-amber-50 mb-3 relative group" style={{ boxShadow: "0 8px 40px rgba(91,31,36,0.1)" }}>
-              <img src={product.img} alt={`${product.name} - ${product.subtitle}`} className="w-full h-full object-cover" />
-              <div className="absolute top-4 right-4 flex gap-2">
-                <button aria-label="Add to wishlist" onClick={() => { if (product) { toggleWishlist(product); } }} className="p-2 rounded-full hover:opacity-80 transition-opacity" style={{ background: "rgba(255,255,255,0.9)" }}>
+            <div
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              className="max-w-md mx-auto sm:max-w-none rounded-3xl overflow-hidden aspect-[4/3] sm:aspect-square max-h-[380px] sm:max-h-[440px] bg-[#FAF7F2] mb-3 relative group flex items-center justify-center p-3 border border-amber-900/10 shadow-[0_4px_24px_rgba(91,31,36,0.06)] select-none"
+            >
+              <img
+                src={product.img}
+                alt={`${product.name} - ${imgViews[selectedImg]}`}
+                className="max-h-full max-w-full w-auto h-auto object-contain transition-all duration-500"
+              />
+
+              {/* Slider Left Arrow */}
+              <button
+                aria-label="Previous photo"
+                onClick={prevImg}
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center backdrop-blur-md bg-white/85 border border-white/60 shadow-md text-[#5B1F24] hover:bg-white hover:scale-105 active:scale-95 transition-all z-10"
+              >
+                <ChevronLeft size={18} />
+              </button>
+
+              {/* Slider Right Arrow */}
+              <button
+                aria-label="Next photo"
+                onClick={nextImg}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center backdrop-blur-md bg-white/85 border border-white/60 shadow-md text-[#5B1F24] hover:bg-white hover:scale-105 active:scale-95 transition-all z-10"
+              >
+                <ChevronRight size={18} />
+              </button>
+
+              {/* Wishlist & Share Buttons */}
+              <div className="absolute top-3 right-3 flex gap-2 z-10">
+                <button
+                  aria-label="Add to wishlist"
+                  onClick={() => { if (product) toggleWishlist(product); }}
+                  className="p-2 rounded-full backdrop-blur-md bg-white/85 border border-white/60 shadow-xs hover:scale-105 active:scale-90 transition-all"
+                >
                   <Heart size={16} style={{ color: product && isInWishlist(product.id) ? "#E74C3C" : "#7A6A58", fill: product && isInWishlist(product.id) ? "#E74C3C" : "none" }} />
                 </button>
                 <button
                   aria-label="Share product"
                   onClick={handleShare}
-                  className="p-2 rounded-full hover:opacity-80 transition-all active:scale-90"
-                  style={{ background: "rgba(255,255,255,0.9)" }}
+                  className="p-2 rounded-full backdrop-blur-md bg-white/85 border border-white/60 shadow-xs hover:scale-105 active:scale-90 transition-all"
                 >
                   <Share2 size={16} style={{ color: copied ? MAROON : "#7A6A58" }} />
                 </button>
               </div>
-              <div className="absolute bottom-4 left-4 px-3 py-1 rounded-full text-[10px] font-semibold" style={{ background: "rgba(91,31,36,0.88)", color: GOLD }}>{imgViews[selectedImg]}</div>
+
+              {/* View Label Badge */}
+              <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-md shadow-xs" style={{ background: "rgba(91,31,36,0.85)", color: GOLD }}>
+                {imgViews[selectedImg]}
+              </div>
+
+              {/* Slider Dots Indicator */}
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10 bg-black/25 backdrop-blur-md px-3 py-1 rounded-full border border-white/20">
+                {imgViews.map((_, i) => (
+                  <button
+                    key={i}
+                    aria-label={`Go to slide ${i + 1}`}
+                    onClick={() => setSelectedImg(i)}
+                    className={`transition-all rounded-full ${
+                      selectedImg === i ? "w-4 h-1.5 bg-[#C8A044]" : "w-1.5 h-1.5 bg-white/70 hover:bg-white"
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
 
             {copied && (
@@ -302,12 +372,20 @@ export function ProductDetailPage() {
                 <span>✨ Link copied to clipboard!</span>
               </div>
             )}
-            <div className="flex gap-2 overflow-x-auto pb-1">
+            
+            {/* Thumbnails Row */}
+            <div className="flex gap-2 overflow-x-auto pb-1 justify-center sm:justify-start">
               {imgViews.map((v, i) => (
-                <button key={i} onClick={() => setSelectedImg(i)}
-                  className="flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden transition-all"
-                  style={{ border: `2px solid ${selectedImg === i ? GOLD : "rgba(91,31,36,0.1)"}`, boxShadow: selectedImg === i ? `0 0 0 2px rgba(200,160,68,0.2)` : "none" }}>
-                  <img src={product.img} alt={v} className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" />
+                <button
+                  key={i}
+                  onClick={() => setSelectedImg(i)}
+                  className="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden transition-all bg-[#FAF7F2] p-1 border"
+                  style={{
+                    borderColor: selectedImg === i ? GOLD : "rgba(91,31,36,0.1)",
+                    boxShadow: selectedImg === i ? `0 0 0 2px rgba(200,160,68,0.3)` : "none"
+                  }}
+                >
+                  <img src={product.img} alt={v} className="w-full h-full object-contain opacity-80 hover:opacity-100 transition-opacity" />
                 </button>
               ))}
             </div>
