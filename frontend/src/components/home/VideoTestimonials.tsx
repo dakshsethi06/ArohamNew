@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 import { MAROON, GOLD, SAFFRON, IVORY, SANS, SERIF } from "@/constants/theme";
 import { VIDEO_REVIEWS, yantraPlateImg, gemstonImg, pendantSilImg } from "@/constants/data";
@@ -12,115 +12,71 @@ const BASE_REELS = [
 
 export function VideoTestimonials() {
   const [active, setActive] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchDelta, setTouchDelta] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const n = BASE_REELS.length;
-  const [centerIndex, setCenterIndex] = useState(n);
-  const ALL_REELS = [...BASE_REELS, ...BASE_REELS, ...BASE_REELS];
 
-  useEffect(() => {
-    setIsMobile(window.innerWidth < 768);
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const goTo = useCallback((i: number) => {
+    setActive(((i % n) + n) % n);
+  }, [n]);
 
-  const isScrollingRef = useRef(false);
+  const next = useCallback(() => goTo(active + 1), [active, goTo]);
+  const prev = useCallback(() => goTo(active - 1), [active, goTo]);
 
-  const scrollToIndex = (idx: number, smooth = true) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const child = el.children[idx] as HTMLElement | undefined;
-    if (!child) return;
-    if (smooth) isScrollingRef.current = true;
-    const targetLeft = child.offsetLeft - el.clientWidth / 2 + child.offsetWidth / 2;
-    el.scrollTo({ left: targetLeft, behavior: smooth ? "smooth" : "instant" });
-
-    if (smooth) {
-      setTimeout(() => {
-        isScrollingRef.current = false;
-      }, 500);
-    }
-  };
-
-  const scrollTo = (i: number) => {
-    const mid = n + i;
-    setActive(i);
-    scrollToIndex(mid, true);
-  };
-
-  const prev = () => scrollTo((active - 1 + n) % n);
-  const next = () => scrollTo((active + 1) % n);
-
-  useEffect(() => {
-    let raf1: number, raf2: number;
-    raf1 = requestAnimationFrame(() => {
-      raf2 = requestAnimationFrame(() => { scrollToIndex(n + active, false); });
-    });
-    return () => { cancelAnimationFrame(raf1); cancelAnimationFrame(raf2); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // 3.5-second smooth auto-slide timer with hover pause
+  // Auto-slide every 4s
   useEffect(() => {
     if (isPaused) return;
-    const timer = setInterval(() => {
-      next();
-    }, 3500);
+    const timer = setInterval(next, 4000);
     return () => clearInterval(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPaused, active, n]);
+  }, [isPaused, next]);
 
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    let snapTimer: ReturnType<typeof setTimeout>;
+  // Touch handlers for swipe
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.touches[0].clientX);
+    setIsSwiping(true);
+    setIsPaused(true);
+  };
 
-    const onScroll = () => {
-      if (isScrollingRef.current) return;
-      const center = el.scrollLeft + el.clientWidth / 2;
-      let closest = 0, minDist = Infinity;
-      Array.from(el.children).forEach((child, ci) => {
-        const c = (child as HTMLElement).offsetLeft + (child as HTMLElement).offsetWidth / 2;
-        const dist = Math.abs(c - center);
-        if (dist < minDist) { minDist = dist; closest = ci; }
-      });
-      const realIdx = closest % n;
-      setActive(realIdx);
-      setCenterIndex(closest);
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    setTouchDelta(e.touches[0].clientX - touchStart);
+  };
 
-      clearTimeout(snapTimer);
-      snapTimer = setTimeout(() => {
-        if (!isScrollingRef.current) {
-          if (closest < n) { scrollToIndex(n + realIdx, false); }
-          else if (closest >= n * 2) { scrollToIndex(n + realIdx, false); }
-        }
-      }, 150);
-    };
+  const onTouchEnd = () => {
+    if (Math.abs(touchDelta) > 50) {
+      if (touchDelta < 0) next();
+      else prev();
+    }
+    setTouchStart(null);
+    setTouchDelta(0);
+    setIsSwiping(false);
+    setTimeout(() => setIsPaused(false), 2000);
+  };
 
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => { el.removeEventListener("scroll", onScroll); clearTimeout(snapTimer); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [n]);
+  // Determine visible cards: prev, current, next (only 3 in DOM at a time)
+  const getIndex = (offset: number) => ((active + offset) % n + n) % n;
+  const prevIdx = getIndex(-1);
+  const nextIdx = getIndex(1);
+  const visibleIndices = [getIndex(-2), prevIdx, active, nextIdx, getIndex(2)];
 
   return (
     <section
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
-      className="py-20 px-0 overflow-hidden"
+      className="py-14 sm:py-20 px-0 overflow-hidden"
       style={{ background: "#0D0508" }}
     >
-      <style>{`
-        .reel-scroll{scrollbar-width:none;}
-        .reel-scroll::-webkit-scrollbar{display:none;}
-      `}</style>
-      <div className="text-center mb-10 px-6">
+      <div className="text-center mb-8 sm:mb-10 px-6">
         <span className="text-xs tracking-[0.25em] uppercase font-medium mb-3 block" style={{ color: SAFFRON, fontFamily: SANS }}>Real Transformations</span>
         <h2 style={{ fontFamily: SERIF, fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 500, color: IVORY }}>Customer Stories</h2>
-        <p className="text-sm mt-2" style={{ color: "rgba(250,247,242,0.5)", fontFamily: SANS }}>Scroll through real stories from our community</p>
+        <p className="text-sm mt-2" style={{ color: "rgba(250,247,242,0.5)", fontFamily: SANS }}>Swipe through real stories from our community</p>
       </div>
-      <div className="relative">
+
+      <div className="relative" ref={containerRef}>
+        {/* Navigation arrows — desktop only */}
         <button aria-label="Previous testimonial" onClick={prev}
           className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full items-center justify-center transition-all hover:scale-110 active:scale-95"
           style={{ background: "rgba(200,160,68,0.15)", border: "1px solid rgba(200,160,68,0.3)", color: GOLD, backdropFilter: "blur(8px)" }}>
@@ -132,33 +88,68 @@ export function VideoTestimonials() {
           <ChevronRight size={18} />
         </button>
 
-        <div ref={scrollRef}
-          className="reel-scroll flex items-center gap-5 overflow-x-auto px-6 sm:px-12 lg:px-20"
-          style={{ paddingBottom: "12px", minHeight: isMobile ? 440 : 470 }}>
-          {ALL_REELS.map((v, i) => {
-            const isActive = (i % n) === active;
+        {/* Cards container */}
+        <div
+          className="flex items-center justify-center relative"
+          style={{ minHeight: 440, perspective: "1000px" }}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
+          {visibleIndices.map((reelIdx, posIdx) => {
+            const v = BASE_REELS[reelIdx];
+            // posIdx: 0=far-left, 1=left, 2=center, 3=right, 4=far-right
+            const offset = posIdx - 2;
+            const isCenter = offset === 0;
+            const cardWidth = typeof window !== "undefined" && window.innerWidth < 640 ? 260 : 280;
+            const gap = typeof window !== "undefined" && window.innerWidth < 640 ? 16 : 24;
+            let translateX = offset * (cardWidth + gap);
+
+            // Add swipe delta only if swiping
+            if (isSwiping) {
+              translateX += touchDelta;
+            }
+
+            const scale = isCenter ? 1.03 : Math.abs(offset) === 1 ? 0.92 : 0.82;
+            const opacity = isCenter ? 1 : Math.abs(offset) === 1 ? 0.6 : 0.3;
+            const zIndex = isCenter ? 10 : Math.abs(offset) === 1 ? 5 : 1;
 
             return (
-              <div key={i} onClick={() => scrollTo(i % n)}
-                className="flex-shrink-0 relative cursor-pointer transition-all duration-300 rounded-3xl overflow-hidden"
+              <div
+                key={`${reelIdx}-${posIdx}`}
+                onClick={() => { if (!isCenter) goTo(reelIdx); }}
+                className="absolute rounded-3xl overflow-hidden"
                 style={{
-                  width: isMobile ? 260 : 280,
-                  height: isMobile ? 410 : 440,
-                  border: isActive ? `2px solid ${GOLD}` : "1px solid rgba(200,160,68,0.18)",
-                  boxShadow: isActive
+                  width: cardWidth,
+                  height: typeof window !== "undefined" && window.innerWidth < 640 ? 400 : 440,
+                  transform: `translateX(${translateX}px) scale(${scale})`,
+                  opacity,
+                  zIndex,
+                  transition: isSwiping ? "none" : "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                  cursor: isCenter ? "default" : "pointer",
+                  border: isCenter ? `2px solid ${GOLD}` : "1px solid rgba(200,160,68,0.18)",
+                  boxShadow: isCenter
                     ? `0 0 30px rgba(200,160,68,0.35), 0 20px 50px rgba(0,0,0,0.85)`
                     : "0 8px 24px rgba(0,0,0,0.5)",
-                  transform: isActive ? "scale(1.03)" : "scale(0.96)",
-                  opacity: isActive ? 1 : 0.7
+                  willChange: "transform, opacity",
                 }}
               >
-                <img src={v.thumb} alt={v.name} className="absolute inset-0 w-full h-full object-cover" />
+                <img
+                  src={v.thumb}
+                  alt={v.name}
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
                 <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom,rgba(0,0,0,0.12) 0%,transparent 30%,transparent 40%,rgba(0,0,0,0.88) 100%)" }} />
+
+                {/* Top badges */}
                 <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between">
                   <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold" style={{ background: "rgba(200,160,68,0.95)", color: "#1A0D0E" }}>✓ Verified</span>
                   <div className="flex gap-0.5">{Array.from({ length: v.rating }).map((_, j) => <Star key={j} size={10} fill={GOLD} stroke="none" />)}</div>
                 </div>
 
+                {/* Bottom content */}
                 <div className="absolute bottom-0 left-0 right-0 p-4">
                   <p className="text-[11px] leading-relaxed mb-3 italic" style={{ color: "rgba(250,247,242,0.9)", fontFamily: SANS }}>
                     "{v.review.slice(0, 90)}{v.review.length > 90 ? "…" : ""}"
@@ -176,9 +167,11 @@ export function VideoTestimonials() {
             );
           })}
         </div>
+
+        {/* Dots */}
         <div className="flex justify-center gap-2 mt-6">
           {BASE_REELS.map((_, i) => (
-            <button key={i} onClick={() => scrollTo(i)} aria-label={`Go to slide ${i + 1}`}
+            <button key={i} onClick={() => goTo(i)} aria-label={`Go to slide ${i + 1}`}
               className="rounded-full transition-all duration-300"
               style={{ width: active === i ? 24 : 6, height: 6, background: active === i ? GOLD : "rgba(200,160,68,0.25)" }} />
           ))}
