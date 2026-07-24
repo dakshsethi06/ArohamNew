@@ -861,58 +861,131 @@ export function ConsultPage() {
             </div>
           ) : (
             filteredAstrologers.map(astro => (
-              <div
-                key={astro.id}
-                className="bg-white rounded-3xl p-5 border border-amber-900/10 shadow-[0_4px_22px_rgba(91,31,36,0.02)] hover:shadow-xl hover:border-amber-500/20 transition-all duration-300 flex flex-col justify-between group hover:-translate-y-1"
-              >
-                <div>
-                  <div className="relative mb-4.5 overflow-hidden rounded-2xl aspect-[4/3] shadow-xs">
-                    <img src={astro.avatar} alt={astro.name} className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500" />
-                    
-                    {/* Live Online Badge */}
-                    {astro.status === "online" ? (
-                      <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-[9px] font-extrabold uppercase bg-emerald-600 text-white shadow-md flex items-center gap-1.5 tracking-wider">
-                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" /> Online
-                      </div>
-                    ) : (
-                      <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-[9px] font-extrabold uppercase bg-gray-500/80 text-white shadow-md flex items-center gap-1.5 tracking-wider backdrop-blur-xs">
-                        <span className="w-1.5 h-1.5 rounded-full bg-gray-300" /> Offline
-                      </div>
-                    )}
+              <div key={astro.id} className="w-full">
+                {/* Desktop Grid Card */}
+                <div className="hidden md:flex flex-col justify-between h-full bg-white rounded-3xl p-5 border border-amber-900/10 shadow-[0_4px_22px_rgba(91,31,36,0.02)] hover:shadow-xl hover:border-amber-500/20 transition-all duration-300 group hover:-translate-y-1">
+                  <div>
+                    <div className="relative mb-4.5 overflow-hidden rounded-2xl aspect-[4/3] shadow-xs">
+                      <img src={astro.avatar} alt={astro.name} className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500" />
+                      
+                      {/* Live Online Badge */}
+                      {astro.status === "online" ? (
+                        <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-[9px] font-extrabold uppercase bg-emerald-600 text-white shadow-md flex items-center gap-1.5 tracking-wider">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" /> Online
+                        </div>
+                      ) : (
+                        <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-[9px] font-extrabold uppercase bg-gray-500/80 text-white shadow-md flex items-center gap-1.5 tracking-wider backdrop-blur-xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-300" /> Offline
+                        </div>
+                      )}
 
-                    <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold bg-black/65 text-amber-300 border border-white/10 flex items-center gap-1 backdrop-blur-xs shadow-md">
-                      <Star size={11} fill="#C8A044" stroke="none" /> {astro.rating.toFixed(2)}
+                      <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold bg-black/65 text-amber-300 border border-white/10 flex items-center gap-1 backdrop-blur-xs shadow-md">
+                        <Star size={11} fill="#C8A044" stroke="none" /> {astro.rating.toFixed(2)}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 mb-1 justify-between">
+                      <h3 className="font-bold text-base truncate pr-1" style={{ color: MAROON, fontFamily: SERIF }}>{astro.name}</h3>
+                      <Award size={15} className="text-amber-500 shrink-0" />
+                    </div>
+                    <p className="text-[11px] font-semibold text-amber-900/60 mb-3.5 tracking-wide leading-relaxed">{astro.title}</p>
+                    
+                    <div className="flex items-center justify-between text-xs font-semibold text-amber-950/70 mb-4 pb-3 border-b border-amber-900/5">
+                      <span className="flex items-center gap-1 text-amber-900/60"><Clock size={13.5} /> {astro.experience}</span>
+                      <span className="flex items-center gap-1 font-extrabold text-emerald-700">₹{astro.pricePerMin || 20}/min</span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5 mb-5">
+                      {astro.specialties.map((spec, i) => (
+                        <span key={i} className="px-2.5 py-1 rounded-xl text-[10px] font-bold bg-amber-900/5 text-[#5B1F24] border border-amber-900/5">
+                          {spec}
+                        </span>
+                      ))}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5 mb-1 justify-between">
-                    <h3 className="font-bold text-base truncate pr-1" style={{ color: MAROON, fontFamily: SERIF }}>{astro.name}</h3>
-                    <Award size={15} className="text-amber-500 shrink-0" />
-                  </div>
-                  <p className="text-[11px] font-semibold text-amber-900/60 mb-3.5 tracking-wide leading-relaxed">{astro.title}</p>
-                  
-                  <div className="flex items-center justify-between text-xs font-semibold text-amber-950/70 mb-4 pb-3 border-b border-amber-900/5">
-                    <span className="flex items-center gap-1 text-amber-900/60"><Clock size={13.5} /> {astro.experience}</span>
-                    <span className="flex items-center gap-1 font-extrabold text-emerald-700">₹{astro.pricePerMin || 20}/min</span>
-                  </div>
-
-                  <div className="flex flex-wrap gap-1.5 mb-5">
-                    {astro.specialties.map((spec, i) => (
-                      <span key={i} className="px-2.5 py-1 rounded-xl text-[10px] font-bold bg-amber-900/5 text-[#5B1F24] border border-amber-900/5">
-                        {spec}
-                      </span>
-                    ))}
+                  <div className="pt-3 border-t border-amber-900/5">
+                    <button
+                      onClick={() => startConsultation(astro)}
+                      className="w-full py-3.5 rounded-2xl text-xs font-extrabold uppercase tracking-wider text-white shadow-md active:scale-98 transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110 shadow-[#6D2025]/15 hover:shadow-[#6D2025]/25"
+                    >
+                      <MessageSquare size={14.5} />
+                      <span>Start Live Chat</span>
+                    </button>
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-amber-900/5">
-                  <button
-                    onClick={() => startConsultation(astro)}
-                    className="w-full py-3.5 rounded-2xl text-xs font-extrabold uppercase tracking-wider text-white shadow-md active:scale-98 transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110 shadow-[#6D2025]/15 hover:shadow-[#6D2025]/25"
-                  >
-                    <MessageSquare size={14.5} />
-                    <span>Start Live Chat</span>
-                  </button>
+                {/* Mobile List Card */}
+                <div className="flex md:hidden bg-white rounded-2xl p-4 border border-amber-900/10 shadow-xs gap-4 items-center w-full">
+                  {/* Left Side: Circular Avatar, Status Dot, Stars & Orders */}
+                  <div className="flex flex-col items-center flex-shrink-0 w-20">
+                    <div className="relative">
+                      <img
+                        src={astro.avatar}
+                        alt={astro.name}
+                        className="w-16 h-16 rounded-full object-cover border border-amber-900/15"
+                      />
+                      <span
+                        className={`absolute bottom-0.5 right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white ${
+                          astro.status === "online" ? "bg-emerald-500" : "bg-gray-400"
+                        }`}
+                      />
+                    </div>
+
+                    {/* Star ratings */}
+                    <div className="flex items-center gap-0.5 mt-1.5">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          size={9}
+                          fill={i < Math.round(astro.rating || 5) ? "#C8A044" : "none"}
+                          stroke="#C8A044"
+                          strokeWidth={1}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Consultations Count */}
+                    <span className="text-[9px] font-semibold text-amber-900/50 mt-1 whitespace-nowrap">
+                      1.2k+ orders
+                    </span>
+                  </div>
+
+                  {/* Middle Section: Scholar Details */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1">
+                      <h4 className="font-bold text-sm text-[#5B1F24] truncate" style={{ fontFamily: SERIF }}>
+                        {astro.name}
+                      </h4>
+                      <CheckCircle2 size={13} className="text-emerald-500 fill-emerald-100 flex-shrink-0 animate-pulse" />
+                    </div>
+
+                    <p className="text-[10px] font-bold text-amber-900/70 truncate mt-0.5">
+                      {astro.specialties.join(", ")}
+                    </p>
+
+                    <p className="text-[9px] font-medium text-amber-900/50 mt-0.5">
+                      Hindi, English
+                    </p>
+
+                    <div className="flex items-center gap-2 mt-1 text-[10px] font-semibold text-amber-900/60">
+                      <span>Exp: {astro.experience}</span>
+                    </div>
+
+                    <p className="text-xs font-extrabold text-[#5B1F24] mt-1">
+                      ₹{astro.pricePerMin || 20}/min
+                    </p>
+                  </div>
+
+                  {/* Right Side: Chat Action Button */}
+                  <div className="flex-shrink-0">
+                    <button
+                      onClick={() => startConsultation(astro)}
+                      className="px-5 py-2 rounded-xl text-xs font-bold border border-emerald-600 text-emerald-600 bg-white hover:bg-emerald-50 active:scale-95 transition-all shadow-xs"
+                    >
+                      Chat
+                    </button>
+                  </div>
                 </div>
               </div>
             ))
