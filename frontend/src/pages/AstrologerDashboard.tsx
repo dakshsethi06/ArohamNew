@@ -977,7 +977,7 @@ export function AstrologerDashboard() {
                     <span>Monthly Earnings</span>
                     <DollarSign size={16} className="text-emerald-600" />
                   </div>
-                  <h3 className="text-2xl font-black text-emerald-600">₹{financialStats.monthlyEarnings.toLocaleString("en-IN")}</h3>
+                  <h3 className="text-2xl font-black text-emerald-600">₹{(financialStats.monthlyEarnings || 0).toLocaleString("en-IN")}</h3>
                   <p className="text-[10px] text-emerald-600 font-bold">Settled to Bank Account</p>
                 </div>
 
@@ -995,7 +995,7 @@ export function AstrologerDashboard() {
                     <span>Lifetime Payouts</span>
                     <Wallet size={16} className="text-purple-600" />
                   </div>
-                  <h3 className="text-2xl font-black text-purple-700">₹{financialStats.lifetimeEarnings.toLocaleString("en-IN")}</h3>
+                  <h3 className="text-2xl font-black text-purple-700">₹{(financialStats.lifetimeEarnings || 0).toLocaleString("en-IN")}</h3>
                   <p className="text-[10px] text-purple-600 font-bold">Total Settled Earnings</p>
                 </div>
               </div>
@@ -1347,29 +1347,29 @@ export function AstrologerDashboard() {
                   <p className="text-xs text-amber-900/70">Track your daily, monthly, and lifetime database consultation payouts.</p>
                 </div>
                 <button
-                  onClick={() => alert(`Withdrawal request for ₹${financialStats.todayEarnings} initiated via UPI / Netbanking. Settlement within 24 hours.`)}
+                  onClick={() => alert(`Withdrawal request for ₹${financialStats.todayEarnings || 0} initiated via UPI / Netbanking. Settlement within 24 hours.`)}
                   className="px-5 py-3 rounded-2xl font-bold text-xs bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg active:scale-95 transition-all"
                 >
-                  Withdraw Payout (₹{financialStats.todayEarnings.toLocaleString("en-IN")})
+                  Withdraw Payout (₹{(financialStats.todayEarnings || 0).toLocaleString("en-IN")})
                 </button>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="p-5 rounded-3xl bg-white border border-emerald-200 shadow-xs">
                   <p className="text-xs text-emerald-800 font-bold uppercase tracking-wider mb-1">Today's Earnings</p>
-                  <h3 className="text-2xl font-black text-emerald-600">₹{financialStats.todayEarnings.toLocaleString("en-IN")}</h3>
+                  <h3 className="text-2xl font-black text-emerald-600">₹{(financialStats.todayEarnings || 0).toLocaleString("en-IN")}</h3>
                   <p className="text-[11px] text-amber-900/60 mt-1">Live Database Settlement</p>
                 </div>
 
                 <div className="p-5 rounded-3xl bg-white border border-amber-900/15 shadow-xs">
                   <p className="text-xs text-[#5B1F24] font-bold uppercase tracking-wider mb-1">This Month</p>
-                  <h3 className="text-2xl font-black text-[#5B1F24]">₹{financialStats.monthlyEarnings.toLocaleString("en-IN")}</h3>
+                  <h3 className="text-2xl font-black text-[#5B1F24]">₹{(financialStats.monthlyEarnings || 0).toLocaleString("en-IN")}</h3>
                   <p className="text-[11px] text-amber-900/60 mt-1">{financialStats.totalConsultations} Consultations</p>
                 </div>
 
                 <div className="p-5 rounded-3xl bg-white border border-purple-200 shadow-xs">
                   <p className="text-xs text-purple-800 font-bold uppercase tracking-wider mb-1">Lifetime Payouts</p>
-                  <h3 className="text-2xl font-black text-purple-700">₹{financialStats.lifetimeEarnings.toLocaleString("en-IN")}</h3>
+                  <h3 className="text-2xl font-black text-purple-700">₹{(financialStats.lifetimeEarnings || 0).toLocaleString("en-IN")}</h3>
                   <p className="text-[11px] text-amber-900/60 mt-1">Direct Bank Transfers</p>
                 </div>
               </div>
