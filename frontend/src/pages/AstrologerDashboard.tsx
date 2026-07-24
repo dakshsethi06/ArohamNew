@@ -406,8 +406,21 @@ export function AstrologerDashboard() {
 
     fetchMessages(activeSession.id);
 
-    const activeMsgInterval = setInterval(() => {
+    const activeMsgInterval = setInterval(async () => {
       fetchMessages(activeSession.id);
+      try {
+        const { data } = await supabase
+          .from("chat_sessions")
+          .select("status")
+          .eq("id", activeSession.id)
+          .maybeSingle();
+        if (data && (data.status === "completed" || data.status === "ended" || data.status === "declined")) {
+          if (activeSession.status !== data.status) {
+            fetchSessions();
+            setActiveSession(prev => prev ? { ...prev, status: data.status } : null);
+          }
+        }
+      } catch (e) {}
     }, 2000);
 
     const channel = supabase
@@ -925,7 +938,7 @@ export function AstrologerDashboard() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAF6F0]" style={{ fontFamily: SANS, color: "#4A3E31" }}>
+    <div className="h-screen max-h-screen flex flex-col bg-[#FAF6F0] overflow-hidden" style={{ fontFamily: SANS, color: "#4A3E31" }}>
       <style>{`
         .scrollbar-none::-webkit-scrollbar {
           display: none;

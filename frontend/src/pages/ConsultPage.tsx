@@ -586,22 +586,18 @@ export function ConsultPage() {
   const endSession = async () => {
     if (session?.id) {
       try {
-        const endChannel = supabase.channel(`typing-${session.id}`);
-        endChannel.subscribe(async (status) => {
-          if (status === 'SUBSCRIBED') {
-            await endChannel.send({
-              type: "broadcast",
-              event: "end-chat",
-              payload: { sessionId: session.id }
-            });
-            supabase.removeChannel(endChannel);
-          }
-        });
-
         await supabase
           .from("chat_sessions")
           .update({ status: "completed", ended_at: new Date().toISOString() })
           .eq("id", session.id);
+      } catch (e) {}
+
+      try {
+        await supabase.channel(`typing-${session.id}`).send({
+          type: "broadcast",
+          event: "end-chat",
+          payload: { sessionId: session.id }
+        });
       } catch (e) {}
       
       setSession(prev => prev ? { ...prev, status: "completed" } : null);
