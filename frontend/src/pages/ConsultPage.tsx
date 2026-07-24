@@ -11,6 +11,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/lib/supabase";
 import { DEFAULT_PRODUCTS } from "@/constants/products";
+import { useProducts } from "@/hooks/useProducts";
 
 interface Astrologer {
   id: string;
@@ -65,6 +66,12 @@ export function ConsultPage() {
   const navigate = useNavigate();
   const { isLoggedIn, user, openAuth } = useAuth();
   const { addToCart } = useCart();
+
+  const { products } = useProducts();
+
+  const findProduct = (slug: string) => {
+    return products.find(p => p.slug === slug) || DEFAULT_PRODUCTS.find(p => p.slug === slug);
+  };
 
   const [selectedTopic, setSelectedTopic] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -125,7 +132,7 @@ export function ConsultPage() {
           sender: m.sender || m.sender_type,
           text: m.text || m.message_text,
           timestamp: new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          recommendedProduct: m.recommended_product_slug ? DEFAULT_PRODUCTS.find(p => p.slug === m.recommended_product_slug) : null
+          recommendedProduct: m.recommended_product_slug ? findProduct(m.recommended_product_slug) : null
         })));
       }
     } catch (e) {}
@@ -338,7 +345,7 @@ export function ConsultPage() {
             sender: m.sender || m.sender_type,
             text: m.text || m.message_text,
             timestamp: new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            recommendedProduct: m.recommended_product_slug ? DEFAULT_PRODUCTS.find(p => p.slug === m.recommended_product_slug) : null
+            recommendedProduct: m.recommended_product_slug ? findProduct(m.recommended_product_slug) : null
           }));
 
           setMessages(prev => {
@@ -409,7 +416,7 @@ export function ConsultPage() {
             sender: payload.new.sender || payload.new.sender_type,
             text: payload.new.text || payload.new.message_text,
             timestamp: new Date(payload.new.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            recommendedProduct: payload.new.recommended_product_slug ? DEFAULT_PRODUCTS.find(p => p.slug === payload.new.recommended_product_slug) : null
+            recommendedProduct: payload.new.recommended_product_slug ? findProduct(payload.new.recommended_product_slug) : null
           };
           setMessages(prev => {
             const index = prev.findIndex(m => m.id === newMsg.id || (m.text?.trim() === newMsg.text?.trim() && m.sender === newMsg.sender));
