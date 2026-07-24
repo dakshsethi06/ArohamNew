@@ -193,53 +193,99 @@ export function AuthPage() {
       try {
         let existingUser: { id: string; fullName: string; email?: string; phone: string } | null = null;
 
-        // 1. Check Local Storage cache
-        const localCached = localStorage.getItem(`aroham_registered_user_phone_${phoneDigits}`);
-        if (localCached) {
+        if (isAstrologerMode) {
+          // Astrologer mode: ONLY check astrologers table, never users table
           try {
-            const parsed = JSON.parse(localCached);
-            if (parsed && parsed.fullName) existingUser = parsed;
-          } catch (e) {}
-        }
+            const { data } = await Promise.race([
+              supabase
+                .from('astrologers')
+                .select('*')
+                .or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`)
+                .maybeSingle(),
+              new Promise<any>(res => setTimeout(() => res({ data: null }), 1500))
+            ]);
+            if (data && data.id) {
+              // Existing astrologer found — sign them in directly
+              const astroProfile = {
+                id: data.id,
+                name: data.full_name || data.name || "Acharya Astrologer",
+                title: data.title || "Senior Vedic Jyotish Master",
+                experience: `${data.experience_years || 5}+ Years Exp`,
+                rating: Number(data.rating) || 5.0,
+                consultations: data.consultations_count || 0,
+                specialties: data.specialties || ["Vedic Kundali"],
+                languages: data.languages || ["Hindi", "English"],
+                avatar: data.avatar_url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
+                status: data.is_online ? "online" : "offline",
+                pricePerMin: Number(data.price_per_min) || 20,
+                bio: data.bio || ""
+              };
 
-        // 2. Check Firestore
-        if (!existingUser) {
-          try {
-            const q = query(collection(db, "users"), where("phone", "in", [phoneDigits, `+91${phoneDigits}`, `91${phoneDigits}`]));
-            const snapshot = await getDocs(q);
-            if (!snapshot.empty) {
-              const docData = snapshot.docs[0].data();
-              if (docData.fullName || docData.full_name) {
+              try {
+                const existingAstros = JSON.parse(localStorage.getItem("aroham_registered_astrologers") || "[]");
+                const idx = existingAstros.findIndex((a: any) => a.id === data.id);
+                if (idx !== -1) {
+                  existingAstros[idx] = { ...existingAstros[idx], ...astroProfile };
+                } else {
+                  existingAstros.unshift(astroProfile);
+                }
+                localStorage.setItem("aroham_registered_astrologers", JSON.stringify(existingAstros));
+                window.dispatchEvent(new Event("storage"));
+              } catch (e) {}
+
+              setLoading(false);
+              login({
+                id: data.id,
+                email: data.email || null,
+                user_metadata: { full_name: astroProfile.name, phone: phoneDigits, role: "astrologer" },
+                role: "astrologer",
+                astrologerProfile: astroProfile
+              });
+
+              if (astroProfile.bio && astroProfile.bio !== "PENDING_WIZARD_COMPLETION" && astroProfile.bio.trim() !== "") {
+                localStorage.setItem(`aroham_astro_wizard_done_${data.id}`, "true");
+              }
+
+              closeAuth(true);
+              navigate("/astrologer");
+              return;
+            }
+          } catch (e) {}
+
+          // No existing astrologer found — proceed to create new one (falls through to astrologer creation below)
+        } else {
+          // Normal user mode: check users table only
+
+          // 1. Check Local Storage cache
+          const localCached = localStorage.getItem(`aroham_registered_user_phone_${phoneDigits}`);
+          if (localCached) {
+            try {
+              const parsed = JSON.parse(localCached);
+              if (parsed && parsed.fullName) existingUser = parsed;
+            } catch (e) {}
+          }
+
+          // 2. Check Supabase users table
+          if (!existingUser) {
+            try {
+              const { data } = await Promise.race([
+                supabase
+                  .from('users')
+                  .select('*')
+                  .or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`)
+                  .maybeSingle(),
+                new Promise<any>(res => setTimeout(() => res({ data: null }), 1500))
+              ]);
+              if (data && (data.full_name || data.fullName || data.id)) {
                 existingUser = {
-                  id: snapshot.docs[0].id,
-                  fullName: docData.fullName || docData.full_name,
-                  email: docData.email,
-                  phone: docData.phone || phoneDigits
+                  id: data.id,
+                  fullName: data.full_name || data.fullName || name.trim() || "Devotee",
+                  email: data.email,
+                  phone: data.phone || phoneDigits
                 };
               }
-            }
-          } catch (e) {
-            console.warn("Firestore search warning:", e);
+            } catch (e) {}
           }
-        }
-
-        // 3. Check Supabase
-        if (!existingUser) {
-          try {
-            const { data } = await supabase
-              .from('users')
-              .select('*')
-              .or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits},phone.ilike.%${phoneDigits}%`)
-              .maybeSingle();
-            if (data && (data.full_name || data.fullName || data.id)) {
-              existingUser = {
-                id: data.id,
-                fullName: data.full_name || data.fullName || name.trim() || "Devotee",
-                email: data.email,
-                phone: data.phone || phoneDigits
-              };
-            }
-          } catch (e) {}
         }
 
         if (isAstrologerMode) {
