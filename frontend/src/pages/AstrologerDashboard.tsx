@@ -1248,8 +1248,29 @@ export function AstrologerDashboard() {
                               <span className="text-[10px] text-amber-900/50">{new Date(s.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                             </div>
 
-                            <div className="flex items-center gap-2 pt-2 border-t border-amber-900/10">
-                              {!isAccepted ? (
+                            <div className="flex items-center gap-2 pt-2 border-t border-amber-900/10 w-full">
+                              {s.status === "completed" || s.status === "ended" ? (
+                                <button
+                                  disabled
+                                  className="w-full py-2 rounded-xl text-xs font-bold bg-amber-900/5 text-amber-900/40 border border-amber-900/10 flex items-center justify-center gap-1.5 cursor-not-allowed"
+                                >
+                                  <Check size={13} /> Consultation Completed
+                                </button>
+                              ) : s.status === "declined" ? (
+                                <button
+                                  disabled
+                                  className="w-full py-2 rounded-xl text-xs font-bold bg-red-50 text-red-700/50 border border-red-200/50 flex items-center justify-center gap-1.5 cursor-not-allowed"
+                                >
+                                  <X size={13} /> Consultation Declined
+                                </button>
+                              ) : isAccepted ? (
+                                <button
+                                  onClick={() => acceptSession(s)}
+                                  className="w-full py-2 rounded-xl text-xs font-bold bg-amber-900/10 text-[#5B1F24] border border-amber-900/20 hover:bg-amber-900/15 transition-all flex items-center justify-center gap-1.5"
+                                >
+                                  <MessageCircle size={13} /> {isActive ? "Currently Active Room" : "Open Consultation Room"}
+                                </button>
+                              ) : (
                                 <>
                                   <button
                                     onClick={() => acceptSession(s)}
@@ -1265,13 +1286,6 @@ export function AstrologerDashboard() {
                                     <X size={14} /> Decline
                                   </button>
                                 </>
-                              ) : (
-                                <button
-                                  onClick={() => acceptSession(s)}
-                                  className="w-full py-2 rounded-xl text-xs font-bold bg-amber-900/10 text-[#5B1F24] border border-amber-900/20 hover:bg-amber-900/15 transition-all flex items-center justify-center gap-1.5"
-                                >
-                                  <MessageCircle size={13} /> {isActive ? "Currently Active Room" : "Open Consultation Room"}
-                                </button>
                               )}
                             </div>
                           </div>
