@@ -128,7 +128,7 @@ export function AstrologerDashboard() {
         .select("status")
         .or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`)
         .limit(1);
-      if (data && data.length > 0 && data[0].status === "BLOCKED") {
+      if (data && data.length > 0 && String(data[0].status).toUpperCase() === "BLOCKED") {
         setPortalLoading(false);
         setPortalError("Sorry, you are blocked. Can't login.");
         return;
@@ -164,7 +164,7 @@ export function AstrologerDashboard() {
       }
     } catch (err) {}
 
-    if (matchedAstro && matchedAstro.status === "BLOCKED") {
+    if (matchedAstro && String(matchedAstro.status).toUpperCase() === "BLOCKED") {
       setPortalLoading(false);
       setPortalError("Sorry, you are blocked. Can't login.");
       return;

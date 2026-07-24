@@ -124,7 +124,7 @@ export function AuthPage() {
           .select('status')
           .or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`)
           .maybeSingle();
-        if (data && data.status === "BLOCKED") {
+        if (data && String(data.status).toUpperCase() === "BLOCKED") {
           setLoading(false);
           setErrorMsg("Sorry, you are blocked. Can't login.");
           return;
@@ -138,50 +138,44 @@ export function AuthPage() {
       return;
     }
 
-    if (activeTab === "signin") {
-      let existingUser: any = null;
+    // Normal User Mode
+    let existingUser: any = null;
 
-      // 1. Check Supabase DB with 1s timeout
-      try {
-        const { data } = await Promise.race([
-          supabase
-            .from('users')
-            .select('*')
-            .or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`)
-            .maybeSingle(),
-          new Promise<any>(res => setTimeout(() => res({ data: null }), 1000))
-        ]);
-        if (data && (data.phone || data.id)) {
-          existingUser = data;
-        }
-      } catch (e) {}
-
-      // 2. Check Local Storage fallback
-      if (!existingUser) {
-        const localCached = localStorage.getItem(`aroham_registered_user_phone_${phoneDigits}`);
-        if (localCached) {
-          try {
-            const parsed = JSON.parse(localCached);
-            if (parsed && (parsed.id || parsed.fullName || parsed.name || parsed.phone)) {
-              existingUser = parsed;
-            }
-          } catch (e) {}
-        }
+    try {
+      const { data } = await supabase
+        .from('users')
+        .select('*')
+        .or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`)
+        .maybeSingle();
+      if (data && (data.phone || data.id)) {
+        existingUser = data;
       }
+    } catch (e) {}
 
-      if (existingUser && existingUser.status === "BLOCKED") {
-        setLoading(false);
-        setErrorMsg("Sorry, you are blocked. Can't login.");
-        return;
+    if (!existingUser) {
+      const localCached = localStorage.getItem(`aroham_registered_user_phone_${phoneDigits}`);
+      if (localCached) {
+        try {
+          const parsed = JSON.parse(localCached);
+          if (parsed && (parsed.id || parsed.fullName || parsed.name || parsed.phone)) {
+            existingUser = parsed;
+          }
+        } catch (e) {}
       }
+    }
 
-      if (!existingUser) {
-        setLoading(false);
-        setActiveTab("signup");
-        setAuthState("signup");
-        setErrorMsg("Mobile number not registered. Please enter your name to create an account.");
-        return;
-      }
+    if (existingUser && String(existingUser.status).toUpperCase() === "BLOCKED") {
+      setLoading(false);
+      setErrorMsg("Sorry, you are blocked. Can't login.");
+      return;
+    }
+
+    if (activeTab === "signin" && !existingUser) {
+      setLoading(false);
+      setActiveTab("signup");
+      setAuthState("signup");
+      setErrorMsg("Mobile number not registered. Please enter your name to create an account.");
+      return;
     }
 
     setTimeout(() => {
@@ -215,15 +209,12 @@ export function AuthPage() {
         if (isAstrologerMode) {
           // Astrologer mode: ONLY check astrologers table, never users table
           try {
-            const { data } = await Promise.race([
-              supabase
-                .from('astrologers')
-                .select('*')
-                .or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`)
-                .maybeSingle(),
-              new Promise<any>(res => setTimeout(() => res({ data: null }), 1500))
-            ]);
-            if (data && data.status === "BLOCKED") {
+            const { data } = await supabase
+              .from('astrologers')
+              .select('*')
+              .or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`)
+              .maybeSingle();
+            if (data && String(data.status).toUpperCase() === "BLOCKED") {
               setLoading(false);
               setErrorMsg("Sorry, you are blocked. Can't login.");
               return;
@@ -292,14 +283,11 @@ export function AuthPage() {
           // 2. Check Supabase users table
           if (!existingUser) {
             try {
-              const { data } = await Promise.race([
-                supabase
-                  .from('users')
-                  .select('*')
-                  .or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`)
-                  .maybeSingle(),
-                new Promise<any>(res => setTimeout(() => res({ data: null }), 1500))
-              ]);
+              const { data } = await supabase
+                .from('users')
+                .select('*')
+                .or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`)
+                .maybeSingle();
               if (data && (data.full_name || data.fullName || data.id)) {
                 existingUser = {
                   id: data.id,
@@ -312,7 +300,7 @@ export function AuthPage() {
             } catch (e) {}
           }
 
-          if (existingUser && existingUser.status === "BLOCKED") {
+          if (existingUser && String(existingUser.status).toUpperCase() === "BLOCKED") {
             setLoading(false);
             setErrorMsg("Sorry, you are blocked. Can't login.");
             return;
