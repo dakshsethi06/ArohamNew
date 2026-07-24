@@ -904,54 +904,60 @@ export function ConsultPage() {
       </div>
 
       {showUserHistoryModal && createPortal(
-        <div className="fixed inset-0 z-[99999] bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4" style={{ fontFamily: SANS }}>
           <div className="bg-[#FCFAF7] border-2 border-amber-900/20 rounded-[32px] w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden shadow-2xl animate-in zoom-in-95">
             {/* Modal Header */}
-            <div className="p-5 bg-gradient-to-r from-[#5B1F24] to-[#7E2930] text-white flex items-center justify-between shadow-md">
-              <div className="flex items-center gap-2">
-                <Clock size={20} className="text-amber-300" />
-                <h3 className="text-lg font-bold" style={{ fontFamily: SERIF }}>My Saved Consultation & Chat History</h3>
+            <div className="p-5 flex items-center justify-between shadow-md text-white shrink-0" style={{ background: `linear-gradient(135deg, ${MAROON} 0%, #4D1418 100%)` }}>
+              <div className="flex items-center gap-2.5">
+                <Clock size={20} className="text-amber-300 animate-pulse" />
+                <h3 className="text-base sm:text-lg font-bold" style={{ fontFamily: SERIF }}>My Saved Consultation & Chat History</h3>
               </div>
               <button
                 onClick={() => setShowUserHistoryModal(false)}
-                className="p-1.5 rounded-full hover:bg-white/20 text-white transition-colors font-bold text-sm"
+                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 border border-white/10"
               >
-                ✕
+                <X size={16} />
               </button>
             </div>
 
             {/* Content Area */}
             <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
               {/* Left Column: Sessions List */}
-              <div className="w-full md:w-1/3 border-r border-amber-900/10 overflow-y-auto p-4 space-y-3 bg-[#F9F5EF]">
-                <p className="text-xs font-bold text-amber-900/60 uppercase tracking-wider mb-2">Past Consultations</p>
+              <div className="w-full md:w-1/3 border-r border-amber-900/15 overflow-y-auto p-4 space-y-3 bg-[#F9F5EF] scrollbar-thin">
+                <p className="text-[10px] font-extrabold text-[#5B1F24] uppercase tracking-wider mb-2">Past Consultations</p>
                 {userHistorySessions.length === 0 ? (
                   <div className="p-6 text-center text-xs text-amber-900/50 bg-white rounded-2xl border border-amber-900/10">
                     No past consultations recorded in database yet.
                   </div>
                 ) : (
-                  userHistorySessions.map(s => (
-                    <button
-                      key={s.id}
-                      onClick={() => viewPastSessionChat(s)}
-                      className={`w-full p-3.5 rounded-2xl text-left border transition-all ${
-                        selectedHistorySession?.id === s.id
-                          ? "bg-white border-[#5B1F24] shadow-md ring-2 ring-[#5B1F24]/10"
-                          : "bg-white/60 hover:bg-white border-amber-900/10"
-                      }`}
-                    >
-                      <p className="font-bold text-xs text-[#5B1F24] truncate">
-                        Consultation with {s.astrologer_name || astrologers.find(a => a.id === s.astrologer_id)?.name || "Vedic Scholar"}
-                      </p>
-                      <p className="text-[11px] text-amber-900/60 mt-0.5">{s.topic || "Vedic Consultation"}</p>
-                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-amber-900/5 text-[10px]">
-                        <span className="text-amber-900/50">{new Date(s.created_at || Date.now()).toLocaleDateString()}</span>
-                        <span className={`font-bold px-2 py-0.5 rounded-full ${s.status === 'completed' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
-                          {s.status}
-                        </span>
-                      </div>
-                    </button>
-                  ))
+                  userHistorySessions.map(s => {
+                    const isSelected = selectedHistorySession?.id === s.id;
+                    const astroName = s.astrologer_name || astrologers.find(a => a.id === s.astrologer_id)?.name || "Vedic Scholar";
+                    return (
+                      <button
+                        key={s.id}
+                        onClick={() => viewPastSessionChat(s)}
+                        className={`w-full p-4 rounded-2xl text-left border transition-all duration-300 flex flex-col justify-between gap-2.5 ${
+                          isSelected
+                            ? "bg-white border-amber-600 shadow-md ring-2 ring-amber-600/10 scale-102"
+                            : "bg-white/60 hover:bg-white border-amber-900/10 hover:shadow-sm"
+                        }`}
+                      >
+                        <div>
+                          <p className="font-extrabold text-xs text-[#5B1F24] line-clamp-1">
+                            Consultation with {astroName}
+                          </p>
+                          <p className="text-[10px] text-amber-900/60 font-semibold mt-0.5">{s.topic || "Vedic Consultation"}</p>
+                        </div>
+                        <div className="flex items-center justify-between pt-2 border-t border-amber-900/5 text-[9px] w-full font-bold">
+                          <span className="text-amber-900/40">{new Date(s.created_at || Date.now()).toLocaleDateString()}</span>
+                          <span className={`px-2 py-0.5 rounded-full uppercase tracking-wider text-[8px] ${s.status === 'completed' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-amber-100 text-amber-800 border border-amber-200'}`}>
+                            {s.status}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })
                 )}
               </div>
 
@@ -959,64 +965,73 @@ export function ConsultPage() {
               <div className="flex-1 flex flex-col bg-white overflow-hidden p-5">
                 {selectedHistorySession ? (
                   <>
-                    <div className="pb-3 mb-3 border-b border-amber-900/10 flex items-center justify-between">
+                    <div className="pb-3.5 mb-3.5 border-b border-amber-900/10 flex items-center justify-between shrink-0">
                       <div>
                         <h4 className="font-bold text-sm text-[#5B1F24]" style={{ fontFamily: SERIF }}>
                           Consultation with {selectedHistorySession.astrologer_name || astrologers.find(a => a.id === selectedHistorySession.astrologer_id)?.name || "Vedic Scholar"}
                         </h4>
-                        <p className="text-xs text-amber-900/60">Topic: {selectedHistorySession.topic || "Vedic Guidance"}</p>
+                        <p className="text-[11px] font-semibold text-amber-900/60">Topic: {selectedHistorySession.topic || "Vedic Guidance"}</p>
                       </div>
-                      <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                        Saved in Database
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200 flex items-center gap-1 shadow-xs">
+                        <CheckCircle2 size={11} className="text-emerald-600 animate-pulse" /> Saved in Database
                       </span>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto space-y-3 p-3 bg-[#FAF6F0] rounded-2xl border border-amber-900/10">
+                    <div className="flex-1 overflow-y-auto space-y-3.5 p-4 bg-[#FAF6F0]/60 rounded-2xl border border-amber-900/10 scrollbar-thin">
                       {historySessionMessages.length === 0 ? (
                         <div className="p-8 text-center text-xs text-amber-900/50">Loading saved messages...</div>
                       ) : (
-                        historySessionMessages.map(m => (
-                          <div
-                            key={m.id}
-                            className={`p-3 rounded-2xl max-w-[80%] text-xs leading-relaxed ${
-                              m.sender === "user"
-                                ? "ml-auto bg-[#5B1F24] text-white rounded-tr-xs shadow-sm"
-                                : "mr-auto bg-white text-[#4A3E31] border border-amber-900/15 rounded-tl-xs shadow-xs"
-                            }`}
-                          >
-                            <p className="whitespace-pre-line">{m.text}</p>
-                            {m.recommendedProduct && (
-                              <div 
-                                onClick={() => navigate(`/product/${m.recommendedProduct.slug}`)}
-                                className="mt-2.5 p-3 rounded-xl bg-[#FCFAF7] border border-amber-400/40 text-[#4A3E31] shadow-sm hover:border-amber-400 cursor-pointer transition-all duration-300 group/prod text-left"
+                        historySessionMessages.map(m => {
+                          const isUser = m.sender === "user";
+                          return (
+                            <div
+                              key={m.id}
+                              className={`flex flex-col ${isUser ? "items-end" : "items-start"} space-y-1`}
+                            >
+                              <div
+                                className={`p-3.5 rounded-3xl max-w-[80%] text-xs leading-relaxed ${
+                                  isUser
+                                    ? "bg-[#5B1F24] text-white rounded-tr-xs shadow-xs"
+                                    : "bg-white text-[#4A3E31] border border-amber-900/15 rounded-tl-xs shadow-xs"
+                                }`}
+                                style={isUser ? { background: `linear-gradient(135deg, ${MAROON} 0%, #802B31 100%)` } : {}}
                               >
-                                <p className="text-[8px] font-extrabold uppercase tracking-wider text-amber-700 mb-1.5 flex items-center gap-1 border-b border-amber-900/5 pb-1">
-                                  <Sparkles size={10} className="text-amber-500 fill-amber-500" /> Sacred Prescribed Remedy
-                                </p>
-                                <div className="flex items-center gap-2">
-                                  <img src={m.recommendedProduct.img} alt={m.recommendedProduct.name} className="w-10 h-10 rounded-lg object-cover border-amber-900/10 group-hover/prod:scale-105 transition-transform duration-300" />
-                                  <div className="flex-1 min-w-0">
-                                    <h4 className="font-bold text-[11px] truncate text-[#5B1F24]">{m.recommendedProduct.name}</h4>
-                                    <p className="text-[10px] font-extrabold text-amber-700">₹{m.recommendedProduct.price.toLocaleString("en-IN")}</p>
-                                  </div>
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); addToCart(m.recommendedProduct, 1); }}
-                                    className="px-2.5 py-1.5 rounded-lg text-[10px] font-extrabold text-white shadow-md active:scale-95 transition-all flex items-center gap-1 whitespace-nowrap bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110"
+                                <p className="whitespace-pre-line font-medium">{m.text}</p>
+                                {m.recommendedProduct && (
+                                  <div 
+                                    onClick={() => navigate(`/product/${m.recommendedProduct.slug}`)}
+                                    className="mt-2.5 p-3 rounded-xl bg-[#FCFAF7] border border-amber-400/40 text-[#4A3E31] shadow-sm hover:border-amber-400 cursor-pointer transition-all duration-300 group/prod text-left"
                                   >
-                                    <ShoppingBag size={10} /> Buy
-                                  </button>
-                                </div>
+                                    <p className="text-[8px] font-extrabold uppercase tracking-wider text-amber-700 mb-1.5 flex items-center gap-1 border-b border-amber-900/5 pb-1">
+                                      <Sparkles size={10} className="text-amber-500 fill-amber-500" /> Sacred Prescribed Remedy
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                      <img src={m.recommendedProduct.img} alt={m.recommendedProduct.name} className="w-10 h-10 rounded-lg object-cover border-amber-900/10 group-hover/prod:scale-105 transition-transform duration-300" />
+                                      <div className="flex-1 min-w-0">
+                                        <h4 className="font-bold text-[11px] truncate text-[#5B1F24]">{m.recommendedProduct.name}</h4>
+                                        <p className="text-[10px] font-extrabold text-amber-700">₹{m.recommendedProduct.price.toLocaleString("en-IN")}</p>
+                                      </div>
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); addToCart(m.recommendedProduct, 1); }}
+                                        className="px-2.5 py-1.5 rounded-lg text-[10px] font-extrabold text-white shadow-md active:scale-95 transition-all flex items-center gap-1 whitespace-nowrap bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110"
+                                      >
+                                        <ShoppingBag size={10} /> Buy
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
-                            )}
-                            <span className="text-[9px] opacity-70 block mt-1 text-right">{m.timestamp}</span>
-                          </div>
-                        ))
+                              <span className="text-[9px] font-bold text-amber-900/40 px-2">{m.timestamp}</span>
+                            </div>
+                          );
+                        })
                       )}
                     </div>
                   </>
                 ) : (
-                  <div className="flex-1 flex items-center justify-center text-xs text-amber-900/50">
-                    Select a consultation from the left to view full chat history transcript.
+                  <div className="flex-1 flex flex-col items-center justify-center text-xs text-amber-900/40 p-8 text-center space-y-3">
+                    <Clock size={32} className="text-amber-700/50" />
+                    <p className="font-bold">Select a consultation from the left to view full chat history transcript.</p>
                   </div>
                 )}
               </div>
