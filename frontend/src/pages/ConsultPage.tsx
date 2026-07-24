@@ -182,7 +182,7 @@ export function ConsultPage() {
     const fetchRealtimeAstrologers = async () => {
       try {
         const { data } = await supabase.from("astrologers").select("*");
-        if (data && data.length > 0) {
+        if (data) {
           const completedData = data.filter(liveData => liveData.bio && liveData.bio !== "PENDING_WIZARD_COMPLETION" && liveData.bio.trim() !== "");
           const dbFormatted: Astrologer[] = completedData.map(liveData => ({
             id: liveData.id,
@@ -197,12 +197,10 @@ export function ConsultPage() {
             status: liveData.is_online ? "online" : "offline",
             pricePerMin: Number(liveData.price_per_min) || 20
           }));
-          if (dbFormatted.length > 0) {
-            setAstrologers(dbFormatted);
-            try {
-              localStorage.setItem("aroham_registered_astrologers", JSON.stringify(dbFormatted));
-            } catch (e) {}
-          }
+          setAstrologers(dbFormatted);
+          try {
+            localStorage.setItem("aroham_registered_astrologers", JSON.stringify(dbFormatted));
+          } catch (e) {}
         }
       } catch (err) {}
     };
