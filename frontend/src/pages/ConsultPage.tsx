@@ -396,9 +396,9 @@ export function ConsultPage() {
           .maybeSingle();
 
         if (data && (data.status === "completed" || data.status === "ended" || data.status === "declined")) {
-          setSession(null);
-          setSelectedAstrologer(null);
-          setMessages([]);
+          if (session.status !== data.status) {
+            setSession(prev => prev ? { ...prev, status: data.status } : null);
+          }
         }
       } catch (e) {}
     };
@@ -435,9 +435,7 @@ export function ConsultPage() {
       .channel(`session-status-${session.id}`)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "chat_sessions", filter: `id=eq.${session.id}` }, payload => {
         if (payload.new && (payload.new.status === "completed" || payload.new.status === "ended" || payload.new.status === "declined")) {
-          setSession(null);
-          setSelectedAstrologer(null);
-          setMessages([]);
+          setSession(prev => prev ? { ...prev, status: payload.new.status } : null);
         }
       })
       .subscribe();
@@ -452,9 +450,7 @@ export function ConsultPage() {
         }
       })
       .on("broadcast", { event: "end-chat" }, () => {
-        setSession(null);
-        setSelectedAstrologer(null);
-        setMessages([]);
+        setSession(prev => prev ? { ...prev, status: "completed" } : null);
       })
       .subscribe();
 
@@ -576,7 +572,11 @@ export function ConsultPage() {
           <div className="p-4 sm:px-6 border-b border-amber-900/15 flex items-center justify-between shadow-lg shrink-0 z-10" style={{ background: `linear-gradient(135deg, ${MAROON} 0%, #4D1418 100%)` }}>
             <div className="flex items-center gap-3">
               <button
-                onClick={endSession}
+                onClick={() => {
+                  setSession(null);
+                  setSelectedAstrologer(null);
+                  setMessages([]);
+                }}
                 className="p-2 rounded-2xl bg-white/10 text-white hover:bg-white/20 transition-all active:scale-95 border border-white/10"
                 title="Back to Consultations"
               >
@@ -691,24 +691,31 @@ export function ConsultPage() {
           )}
 
           {/* Input Box Footer Bar */}
-          <div className="p-3 sm:p-5 border-t border-amber-900/15 bg-white flex items-center gap-2.5 shrink-0 z-10 shadow-[0_-5px_15px_rgba(45,11,14,0.02)]">
-            <input
-              type="text"
-              value={inputMessage}
-              onChange={e => handleInputChange(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && handleSendMessage()}
-              placeholder="Ask scholar..."
-              className="flex-1 h-12 px-4 rounded-2xl text-xs sm:text-sm border border-amber-900/20 outline-none focus:border-[#5B1F24] focus:ring-2 focus:ring-[#5B1F24]/10 transition-all bg-[#FAF6F0]/50 text-[#3C3024] font-medium"
-            />
-            <button
-              onClick={() => handleSendMessage()}
-              disabled={!inputMessage.trim()}
-              className="h-12 w-12 sm:w-auto sm:px-6 rounded-2xl font-bold text-xs sm:text-sm text-white flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all disabled:opacity-50 shrink-0 bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110 shadow-[#6D2025]/20"
-            >
-              <span className="hidden sm:inline">Ask Scholar</span>
-              <Send size={15} />
-            </button>
-          </div>
+          {session.status === "completed" || session.status === "ended" || session.status === "declined" ? (
+            <div className="p-4 border-t border-amber-900/15 bg-amber-50 text-center text-xs font-bold text-amber-900 flex items-center justify-center gap-2 shrink-0 z-10 shadow-xs rounded-b-[30px]">
+              <CheckCircle2 size={16} className="text-amber-700 animate-pulse" />
+              <span>This consultation has been completed. The chat log is read-only.</span>
+            </div>
+          ) : (
+            <div className="p-3 sm:p-5 border-t border-amber-900/15 bg-white flex items-center gap-2.5 shrink-0 z-10 shadow-[0_-5px_15px_rgba(45,11,14,0.02)]">
+              <input
+                type="text"
+                value={inputMessage}
+                onChange={e => handleInputChange(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleSendMessage()}
+                placeholder="Ask scholar..."
+                className="flex-1 h-12 px-4 rounded-2xl text-xs sm:text-sm border border-amber-900/20 outline-none focus:border-[#5B1F24] focus:ring-2 focus:ring-[#5B1F24]/10 transition-all bg-[#FAF6F0]/50 text-[#3C3024] font-medium"
+              />
+              <button
+                onClick={() => handleSendMessage()}
+                disabled={!inputMessage.trim()}
+                className="h-12 w-12 sm:w-auto sm:px-6 rounded-2xl font-bold text-xs sm:text-sm text-white flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all disabled:opacity-50 shrink-0 bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110 shadow-[#6D2025]/20"
+              >
+                <span className="hidden sm:inline">Ask Scholar</span>
+                <Send size={15} />
+              </button>
+            </div>
+          )}
         </div>
       </div>,
       document.body

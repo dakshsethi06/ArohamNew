@@ -444,9 +444,8 @@ export function AstrologerDashboard() {
         }
       })
       .on("broadcast", { event: "end-chat" }, () => {
-        setActiveSession(null);
-        setMessages([]);
         fetchSessions();
+        setActiveSession(prev => prev ? { ...prev, status: "completed" } : null);
       })
       .subscribe();
 
@@ -631,17 +630,17 @@ export function AstrologerDashboard() {
         }
       }
     } catch (e) {}
-
     setSessions(sessionList);
 
     if (activeSession) {
       const match = sessionList.find(s => s.id === activeSession.id);
       if (match && (match.status === "completed" || match.status === "ended" || match.status === "declined")) {
-        setActiveSession(null);
+        if (activeSession.status !== match.status) {
+          setActiveSession(match);
+        }
       }
     }
   };
-
   const saveProfile = async () => {
     try {
       const updatedProfile = { ...profile };
