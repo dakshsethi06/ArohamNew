@@ -120,19 +120,27 @@ export function AstrologerDashboard() {
 
   const syncProfileToDBAndLocal = async (p: typeof profile) => {
     if (!user?.id) return;
+
+    let languagesList: string[] = ["Hindi", "English"];
+    if (Array.isArray(p.languages)) {
+      languagesList = p.languages;
+    } else if (typeof p.languages === "string") {
+      languagesList = p.languages.split(",").map(l => l.trim()).filter(Boolean);
+    }
+
     const formattedObj = {
       id: user.id,
-      name: p.name,
-      title: p.title,
-      experience: `${p.experience}+ Years Exp`,
+      name: p.name || "Acharya Astrologer",
+      title: p.title || "Senior Vedic Astrologer",
+      experience: `${p.experience || 5}+ Years Exp`,
       rating: 4.95,
       consultations: 0,
-      specialties: p.specialty ? [p.specialty, "Vedic Kundali"] : ["Vedic Kundali"],
-      languages: p.languages.split(",").map(l => l.trim()),
-      avatar: p.avatar,
+      specialties: p.specialty ? (Array.isArray(p.specialty) ? p.specialty : [p.specialty, "Vedic Kundali"]) : ["Vedic Kundali"],
+      languages: languagesList,
+      avatar: p.avatar || PRESET_AVATARS[0],
       status: isChatOnline ? "online" : "offline",
       pricePerMin: parseFloat(p.pricePerMin) || 20,
-      bio: p.bio
+      bio: p.bio || ""
     };
 
     try {
@@ -156,8 +164,8 @@ export function AstrologerDashboard() {
         phone: p.phone,
         title: p.title,
         experience_years: parseInt(p.experience) || 5,
-        specialties: [p.specialty, "Vedic Kundali"],
-        languages: p.languages.split(",").map(l => l.trim()),
+        specialties: formattedObj.specialties,
+        languages: languagesList,
         bio: p.bio,
         avatar_url: p.avatar,
         price_per_min: parseFloat(p.pricePerMin) || 20,
