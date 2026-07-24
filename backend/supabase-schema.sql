@@ -144,6 +144,7 @@ alter table chat_messages enable row level security;
 
 create policy "Allow user insert" on users for insert with check (true);
 create policy "Allow user select own" on users for select using (auth.uid() = id);
+create policy "Allow public select users" on users for select using (true);
 
 create policy "Public read astrologers" on astrologers for select using (true);
 create policy "Allow astrologer upsert" on astrologers for insert with check (true);

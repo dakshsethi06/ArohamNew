@@ -109,6 +109,7 @@ export function AstrologerDashboard() {
   }, [isChatOnline]);
 
   const [dbTransactions, setDbTransactions] = useState<any[]>([]);
+  const [seekerNames, setSeekerNames] = useState<Record<string, string>>({});
   const [dbReviews, setDbReviews] = useState<any[]>([]);
   const [dbCallLogs, setDbCallLogs] = useState<any[]>([]);
   const [remedyProducts, setRemedyProducts] = useState<any[]>(DEFAULT_PRODUCTS || []);
@@ -707,6 +708,7 @@ export function AstrologerDashboard() {
       }
     } catch (e) {}
     setSessions(sessionList);
+    fetchSeekerNames(sessionList);
 
     if (activeSession) {
       const match = sessionList.find(s => s.id === activeSession.id);
@@ -716,6 +718,24 @@ export function AstrologerDashboard() {
         }
       }
     }
+  };
+
+  const fetchSeekerNames = async (sessionList: any[]) => {
+    const userIds = Array.from(new Set(sessionList.map(s => s.user_id).filter(Boolean)));
+    if (userIds.length === 0) return;
+    try {
+      const { data } = await supabase
+        .from("users")
+        .select("id, full_name")
+        .in("id", userIds);
+      if (data && data.length > 0) {
+        const mapping: Record<string, string> = {};
+        data.forEach(u => {
+          mapping[u.id] = u.full_name;
+        });
+        setSeekerNames(prev => ({ ...prev, ...mapping }));
+      }
+    } catch (e) {}
   };
   const saveProfile = async () => {
     try {
@@ -1183,7 +1203,7 @@ export function AstrologerDashboard() {
                       {sessions.filter(s => s.status === "completed").slice(0, 4).map(s => (
                         <div key={s.id} className="p-3.5 rounded-2xl bg-[#FAF6F0] border border-amber-900/10 flex items-center justify-between text-xs">
                           <div>
-                            <p className="font-bold text-[#5B1F24]">Devotee {s.user_name || s.user_email?.split("@")[0] || (s.user_id ? `#${s.user_id.slice(0, 8)}` : "Seeker")}</p>
+                            <p className="font-bold text-[#5B1F24]">{s.user_name || s.user_email?.split("@")[0] || seekerNames[s.user_id] || `Devotee (#${s.user_id?.slice(0, 6)})`}</p>
                             <p className="text-[11px] text-amber-900/60">{s.topic || "Vedic Consultation"} • {new Date(s.created_at || Date.now()).toLocaleDateString()}</p>
                           </div>
                           <div className="flex items-center gap-2">
@@ -1292,7 +1312,7 @@ export function AstrologerDashboard() {
                             <div className="flex items-start justify-between">
                               <div>
                                 <div className="flex items-center gap-2 mb-1">
-                                  <span className="font-bold text-xs text-[#5B1F24]">Seeker #{s.user_id?.slice(0, 8)}</span>
+                                  <span className="font-bold text-xs text-[#5B1F24]">{s.user_name || s.user_email?.split("@")[0] || seekerNames[s.user_id] || `Seeker #${s.user_id?.slice(0, 8)}`}</span>
                                   {isPending && (
                                     <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-600 text-white animate-pulse">
                                       Ringing
@@ -1367,7 +1387,7 @@ export function AstrologerDashboard() {
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <h2 className="text-sm sm:text-base font-bold text-[#5B1F24] truncate" style={{ fontFamily: SERIF }}>
-                              {activeSession.user_name || activeSession.user_email?.split("@")[0] || `Devotee (#${activeSession.user_id?.slice(0, 6)})`}
+                              {activeSession.user_name || activeSession.user_email?.split("@")[0] || seekerNames[activeSession.user_id] || `Devotee (#${activeSession.user_id?.slice(0, 6)})`}
                             </h2>
                             <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1 shrink-0">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-ping" /> Live
@@ -1967,7 +1987,7 @@ export function AstrologerDashboard() {
             <div className="min-w-0 flex-1">
               <h3 className="font-extrabold text-xs text-amber-800 uppercase tracking-wider">Incoming Consultation</h3>
               <p className="text-sm font-bold text-[#5B1F24] truncate" style={{ fontFamily: SERIF }}>
-                Seeker #{pendingSession.user_id?.slice(-6) || "Devotee"}
+                {seekerNames[pendingSession.user_id] || `Seeker #${pendingSession.user_id?.slice(-6) || "Devotee"}`}
               </p>
               <p className="text-[11px] text-amber-900/60 font-semibold truncate mt-0.5">
                 Topic: {pendingSession.topic || "Vedic Guidance"}
