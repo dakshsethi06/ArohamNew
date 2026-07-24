@@ -222,6 +222,7 @@ export function ConsultPage() {
         .select("*")
         .eq("user_id", activeUser.id)
         .eq("astrologer_id", astro.id)
+        .in("status", ["pending", "active"])
         .order("created_at", { ascending: false })
         .limit(1);
 
