@@ -224,7 +224,6 @@ export function ConsultPage() {
         .select("*")
         .eq("user_id", activeUser.id)
         .eq("astrologer_id", astro.id)
-        .in("status", ["pending", "active"])
         .order("created_at", { ascending: false })
         .limit(1);
 
@@ -303,7 +302,8 @@ export function ConsultPage() {
             id: m.id,
             sender: m.sender || m.sender_type,
             text: m.text || m.message_text,
-            timestamp: new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            timestamp: new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            recommendedProduct: m.recommended_product_slug ? DEFAULT_PRODUCTS.find(p => p.slug === m.recommended_product_slug) : null
           })));
         }
       } catch (e) {}
