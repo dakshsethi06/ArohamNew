@@ -27,17 +27,17 @@ interface Astrologer {
 }
 
 const DEFAULT_DB_ASTROLOGER: Astrologer = {
-  id: "astro-1",
-  name: "Acharya Devrat Sharma",
-  title: "Senior Vedic Jyotish & Rudraksha Specialist",
-  experience: "18+ Years Exp",
-  rating: 4.95,
-  consultations: 2450,
-  specialties: ["Kundali Matchmaking", "Rudraksha Remedy", "Career & Wealth"],
-  languages: ["Hindi", "English", "Sanskrit"],
+  id: "d57acc94-b68d-4831-b493-ed548fe1f1f8",
+  name: "genz babaji",
+  title: "Senior Vedic Jyotish & Prashna Kundali Master",
+  experience: "8+ Years Exp",
+  rating: 5.0,
+  consultations: 120,
+  specialties: ["Vedic Kundali", "Sacred Remedies"],
+  languages: ["Hindi", "English", "Sanskrit", "Gujarati"],
   avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
   status: "online",
-  pricePerMin: 20
+  pricePerMin: 10
 };
 
 const STARTER_QUESTIONS = [
@@ -66,7 +66,7 @@ const getDatabaseAstrologers = (): Astrologer[] => {
         if (!list.some(a => a.id === id)) {
           list.unshift({
             id: id,
-            name: parsed.user_metadata?.full_name || parsed.name || "Acharya Astrologer",
+            name: parsed.user_metadata?.full_name || parsed.name || "genz babaji",
             title: "Senior Vedic Jyotish Master",
             experience: "5+ Years Exp",
             rating: 4.95,
@@ -141,9 +141,14 @@ export function ConsultPage() {
             languages: liveData.languages || ["Hindi", "English"],
             avatar: liveData.avatar_url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
             status: liveData.is_online ? "online" : "offline",
-            pricePerMin: 20
+            pricePerMin: Number(liveData.price_per_min) || 20
           }));
-          setAstrologers(dbFormatted);
+          if (dbFormatted.length > 0) {
+            setAstrologers(dbFormatted);
+            try {
+              localStorage.setItem("aroham_registered_astrologers", JSON.stringify(dbFormatted));
+            } catch (e) {}
+          }
         }
       } catch (err) {}
     };
