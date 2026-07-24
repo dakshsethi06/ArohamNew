@@ -377,16 +377,6 @@ export function ConsultPage() {
             .from("chat_sessions")
             .update({ status: "pending" })
             .eq("id", sessionUuid);
-
-          if (prevStatus === "completed" || prevStatus === "ended" || prevStatus === "declined") {
-            await supabase.from("chat_messages").insert({
-              session_id: sessionUuid,
-              sender: "astrologer",
-              sender_type: "astrologer",
-              text: "Namaste! Astrologer will join your chat soon.",
-              message_text: "Namaste! Astrologer will join your chat soon."
-            });
-          }
         } catch (e) {}
       }
     } catch (e) {}
@@ -403,19 +393,11 @@ export function ConsultPage() {
     setSession(createdSession);
 
     if (!isExisting) {
-      const initialMsg = {
-        id: "initial-" + Date.now(),
-        session_id: sessionUuid,
-        sender: "astrologer",
-        text: "Namaste! Astrologer will join your chat soon.",
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-
-      setMessages([initialMsg]);
+      setMessages([]);
 
       try {
         localStorage.setItem("aroham_latest_live_session", JSON.stringify(createdSession));
-        localStorage.setItem(`aroham_live_chat_${createdSession.id}`, JSON.stringify([initialMsg]));
+        localStorage.setItem(`aroham_live_chat_${createdSession.id}`, JSON.stringify([]));
         window.dispatchEvent(new Event("storage"));
       } catch (e) {}
 
@@ -429,14 +411,6 @@ export function ConsultPage() {
             astrologer_id: astro.id,
             topic: "Vedic Kundali & Horoscope"
           });
-
-        await supabase.from("chat_messages").insert({
-          session_id: sessionUuid,
-          sender: "astrologer",
-          sender_type: "astrologer",
-          text: "Namaste! Astrologer will join your chat soon.",
-          message_text: "Namaste! Astrologer will join your chat soon."
-        });
       } catch {}
     } else {
       try {
