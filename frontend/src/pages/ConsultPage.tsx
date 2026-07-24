@@ -136,6 +136,7 @@ export function ConsultPage() {
           sender: m.sender || m.sender_type,
           text: m.text || m.message_text,
           timestamp: new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          recommended_product_slug: m.recommended_product_slug,
           recommendedProduct: m.recommended_product_slug ? findProduct(m.recommended_product_slug) : null
         })));
       }
@@ -325,6 +326,7 @@ export function ConsultPage() {
             sender: m.sender || m.sender_type,
             text: m.text || m.message_text,
             timestamp: new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            recommended_product_slug: m.recommended_product_slug,
             recommendedProduct: m.recommended_product_slug ? DEFAULT_PRODUCTS.find(p => p.slug === m.recommended_product_slug) : null
           })));
         }
@@ -349,13 +351,20 @@ export function ConsultPage() {
             sender: m.sender || m.sender_type,
             text: m.text || m.message_text,
             timestamp: new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            recommended_product_slug: m.recommended_product_slug,
             recommendedProduct: m.recommended_product_slug ? findProduct(m.recommended_product_slug) : null
           }));
 
           setMessages(prev => {
             const merged = [...prev];
             dbFormatted.forEach(dm => {
-              const index = merged.findIndex(p => p.id === dm.id || (p.text?.trim() === dm.text?.trim() && p.sender === dm.sender));
+              const index = merged.findIndex(p => {
+                if (p.id === dm.id) return true;
+                if (dm.sender === "user" && p.sender === "user" && p.text?.trim() === dm.text?.trim()) {
+                  return true;
+                }
+                return false;
+              });
               if (index !== -1) {
                 merged[index] = dm;
               } else {
@@ -378,7 +387,13 @@ export function ConsultPage() {
           setMessages(prev => {
             const merged = [...prev];
             stored.forEach(m => {
-              const index = merged.findIndex(p => p.id === m.id || (p.text?.trim() === m.text?.trim() && p.sender === m.sender));
+              const index = merged.findIndex(p => {
+                if (p.id === m.id) return true;
+                if (m.sender === "user" && p.sender === "user" && p.text?.trim() === m.text?.trim()) {
+                  return true;
+                }
+                return false;
+              });
               if (index !== -1) {
                 merged[index] = m;
               } else {
@@ -420,10 +435,17 @@ export function ConsultPage() {
             sender: payload.new.sender || payload.new.sender_type,
             text: payload.new.text || payload.new.message_text,
             timestamp: new Date(payload.new.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            recommended_product_slug: payload.new.recommended_product_slug,
             recommendedProduct: payload.new.recommended_product_slug ? findProduct(payload.new.recommended_product_slug) : null
           };
           setMessages(prev => {
-            const index = prev.findIndex(m => m.id === newMsg.id || (m.text?.trim() === newMsg.text?.trim() && m.sender === newMsg.sender));
+            const index = prev.findIndex(m => {
+              if (m.id === newMsg.id) return true;
+              if (newMsg.sender === "user" && m.sender === "user" && m.text?.trim() === newMsg.text?.trim()) {
+                return true;
+              }
+              return false;
+            });
             if (index !== -1) {
               const updated = [...prev];
               updated[index] = newMsg;
