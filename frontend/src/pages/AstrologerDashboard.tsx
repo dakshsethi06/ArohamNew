@@ -812,6 +812,14 @@ export function AstrologerDashboard() {
       await supabase.from("chat_sessions").update({ status: "active", astrologer_id: currentAstroId }).eq("id", s.id);
     } catch (e) {}
 
+    try {
+      await supabase.from("chat_messages").insert({
+        session_id: s.id,
+        sender: "astrologer",
+        text: "Astrologer is here to help you."
+      });
+    } catch (e) {}
+
     fetchMessages(s.id);
   };
 
