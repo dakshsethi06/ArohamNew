@@ -1069,7 +1069,7 @@ export function AstrologerDashboard() {
         }
       `}</style>
       
-      <header className="px-6 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-40 transition-all duration-500" style={{ background: "rgba(250,247,242,0.97)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(91,31,36,0.1)", boxShadow: "0 2px 24px rgba(91,31,36,0.06)" }}>
+      <header className="px-4 md:px-6 py-2.5 md:py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 sticky top-0 z-40 transition-all duration-500" style={{ background: "rgba(250,247,242,0.97)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(91,31,36,0.1)", boxShadow: "0 2px 24px rgba(91,31,36,0.06)" }}>
         <div className="flex items-center gap-3.5">
           <div className="relative">
             <img src={profile.avatar} alt={profile.name} className="w-11 h-11 rounded-2xl object-cover border-2 border-amber-300 shadow-md" />
@@ -1078,7 +1078,7 @@ export function AstrologerDashboard() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-base font-bold text-[#5B1F24] tracking-wide" style={{ fontFamily: SERIF }}>{profile.name}</h1>
-              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-400/10 text-amber-800 border border-amber-400/20 flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-400/10 text-amber-800 border border-amber-400/20 flex items-center gap-1">
                 <Award size={10} /> Certified Scholar
               </span>
             </div>
@@ -1086,7 +1086,7 @@ export function AstrologerDashboard() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2.5 flex-wrap">
           
           {pendingCount > 0 && (
             <button
@@ -1123,8 +1123,8 @@ export function AstrologerDashboard() {
 
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         
-        <aside className="w-full lg:w-64 bg-[#FCFAF7] border-r border-amber-900/10 p-4 flex lg:flex-col justify-between overflow-x-auto lg:overflow-y-auto shrink-0 scrollbar-none">
-          <div className="space-y-1 flex lg:flex-col gap-1 w-full">
+        <aside className="w-full lg:w-64 bg-[#FCFAF7] border-b lg:border-b-0 lg:border-r border-amber-900/10 p-3 lg:p-4 flex flex-row lg:flex-col justify-start lg:justify-between overflow-x-auto lg:overflow-y-auto shrink-0 scrollbar-none">
+          <div className="flex lg:flex-col gap-1.5 lg:space-y-1 w-full">
             {[
               { id: "overview", label: "Dashboard & Analytics", icon: BarChart2 },
               { id: "workstation", label: "Live Workstation & Queue", icon: MessageCircle, badge: pendingCount },
@@ -1139,14 +1139,14 @@ export function AstrologerDashboard() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as MainTab)}
-                  className={`w-full px-3.5 py-3 rounded-2xl text-xs font-extrabold flex items-center justify-between transition-all whitespace-nowrap ${
+                  className={`w-auto lg:w-full px-3.5 py-2.5 lg:py-3 rounded-xl lg:rounded-2xl text-[11px] lg:text-xs font-bold lg:font-extrabold flex items-center justify-between gap-2.5 transition-all whitespace-nowrap ${
                     isActive
                       ? "text-white shadow-md"
                       : "text-amber-900/80 hover:text-[#5B1F24] hover:bg-amber-900/10"
                   }`}
                   style={isActive ? { background: `linear-gradient(135deg, ${MAROON}, #8C1D24)` } : {}}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 lg:gap-3">
                     <Icon size={16} className={isActive ? "text-amber-300" : "text-amber-900/60"} />
                     <span>{tab.label}</span>
                   </div>
