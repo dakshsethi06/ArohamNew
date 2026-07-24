@@ -229,6 +229,7 @@ export function ConsultPage() {
 
       if (existing && existing.length > 0) {
         sessionUuid = existing[0].id;
+        const prevStatus = existing[0].status;
         existingStatus = "pending";
         existingCreatedAt = existing[0].created_at || new Date().toISOString();
         isExisting = true;
@@ -238,6 +239,16 @@ export function ConsultPage() {
             .from("chat_sessions")
             .update({ status: "pending" })
             .eq("id", sessionUuid);
+
+          if (prevStatus === "completed" || prevStatus === "ended" || prevStatus === "declined") {
+            await supabase.from("chat_messages").insert({
+              session_id: sessionUuid,
+              sender: "astrologer",
+              sender_type: "astrologer",
+              text: "Namaste! Astrologer will join your chat soon.",
+              message_text: "Namaste! Astrologer will join your chat soon."
+            });
+          }
         } catch (e) {}
       }
     } catch (e) {}
