@@ -1367,43 +1367,52 @@ export function AstrologerDashboard() {
                       ))}
                     </div>
 
-                    <div className="mb-3 p-3 rounded-2xl bg-[#F7F0E6] border border-amber-900/15">
-                      <p className="text-[10px] font-extrabold uppercase text-[#5B1F24] mb-2 flex items-center gap-1">
-                        <ShoppingBag size={12} /> Recommend Sacred Remedy Item:
-                      </p>
-                      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-                        {remedyProducts.map(prod => (
-                          <button
-                            key={prod.slug || prod.id}
-                            onClick={() => sendMessage(`I recommend wearing this sacred item to balance your planetary stars:`, prod)}
-                            className="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-amber-50 border border-amber-900/15 text-[#4A3E31] flex items-center gap-2 transition-all active:scale-95 shadow-xs"
-                          >
-                            <img src={prod.image || prod.img} alt={prod.name} className="w-5 h-5 rounded-md object-cover" />
-                            <span>{prod.name} (₹{prod.price})</span>
-                          </button>
-                        ))}
+                    {activeSession.status === "completed" || activeSession.status === "ended" || activeSession.status === "declined" ? (
+                      <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-center text-xs font-bold text-amber-900 flex items-center justify-center gap-2 shadow-xs shrink-0">
+                        <CheckCircle2 size={16} className="text-amber-700 animate-pulse" />
+                        <span>This consultation has been completed. The chat log is read-only.</span>
                       </div>
-                    </div>
+                    ) : (
+                      <>
+                        <div className="mb-3 p-3 rounded-2xl bg-[#F7F0E6] border border-amber-900/15">
+                          <p className="text-[10px] font-extrabold uppercase text-[#5B1F24] mb-2 flex items-center gap-1">
+                            <ShoppingBag size={12} /> Recommend Sacred Remedy Item:
+                          </p>
+                          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                            {remedyProducts.map(prod => (
+                              <button
+                                key={prod.slug || prod.id}
+                                onClick={() => sendMessage(`I recommend wearing this sacred item to balance your planetary stars:`, prod)}
+                                className="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-amber-50 border border-amber-900/15 text-[#4A3E31] flex items-center gap-2 transition-all active:scale-95 shadow-xs"
+                              >
+                                <img src={prod.image || prod.img} alt={prod.name} className="w-5 h-5 rounded-md object-cover" />
+                                <span>{prod.name} (₹{prod.price})</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
 
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={reply}
-                        onChange={e => handleReplyChange(e.target.value)}
-                        onKeyDown={e => e.key === "Enter" && sendMessage()}
-                        placeholder="Type your astrological remedy or guidance..."
-                        className="flex-1 h-12 px-4 rounded-xl text-xs bg-white border border-amber-900/20 text-[#4A3E31] outline-none focus:border-[#5B1F24] transition-all shadow-xs"
-                      />
-                      <button
-                        onClick={() => sendMessage()}
-                        disabled={!reply.trim()}
-                        className="h-12 px-6 rounded-xl font-bold text-xs text-white flex items-center gap-2 shadow-md active:scale-95 transition-all disabled:opacity-50"
-                        style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}
-                      >
-                        <span>Send</span>
-                        <Send size={14} />
-                      </button>
-                    </div>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={reply}
+                            onChange={e => handleReplyChange(e.target.value)}
+                            onKeyDown={e => e.key === "Enter" && sendMessage()}
+                            placeholder="Type your astrological remedy or guidance..."
+                            className="flex-1 h-12 px-4 rounded-xl text-xs bg-white border border-amber-900/20 text-[#4A3E31] outline-none focus:border-[#5B1F24] transition-all shadow-xs"
+                          />
+                          <button
+                            onClick={() => sendMessage()}
+                            disabled={!reply.trim()}
+                            className="h-12 px-6 rounded-xl font-bold text-xs text-white flex items-center gap-2 shadow-md active:scale-95 transition-all disabled:opacity-50"
+                            style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}
+                          >
+                            <span>Send</span>
+                            <Send size={14} />
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </>
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full text-amber-900/40 space-y-4 p-8 text-center">
