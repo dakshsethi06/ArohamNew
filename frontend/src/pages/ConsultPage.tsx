@@ -700,8 +700,11 @@ export function ConsultPage() {
     );
   }
 
-  // Filter Astrologers strictly from DB
+  // Filter Astrologers strictly from DB — hide offline astrologers
   const filteredAstrologers = astrologers.filter(a => {
+    // Always hide offline astrologers from the directory
+    if (a.status === "offline") return false;
+
     const matchesTopic = selectedTopic === "All"
       ? true
       : selectedTopic === "Online Now"
