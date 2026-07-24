@@ -103,6 +103,51 @@ export function ConsultPage() {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const [showUserHistoryModal, setShowUserHistoryModal] = useState(false);
+  const [userHistorySessions, setUserHistorySessions] = useState<any[]>([]);
+  const [selectedHistorySession, setSelectedHistorySession] = useState<any | null>(null);
+  const [historySessionMessages, setHistorySessionMessages] = useState<any[]>([]);
+
+  const openUserHistoryModal = async () => {
+    if (!isLoggedIn || !user?.id) {
+      openAuth();
+      return;
+    }
+    setShowUserHistoryModal(true);
+    try {
+      const { data } = await supabase
+        .from("chat_sessions")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (data && data.length > 0) {
+        setUserHistorySessions(data);
+        viewPastSessionChat(data[0]);
+      }
+    } catch (e) {}
+  };
+
+  const viewPastSessionChat = async (sess: any) => {
+    setSelectedHistorySession(sess);
+    try {
+      const { data } = await supabase
+        .from("chat_messages")
+        .select("*")
+        .eq("session_id", sess.id)
+        .order("created_at", { ascending: true });
+
+      if (data) {
+        setHistorySessionMessages(data.map(m => ({
+          id: m.id,
+          sender: m.sender || m.sender_type,
+          text: m.text || m.message_text,
+          timestamp: new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        })));
+      }
+    } catch (e) {}
+  };
+
   // Subscribe to real-time database status changes
   useEffect(() => {
     const syncAstrologers = () => {
@@ -719,6 +764,13 @@ export function ConsultPage() {
 
           {/* Topic Category Pills */}
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1">
+            <button
+              onClick={openUserHistoryModal}
+              className="px-4.5 py-2 rounded-2xl text-xs font-extrabold transition-all whitespace-nowrap bg-amber-900/10 hover:bg-amber-900/15 text-[#5B1F24] border border-amber-900/20 flex items-center gap-1.5 shadow-xs"
+            >
+              <Clock size={14} className="text-amber-700" />
+              <span>My Saved Chat History</span>
+            </button>
             {["All", "Online Now", "Kundali", "Rudraksha", "Gemstone", "Vastu", "Career", "Marriage"].map(topic => (
               <button
                 key={topic}
@@ -834,6 +886,102 @@ export function ConsultPage() {
           </button>
         </div>
       </div>
+
+      {showUserHistoryModal && createPortal(
+        <div className="fixed inset-0 z-[99999] bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#FCFAF7] border-2 border-amber-900/20 rounded-[32px] w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden shadow-2xl animate-in zoom-in-95">
+            {/* Modal Header */}
+            <div className="p-5 bg-gradient-to-r from-[#5B1F24] to-[#7E2930] text-white flex items-center justify-between shadow-md">
+              <div className="flex items-center gap-2">
+                <Clock size={20} className="text-amber-300" />
+                <h3 className="text-lg font-bold" style={{ fontFamily: SERIF }}>My Saved Consultation & Chat History</h3>
+              </div>
+              <button
+                onClick={() => setShowUserHistoryModal(false)}
+                className="p-1.5 rounded-full hover:bg-white/20 text-white transition-colors font-bold text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Content Area */}
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+              {/* Left Column: Sessions List */}
+              <div className="w-full md:w-1/3 border-r border-amber-900/10 overflow-y-auto p-4 space-y-3 bg-[#F9F5EF]">
+                <p className="text-xs font-bold text-amber-900/60 uppercase tracking-wider mb-2">Past Consultations</p>
+                {userHistorySessions.length === 0 ? (
+                  <div className="p-6 text-center text-xs text-amber-900/50 bg-white rounded-2xl border border-amber-900/10">
+                    No past consultations recorded in database yet.
+                  </div>
+                ) : (
+                  userHistorySessions.map(s => (
+                    <button
+                      key={s.id}
+                      onClick={() => viewPastSessionChat(s)}
+                      className={`w-full p-3.5 rounded-2xl text-left border transition-all ${
+                        selectedHistorySession?.id === s.id
+                          ? "bg-white border-[#5B1F24] shadow-md ring-2 ring-[#5B1F24]/10"
+                          : "bg-white/60 hover:bg-white border-amber-900/10"
+                      }`}
+                    >
+                      <p className="font-bold text-xs text-[#5B1F24] truncate">Session #{s.id.slice(0, 8)}</p>
+                      <p className="text-[11px] text-amber-900/60 mt-0.5">{s.topic || "Vedic Consultation"}</p>
+                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-amber-900/5 text-[10px]">
+                        <span className="text-amber-900/50">{new Date(s.created_at || Date.now()).toLocaleDateString()}</span>
+                        <span className={`font-bold px-2 py-0.5 rounded-full ${s.status === 'completed' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                          {s.status}
+                        </span>
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+
+              {/* Right Column: Messages View */}
+              <div className="flex-1 flex flex-col bg-white overflow-hidden p-5">
+                {selectedHistorySession ? (
+                  <>
+                    <div className="pb-3 mb-3 border-b border-amber-900/10 flex items-center justify-between">
+                      <div>
+                        <h4 className="font-bold text-sm text-[#5B1F24]" style={{ fontFamily: SERIF }}>Session #{selectedHistorySession.id.slice(0, 8)} Transcript</h4>
+                        <p className="text-xs text-amber-900/60">Topic: {selectedHistorySession.topic || "Vedic Guidance"}</p>
+                      </div>
+                      <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                        Saved in Database
+                      </span>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto space-y-3 p-3 bg-[#FAF6F0] rounded-2xl border border-amber-900/10">
+                      {historySessionMessages.length === 0 ? (
+                        <div className="p-8 text-center text-xs text-amber-900/50">Loading saved messages...</div>
+                      ) : (
+                        historySessionMessages.map(m => (
+                          <div
+                            key={m.id}
+                            className={`p-3 rounded-2xl max-w-[80%] text-xs leading-relaxed ${
+                              m.sender === "user"
+                                ? "ml-auto bg-[#5B1F24] text-white rounded-tr-xs shadow-sm"
+                                : "mr-auto bg-white text-[#4A3E31] border border-amber-900/15 rounded-tl-xs shadow-xs"
+                            }`}
+                          >
+                            <p className="whitespace-pre-line">{m.text}</p>
+                            <span className="text-[9px] opacity-70 block mt-1 text-right">{m.timestamp}</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center text-xs text-amber-900/50">
+                    Select a consultation from the left to view full chat history transcript.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
