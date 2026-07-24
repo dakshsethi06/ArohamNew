@@ -1372,10 +1372,17 @@ export function AstrologerDashboard() {
                             <div className="flex items-center gap-2 pt-2 border-t border-amber-900/10 w-full">
                               {s.status === "completed" || s.status === "ended" ? (
                                 <button
-                                  disabled
-                                  className="w-full py-2 rounded-xl text-xs font-bold bg-amber-900/5 text-amber-900/40 border border-amber-900/10 flex items-center justify-center gap-1.5 cursor-not-allowed"
+                                  onClick={() => {
+                                    setActiveSession(s);
+                                    fetchMessages(s.id);
+                                  }}
+                                  className={`w-full py-2 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 ${
+                                    isActive
+                                      ? "bg-[#5B1F24] text-white border-[#5B1F24] shadow-md"
+                                      : "bg-amber-900/10 text-[#5B1F24] border border-amber-900/20 hover:bg-amber-900/15"
+                                  }`}
                                 >
-                                  <Check size={13} /> Consultation Completed
+                                  <Check size={13} /> {isActive ? "Viewing Past Chat History" : "View Chat History"}
                                 </button>
                               ) : s.status === "declined" ? (
                                 <button
