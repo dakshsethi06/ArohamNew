@@ -242,15 +242,21 @@ export function ConsultPage() {
         .select("*")
         .eq("user_id", activeUser.id)
         .eq("astrologer_id", astro.id)
-        .in("status", ["pending", "active"])
         .order("created_at", { ascending: false })
         .limit(1);
 
       if (existing && existing.length > 0) {
         sessionUuid = existing[0].id;
-        existingStatus = existing[0].status || "pending";
+        existingStatus = "pending";
         existingCreatedAt = existing[0].created_at || new Date().toISOString();
         isExisting = true;
+
+        try {
+          await supabase
+            .from("chat_sessions")
+            .update({ status: "pending" })
+            .eq("id", sessionUuid);
+        } catch (e) {}
       }
     } catch (e) {}
 
