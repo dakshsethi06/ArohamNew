@@ -746,7 +746,7 @@ export function ConsultPage() {
       `}</style>
       
       {/* Luxury Sacred Hero Header with radial starry glow */}
-      <div className="relative pt-12 sm:pt-16 pb-12 px-4 sm:px-6 lg:px-10 border-b border-amber-900/10 overflow-hidden" style={{ background: "linear-gradient(180deg, #F8F4ED 0%, #FCFAF7 100%)" }}>
+      <div className="relative pt-6 sm:pt-16 pb-6 sm:pb-12 px-4 sm:px-6 lg:px-10 border-b border-amber-900/10 overflow-hidden" style={{ background: "linear-gradient(180deg, #F8F4ED 0%, #FCFAF7 100%)" }}>
         
         {/* Decorative Golden Ambient Orbs */}
         <div className="absolute top-12 right-1/4 w-80 h-80 rounded-full bg-amber-200/20 blur-[100px] pointer-events-none" />
@@ -792,7 +792,7 @@ export function ConsultPage() {
       </div>
 
       {/* Main Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-10 space-y-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-4 pb-10 sm:py-10 space-y-8">
         
         {/* Search & Topic Filters Bar */}
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-white p-4.5 rounded-3xl border border-amber-900/10 shadow-[0_4px_25px_rgba(91,31,36,0.02)]">
