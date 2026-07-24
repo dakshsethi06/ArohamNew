@@ -42,6 +42,10 @@ router.post("/signup", async (req, res) => {
       .maybeSingle();
 
     if (existingProfile) {
+      if (existingProfile.status === "BLOCKED") {
+        return res.status(403).json({ error: "Sorry, you are blocked. Can't login." });
+      }
+
       // Update existing profile details
       const { data: updated, error: updateErr } = await supabase
         .from("users")

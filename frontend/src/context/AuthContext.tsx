@@ -137,27 +137,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    const rawSession = localStorage.getItem("aroham_mock_session") || getCookie("aroham_session");
-    if (rawSession) {
-      try {
-        const parsed = JSON.parse(rawSession);
-        setUser(parsed);
-        setIsLoggedIn(true);
-        setSession({ user: parsed });
-        // Sync cookie & local storage
-        localStorage.setItem("aroham_mock_session", JSON.stringify(parsed));
-        setCookie("aroham_session", JSON.stringify(parsed), 365);
+    const checkBlockedAndInit = async () => {
+      const rawSession = localStorage.getItem("aroham_mock_session") || getCookie("aroham_session");
+      if (rawSession) {
+        try {
+          const parsed = JSON.parse(rawSession);
+          const table = (parsed.role === "astrologer" || parsed.user_metadata?.role === "astrologer") ? "astrologers" : "users";
+          
+          let isBlocked = false;
+          try {
+            const { data } = await supabase.from(table).select("status").eq("id", parsed.id).maybeSingle();
+            if (data && data.status === "BLOCKED") {
+              isBlocked = true;
+            }
+          } catch (e) {}
 
-        handleCartSync();
-        if (parsed?.id) {
-          handleOrderSync(parsed);
-          handleUserSupabaseSync(parsed);
+          if (isBlocked) {
+            await logout();
+            return;
+          }
+
+          setUser(parsed);
+          setIsLoggedIn(true);
+          setSession({ user: parsed });
+          localStorage.setItem("aroham_mock_session", JSON.stringify(parsed));
+          setCookie("aroham_session", JSON.stringify(parsed), 365);
+
+          handleCartSync();
+          if (parsed?.id) {
+            handleOrderSync(parsed);
+            handleUserSupabaseSync(parsed);
+          }
+        } catch (e) {
+          localStorage.removeItem("aroham_mock_session");
+          deleteCookie("aroham_session");
         }
-      } catch (e) {
-        localStorage.removeItem("aroham_mock_session");
-        deleteCookie("aroham_session");
       }
-    }
+    };
+
+    checkBlockedAndInit();
 
     const syncSupabaseSession = async () => {
       try {

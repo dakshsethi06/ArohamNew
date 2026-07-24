@@ -112,14 +112,29 @@ export function AstrologerDashboard() {
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError, setPortalError] = useState("");
 
-  const handleSendOtp = (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!loginPhone.trim() || loginPhone.replace(/\D/g, "").length < 10) {
+    const phoneDigits = loginPhone.replace(/\D/g, "");
+    if (!loginPhone.trim() || phoneDigits.length < 10) {
       setPortalError("Please enter a valid 10-digit mobile number.");
       return;
     }
     setPortalError("");
     setPortalLoading(true);
+
+    try {
+      const { data } = await supabase
+        .from("astrologers")
+        .select("status")
+        .or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`)
+        .limit(1);
+      if (data && data.length > 0 && data[0].status === "BLOCKED") {
+        setPortalLoading(false);
+        setPortalError("Sorry, you are blocked. Can't login.");
+        return;
+      }
+    } catch (err) {}
+
     setTimeout(() => {
       setPortalLoading(false);
       setLoginStep("otp");
@@ -148,6 +163,12 @@ export function AstrologerDashboard() {
         matchedAstro = data[0];
       }
     } catch (err) {}
+
+    if (matchedAstro && matchedAstro.status === "BLOCKED") {
+      setPortalLoading(false);
+      setPortalError("Sorry, you are blocked. Can't login.");
+      return;
+    }
 
     const finalAstroId = matchedAstro?.id || generateUUID();
     const finalAstroName = matchedAstro?.full_name || matchedAstro?.name || "Acharya Devrat Sharma";

@@ -57,14 +57,19 @@ export function ShopPage() {
   else if (cats.length === 1 && prps.length === 0) displayTitle = cats[0];
   else if (prps.length === 1 && cats.length === 0) displayTitle = prps[0];
   else if (cats.length > 1 || prps.length > 1 || cols.length > 1) displayTitle = "Filtered Products";
-  else if (titleParam) displayTitle = titleParam;
-
   const isCustom = displayTitle !== "Sacred Products";
 
   const { products } = useProducts();
 
   const filtered = products.filter(p => {
-    if (cats.length && p.category && !cats.includes(p.category)) return false;
+    if (cats.length && p.category) {
+      const pCatNorm = p.category.toLowerCase().trim().replace(/s$/, "");
+      const matchesCat = cats.some(c => {
+        const cNorm = c.toLowerCase().trim().replace(/s$/, "");
+        return cNorm === pCatNorm || c.toLowerCase().trim() === p.category.toLowerCase().trim();
+      });
+      if (!matchesCat) return false;
+    }
     if (prps.length && p.purpose && !prps.includes(p.purpose)) return false;
     if (cols.length) {
       let matchesCol = false;

@@ -118,6 +118,19 @@ export function AuthPage() {
     setNoAccountNotice(false);
 
     if (isAstrologerMode) {
+      try {
+        const { data } = await supabase
+          .from('astrologers')
+          .select('status')
+          .or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`)
+          .maybeSingle();
+        if (data && data.status === "BLOCKED") {
+          setLoading(false);
+          setErrorMsg("Sorry, you are blocked. Can't login.");
+          return;
+        }
+      } catch (e) {}
+
       setTimeout(() => {
         setLoading(false);
         goTo("otp");
@@ -156,6 +169,12 @@ export function AuthPage() {
         }
       }
 
+      if (existingUser && existingUser.status === "BLOCKED") {
+        setLoading(false);
+        setErrorMsg("Sorry, you are blocked. Can't login.");
+        return;
+      }
+
       if (!existingUser) {
         setLoading(false);
         setActiveTab("signup");
@@ -191,7 +210,7 @@ export function AuthPage() {
       const phoneDigits = phone.replace(/\D/g, "");
 
       try {
-        let existingUser: { id: string; fullName: string; email?: string; phone: string } | null = null;
+        let existingUser: { id: string; fullName: string; email?: string; phone: string; status?: string } | null = null;
 
         if (isAstrologerMode) {
           // Astrologer mode: ONLY check astrologers table, never users table
@@ -204,6 +223,11 @@ export function AuthPage() {
                 .maybeSingle(),
               new Promise<any>(res => setTimeout(() => res({ data: null }), 1500))
             ]);
+            if (data && data.status === "BLOCKED") {
+              setLoading(false);
+              setErrorMsg("Sorry, you are blocked. Can't login.");
+              return;
+            }
             if (data && data.id) {
               // Existing astrologer found — sign them in directly
               const astroProfile = {
@@ -281,10 +305,17 @@ export function AuthPage() {
                   id: data.id,
                   fullName: data.full_name || data.fullName || name.trim() || "Devotee",
                   email: data.email,
-                  phone: data.phone || phoneDigits
+                  phone: data.phone || phoneDigits,
+                  status: data.status
                 };
               }
             } catch (e) {}
+          }
+
+          if (existingUser && existingUser.status === "BLOCKED") {
+            setLoading(false);
+            setErrorMsg("Sorry, you are blocked. Can't login.");
+            return;
           }
         }
 

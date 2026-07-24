@@ -8,20 +8,7 @@ export function useProducts() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const cached = sessionStorage.getItem("aroham_products_cache");
-    if (cached) {
-      try {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setProducts(parsed);
-          setLoading(false);
-          return;
-        }
-      } catch (e) {
-        console.error("Failed to parse cached products", e);
-      }
-    }
-
+    // Fetch latest products live from backend API
     api("/products")
       .then((data: ArohamProduct[]) => {
         if (Array.isArray(data) && data.length > 0) {
@@ -31,7 +18,16 @@ export function useProducts() {
         setLoading(false);
       })
       .catch((err) => {
-        console.error("Using default products fallback:", err);
+        console.error("Using fallback products:", err);
+        const cached = sessionStorage.getItem("aroham_products_cache");
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setProducts(parsed);
+            }
+          } catch (e) {}
+        }
         setLoading(false);
       });
   }, []);

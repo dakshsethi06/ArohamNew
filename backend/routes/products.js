@@ -2,6 +2,15 @@
 const router = require("express").Router();
 const supabase = require("../config/supabase");
 
+function formatImageUrl(url) {
+  if (!url || typeof url !== "string") return url;
+  const driveMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (driveMatch && driveMatch[1]) {
+    return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
+  }
+  return url;
+}
+
 // GET /api/products
 router.get("/", async (req, res) => {
   const { data, error } = await supabase
@@ -22,7 +31,7 @@ router.get("/", async (req, res) => {
     original: p.original_price / 100,
     rating: p.rating,
     reviews: p.reviews,
-    img: p.img,
+    img: formatImageUrl(p.img),
     badges: p.badges || [],
     shortDesc: p.short_desc,
     benefits: p.benefits || [],
