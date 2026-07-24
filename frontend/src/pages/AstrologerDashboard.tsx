@@ -121,9 +121,9 @@ export function AstrologerDashboard() {
         .from("astrologers")
         .select("*")
         .or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`)
-        .maybeSingle();
-      if (data && data.id) {
-        matchedAstro = data;
+        .limit(1);
+      if (data && data.length > 0 && data[0].id) {
+        matchedAstro = data[0];
       }
     } catch (err) {}
 

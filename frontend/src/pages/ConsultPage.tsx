@@ -303,9 +303,6 @@ export function ConsultPage() {
           .insert({
             id: sessionUuid,
             user_id: activeUser.id,
-            user_name: activeUser.user_metadata?.full_name || activeUser.email?.split("@")[0] || "Seeker Devotee",
-            user_email: activeUser.email || "",
-            astrologer_name: astro.name,
             status: "pending",
             astrologer_id: astro.id,
             topic: "Vedic Kundali & Horoscope"
