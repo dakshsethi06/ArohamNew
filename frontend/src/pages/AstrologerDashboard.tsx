@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { MAROON, GOLD, IVORY, SANS, SERIF } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { DEFAULT_PRODUCTS } from "@/constants/products";
+import { generateUUID } from "@/utils/uuid";
 import {
   Send,
   UserCheck,
@@ -103,23 +104,64 @@ export function AstrologerDashboard() {
     }, 500);
   };
 
-  const handleVerifyPortalOtp = (e: React.FormEvent) => {
+  const handleVerifyPortalOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loginOtp !== "123456" && loginOtp.length !== 6) {
       setPortalError("Invalid OTP. Use test OTP 123456.");
       return;
     }
+    setPortalError("");
     setPortalLoading(true);
+
+    const phoneDigits = loginPhone.replace(/\D/g, "");
+    let matchedAstro: any = null;
+
+    try {
+      const { data } = await supabase
+        .from("astrologers")
+        .select("*")
+        .or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`)
+        .maybeSingle();
+      if (data && data.id) {
+        matchedAstro = data;
+      }
+    } catch (err) {}
+
+    const finalAstroId = matchedAstro?.id || `astro-${generateUUID()}`;
+    const finalAstroName = matchedAstro?.full_name || matchedAstro?.name || "Acharya Devrat Sharma";
+    const finalEmail = matchedAstro?.email || `astrologer_${phoneDigits.slice(-4)}@aroham.com`;
+
     const astroUser = {
-      id: "astro-1",
-      email: `astrologer_${loginPhone.slice(-4)}@aroham.com`,
+      id: finalAstroId,
+      email: finalEmail,
       user_metadata: {
-        full_name: "Acharya Devrat Sharma",
-        phone: loginPhone,
+        full_name: finalAstroName,
+        phone: phoneDigits,
         role: "astrologer"
       },
       role: "astrologer"
     };
+
+    if (!matchedAstro) {
+      try {
+        await supabase.from("astrologers").insert({
+          id: finalAstroId,
+          full_name: finalAstroName,
+          email: finalEmail,
+          phone: phoneDigits,
+          title: "Senior Vedic Jyotish Master",
+          experience_years: 8,
+          specialties: ["Vedic Kundali", "Sacred Remedies"],
+          languages: ["Hindi", "English"],
+          rating: 4.95,
+          is_online: true,
+          avatar_url: PRESET_AVATARS[0],
+          price_per_min: 20,
+          role: "astrologer",
+          bio: "PENDING_WIZARD_COMPLETION"
+        });
+      } catch (err) {}
+    }
 
     try {
       localStorage.setItem("aroham_mock_session", JSON.stringify(astroUser));
@@ -173,19 +215,12 @@ export function AstrologerDashboard() {
   const getAllAstroIds = (): string[] => {
     const ids = new Set<string>();
     ids.add(currentAstroId);
-    ids.add("astro-1");
     try {
       const mockStr = localStorage.getItem("aroham_mock_session");
       if (mockStr) {
         const mock = JSON.parse(mockStr);
         if (mock?.id) ids.add(mock.id);
         if (mock?.astrologerProfile?.id) ids.add(mock.astrologerProfile.id);
-      }
-    } catch (e) {}
-    try {
-      const registered = JSON.parse(localStorage.getItem("aroham_registered_astrologers") || "[]");
-      if (Array.isArray(registered)) {
-        registered.forEach((a: any) => { if (a.id) ids.add(a.id); });
       }
     } catch (e) {}
     return Array.from(ids);
