@@ -80,6 +80,19 @@ export function ConsultPage() {
   const [session, setSession] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [inputMessage, setInputMessage] = useState("");
+  const [localCartToast, setLocalCartToast] = useState<string | null>(null);
+  const localToastTimer = useRef<any>(null);
+
+  const handleAddToCart = (product: any) => {
+    if (!product) return;
+    addToCart(product, 1);
+    if (localToastTimer.current) clearTimeout(localToastTimer.current);
+    setLocalCartToast(product.name);
+    localToastTimer.current = setTimeout(() => {
+      setLocalCartToast(null);
+    }, 2200);
+  };
+
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -689,7 +702,7 @@ export function ConsultPage() {
                              </div>
                            </div>
                            <button
-                             onClick={(e) => { e.stopPropagation(); addToCart(resolvedProduct, 1); }}
+                             onClick={(e) => { e.stopPropagation(); handleAddToCart(resolvedProduct); }}
                              className="w-full sm:w-auto px-4 py-2 rounded-xl text-[10px] sm:text-[11px] font-extrabold text-white shadow-md active:scale-95 transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110 shadow-[#6D2025]/20 shrink-0"
                            >
                              <ShoppingBag size={11} /> Add to Cart
@@ -1178,7 +1191,7 @@ export function ConsultPage() {
                                         <p className="text-[10px] font-extrabold text-amber-700">₹{m.recommendedProduct.price.toLocaleString("en-IN")}</p>
                                       </div>
                                       <button
-                                        onClick={(e) => { e.stopPropagation(); addToCart(m.recommendedProduct, 1); }}
+                                        onClick={(e) => { e.stopPropagation(); handleAddToCart(m.recommendedProduct); }}
                                         className="px-2.5 py-1.5 rounded-lg text-[10px] font-extrabold text-white shadow-md active:scale-95 transition-all flex items-center gap-1 whitespace-nowrap bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110"
                                       >
                                         <ShoppingBag size={10} /> Buy
@@ -1202,6 +1215,16 @@ export function ConsultPage() {
                 )}
               </div>
             </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {localCartToast && createPortal(
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[10001] animate-in fade-in slide-in-from-top-4 duration-300 pointer-events-none">
+          <div className="flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-[#5B1F24]/95 backdrop-blur-md border border-amber-400/30 text-amber-100 shadow-xl font-bold text-xs sm:text-sm tracking-wide">
+            <span className="text-emerald-400 text-lg">✓</span>
+            <span>{localCartToast} added to cart!</span>
           </div>
         </div>,
         document.body
