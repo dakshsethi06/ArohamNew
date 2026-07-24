@@ -815,22 +815,13 @@ export function ConsultPage() {
 
           {/* Action and Filter Row */}
           <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3.5 flex-1 justify-end min-w-0">
-            {/* History Button - Prominent on mobile, aligned on desktop */}
-            <button
-              onClick={openUserHistoryModal}
-              className="px-4.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all whitespace-nowrap bg-amber-900/10 hover:bg-amber-900/15 text-[#5B1F24] border border-amber-900/20 flex items-center justify-center gap-1.5 shadow-xs shrink-0"
-            >
-              <Clock size={14} className="text-amber-700" />
-              <span>My Saved Chat History</span>
-            </button>
-
             {/* Topic Category Pills */}
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1 min-w-0 w-full lg:w-auto">
               {["All", "Online Now", "Kundali", "Rudraksha", "Gemstone", "Vastu", "Career", "Marriage"].map(topic => (
                 <button
                   key={topic}
                   onClick={() => setSelectedTopic(topic)}
-                  className={`px-4.5 py-2 rounded-2xl text-xs font-bold transition-all whitespace-nowrap border ${
+                  className={`px-4.5 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap border ${
                     selectedTopic === topic
                       ? "bg-[#5B1F24] text-white border-[#5B1F24] shadow-md shadow-[#5B1F24]/10"
                       : "bg-[#FAF8F5] text-[#4A3E31] border-amber-900/10 hover:bg-amber-900/5 hover:border-amber-900/20"
@@ -840,6 +831,15 @@ export function ConsultPage() {
                 </button>
               ))}
             </div>
+
+            {/* History Button - Prominent on mobile, aligned on desktop */}
+            <button
+              onClick={openUserHistoryModal}
+              className="px-4.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all whitespace-nowrap bg-amber-900/10 hover:bg-amber-900/15 text-[#5B1F24] border border-amber-900/20 flex items-center justify-center gap-1.5 shadow-xs shrink-0 w-full lg:w-auto"
+            >
+              <Clock size={14} className="text-amber-700" />
+              <span>My Saved Chat History</span>
+            </button>
           </div>
         </div>
 
@@ -920,9 +920,9 @@ export function ConsultPage() {
                 </div>
 
                 {/* Mobile List Card */}
-                <div className="flex md:hidden bg-white rounded-2xl p-4 border border-amber-900/10 shadow-xs gap-4 items-center w-full">
+                <div className="flex md:hidden bg-white rounded-2xl p-4.5 border border-amber-900/10 shadow-xs gap-4 items-center w-full">
                   {/* Left Side: Circular Avatar, Status Dot, Stars & Orders */}
-                  <div className="flex flex-col items-center flex-shrink-0 w-20">
+                  <div className="flex flex-col items-center flex-shrink-0 min-w-[85px]">
                     <div className="relative">
                       <img
                         src={astro.avatar}
