@@ -400,6 +400,15 @@ export function AstrologerDashboard() {
 
   const [isSeekerTyping, setIsSeekerTyping] = useState(false);
   const seekerTypingTimerRef = useRef<any>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isSeekerTyping]);
 
   useEffect(() => {
     if (!activeSession?.id) return;
@@ -1361,6 +1370,7 @@ export function AstrologerDashboard() {
                           <span>Devotee is typing...</span>
                         </div>
                       )}
+                      <div ref={messagesEndRef} />
                     </div>
 
                     <div className="mb-3 flex gap-2 overflow-x-auto pb-1 scrollbar-none">
