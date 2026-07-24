@@ -479,6 +479,17 @@ export function ConsultPage() {
     };
   }, [session?.id]);
 
+  useEffect(() => {
+    if (session && (session.status === "completed" || session.status === "ended" || session.status === "declined")) {
+      const timer = setTimeout(() => {
+        setSession(null);
+        setSelectedAstrologer(null);
+        setMessages([]);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [session?.status]);
+
   const typingTimerRef = useRef<any>(null);
 
   const handleInputChange = (val: string) => {
@@ -693,7 +704,7 @@ export function ConsultPage() {
           {session.status === "completed" || session.status === "ended" || session.status === "declined" ? (
             <div className="p-4 border-t border-amber-900/15 bg-amber-50 text-center text-xs font-bold text-amber-900 flex items-center justify-center gap-2 shrink-0 z-10 shadow-xs rounded-b-[30px]">
               <CheckCircle2 size={16} className="text-amber-700 animate-pulse" />
-              <span>This consultation has been completed. The chat log is read-only.</span>
+              <span>Chat ended. Redirecting to consult page...</span>
             </div>
           ) : (
             <div className="p-3 sm:p-5 border-t border-amber-900/15 bg-white flex items-center gap-2.5 shrink-0 z-10 shadow-[0_-5px_15px_rgba(45,11,14,0.02)]">
