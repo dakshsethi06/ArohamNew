@@ -51,16 +51,8 @@ const STARTER_QUESTIONS = [
   "Which Vastu product will bring peace to my home?"
 ];
 
-const isAstrologerActive = (isOnline: boolean, lastActiveAt: string | null | undefined, workingHours: any) => {
+const isAstrologerActive = (isOnline: boolean, workingHours: any) => {
   if (!isOnline) return false;
-
-  if (lastActiveAt) {
-    const lastActive = new Date(lastActiveAt).getTime();
-    const now = Date.now();
-    if (now - lastActive > 90 * 1000) {
-      return false;
-    }
-  }
 
   if (workingHours && workingHours.enabled) {
     const { start, end } = workingHours;
@@ -277,7 +269,7 @@ export function ConsultPage() {
 
       const computedList = list.map(a => ({
         ...a,
-        status: (isAstrologerActive(a.status === "online" || a.status === "busy", a.lastActiveAt, a.workingHours)
+        status: (isAstrologerActive(a.status === "online" || a.status === "busy", a.workingHours)
           ? (a.status === "busy" ? "busy" : "online")
           : "offline") as "online" | "offline" | "busy"
       }));
@@ -302,7 +294,7 @@ export function ConsultPage() {
             specialties: liveData.specialties || ["Vedic Kundali", "Gemstones"],
             languages: liveData.languages || ["Hindi", "English"],
             avatar: liveData.avatar_url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
-            status: (isAstrologerActive(liveData.is_online, liveData.last_active_at, liveData.working_hours) ? "online" : "offline") as "online" | "offline" | "busy",
+            status: (isAstrologerActive(liveData.is_online, liveData.working_hours) ? "online" : "offline") as "online" | "offline" | "busy",
             pricePerMin: Number(liveData.price_per_min) || 20,
             bio: liveData.bio,
             lastActiveAt: liveData.last_active_at,
@@ -328,7 +320,7 @@ export function ConsultPage() {
     const checkInterval = setInterval(() => {
       setAstrologers(prevList => prevList.map(a => ({
         ...a,
-        status: (isAstrologerActive(a.status === "online" || a.status === "busy", a.lastActiveAt, a.workingHours) 
+        status: (isAstrologerActive(a.status === "online" || a.status === "busy", a.workingHours) 
           ? (a.status === "busy" ? "busy" : "online") 
           : "offline") as "online" | "offline" | "busy"
       })));
@@ -548,10 +540,8 @@ export function ConsultPage() {
           .eq("id", session.id)
           .maybeSingle();
 
-        if (data && (data.status === "completed" || data.status === "ended" || data.status === "declined")) {
-          if (session.status !== data.status) {
-            setSession(prev => prev ? { ...prev, status: data.status } : null);
-          }
+        if (data && data.status !== session.status) {
+          setSession(prev => prev ? { ...prev, status: data.status } : null);
         }
       } catch (e) {}
     };
@@ -594,7 +584,7 @@ export function ConsultPage() {
     const sessionChannel = supabase
       .channel(`session-status-${session.id}`)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "chat_sessions", filter: `id=eq.${session.id}` }, payload => {
-        if (payload.new && (payload.new.status === "completed" || payload.new.status === "ended" || payload.new.status === "declined")) {
+        if (payload.new && payload.new.status !== session.status) {
           setSession(prev => prev ? { ...prev, status: payload.new.status } : null);
         }
       })
@@ -776,112 +766,135 @@ export function ConsultPage() {
             </button>
           </div>
 
-          {/* Premium Chat Messages Body */}
-          <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 bg-[#F8F4ED]/60 relative z-10 scrollbar-thin">
-            <div className="text-center my-2">
-              <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-amber-900/5 text-[#5B1F24] border border-amber-900/10 shadow-xs">
-                <Lock size={11} className="text-amber-700" /> Secure Live consultation
-              </span>
-            </div>
-
-             {messages.map(m => {
-               const isUser = m.sender === "user";
-               const resolvedProduct = m.recommendedProduct || (m.recommended_product_slug ? findProduct(m.recommended_product_slug) : null);
-               return (
-                 <div key={m.id} className={`flex flex-col ${isUser ? "items-end" : "items-start"} space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-                   <div
-                     className={`max-w-[85%] sm:max-w-[75%] p-4 rounded-3xl text-xs sm:text-sm shadow-xs leading-relaxed ${
-                       isUser
-                         ? "rounded-tr-xs text-white"
-                         : "rounded-tl-xs bg-white text-[#3E3125] border border-amber-900/10"
-                     }`}
-                     style={isUser ? { background: `linear-gradient(135deg, ${MAROON} 0%, #802B31 100%)`, boxShadow: "0 4px 15px rgba(91,31,36,0.08)" } : { boxShadow: "0 4px 12px rgba(45,11,14,0.02)" }}
-                   >
-                     <p className="whitespace-pre-line font-medium">{m.text}</p>
-                     
-                     {resolvedProduct && (
-                       <div 
-                         onClick={() => navigate(`/product/${resolvedProduct.slug}`)}
-                         className="mt-3.5 p-3.5 rounded-2xl bg-[#FCFAF7] border border-amber-400/40 text-[#4A3E31] shadow-sm hover:border-amber-400 cursor-pointer transition-all duration-300 group/prod"
-                       >
-                         <p className="text-[9px] font-extrabold uppercase tracking-wider text-amber-700 mb-2 flex items-center gap-1 border-b border-amber-900/5 pb-1">
-                           <Sparkles size={12} className="text-amber-500 fill-amber-500" /> Sacred Prescribed Remedy
-                         </p>
-                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                           <div className="flex items-center gap-3 flex-1 min-w-0">
-                             <img src={resolvedProduct.img || resolvedProduct.image} alt={resolvedProduct.name} className="w-12 h-12 rounded-xl object-cover border border-amber-900/10 group-hover/prod:scale-105 transition-transform duration-300 flex-shrink-0" />
-                             <div className="flex-1 min-w-0">
-                               <h4 className="font-bold text-xs text-[#5B1F24] leading-tight truncate sm:whitespace-normal">{resolvedProduct.name}</h4>
-                               <div className="flex items-baseline gap-2 mt-0.5">
-                                 <span className="text-xs font-extrabold text-amber-700">₹{resolvedProduct.price.toLocaleString("en-IN")}</span>
-                                 <span className="text-[9px] text-amber-900/50 font-bold">⭐ {resolvedProduct.rating || 5}</span>
-                               </div>
-                             </div>
-                           </div>
-                           <button
-                             onClick={(e) => { e.stopPropagation(); handleAddToCart(resolvedProduct); }}
-                             className="w-full sm:w-auto px-4 py-2 rounded-xl text-[10px] sm:text-[11px] font-extrabold text-white shadow-md active:scale-95 transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110 shadow-[#6D2025]/20 shrink-0"
-                           >
-                             <ShoppingBag size={11} /> Add to Cart
-                           </button>
-                         </div>
-                       </div>
-                     )}
-                   </div>
-                   <span className="text-[10px] font-bold text-amber-900/40 px-2">{m.timestamp || "Just now"}</span>
-                 </div>
-               );
-             })}
-
-            {isTyping && (
-              <div className="flex items-center gap-2 text-xs font-semibold text-amber-900/70 p-3 bg-white/95 rounded-2xl w-fit border border-amber-900/10 shadow-md animate-pulse">
-                <RefreshCw size={13} className="animate-spin text-amber-600" />
-                <span>pandit ji is typing...</span>
+          {session.status === "pending" ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-6 bg-[#FAF6F0]/60 relative z-10 text-center space-y-6">
+              <div className="relative flex items-center justify-center">
+                {/* Spiritual spinning ring */}
+                <div className="w-20 h-20 rounded-full border-4 border-amber-900/10 border-t-[#5B1F24] animate-spin duration-1000" />
+                <Sparkles size={24} className="absolute text-amber-500 animate-pulse" />
               </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Quick Questions Pills */}
-          {messages.length < 3 && (
-            <div className="px-5 py-3.5 border-t border-amber-900/10 bg-[#FAF8F5] flex flex-wrap gap-2 shrink-0 z-10">
-              {STARTER_QUESTIONS.map((q, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleSendMessage(q)}
-                  className="px-4 py-2 rounded-full text-xs font-bold transition-all border border-amber-900/15 bg-white hover:bg-amber-900/5 hover:border-amber-600 text-[#5B1F24] active:scale-95 shadow-xs"
-                >
-                  {q}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Input Box Footer Bar */}
-          {session.status === "completed" || session.status === "ended" || session.status === "declined" ? (
-            <div className="p-4 border-t border-amber-900/15 bg-amber-50 text-center text-xs font-bold text-amber-900 flex items-center justify-center gap-2 shrink-0 z-10 shadow-xs rounded-b-[30px]">
-              <CheckCircle2 size={16} className="text-amber-700 animate-pulse" />
-              <span>Chat ended. Redirecting to consult page...</span>
+              <div className="space-y-2.5 max-w-md px-4">
+                <h3 className="text-base sm:text-lg font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Connecting to {selectedAstrologer.name}...</h3>
+                <p className="text-xs font-semibold text-amber-900/60 leading-relaxed">
+                  Please wait while the astrologer joins your chat. Do not close or refresh this page.
+                </p>
+                <div className="pt-2">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-extrabold uppercase bg-amber-400/20 text-amber-800 border border-amber-400/30 tracking-widest animate-pulse">
+                    Awaiting Scholar
+                  </span>
+                </div>
+              </div>
             </div>
           ) : (
-            <div className="p-3 sm:p-5 border-t border-amber-900/15 bg-white flex items-center gap-2.5 shrink-0 z-10 shadow-[0_-5px_15px_rgba(45,11,14,0.02)]">
-              <input
-                type="text"
-                value={inputMessage}
-                onChange={e => handleInputChange(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && handleSendMessage()}
-                placeholder="Ask scholar..."
-                className="flex-1 h-12 px-4 rounded-2xl text-xs sm:text-sm border border-amber-900/20 outline-none focus:border-[#5B1F24] focus:ring-2 focus:ring-[#5B1F24]/10 transition-all bg-[#FAF6F0]/50 text-[#3C3024] font-medium"
-              />
-              <button
-                onClick={() => handleSendMessage()}
-                disabled={!inputMessage.trim()}
-                className="h-12 w-12 sm:w-auto sm:px-6 rounded-2xl font-bold text-xs sm:text-sm text-white flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all disabled:opacity-50 shrink-0 bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110 shadow-[#6D2025]/20"
-              >
-                <span className="hidden sm:inline">Ask Scholar</span>
-                <Send size={15} />
-              </button>
-            </div>
+            <>
+              {/* Premium Chat Messages Body */}
+              <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 bg-[#F8F4ED]/60 relative z-10 scrollbar-thin">
+                <div className="text-center my-2">
+                  <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-amber-900/5 text-[#5B1F24] border border-amber-900/10 shadow-xs">
+                    <Lock size={11} className="text-amber-700" /> Secure Live consultation
+                  </span>
+                </div>
+
+                 {messages.map(m => {
+                   const isUser = m.sender === "user";
+                   const resolvedProduct = m.recommendedProduct || (m.recommended_product_slug ? findProduct(m.recommended_product_slug) : null);
+                   return (
+                     <div key={m.id} className={`flex flex-col ${isUser ? "items-end" : "items-start"} space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+                       <div
+                         className={`max-w-[85%] sm:max-w-[75%] p-4 rounded-3xl text-xs sm:text-sm shadow-xs leading-relaxed ${
+                           isUser
+                             ? "rounded-tr-xs text-white"
+                             : "rounded-tl-xs bg-white text-[#3E3125] border border-amber-900/10"
+                         }`}
+                         style={isUser ? { background: `linear-gradient(135deg, ${MAROON} 0%, #802B31 100%)`, boxShadow: "0 4px 15px rgba(91,31,36,0.08)" } : { boxShadow: "0 4px 12px rgba(45,11,14,0.02)" }}
+                       >
+                         <p className="whitespace-pre-line font-medium">{m.text}</p>
+                         
+                         {resolvedProduct && (
+                           <div 
+                             onClick={() => navigate(`/product/${resolvedProduct.slug}`)}
+                             className="mt-3.5 p-3.5 rounded-2xl bg-[#FCFAF7] border border-amber-400/40 text-[#4A3E31] shadow-sm hover:border-amber-400 cursor-pointer transition-all duration-300 group/prod"
+                           >
+                             <p className="text-[9px] font-extrabold uppercase tracking-wider text-amber-700 mb-2 flex items-center gap-1 border-b border-amber-900/5 pb-1">
+                               <Sparkles size={12} className="text-amber-500 fill-amber-500" /> Sacred Prescribed Remedy
+                             </p>
+                             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                               <div className="flex items-center gap-3 flex-1 min-w-0">
+                                 <img src={resolvedProduct.img || resolvedProduct.image} alt={resolvedProduct.name} className="w-12 h-12 rounded-xl object-cover border border-amber-900/10 group-hover/prod:scale-105 transition-transform duration-300 flex-shrink-0" />
+                                 <div className="flex-1 min-w-0">
+                                   <h4 className="font-bold text-xs text-[#5B1F24] leading-tight truncate sm:whitespace-normal">{resolvedProduct.name}</h4>
+                                   <div className="flex items-baseline gap-2 mt-0.5">
+                                     <span className="text-xs font-extrabold text-amber-700">₹{resolvedProduct.price.toLocaleString("en-IN")}</span>
+                                     <span className="text-[9px] text-amber-900/50 font-bold">⭐ {resolvedProduct.rating || 5}</span>
+                                   </div>
+                                 </div>
+                               </div>
+                               <button
+                                 onClick={(e) => { e.stopPropagation(); handleAddToCart(resolvedProduct); }}
+                                 className="w-full sm:w-auto px-4 py-2 rounded-xl text-[10px] sm:text-[11px] font-extrabold text-white shadow-md active:scale-95 transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110 shadow-[#6D2025]/20 shrink-0"
+                               >
+                                 <ShoppingBag size={11} /> Add to Cart
+                               </button>
+                             </div>
+                           </div>
+                         )}
+                       </div>
+                       <span className="text-[10px] font-bold text-amber-900/40 px-2">{m.timestamp || "Just now"}</span>
+                     </div>
+                   );
+                 })}
+
+                {isTyping && (
+                  <div className="flex items-center gap-2 text-xs font-semibold text-amber-900/70 p-3 bg-white/95 rounded-2xl w-fit border border-amber-900/10 shadow-md animate-pulse">
+                    <RefreshCw size={13} className="animate-spin text-amber-600" />
+                    <span>pandit ji is typing...</span>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Quick Questions Pills */}
+              {messages.length < 3 && (
+                <div className="px-5 py-3.5 border-t border-amber-900/10 bg-[#FAF8F5] flex flex-wrap gap-2 shrink-0 z-10">
+                  {STARTER_QUESTIONS.map((q, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleSendMessage(q)}
+                      className="px-4 py-2 rounded-full text-xs font-bold transition-all border border-amber-900/15 bg-white hover:bg-amber-900/5 hover:border-amber-600 text-[#5B1F24] active:scale-95 shadow-xs"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Input Box Footer Bar */}
+              {session.status === "completed" || session.status === "ended" || session.status === "declined" ? (
+                <div className="p-4 border-t border-amber-900/15 bg-amber-50 text-center text-xs font-bold text-amber-900 flex items-center justify-center gap-2 shrink-0 z-10 shadow-xs rounded-b-[30px]">
+                  <CheckCircle2 size={16} className="text-amber-700 animate-pulse" />
+                  <span>Chat ended. Redirecting to consult page...</span>
+                </div>
+              ) : (
+                <div className="p-3 sm:p-5 border-t border-amber-900/15 bg-white flex items-center gap-2.5 shrink-0 z-10 shadow-[0_-5px_15px_rgba(45,11,14,0.02)]">
+                  <input
+                    type="text"
+                    value={inputMessage}
+                    onChange={e => handleInputChange(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && handleSendMessage()}
+                    placeholder="Ask scholar..."
+                    className="flex-1 h-12 px-4 rounded-2xl text-xs sm:text-sm border border-amber-900/20 outline-none focus:border-[#5B1F24] focus:ring-2 focus:ring-[#5B1F24]/10 transition-all bg-[#FAF6F0]/50 text-[#3C3024] font-medium"
+                  />
+                  <button
+                    onClick={() => handleSendMessage()}
+                    disabled={!inputMessage.trim()}
+                    className="h-12 w-12 sm:w-auto sm:px-6 rounded-2xl font-bold text-xs sm:text-sm text-white flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all disabled:opacity-50 shrink-0 bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110 shadow-[#6D2025]/20"
+                  >
+                    <span className="hidden sm:inline">Ask Scholar</span>
+                    <Send size={15} />
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -1056,16 +1069,6 @@ export function ConsultPage() {
                     <div className="relative mb-4.5 overflow-hidden rounded-2xl aspect-[4/3] shadow-xs">
                       <img src={astro.avatar} alt={astro.name} className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500" />
                       
-                      {/* Live Online Badge */}
-                      {astro.status === "online" ? (
-                        <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-[9px] font-extrabold uppercase bg-emerald-600 text-white shadow-md flex items-center gap-1.5 tracking-wider">
-                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" /> Online
-                        </div>
-                      ) : (
-                        <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-[9px] font-extrabold uppercase bg-gray-500/80 text-white shadow-md flex items-center gap-1.5 tracking-wider backdrop-blur-xs">
-                          <span className="w-1.5 h-1.5 rounded-full bg-gray-300" /> Offline
-                        </div>
-                      )}
 
                       <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold bg-black/65 text-amber-300 border border-white/10 flex items-center gap-1 backdrop-blur-xs shadow-md">
                         <Star size={11} fill="#C8A044" stroke="none" /> {astro.rating.toFixed(2)}
@@ -1113,11 +1116,7 @@ export function ConsultPage() {
                         alt={astro.name}
                         className="w-16 h-16 rounded-full object-cover border border-amber-900/15"
                       />
-                      <span
-                        className={`absolute bottom-0.5 right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white ${
-                          astro.status === "online" ? "bg-emerald-500" : "bg-gray-400"
-                        }`}
-                      />
+
                     </div>
 
                     {/* Star ratings */}
