@@ -188,6 +188,8 @@ export function ConsultPage() {
 
     let sessionUuid = generateUUID();
     let isExisting = false;
+    let existingStatus = "pending";
+    let existingCreatedAt = new Date().toISOString();
 
     try {
       const { data: existing } = await supabase
@@ -201,6 +203,8 @@ export function ConsultPage() {
 
       if (existing && existing.length > 0) {
         sessionUuid = existing[0].id;
+        existingStatus = existing[0].status || "pending";
+        existingCreatedAt = existing[0].created_at || new Date().toISOString();
         isExisting = true;
       }
     } catch (e) {}
@@ -209,9 +213,9 @@ export function ConsultPage() {
       id: sessionUuid,
       user_id: activeUser.id,
       astrologer_id: astro.id,
-      status: isExisting ? existing[0].status : "pending",
+      status: existingStatus,
       topic: "Vedic Kundali & Horoscope",
-      created_at: isExisting ? existing[0].created_at : new Date().toISOString()
+      created_at: existingCreatedAt
     };
 
     setSession(createdSession);
