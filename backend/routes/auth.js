@@ -5,16 +5,25 @@ const supabase = require("../config/supabase");
 router.get("/email-by-phone", async (req, res) => {
   const { phone } = req.query;
   if (!phone) return res.status(400).json({ error: "Phone number is required" });
+  const cleanPhone = phone.trim().replace(/\D/g, "");
+  const last10 = cleanPhone.slice(-10);
+
   try {
     const { data, error } = await supabase
       .from("users")
-      .select("email, full_name")
-      .eq("phone", phone.trim())
+      .select("id, email, full_name, phone, status")
+      .or(`phone.eq.${last10},phone.eq.+91${last10},phone.eq.91${last10}`)
       .maybeSingle();
 
     if (error) throw error;
     if (!data) return res.status(404).json({ error: "No account found with this phone number" });
-    res.json({ email: data.email, fullName: data.full_name });
+    res.json({
+      id: data.id,
+      email: data.email,
+      fullName: data.full_name,
+      phone: data.phone,
+      status: data.status || "ACTIVE"
+    });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
