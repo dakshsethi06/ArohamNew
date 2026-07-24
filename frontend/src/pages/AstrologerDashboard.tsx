@@ -724,6 +724,24 @@ export function AstrologerDashboard() {
       }
     } catch (e) {}
   };
+
+  const getTransactionUserName = (t: any) => {
+    const session = sessions.find(s => s.id === t.session_id);
+    if (session) {
+      const resolvedName = session.user_name || session.user_email?.split("@")[0] || seekerNames[session.user_id];
+      if (resolvedName) return resolvedName;
+    }
+
+    if (t.user_name && t.user_name.startsWith("Seeker #")) {
+      const sliceId = t.user_name.replace("Seeker #", "").trim();
+      const matchedUserId = Object.keys(seekerNames).find(key => key.slice(0, 6) === sliceId || key.slice(0, 8) === sliceId);
+      if (matchedUserId) {
+        return seekerNames[matchedUserId];
+      }
+    }
+
+    return t.user_name || "Seeker";
+  };
   const saveProfile = async () => {
     try {
       const updatedProfile = { ...profile };
@@ -747,6 +765,7 @@ export function AstrologerDashboard() {
     setAcceptedSessionIds(updatedSet);
     try {
       localStorage.setItem("aroham_accepted_session_ids", JSON.stringify(Array.from(updatedSet)));
+      localStorage.setItem(`aroham_session_start_time_${s.id}`, Date.now().toString());
     } catch (e) {}
 
     const activeObj = { ...s, status: "active" };
@@ -854,7 +873,8 @@ export function AstrologerDashboard() {
     if (!activeSession) return;
 
     const endedAt = new Date().toISOString();
-    const startTime = new Date(activeSession.created_at || Date.now()).getTime();
+    const sessionStartStr = localStorage.getItem(`aroham_session_start_time_${activeSession.id}`);
+    const startTime = sessionStartStr ? parseInt(sessionStartStr) : new Date(activeSession.created_at || Date.now()).getTime();
     const endTime = Date.now();
     const durationMins = Math.max(1, Math.round((endTime - startTime) / (1000 * 60)));
     const ratePerMin = parseFloat(profile.pricePerMin) || 20;
@@ -881,11 +901,13 @@ export function AstrologerDashboard() {
       }).eq("id", activeSession.id);
     } catch {}
 
+    const resolvedName = activeSession.user_name || activeSession.user_email?.split("@")[0] || seekerNames[activeSession.user_id] || "Devotee";
+
     try {
       await supabase.from("astrologer_transactions").insert({
         astrologer_id: currentAstroId,
         session_id: activeSession.id,
-        user_name: `Seeker #${activeSession.user_id?.slice(0, 6) || "Guest"}`,
+        user_name: resolvedName,
         session_type: "Live Chat",
         duration_mins: durationMins,
         rate_per_min: ratePerMin,
@@ -893,6 +915,10 @@ export function AstrologerDashboard() {
         status: "Settled"
       });
     } catch {}
+
+    try {
+      localStorage.removeItem(`aroham_session_start_time_${activeSession.id}`);
+    } catch (e) {}
 
     setAcceptedSessionIds(prev => {
       const copy = new Set(prev);
@@ -1559,7 +1585,7 @@ export function AstrologerDashboard() {
                         {dbTransactions.map(t => (
                           <tr key={t.id} className="hover:bg-amber-50/50">
                             <td className="py-3.5 font-mono text-[#5B1F24] font-bold">{t.id?.slice(0, 8)}</td>
-                            <td className="py-3.5 font-bold text-[#4A3E31]">{t.user_name || "Seeker"}</td>
+                            <td className="py-3.5 font-bold text-[#4A3E31]">{getTransactionUserName(t)}</td>
                             <td className="py-3.5 text-amber-900/70">{t.session_type || "Live Chat"}</td>
                             <td className="py-3.5 text-amber-900/70">{t.duration_mins || 1} mins</td>
                             <td className="py-3.5 font-bold text-emerald-600">₹{t.amount}</td>
