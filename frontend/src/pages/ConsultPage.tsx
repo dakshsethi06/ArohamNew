@@ -767,6 +767,16 @@ export function ConsultPage() {
             </div>
           )}
         </div>
+
+        {/* Cart toast inside portal */}
+        {localCartToast && (
+          <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[10001] animate-in fade-in slide-in-from-top-4 duration-300 pointer-events-none">
+            <div className="flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-[#5B1F24]/95 backdrop-blur-md border border-amber-400/30 text-amber-100 shadow-xl font-bold text-xs sm:text-sm tracking-wide">
+              <span className="text-emerald-400 text-lg">✓</span>
+              <span>{localCartToast} added to cart!</span>
+            </div>
+          </div>
+        )}
       </div>,
       document.body
     );
