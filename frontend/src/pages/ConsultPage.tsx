@@ -122,8 +122,17 @@ export function ConsultPage() {
         .order("created_at", { ascending: false });
 
       if (data && data.length > 0) {
-        setUserHistorySessions(data);
-        viewPastSessionChat(data[0]);
+        const uniqueThreads: any[] = [];
+        const seenAstros = new Set();
+        for (const s of data) {
+          const astroKey = s.astrologer_id || s.id;
+          if (!seenAstros.has(astroKey)) {
+            seenAstros.add(astroKey);
+            uniqueThreads.push(s);
+          }
+        }
+        setUserHistorySessions(uniqueThreads);
+        viewPastSessionChat(uniqueThreads[0]);
       }
     } catch (e) {}
   };
