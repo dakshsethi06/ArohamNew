@@ -117,14 +117,17 @@ export function AuthPage() {
     setErrorMsg("");
     setNoAccountNotice(false);
 
+    const last10 = phoneDigits.slice(-10);
+
     if (isAstrologerMode) {
       try {
         const { data } = await supabase
           .from('astrologers')
           .select('status')
-          .or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`)
-          .maybeSingle();
-        if (data && String(data.status).toUpperCase() === "BLOCKED") {
+          .or(`phone.eq.${last10},phone.eq.+91${last10},phone.eq.91${last10},phone.ilike.%${last10}`)
+          .limit(1);
+        const astroObj = data && data.length > 0 ? data[0] : null;
+        if (astroObj && String(astroObj.status).toUpperCase() === "BLOCKED") {
           setLoading(false);
           setErrorMsg("Sorry, you are blocked. Can't login.");
           return;
@@ -141,19 +144,48 @@ export function AuthPage() {
     // Normal User Mode
     let existingUser: any = null;
 
+    // 1. Query backend API (Service Role Key bypasses RLS and formats phone cleanly)
     try {
-      const { data } = await supabase
-        .from('users')
-        .select('*')
-        .or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`)
-        .maybeSingle();
-      if (data && (data.phone || data.id)) {
-        existingUser = data;
+      const apiRes: any = await api(`/auth/email-by-phone?phone=${phoneDigits}`).catch(() => null);
+      if (apiRes && (apiRes.id || apiRes.fullName || apiRes.email)) {
+        existingUser = {
+          id: apiRes.id,
+          fullName: apiRes.fullName || "Devotee",
+          email: apiRes.email,
+          phone: apiRes.phone || phoneDigits,
+          status: apiRes.status || "ACTIVE"
+        };
       }
     } catch (e) {}
 
+    // 2. Direct Supabase query as fallback (with flexible phone matching)
     if (!existingUser) {
-      const localCached = localStorage.getItem(`aroham_registered_user_phone_${phoneDigits}`);
+      try {
+        const { data } = await supabase
+          .from('users')
+          .select('*')
+          .or(`phone.eq.${last10},phone.eq.+91${last10},phone.eq.91${last10},phone.ilike.%${last10}`)
+          .limit(1);
+        const userObj = data && data.length > 0 ? data[0] : null;
+        if (userObj && (userObj.phone || userObj.id)) {
+          existingUser = {
+            id: userObj.id,
+            fullName: userObj.full_name || userObj.fullName || "Devotee",
+            email: userObj.email,
+            phone: userObj.phone || phoneDigits,
+            status: userObj.status || "ACTIVE"
+          };
+        }
+      } catch (e) {}
+    }
+
+    // 3. If live DB returned user, update Local Storage cache with live status (clears stale BLOCKED cache)
+    if (existingUser) {
+      localStorage.setItem(`aroham_registered_user_phone_${last10}`, JSON.stringify(existingUser));
+      localStorage.setItem(`aroham_registered_user_phone_${phoneDigits}`, JSON.stringify(existingUser));
+    } else {
+      // 4. Local Storage cache fallback only if DB lookup yielded nothing
+      const localCached = localStorage.getItem(`aroham_registered_user_phone_${last10}`) || localStorage.getItem(`aroham_registered_user_phone_${phoneDigits}`);
       if (localCached) {
         try {
           const parsed = JSON.parse(localCached);
@@ -202,6 +234,7 @@ export function AuthPage() {
       }
 
       const phoneDigits = phone.replace(/\D/g, "");
+      const last10 = phoneDigits.slice(-10);
 
       try {
         let existingUser: { id: string; fullName: string; email?: string; phone: string; status?: string } | null = null;
@@ -212,33 +245,34 @@ export function AuthPage() {
             const { data } = await supabase
               .from('astrologers')
               .select('*')
-              .or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`)
-              .maybeSingle();
-            if (data && String(data.status).toUpperCase() === "BLOCKED") {
+              .or(`phone.eq.${last10},phone.eq.+91${last10},phone.eq.91${last10},phone.ilike.%${last10}`)
+              .limit(1);
+            const astroData = data && data.length > 0 ? data[0] : null;
+            if (astroData && String(astroData.status).toUpperCase() === "BLOCKED") {
               setLoading(false);
               setErrorMsg("Sorry, you are blocked. Can't login.");
               return;
             }
-            if (data && data.id) {
+            if (astroData && astroData.id) {
               // Existing astrologer found — sign them in directly
               const astroProfile = {
-                id: data.id,
-                name: data.full_name || data.name || "Acharya Astrologer",
-                title: data.title || "Senior Vedic Jyotish Master",
-                experience: `${data.experience_years || 5}+ Years Exp`,
-                rating: Number(data.rating) || 5.0,
-                consultations: data.consultations_count || 0,
-                specialties: data.specialties || ["Vedic Kundali"],
-                languages: data.languages || ["Hindi", "English"],
-                avatar: data.avatar_url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
-                status: data.is_online ? "online" : "offline",
-                pricePerMin: Number(data.price_per_min) || 20,
-                bio: data.bio || ""
+                id: astroData.id,
+                name: astroData.full_name || astroData.name || "Acharya Astrologer",
+                title: astroData.title || "Senior Vedic Jyotish Master",
+                experience: `${astroData.experience_years || 5}+ Years Exp`,
+                rating: Number(astroData.rating) || 5.0,
+                consultations: astroData.consultations_count || 0,
+                specialties: astroData.specialties || ["Vedic Kundali"],
+                languages: astroData.languages || ["Hindi", "English"],
+                avatar: astroData.avatar_url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
+                status: astroData.is_online ? "online" : "offline",
+                pricePerMin: Number(astroData.price_per_min) || 20,
+                bio: astroData.bio || ""
               };
 
               try {
                 const existingAstros = JSON.parse(localStorage.getItem("aroham_registered_astrologers") || "[]");
-                const idx = existingAstros.findIndex((a: any) => a.id === data.id);
+                const idx = existingAstros.findIndex((a: any) => a.id === astroData.id);
                 if (idx !== -1) {
                   existingAstros[idx] = { ...existingAstros[idx], ...astroProfile };
                 } else {
@@ -250,15 +284,15 @@ export function AuthPage() {
 
               setLoading(false);
               login({
-                id: data.id,
-                email: data.email || null,
+                id: astroData.id,
+                email: astroData.email || null,
                 user_metadata: { full_name: astroProfile.name, phone: phoneDigits, role: "astrologer" },
                 role: "astrologer",
                 astrologerProfile: astroProfile
               });
 
               if (astroProfile.bio && astroProfile.bio !== "PENDING_WIZARD_COMPLETION" && astroProfile.bio.trim() !== "") {
-                localStorage.setItem(`aroham_astro_wizard_done_${data.id}`, "true");
+                localStorage.setItem(`aroham_astro_wizard_done_${astroData.id}`, "true");
               }
 
               closeAuth(true);
@@ -269,35 +303,51 @@ export function AuthPage() {
 
           // No existing astrologer found — proceed to create new one (falls through to astrologer creation below)
         } else {
-          // Normal user mode: check users table only
+          // Normal user mode: check backend API & database first for live status
+          try {
+            const apiRes: any = await api(`/auth/email-by-phone?phone=${phoneDigits}`).catch(() => null);
+            if (apiRes && (apiRes.id || apiRes.fullName || apiRes.email)) {
+              existingUser = {
+                id: apiRes.id,
+                fullName: apiRes.fullName || name.trim() || "Devotee",
+                email: apiRes.email,
+                phone: apiRes.phone || phoneDigits,
+                status: apiRes.status || "ACTIVE"
+              };
+            }
+          } catch (e) {}
 
-          // 1. Check Local Storage cache
-          const localCached = localStorage.getItem(`aroham_registered_user_phone_${phoneDigits}`);
-          if (localCached) {
-            try {
-              const parsed = JSON.parse(localCached);
-              if (parsed && parsed.fullName) existingUser = parsed;
-            } catch (e) {}
-          }
-
-          // 2. Check Supabase users table
           if (!existingUser) {
             try {
               const { data } = await supabase
                 .from('users')
                 .select('*')
-                .or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`)
-                .maybeSingle();
-              if (data && (data.full_name || data.fullName || data.id)) {
+                .or(`phone.eq.${last10},phone.eq.+91${last10},phone.eq.91${last10},phone.ilike.%${last10}`)
+                .limit(1);
+              const userObj = data && data.length > 0 ? data[0] : null;
+              if (userObj && (userObj.full_name || userObj.fullName || userObj.id)) {
                 existingUser = {
-                  id: data.id,
-                  fullName: data.full_name || data.fullName || name.trim() || "Devotee",
-                  email: data.email,
-                  phone: data.phone || phoneDigits,
-                  status: data.status
+                  id: userObj.id,
+                  fullName: userObj.full_name || userObj.fullName || name.trim() || "Devotee",
+                  email: userObj.email,
+                  phone: userObj.phone || phoneDigits,
+                  status: userObj.status || "ACTIVE"
                 };
               }
             } catch (e) {}
+          }
+
+          if (existingUser) {
+            localStorage.setItem(`aroham_registered_user_phone_${last10}`, JSON.stringify(existingUser));
+            localStorage.setItem(`aroham_registered_user_phone_${phoneDigits}`, JSON.stringify(existingUser));
+          } else {
+            const localCached = localStorage.getItem(`aroham_registered_user_phone_${last10}`) || localStorage.getItem(`aroham_registered_user_phone_${phoneDigits}`);
+            if (localCached) {
+              try {
+                const parsed = JSON.parse(localCached);
+                if (parsed && parsed.fullName) existingUser = parsed;
+              } catch (e) {}
+            }
           }
 
           if (existingUser && String(existingUser.status).toUpperCase() === "BLOCKED") {

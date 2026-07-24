@@ -12,17 +12,18 @@ router.get("/email-by-phone", async (req, res) => {
     const { data, error } = await supabase
       .from("users")
       .select("id, email, full_name, phone, status")
-      .or(`phone.eq.${last10},phone.eq.+91${last10},phone.eq.91${last10}`)
-      .maybeSingle();
+      .or(`phone.eq.${last10},phone.eq.+91${last10},phone.eq.91${last10},phone.ilike.%${last10}`)
+      .limit(1);
 
     if (error) throw error;
-    if (!data) return res.status(404).json({ error: "No account found with this phone number" });
+    const userObj = data && data.length > 0 ? data[0] : null;
+    if (!userObj) return res.status(404).json({ error: "No account found with this phone number" });
     res.json({
-      id: data.id,
-      email: data.email,
-      fullName: data.full_name,
-      phone: data.phone,
-      status: data.status || "ACTIVE"
+      id: userObj.id,
+      email: userObj.email,
+      fullName: userObj.full_name,
+      phone: userObj.phone,
+      status: userObj.status || "ACTIVE"
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
