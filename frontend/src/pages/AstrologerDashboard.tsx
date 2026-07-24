@@ -957,10 +957,7 @@ export function AstrologerDashboard() {
             </button>
           )}
 
-          <div className="px-3 py-1.5 rounded-xl bg-amber-400/15 border border-amber-400/30 text-amber-200 text-xs font-bold flex items-center gap-1.5 shadow-xs">
-            <Wallet size={14} className="text-amber-300" />
-            <span>Today: ₹{(financialStats.todayEarnings || 0).toLocaleString("en-IN")}</span>
-          </div>
+
 
           <button
             onClick={toggleChatOnline}
