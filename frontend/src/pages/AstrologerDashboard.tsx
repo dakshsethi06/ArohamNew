@@ -168,7 +168,28 @@ export function AstrologerDashboard() {
   });
 
   const currentAstroId = user?.id || "astro-1";
-  const pendingSession = sessions.find(s => s.status === "pending" && !acceptedSessionIds.has(s.id));
+
+  // Collect all possible IDs this astrologer might be known by
+  const getAllAstroIds = (): string[] => {
+    const ids = new Set<string>();
+    ids.add(currentAstroId);
+    ids.add("astro-1");
+    try {
+      const mockStr = localStorage.getItem("aroham_mock_session");
+      if (mockStr) {
+        const mock = JSON.parse(mockStr);
+        if (mock?.id) ids.add(mock.id);
+        if (mock?.astrologerProfile?.id) ids.add(mock.astrologerProfile.id);
+      }
+    } catch (e) {}
+    try {
+      const registered = JSON.parse(localStorage.getItem("aroham_registered_astrologers") || "[]");
+      if (Array.isArray(registered)) {
+        registered.forEach((a: any) => { if (a.id) ids.add(a.id); });
+      }
+    } catch (e) {}
+    return Array.from(ids);
+  };
 
   const syncProfileToDBAndLocal = async (p: typeof profile) => {
     if (!user?.id) return;
@@ -496,11 +517,13 @@ export function AstrologerDashboard() {
 
   const fetchSessions = async () => {
     let sessionList: any[] = [];
+    const allIds = getAllAstroIds();
     try {
+      const orFilter = allIds.map(id => `astrologer_id.eq.${id}`).join(",");
       const { data } = await supabase
         .from("chat_sessions")
         .select("*")
-        .or(`astrologer_id.eq.${currentAstroId},astrologer_id.eq.astro-1`)
+        .or(orFilter)
         .order("created_at", { ascending: false });
       if (data && data.length > 0) sessionList = data;
     } catch (e) {}
@@ -509,7 +532,7 @@ export function AstrologerDashboard() {
       const latestLocal = localStorage.getItem("aroham_latest_live_session");
       if (latestLocal) {
         const parsed = JSON.parse(latestLocal);
-        if (parsed.astrologer_id === currentAstroId || parsed.astrologer_id === "astro-1" || !parsed.astrologer_id) {
+        if (allIds.includes(parsed.astrologer_id) || !parsed.astrologer_id) {
           if (!sessionList.some(s => s.id === parsed.id)) {
             sessionList.unshift(parsed);
           }
