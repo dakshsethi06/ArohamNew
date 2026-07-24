@@ -65,7 +65,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
               return combined;
             });
           }
-        }).catch(() => {});
+        }, () => {});
     } else {
       // Load guest wishlist
       const guestCached = localStorage.getItem("aroham_wishlist");

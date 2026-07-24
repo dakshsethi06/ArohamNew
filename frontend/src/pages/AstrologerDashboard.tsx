@@ -40,7 +40,8 @@ import {
   Users,
   Layers,
   Activity,
-  ChevronLeft
+  ChevronLeft,
+  RefreshCw
 } from "lucide-react";
 
 const PRESET_AVATARS = [
@@ -93,6 +94,23 @@ export function AstrologerDashboard() {
   const [isChatOnline, setIsChatOnline] = useState(true);
   const [isCallOnline, setIsCallOnline] = useState(true);
   const [filterTab, setFilterTab] = useState<"all" | "active" | "completed">("all");
+
+  const [workingHours, setWorkingHours] = useState(() => {
+    try {
+      const cached = localStorage.getItem(`aroham_astro_working_hours_${currentAstroId}`);
+      return cached ? JSON.parse(cached) : { enabled: false, start: "09:00", end: "22:00" };
+    } catch (e) {
+      return { enabled: false, start: "09:00", end: "22:00" };
+    }
+  });
+  const [showIdleModal, setShowIdleModal] = useState(false);
+  const lastActivityTimeRef = useRef<number>(Date.now());
+  const lastHeartbeatTimeRef = useRef<number>(0);
+  const isChatOnlineRef = useRef(true);
+
+  useEffect(() => {
+    isChatOnlineRef.current = isChatOnline;
+  }, [isChatOnline]);
 
   const [dbTransactions, setDbTransactions] = useState<any[]>([]);
   const [dbReviews, setDbReviews] = useState<any[]>([]);
@@ -278,7 +296,8 @@ export function AstrologerDashboard() {
       avatar: p.avatar || PRESET_AVATARS[0],
       status: isChatOnline ? "online" : "offline",
       pricePerMin: parseFloat(p.pricePerMin) || 20,
-      bio: p.bio || ""
+      bio: p.bio || "",
+      working_hours: workingHours
     };
 
     try {
@@ -308,7 +327,8 @@ export function AstrologerDashboard() {
         avatar_url: p.avatar,
         price_per_min: parseFloat(p.pricePerMin) || 20,
         is_online: isChatOnline,
-        role: "astrologer"
+        role: "astrologer",
+        working_hours: workingHours
       });
     } catch (e) {}
   };
@@ -374,6 +394,14 @@ export function AstrologerDashboard() {
           
           setProfile(dbProfile);
           localStorage.setItem(`aroham_astro_profile_${astroId}`, JSON.stringify(dbProfile));
+          if (data.working_hours) {
+            setWorkingHours({
+              enabled: data.working_hours.enabled ?? false,
+              start: data.working_hours.start || "09:00",
+              end: data.working_hours.end || "22:00"
+            });
+            localStorage.setItem(`aroham_astro_working_hours_${astroId}`, JSON.stringify(data.working_hours));
+          }
           if (dbProfile.bio && dbProfile.bio !== "PENDING_WIZARD_COMPLETION" && dbProfile.bio.trim() !== "") {
             localStorage.setItem(`aroham_astro_wizard_done_${astroId}`, "true");
             setShowProfileWizard(false);
@@ -391,6 +419,50 @@ export function AstrologerDashboard() {
       fetchDatabaseData();
     };
 
+    const handleUnload = () => {
+      if (currentAstroId && isChatOnlineRef.current) {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://lzzdfsphevmzbkkoskxb.supabase.co";
+        const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "sb_publishable_hXI5tCwU5jA3BQtdLxuXoQ_L69CcRaZ";
+        
+        const url = `${supabaseUrl}/rest/v1/astrologers?id=eq.${currentAstroId}`;
+        const headers = {
+          apikey: supabaseAnonKey,
+          Authorization: `Bearer ${supabaseAnonKey}`,
+          "Content-Type": "application/json",
+          Prefer: "return=minimal"
+        };
+        const body = JSON.stringify({ is_online: false });
+        
+        fetch(url, {
+          method: "PATCH",
+          headers,
+          body,
+          keepalive: true
+        });
+
+        try {
+          const existing = JSON.parse(localStorage.getItem("aroham_registered_astrologers") || "[]");
+          if (Array.isArray(existing) && existing.length > 0) {
+            const updated = existing.map((a: any) => {
+              if (a.id === currentAstroId) {
+                return { ...a, status: "offline" };
+              }
+              return a;
+            });
+            localStorage.setItem("aroham_registered_astrologers", JSON.stringify(updated));
+          }
+          localStorage.setItem("aroham_global_online_status", JSON.stringify({
+            userId: currentAstroId,
+            isOnline: false,
+            timestamp: Date.now()
+          }));
+        } catch (e) {}
+      }
+    };
+
+    window.addEventListener("beforeunload", handleUnload);
+    window.addEventListener("unload", handleUnload);
+
     window.addEventListener("storage", syncAll);
     window.addEventListener("focus", syncAll);
 
@@ -401,6 +473,19 @@ export function AstrologerDashboard() {
     const pollInterval = setInterval(() => {
       fetchSessions();
       fetchDatabaseData();
+
+      // Send heartbeat update to Supabase every 30 seconds if online
+      if (isChatOnlineRef.current && currentAstroId) {
+        const nowTime = Date.now();
+        if (nowTime - lastHeartbeatTimeRef.current > 30000) {
+          lastHeartbeatTimeRef.current = nowTime;
+          supabase
+            .from("astrologers")
+            .update({ last_active_at: new Date().toISOString() })
+            .eq("id", currentAstroId)
+            .then(() => {});
+        }
+      }
     }, 3000);
 
     const sub = supabase
@@ -413,11 +498,44 @@ export function AstrologerDashboard() {
 
     return () => {
       clearInterval(pollInterval);
+      window.removeEventListener("beforeunload", handleUnload);
+      window.removeEventListener("unload", handleUnload);
       window.removeEventListener("storage", syncAll);
       window.removeEventListener("focus", syncAll);
       supabase.removeChannel(sub);
     };
   }, [user, currentAstroId]);
+
+  // Idle / Inactivity detection (Auto-offline after 15 minutes of no activity)
+  useEffect(() => {
+    const handleActivity = () => {
+      lastActivityTimeRef.current = Date.now();
+    };
+
+    window.addEventListener("mousemove", handleActivity);
+    window.addEventListener("keydown", handleActivity);
+    window.addEventListener("click", handleActivity);
+    window.addEventListener("scroll", handleActivity);
+
+    const idleCheckInterval = setInterval(() => {
+      if (isChatOnlineRef.current) {
+        const elapsed = Date.now() - lastActivityTimeRef.current;
+        if (elapsed > 15 * 60 * 1000) { // 15 minutes
+          setIsChatOnline(false);
+          broadcastStatus(false);
+          setShowIdleModal(true);
+        }
+      }
+    }, 10000); // Check every 10 seconds
+
+    return () => {
+      window.removeEventListener("mousemove", handleActivity);
+      window.removeEventListener("keydown", handleActivity);
+      window.removeEventListener("click", handleActivity);
+      window.removeEventListener("scroll", handleActivity);
+      clearInterval(idleCheckInterval);
+    };
+  }, []);
 
   const [isSeekerTyping, setIsSeekerTyping] = useState(false);
   const seekerTypingTimerRef = useRef<any>(null);
@@ -701,6 +819,7 @@ export function AstrologerDashboard() {
       }
       setProfile(updatedProfile);
       localStorage.setItem(`aroham_astro_profile_${currentAstroId}`, JSON.stringify(updatedProfile));
+      localStorage.setItem(`aroham_astro_working_hours_${currentAstroId}`, JSON.stringify(workingHours));
       localStorage.setItem(`aroham_astro_wizard_done_${currentAstroId}`, "true");
       await syncProfileToDBAndLocal(updatedProfile);
     } catch (e) {}
@@ -1730,6 +1849,53 @@ export function AstrologerDashboard() {
                     className="w-full p-3.5 rounded-xl text-xs bg-amber-50/50 border border-amber-900/15 text-[#4A3E31] outline-none focus:border-[#5B1F24] leading-relaxed"
                   />
                 </div>
+
+                {/* Working Hours settings */}
+                <div className="pt-4 border-t border-amber-900/15 space-y-4">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#5B1F24] flex items-center gap-2" style={{ fontFamily: SERIF }}>
+                    <Clock size={14} className="text-amber-600" />
+                    <span>Working Hours & Auto-Offline</span>
+                  </h4>
+                  <p className="text-[11px] text-amber-900/60 leading-relaxed">
+                    Configure your active hours. When enabled, your status will automatically show as Offline to seekers outside these hours (e.g. during night/sleep).
+                  </p>
+                  
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="workingHoursEnabled"
+                      checked={workingHours.enabled}
+                      onChange={e => setWorkingHours(prev => ({ ...prev, enabled: e.target.checked }))}
+                      className="rounded border-amber-900/20 text-[#5B1F24] focus:ring-[#5B1F24] h-4 w-4"
+                    />
+                    <label htmlFor="workingHoursEnabled" className="text-xs font-bold text-[#4A3E31]">
+                      Enable Auto-Offline Outside Working Hours
+                    </label>
+                  </div>
+
+                  {workingHours.enabled && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[11px] font-bold text-amber-900/70 mb-1">Shift Start Time (HH:MM)</label>
+                        <input
+                          type="time"
+                          value={workingHours.start}
+                          onChange={e => setWorkingHours(prev => ({ ...prev, start: e.target.value }))}
+                          className="w-full h-11 px-3.5 rounded-xl text-xs bg-amber-50/50 border border-amber-900/15 text-[#4A3E31] outline-none focus:border-[#5B1F24]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-amber-900/70 mb-1">Shift End Time (HH:MM)</label>
+                        <input
+                          type="time"
+                          value={workingHours.end}
+                          onChange={e => setWorkingHours(prev => ({ ...prev, end: e.target.value }))}
+                          className="w-full h-11 px-3.5 rounded-xl text-xs bg-amber-50/50 border border-amber-900/15 text-[#4A3E31] outline-none focus:border-[#5B1F24]"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -1916,6 +2082,42 @@ export function AstrologerDashboard() {
               style={{ background: `linear-gradient(135deg, ${MAROON}, #8C1D24)` }}
             >
               <Check size={14} /> Accept Request
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Idle / Inactivity Offline Modal */}
+      {showIdleModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#FAF6F0] max-w-md w-full rounded-3xl border-2 border-amber-900/15 shadow-2xl p-6 text-center space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-amber-900/10 text-amber-800 flex items-center justify-center mx-auto border border-amber-900/20">
+              <Clock size={24} className="animate-pulse" />
+            </div>
+            <div>
+              <h3 className="text-base font-extrabold text-[#5B1F24]" style={{ fontFamily: SERIF }}>
+                Marked Offline (Inactivity)
+              </h3>
+              <p className="text-xs text-amber-900/70 mt-1.5 leading-relaxed font-medium">
+                You have been automatically marked Offline because we did not detect any activity on your dashboard for the last 15 minutes.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setShowIdleModal(false);
+                setIsChatOnline(true);
+                broadcastStatus(true);
+              }}
+              className="w-full py-2.5 rounded-xl text-xs font-extrabold text-white shadow-md hover:brightness-110 active:scale-95 transition-all"
+              style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}
+            >
+              Go Back Online
+            </button>
+            <button
+              onClick={() => setShowIdleModal(false)}
+              className="w-full py-2 rounded-xl text-xs font-bold text-amber-900/70 hover:bg-amber-900/10 border border-transparent hover:border-amber-900/10 transition-all active:scale-95"
+            >
+              Keep Offline
             </button>
           </div>
         </div>

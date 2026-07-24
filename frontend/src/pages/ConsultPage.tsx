@@ -26,6 +26,8 @@ interface Astrologer {
   status: "online" | "busy" | "offline";
   pricePerMin: number;
   bio?: string;
+  lastActiveAt?: string | null;
+  workingHours?: { enabled: boolean; start: string; end: string } | null;
 }
 
 const DEFAULT_DB_ASTROLOGER: Astrologer = {
@@ -48,6 +50,94 @@ const STARTER_QUESTIONS = [
   "How do I balance negative planetary influences (Graha Dosha)?",
   "Which Vastu product will bring peace to my home?"
 ];
+
+const isAstrologerActive = (isOnline: boolean, lastActiveAt: string | null | undefined, workingHours: any) => {
+  if (!isOnline) return false;
+
+  if (lastActiveAt) {
+    const lastActive = new Date(lastActiveAt).getTime();
+    const now = Date.now();
+    if (now - lastActive > 90 * 1000) {
+      return false;
+    }
+  }
+
+  if (workingHours && workingHours.enabled) {
+    const { start, end } = workingHours;
+    if (start && end) {
+      const nowTime = new Date();
+      const hrs = String(nowTime.getHours()).padStart(2, "0");
+      const mins = String(nowTime.getMinutes()).padStart(2, "0");
+      const currentTimeStr = `${hrs}:${mins}`;
+
+      if (start <= end) {
+        if (currentTimeStr < start || currentTimeStr > end) {
+          return false;
+        }
+      } else {
+        if (currentTimeStr < start && currentTimeStr > end) {
+          return false;
+        }
+      }
+    }
+  }
+
+  return true;
+};
+
+const formatChatDate = (dateInput: string | Date | number | undefined) => {
+  if (!dateInput) return "";
+  const date = new Date(dateInput);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  const dDate = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  const dToday = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+  const dYesterday = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate()).getTime();
+
+  if (dDate === dToday) {
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  } else if (dDate === dYesterday) {
+    return "Yesterday";
+  }
+
+  const diffTime = dToday - dDate;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 7) {
+    return date.toLocaleDateString([], { weekday: "long" });
+  }
+
+  return date.toLocaleDateString([], { day: "numeric", month: "numeric", year: "numeric" });
+};
+
+const formatMessageHeaderDate = (dateInput: any) => {
+  if (!dateInput) return "";
+  const date = new Date(dateInput);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  const dDate = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  const dToday = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+  const dYesterday = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate()).getTime();
+
+  if (dDate === dToday) {
+    return "Today";
+  } else if (dDate === dYesterday) {
+    return "Yesterday";
+  }
+
+  const diffTime = dToday - dDate;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 7) {
+    return date.toLocaleDateString([], { weekday: "long" });
+  }
+
+  return date.toLocaleDateString([], { day: "numeric", month: "long", year: "numeric" });
+};
 
 // Strictly fetch database & registered astrologers
 const getDatabaseAstrologers = (): Astrologer[] => {
@@ -95,11 +185,27 @@ export function ConsultPage() {
 
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const historyContainerRef = useRef<HTMLDivElement>(null);
 
   const [showUserHistoryModal, setShowUserHistoryModal] = useState(false);
   const [userHistorySessions, setUserHistorySessions] = useState<any[]>([]);
   const [selectedHistorySession, setSelectedHistorySession] = useState<any | null>(null);
   const [historySessionMessages, setHistorySessionMessages] = useState<any[]>([]);
+
+  const scrollToHistoryBottom = () => {
+    if (historyContainerRef.current) {
+      historyContainerRef.current.scrollTop = historyContainerRef.current.scrollHeight;
+    }
+  };
+
+  useEffect(() => {
+    if (selectedHistorySession) {
+      const timer = setTimeout(() => {
+        scrollToHistoryBottom();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [historySessionMessages, selectedHistorySession]);
 
   const openUserHistoryModal = async () => {
     if (!isLoggedIn || !user?.id) {
@@ -115,18 +221,9 @@ export function ConsultPage() {
         .order("created_at", { ascending: false });
 
       if (data && data.length > 0) {
-        const uniqueThreads: any[] = [];
-        const seenAstros = new Set();
-        for (const s of data) {
-          const astroKey = s.astrologer_id || s.id;
-          if (!seenAstros.has(astroKey)) {
-            seenAstros.add(astroKey);
-            uniqueThreads.push(s);
-          }
-        }
-        setUserHistorySessions(uniqueThreads);
+        setUserHistorySessions(data);
         if (window.innerWidth >= 768) {
-          viewPastSessionChat(uniqueThreads[0]);
+          viewPastSessionChat(data[0]);
         } else {
           setSelectedHistorySession(null);
         }
@@ -149,6 +246,7 @@ export function ConsultPage() {
           sender: m.sender || m.sender_type,
           text: m.text || m.message_text,
           timestamp: new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          created_at: m.created_at,
           recommended_product_slug: m.recommended_product_slug,
           recommendedProduct: m.recommended_product_slug ? findProduct(m.recommended_product_slug) : null
         })));
@@ -166,13 +264,24 @@ export function ConsultPage() {
           const parsed = JSON.parse(globalStatusStr);
           list = list.map(a => {
             if (a.id === parsed.userId || (parsed.userId === "astro-1" && a.id.startsWith("astro-"))) {
-              return { ...a, status: parsed.isOnline ? "online" : "offline" };
+              return { 
+                ...a, 
+                status: (parsed.isOnline ? "online" : "offline") as "online" | "offline" | "busy",
+                lastActiveAt: parsed.isOnline ? new Date().toISOString() : a.lastActiveAt
+              };
             }
             return a;
           });
         }
       } catch (e) {}
-      setAstrologers(list);
+
+      const computedList = list.map(a => ({
+        ...a,
+        status: (isAstrologerActive(a.status === "online" || a.status === "busy", a.lastActiveAt, a.workingHours)
+          ? (a.status === "busy" ? "busy" : "online")
+          : "offline") as "online" | "offline" | "busy"
+      }));
+      setAstrologers(computedList);
     };
 
     window.addEventListener("storage", syncAstrologers);
@@ -193,9 +302,11 @@ export function ConsultPage() {
             specialties: liveData.specialties || ["Vedic Kundali", "Gemstones"],
             languages: liveData.languages || ["Hindi", "English"],
             avatar: liveData.avatar_url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
-            status: liveData.is_online ? "online" : "offline",
+            status: (isAstrologerActive(liveData.is_online, liveData.last_active_at, liveData.working_hours) ? "online" : "offline") as "online" | "offline" | "busy",
             pricePerMin: Number(liveData.price_per_min) || 20,
-            bio: liveData.bio
+            bio: liveData.bio,
+            lastActiveAt: liveData.last_active_at,
+            workingHours: liveData.working_hours
           }));
           setAstrologers(dbFormatted);
           try {
@@ -214,9 +325,19 @@ export function ConsultPage() {
       })
       .subscribe();
 
+    const checkInterval = setInterval(() => {
+      setAstrologers(prevList => prevList.map(a => ({
+        ...a,
+        status: (isAstrologerActive(a.status === "online" || a.status === "busy", a.lastActiveAt, a.workingHours) 
+          ? (a.status === "busy" ? "busy" : "online") 
+          : "offline") as "online" | "offline" | "busy"
+      })));
+    }, 10000);
+
     return () => {
       window.removeEventListener("storage", syncAstrologers);
       window.removeEventListener("focus", syncAstrologers);
+      clearInterval(checkInterval);
       supabase.removeChannel(channel);
     };
   }, []);
@@ -930,7 +1051,7 @@ export function ConsultPage() {
             filteredAstrologers.map(astro => (
               <div key={astro.id} className="w-full">
                 {/* Desktop Grid Card */}
-                <div className="hidden md:flex flex-col justify-between h-full bg-white rounded-3xl p-5 border border-amber-900/10 shadow-[0_4px_22px_rgba(91,31,36,0.02)] hover:shadow-xl hover:border-amber-500/20 transition-all duration-300 group hover:-translate-y-1">
+                <div onClick={() => startConsultation(astro)} className="hidden md:flex flex-col justify-between h-full bg-white rounded-3xl p-5 border border-amber-900/10 shadow-[0_4px_22px_rgba(91,31,36,0.02)] hover:shadow-xl hover:border-amber-500/20 transition-all duration-300 group hover:-translate-y-1 cursor-pointer">
                   <div>
                     <div className="relative mb-4.5 overflow-hidden rounded-2xl aspect-[4/3] shadow-xs">
                       <img src={astro.avatar} alt={astro.name} className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500" />
@@ -973,7 +1094,7 @@ export function ConsultPage() {
 
                   <div className="pt-3 border-t border-amber-900/5">
                     <button
-                      onClick={() => startConsultation(astro)}
+                      onClick={(e) => { e.stopPropagation(); startConsultation(astro); }}
                       className="w-full py-3.5 rounded-2xl text-xs font-extrabold uppercase tracking-wider text-white shadow-md active:scale-98 transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110 shadow-[#6D2025]/15 hover:shadow-[#6D2025]/25"
                     >
                       <MessageSquare size={14.5} />
@@ -983,7 +1104,7 @@ export function ConsultPage() {
                 </div>
 
                 {/* Mobile List Card */}
-                <div className="flex md:hidden bg-white rounded-2xl p-4.5 border border-amber-900/10 shadow-xs gap-4 items-center w-full">
+                <div onClick={() => startConsultation(astro)} className="flex md:hidden bg-white rounded-2xl p-4.5 border border-amber-900/10 shadow-xs gap-4 items-center w-full cursor-pointer hover:shadow-md hover:border-amber-500/20 transition-all duration-300">
                   {/* Left Side: Circular Avatar, Status Dot, Stars & Orders */}
                   <div className="flex flex-col items-center flex-shrink-0 min-w-[85px]">
                     <div className="relative">
@@ -1047,7 +1168,7 @@ export function ConsultPage() {
                   {/* Right Side: Chat Action Button */}
                   <div className="flex-shrink-0">
                     <button
-                      onClick={() => startConsultation(astro)}
+                      onClick={(e) => { e.stopPropagation(); startConsultation(astro); }}
                       className="px-5 py-2 rounded-xl text-xs font-bold border border-emerald-600 text-emerald-600 bg-white hover:bg-emerald-50 active:scale-95 transition-all shadow-xs"
                     >
                       Chat
@@ -1129,7 +1250,7 @@ export function ConsultPage() {
                           <p className="text-[10px] text-amber-900/60 font-semibold mt-0.5">{s.topic || "Vedic Consultation"}</p>
                         </div>
                         <div className="flex items-center justify-between pt-2 border-t border-amber-900/5 text-[9px] w-full font-bold">
-                          <span className="text-amber-900/40">{new Date(s.created_at || Date.now()).toLocaleDateString()}</span>
+                          <span className="text-amber-900/50">{formatChatDate(s.created_at)}</span>
                           <span className={`px-2 py-0.5 rounded-full uppercase tracking-wider text-[8px] ${s.status === 'completed' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-amber-100 text-amber-800 border border-amber-200'}`}>
                             {s.status}
                           </span>
@@ -1162,55 +1283,70 @@ export function ConsultPage() {
                       </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto space-y-3.5 p-4 bg-[#FAF6F0]/60 rounded-2xl border border-amber-900/10 scrollbar-thin">
+                    <div 
+                      ref={historyContainerRef}
+                      className="flex-1 overflow-y-auto space-y-3.5 p-4 bg-[#FAF6F0]/60 rounded-2xl border border-amber-900/10 scrollbar-thin"
+                    >
                       {historySessionMessages.length === 0 ? (
                         <div className="p-8 text-center text-xs text-amber-900/50">Loading saved messages...</div>
-                      ) : (
-                        historySessionMessages.map(m => {
+                      ) : (() => {
+                        let lastDateStr = "";
+                        return historySessionMessages.map(m => {
                           const isUser = m.sender === "user";
+                          const messageDate = new Date(m.created_at || Date.now());
+                          const dateStr = messageDate.toDateString();
+                          const showDateHeader = dateStr !== lastDateStr;
+                          lastDateStr = dateStr;
+
                           return (
-                            <div
-                              key={m.id}
-                              className={`flex flex-col ${isUser ? "items-end" : "items-start"} space-y-1`}
-                            >
-                              <div
-                                className={`p-3.5 rounded-3xl max-w-[80%] text-xs leading-relaxed ${
-                                  isUser
-                                    ? "bg-[#5B1F24] text-white rounded-tr-xs shadow-xs"
-                                    : "bg-white text-[#4A3E31] border border-amber-900/15 rounded-tl-xs shadow-xs"
-                                }`}
-                                style={isUser ? { background: `linear-gradient(135deg, ${MAROON} 0%, #802B31 100%)` } : {}}
-                              >
-                                <p className="whitespace-pre-line font-medium">{m.text}</p>
-                                {m.recommendedProduct && (
-                                  <div 
-                                    onClick={() => navigate(`/product/${m.recommendedProduct.slug}`)}
-                                    className="mt-2.5 p-3 rounded-xl bg-[#FCFAF7] border border-amber-400/40 text-[#4A3E31] shadow-sm hover:border-amber-400 cursor-pointer transition-all duration-300 group/prod text-left"
-                                  >
-                                    <p className="text-[8px] font-extrabold uppercase tracking-wider text-amber-700 mb-1.5 flex items-center gap-1 border-b border-amber-900/5 pb-1">
-                                      <Sparkles size={10} className="text-amber-500 fill-amber-500" /> Sacred Prescribed Remedy
-                                    </p>
-                                    <div className="flex items-center gap-2">
-                                      <img src={m.recommendedProduct.img} alt={m.recommendedProduct.name} className="w-10 h-10 rounded-lg object-cover border-amber-900/10 group-hover/prod:scale-105 transition-transform duration-300" />
-                                      <div className="flex-1 min-w-0">
-                                        <h4 className="font-bold text-[11px] truncate text-[#5B1F24]">{m.recommendedProduct.name}</h4>
-                                        <p className="text-[10px] font-extrabold text-amber-700">₹{m.recommendedProduct.price.toLocaleString("en-IN")}</p>
+                            <div key={m.id} className="w-full">
+                              {showDateHeader && (
+                                <div className="flex justify-center my-4">
+                                  <span className="px-3.5 py-1.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-900/10 text-[#5B1F24] border border-amber-900/5 shadow-2xs">
+                                    {formatMessageHeaderDate(m.created_at)}
+                                  </span>
+                                </div>
+                              )}
+                              <div className={`flex flex-col ${isUser ? "items-end" : "items-start"} space-y-1 mt-2.5`}>
+                                <div
+                                  className={`p-3.5 rounded-3xl max-w-[80%] text-xs leading-relaxed ${
+                                    isUser
+                                      ? "bg-[#5B1F24] text-white rounded-tr-xs shadow-xs"
+                                      : "bg-white text-[#4A3E31] border border-amber-900/15 rounded-tl-xs shadow-xs"
+                                  }`}
+                                  style={isUser ? { background: `linear-gradient(135deg, ${MAROON} 0%, #802B31 100%)` } : {}}
+                                >
+                                  <p className="whitespace-pre-line font-medium">{m.text}</p>
+                                  {m.recommendedProduct && (
+                                    <div 
+                                      onClick={() => navigate(`/product/${m.recommendedProduct.slug}`)}
+                                      className="mt-2.5 p-3 rounded-xl bg-[#FCFAF7] border border-amber-400/40 text-[#4A3E31] shadow-sm hover:border-amber-400 cursor-pointer transition-all duration-300 group/prod text-left"
+                                    >
+                                      <p className="text-[8px] font-extrabold uppercase tracking-wider text-amber-700 mb-1.5 flex items-center gap-1 border-b border-amber-900/5 pb-1">
+                                        <Sparkles size={10} className="text-amber-500 fill-amber-500" /> Sacred Prescribed Remedy
+                                      </p>
+                                      <div className="flex items-center gap-2">
+                                        <img src={m.recommendedProduct.img} alt={m.recommendedProduct.name} className="w-10 h-10 rounded-lg object-cover border-amber-900/10 group-hover/prod:scale-105 transition-transform duration-300" />
+                                        <div className="flex-1 min-w-0">
+                                          <h4 className="font-bold text-[11px] truncate text-[#5B1F24]">{m.recommendedProduct.name}</h4>
+                                          <p className="text-[10px] font-extrabold text-amber-700">₹{m.recommendedProduct.price.toLocaleString("en-IN")}</p>
+                                        </div>
+                                        <button
+                                          onClick={(e) => { e.stopPropagation(); handleAddToCart(m.recommendedProduct); }}
+                                          className="px-2.5 py-1.5 rounded-lg text-[10px] font-extrabold text-white shadow-md active:scale-95 transition-all flex items-center gap-1 whitespace-nowrap bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110"
+                                        >
+                                          <ShoppingBag size={10} /> Buy
+                                        </button>
                                       </div>
-                                      <button
-                                        onClick={(e) => { e.stopPropagation(); handleAddToCart(m.recommendedProduct); }}
-                                        className="px-2.5 py-1.5 rounded-lg text-[10px] font-extrabold text-white shadow-md active:scale-95 transition-all flex items-center gap-1 whitespace-nowrap bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110"
-                                      >
-                                        <ShoppingBag size={10} /> Buy
-                                      </button>
                                     </div>
-                                  </div>
-                                )}
+                                  )}
+                                </div>
+                                <span className="text-[9px] font-bold text-amber-900/40 px-2">{m.timestamp}</span>
                               </div>
-                              <span className="text-[9px] font-bold text-amber-900/40 px-2">{m.timestamp}</span>
                             </div>
                           );
-                        })
-                      )}
+                        });
+                      })()}
                     </div>
                   </>
                 ) : (

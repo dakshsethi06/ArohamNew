@@ -112,6 +112,8 @@ create table if not exists astrologers (
   bio text,
   avatar_url text,
   role text default 'astrologer',
+  last_active_at timestamptz default now(),
+  working_hours jsonb default '{"enabled": false, "start": "09:00", "end": "22:00"}'::jsonb,
   created_at timestamptz default now()
 );
 
