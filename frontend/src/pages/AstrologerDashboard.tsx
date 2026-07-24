@@ -809,6 +809,15 @@ export function AstrologerDashboard() {
       });
     } catch {}
 
+    setAcceptedSessionIds(prev => {
+      const copy = new Set(prev);
+      copy.delete(activeSession.id);
+      try {
+        localStorage.setItem("aroham_accepted_session_ids", JSON.stringify(Array.from(copy)));
+      } catch (e) {}
+      return copy;
+    });
+
     setSessions(prev => prev.map(item => item.id === activeSession.id ? { ...item, status: "completed" } : item));
     setActiveSession(null);
     setMessages([]);
@@ -816,7 +825,9 @@ export function AstrologerDashboard() {
   };
 
   const filteredSessions = sessions.filter(s => {
-    if (filterTab === "active") return s.status === "active" || acceptedSessionIds.has(s.id);
+    if (filterTab === "active") {
+      return (s.status === "active" || acceptedSessionIds.has(s.id)) && s.status !== "completed" && s.status !== "ended" && s.status !== "declined";
+    }
     if (filterTab === "completed") return s.status === "completed";
     return true;
   });
