@@ -553,10 +553,9 @@ export function ConsultPage() {
           .update({ status: "completed", ended_at: new Date().toISOString() })
           .eq("id", session.id);
       } catch (e) {}
+      
+      setSession(prev => prev ? { ...prev, status: "completed" } : null);
     }
-    setSession(null);
-    setSelectedAstrologer(null);
-    setMessages([]);
   };
 
   if (session && selectedAstrologer) {

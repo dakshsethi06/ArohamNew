@@ -820,8 +820,7 @@ export function AstrologerDashboard() {
     });
 
     setSessions(prev => prev.map(item => item.id === activeSession.id ? { ...item, status: "completed" } : item));
-    setActiveSession(null);
-    setMessages([]);
+    setActiveSession(prev => prev ? { ...prev, status: "completed" } : null);
     fetchDatabaseData();
   };
 
