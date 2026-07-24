@@ -106,7 +106,7 @@ export function AuthPage() {
       return;
     }
 
-    if (activeTab === "signup") {
+    if (activeTab === "signup" && !isAstrologerMode) {
       if (!name.trim()) {
         setErrorMsg("Please enter your full name to create an account.");
         return;
@@ -117,33 +117,33 @@ export function AuthPage() {
     setErrorMsg("");
     setNoAccountNotice(false);
 
+    if (isAstrologerMode) {
+      setTimeout(() => {
+        setLoading(false);
+        goTo("otp");
+      }, 400);
+      return;
+    }
+
     if (activeTab === "signin") {
       let existingUser: any = null;
 
-      // 1. Check Supabase DB
+      // 1. Check Supabase DB with 1s timeout
       try {
-        const { data } = await supabase
-          .from('users')
-          .select('*')
-          .or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits},phone.ilike.%${phoneDigits}%`)
-          .maybeSingle();
+        const { data } = await Promise.race([
+          supabase
+            .from('users')
+            .select('*')
+            .or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}`)
+            .maybeSingle(),
+          new Promise<any>(res => setTimeout(() => res({ data: null }), 1000))
+        ]);
         if (data && (data.phone || data.id)) {
           existingUser = data;
         }
       } catch (e) {}
 
-      // 2. Check Firestore DB fallback
-      if (!existingUser) {
-        try {
-          const q = query(collection(db, "users"), where("phone", "in", [phoneDigits, `+91${phoneDigits}`, `91${phoneDigits}`]));
-          const snapshot = await getDocs(q);
-          if (!snapshot.empty) {
-            existingUser = snapshot.docs[0].data();
-          }
-        } catch (e) {}
-      }
-
-      // 3. Check Local Storage fallback
+      // 2. Check Local Storage fallback
       if (!existingUser) {
         const localCached = localStorage.getItem(`aroham_registered_user_phone_${phoneDigits}`);
         if (localCached) {
@@ -158,42 +158,9 @@ export function AuthPage() {
 
       if (!existingUser) {
         setLoading(false);
-        setErrorMsg("Mobile number not registered. Redirecting to Create Account...");
-        setTimeout(() => {
-          setActiveTab("signup");
-          setAuthState("signup");
-          setErrorMsg("Mobile number not registered. Please create an account.");
-        }, 1200);
-        return;
-      }
-    }
-
-    if (activeTab === "signup") {
-      let existingUser: any = null;
-      const cleanEmail = email.trim().toLowerCase();
-
-      try {
-        const { data } = await Promise.race([
-          supabase.from('users').select('*').or(`phone.eq.${phoneDigits},phone.eq.+91${phoneDigits},phone.eq.91${phoneDigits}${cleanEmail ? `,email.eq.${cleanEmail}` : ''}`).maybeSingle(),
-          new Promise<any>(res => setTimeout(() => res({ data: null }), 1000))
-        ]);
-        if (data && (data.phone || data.id || data.email)) {
-          existingUser = data;
-        }
-      } catch (e) {}
-
-      if (existingUser) {
-        // Already registered number/email entered on Create Account -> Redirect to Sign In
-        setLoading(false);
-        const reason = (existingUser.email && cleanEmail && existingUser.email.trim().toLowerCase() === cleanEmail)
-          ? "Account already exists with this email. Redirecting to Sign In..."
-          : "Mobile number already registered. Redirecting to Sign In...";
-        setErrorMsg(reason);
-        setTimeout(() => {
-          setActiveTab("signin");
-          setAuthState("signin");
-          setErrorMsg(reason.includes("email") ? "Email address already registered. Please sign in." : "Mobile number already registered. Please sign in.");
-        }, 1000);
+        setActiveTab("signup");
+        setAuthState("signup");
+        setErrorMsg("Mobile number not registered. Please enter your name to create an account.");
         return;
       }
     }
@@ -201,7 +168,7 @@ export function AuthPage() {
     setTimeout(() => {
       setLoading(false);
       goTo("otp");
-    }, 600);
+    }, 400);
   };
 
   // Verify OTP handler
