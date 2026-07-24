@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import {
   ChevronLeft, Send, Sparkles, Star, MessageSquare, ShieldCheck,
   Clock, CheckCircle2, User, RefreshCw, ShoppingBag, PhoneCall,
-  Video, Image, Smile, Lock, Search, Filter, Award
+  Video, Image, Smile, Lock, Search, Filter, Award, X
 } from "lucide-react";
 import { GOLD, IVORY, SANS, SERIF, MAROON } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
