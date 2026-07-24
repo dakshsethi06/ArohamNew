@@ -7,9 +7,11 @@ import { setCookie, getCookie, deleteCookie } from "@/lib/cookies";
 interface UnifiedUser {
   id: string;
   email?: string | null;
+  role?: string;
   user_metadata?: {
     full_name?: string;
     phone?: string;
+    role?: string;
   };
 }
 
@@ -144,15 +146,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const parsed = JSON.parse(rawSession);
           const table = (parsed.role === "astrologer" || parsed.user_metadata?.role === "astrologer") ? "astrologers" : "users";
           
+          let userExists = false;
           let isBlocked = false;
+
           try {
-            const { data } = await supabase.from(table).select("status").eq("id", parsed.id).maybeSingle();
-            if (data && data.status === "BLOCKED") {
-              isBlocked = true;
+            const { data } = await supabase.from(table).select("id, status").eq("id", parsed.id).maybeSingle();
+            if (data && data.id) {
+              userExists = true;
+              if (String(data.status).toUpperCase() === "BLOCKED") {
+                isBlocked = true;
+              }
             }
           } catch (e) {}
 
-          if (isBlocked) {
+          // If user was deleted or blocked in DB, force logout immediately and clear local state
+          if (!userExists || isBlocked) {
             await logout();
             return;
           }
@@ -219,6 +227,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // Real-time background watcher: Check every 4 seconds if logged-in user still exists & is active in DB
+  useEffect(() => {
+    if (!isLoggedIn || !user?.id) return;
+
+    const intervalId = setInterval(async () => {
+      try {
+        const table = (user.role === "astrologer" || user.user_metadata?.role === "astrologer") ? "astrologers" : "users";
+        const { data } = await supabase.from(table).select("id, status").eq("id", user.id).maybeSingle();
+        
+        // If account was deleted or blocked in DB, force immediate logout
+        if (!data || !data.id || String(data.status).toUpperCase() === "BLOCKED") {
+          console.warn("[AuthWatcher] User was deleted or blocked in database. Force logging out.");
+          await logout();
+          sessionStorage.setItem("aroham_auth_notice", "Your account is no longer active.");
+          window.location.href = "/";
+        }
+      } catch (e) {}
+    }, 4000);
+
+    return () => clearInterval(intervalId);
+  }, [isLoggedIn, user?.id]);
+
   const login = (userData?: any) => {
     setIsLoggedIn(true);
     if (userData) {
@@ -240,6 +270,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try { await supabase.auth.signOut(); } catch (e) {}
     localStorage.removeItem("aroham_mock_session");
     deleteCookie("aroham_session");
+    
+    // Clear all cart & order caches from localStorage
+    localStorage.removeItem("aroham_cart");
+    localStorage.removeItem("aroham_buy_now_intent");
+    if (user?.id) {
+      localStorage.removeItem(`aroham_user_cart_${user.id}`);
+      localStorage.removeItem(`aroham_user_orders_${user.id}`);
+      if (user.user_metadata?.phone) {
+        const pDigits = String(user.user_metadata.phone).replace(/\D/g, "");
+        localStorage.removeItem(`aroham_registered_user_phone_${pDigits}`);
+        localStorage.removeItem(`aroham_registered_user_phone_${pDigits.slice(-10)}`);
+      }
+    }
     
     // Clear all user-specific data from sessionStorage to prevent cross-account leakage
     sessionStorage.removeItem("aroham_user_profile");

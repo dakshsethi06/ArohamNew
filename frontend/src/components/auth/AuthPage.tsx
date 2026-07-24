@@ -179,21 +179,14 @@ export function AuthPage() {
       } catch (e) {}
     }
 
-    // 3. If live DB returned user, update Local Storage cache with live status (clears stale BLOCKED cache)
+    // 3. If live DB returned user, update Local Storage cache
     if (existingUser) {
       localStorage.setItem(`aroham_registered_user_phone_${last10}`, JSON.stringify(existingUser));
       localStorage.setItem(`aroham_registered_user_phone_${phoneDigits}`, JSON.stringify(existingUser));
     } else {
-      // 4. Local Storage cache fallback only if DB lookup yielded nothing
-      const localCached = localStorage.getItem(`aroham_registered_user_phone_${last10}`) || localStorage.getItem(`aroham_registered_user_phone_${phoneDigits}`);
-      if (localCached) {
-        try {
-          const parsed = JSON.parse(localCached);
-          if (parsed && (parsed.id || parsed.fullName || parsed.name || parsed.phone)) {
-            existingUser = parsed;
-          }
-        } catch (e) {}
-      }
+      // User does not exist in DB (deleted or not registered) — wipe stale local storage cache
+      localStorage.removeItem(`aroham_registered_user_phone_${last10}`);
+      localStorage.removeItem(`aroham_registered_user_phone_${phoneDigits}`);
     }
 
     if (existingUser && String(existingUser.status).toUpperCase() === "BLOCKED") {
@@ -227,9 +220,9 @@ export function AuthPage() {
     setErrorMsg("");
 
     setTimeout(async () => {
-      if (joinedOtp !== "123456") {
+      if (joinedOtp !== "111111" && joinedOtp !== "123456") {
         setLoading(false);
-        setErrorMsg("Invalid OTP code. Use test code 123456.");
+        setErrorMsg("Invalid OTP code. Use code 111111.");
         return;
       }
 
@@ -341,13 +334,9 @@ export function AuthPage() {
             localStorage.setItem(`aroham_registered_user_phone_${last10}`, JSON.stringify(existingUser));
             localStorage.setItem(`aroham_registered_user_phone_${phoneDigits}`, JSON.stringify(existingUser));
           } else {
-            const localCached = localStorage.getItem(`aroham_registered_user_phone_${last10}`) || localStorage.getItem(`aroham_registered_user_phone_${phoneDigits}`);
-            if (localCached) {
-              try {
-                const parsed = JSON.parse(localCached);
-                if (parsed && parsed.fullName) existingUser = parsed;
-              } catch (e) {}
-            }
+            // User does not exist in DB (deleted or not registered) — wipe stale local storage cache
+            localStorage.removeItem(`aroham_registered_user_phone_${last10}`);
+            localStorage.removeItem(`aroham_registered_user_phone_${phoneDigits}`);
           }
 
           if (existingUser && String(existingUser.status).toUpperCase() === "BLOCKED") {
