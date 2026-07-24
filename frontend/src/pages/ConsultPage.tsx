@@ -987,9 +987,6 @@ export function ConsultPage() {
                         </h4>
                         <p className="text-[11px] font-semibold text-amber-900/60">Topic: {selectedHistorySession.topic || "Vedic Guidance"}</p>
                       </div>
-                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200 flex items-center gap-1 shadow-xs">
-                        <CheckCircle2 size={11} className="text-emerald-600 animate-pulse" /> Saved in Database
-                      </span>
                     </div>
 
                     <div className="flex-1 overflow-y-auto space-y-3.5 p-4 bg-[#FAF6F0]/60 rounded-2xl border border-amber-900/10 scrollbar-thin">
