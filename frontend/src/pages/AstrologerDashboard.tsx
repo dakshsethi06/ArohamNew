@@ -719,6 +719,7 @@ export function AstrologerDashboard() {
   });
 
   const pendingCount = sessions.filter(s => s.status === "pending" && !acceptedSessionIds.has(s.id)).length;
+  const pendingSession = sessions.find(s => s.status === "pending" && !acceptedSessionIds.has(s.id));
 
   const mockStr = localStorage.getItem("aroham_mock_session");
   const currentUser = user || (mockStr ? JSON.parse(mockStr) : null);
