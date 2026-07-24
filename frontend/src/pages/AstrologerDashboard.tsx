@@ -193,12 +193,15 @@ export function AstrologerDashboard() {
   const [showProfileWizard, setShowProfileWizard] = useState(false);
 
   useEffect(() => {
-    const wizardDone = localStorage.getItem(`aroham_astro_wizard_done_${user?.id || "default"}`);
-    if (wizardDone) return;
+    const wizardDone = localStorage.getItem(`aroham_astro_wizard_done_${currentAstroId}`);
+    if (wizardDone) {
+      setShowProfileWizard(false);
+      return;
+    }
     if (!profile.bio || profile.bio === "PENDING_WIZARD_COMPLETION" || profile.bio.trim() === "") {
       setShowProfileWizard(true);
     }
-  }, [profile.bio]);
+  }, [profile.bio, currentAstroId]);
 
   const [acceptedSessionIds, setAcceptedSessionIds] = useState<Set<string>>(() => {
     try {
