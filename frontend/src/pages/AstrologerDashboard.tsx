@@ -39,7 +39,8 @@ import {
   Headphones,
   Users,
   Layers,
-  Activity
+  Activity,
+  ChevronLeft
 } from "lucide-react";
 
 const PRESET_AVATARS = [
@@ -917,6 +918,15 @@ export function AstrologerDashboard() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF6F0]" style={{ fontFamily: SANS, color: "#4A3E31" }}>
+      <style>{`
+        .scrollbar-none::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-none {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
       
       <header className="px-6 py-3.5 border-b border-amber-900/15 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-40 shadow-xl" style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}>
         <div className="flex items-center gap-3.5">
@@ -977,7 +987,7 @@ export function AstrologerDashboard() {
 
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         
-        <aside className="w-full lg:w-64 bg-[#F5EDE0] border-r border-amber-900/15 p-4 flex lg:flex-col justify-between overflow-x-auto lg:overflow-y-auto shrink-0">
+        <aside className="w-full lg:w-64 bg-[#F5EDE0] border-r border-amber-900/15 p-4 flex lg:flex-col justify-between overflow-x-auto lg:overflow-y-auto shrink-0 scrollbar-none">
           <div className="space-y-1 flex lg:flex-col gap-1 w-full">
             {[
               { id: "overview", label: "Dashboard & Analytics", icon: BarChart2 },
@@ -1185,8 +1195,8 @@ export function AstrologerDashboard() {
           )}
 
           {activeTab === "workstation" && (
-            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-              <div className="w-full md:w-1/3 border-r border-amber-900/15 p-5 bg-[#F7F0E6] flex flex-col justify-between">
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden h-full">
+              <div className={`w-full md:w-1/3 border-r border-amber-900/15 p-4 sm:p-5 bg-[#F7F0E6] flex flex-col justify-between h-full ${activeSession ? "hidden md:flex" : "flex"}`}>
                 <div>
                   <div className="flex items-center justify-between mb-4 pb-3 border-b border-amber-900/15">
                     <h2 className="text-xs font-bold tracking-wider uppercase flex items-center gap-2" style={{ color: MAROON }}>
@@ -1296,25 +1306,34 @@ export function AstrologerDashboard() {
                 </div>
               </div>
 
-              <div className="w-full md:w-2/3 p-6 flex flex-col justify-between bg-[#FFFDF9]">
+              <div className={`w-full md:w-2/3 p-4 sm:p-6 flex flex-col justify-between bg-[#FFFDF9] h-full ${!activeSession ? "hidden md:flex" : "flex"}`}>
                 {activeSession ? (
                   <>
-                    <div className="flex justify-between items-center pb-4 border-b border-amber-900/15 mb-4">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h2 className="text-base font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>
-                            Consultation with {activeSession.user_name || activeSession.user_email?.split("@")[0] || `Devotee (#${activeSession.user_id?.slice(0, 6)})`}
-                          </h2>
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-ping" /> Real-time Live
-                          </span>
+                    <div className="flex justify-between items-center pb-4 border-b border-amber-900/15 mb-4 shrink-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        {/* Mobile Back Button */}
+                        <button
+                          onClick={() => setActiveSession(null)}
+                          className="md:hidden p-2 rounded-xl bg-amber-900/10 text-amber-900 hover:bg-amber-900/20 transition-all active:scale-95 shrink-0"
+                        >
+                          <ChevronLeft size={16} />
+                        </button>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h2 className="text-sm sm:text-base font-bold text-[#5B1F24] truncate" style={{ fontFamily: SERIF }}>
+                              {activeSession.user_name || activeSession.user_email?.split("@")[0] || `Devotee (#${activeSession.user_id?.slice(0, 6)})`}
+                            </h2>
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1 shrink-0">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-ping" /> Live
+                            </span>
+                          </div>
+                          <p className="text-[10px] sm:text-xs text-amber-900/60 mt-0.5 truncate">Topic: {activeSession.topic || "Vedic Guidance"}</p>
                         </div>
-                        <p className="text-xs text-amber-900/60 mt-0.5">Topic: {activeSession.topic || "Vedic Horoscope & Sacred Remedies"}</p>
                       </div>
 
                       <button
                         onClick={endSession}
-                        className="px-4 py-2 text-xs font-bold rounded-xl bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 active:scale-95 transition-all"
+                        className="px-3.5 py-2 text-xs font-bold rounded-xl bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 active:scale-95 transition-all shrink-0"
                       >
                         End Session
                       </button>
