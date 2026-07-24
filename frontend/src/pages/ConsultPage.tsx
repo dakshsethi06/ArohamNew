@@ -24,6 +24,7 @@ interface Astrologer {
   avatar: string;
   status: "online" | "busy" | "offline";
   pricePerMin: number;
+  bio?: string;
 }
 
 const DEFAULT_DB_ASTROLOGER: Astrologer = {
@@ -168,7 +169,8 @@ export function ConsultPage() {
             languages: liveData.languages || ["Hindi", "English"],
             avatar: liveData.avatar_url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
             status: liveData.is_online ? "online" : "offline",
-            pricePerMin: Number(liveData.price_per_min) || 20
+            pricePerMin: Number(liveData.price_per_min) || 20,
+            bio: liveData.bio
           }));
           setAstrologers(dbFormatted);
           try {
