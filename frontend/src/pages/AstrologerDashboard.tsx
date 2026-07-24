@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import { supabase } from "@/lib/supabase";
 import { MAROON, GOLD, IVORY, SANS, SERIF } from "@/constants/theme";
@@ -239,13 +239,8 @@ export function AstrologerDashboard() {
       mockSession?.role === "astrologer";
 
     if (!currentUser) {
-      const graceTimer = setTimeout(() => {
-        const recheckMock = localStorage.getItem("aroham_mock_session");
-        if (!recheckMock && !user) {
-          navigate("/auth?role=astrologer", { replace: true });
-        }
-      }, 500);
-      return () => clearTimeout(graceTimer);
+      // No redirect - the inline Scholar Portal login UI handles this
+      return;
     }
 
     let currentP = { ...profile };
