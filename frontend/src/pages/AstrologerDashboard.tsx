@@ -848,7 +848,7 @@ export function AstrologerDashboard() {
                       {sessions.filter(s => s.status === "completed").slice(0, 4).map(s => (
                         <div key={s.id} className="p-3.5 rounded-2xl bg-[#FAF6F0] border border-amber-900/10 flex items-center justify-between text-xs">
                           <div>
-                            <p className="font-bold text-[#5B1F24]">Seeker #{s.user_id?.slice(0, 8) || "Client"}</p>
+                            <p className="font-bold text-[#5B1F24]">Devotee {s.user_name || s.user_email?.split("@")[0] || (s.user_id ? `#${s.user_id.slice(0, 8)}` : "Seeker")}</p>
                             <p className="text-[11px] text-amber-900/60">{s.topic || "Vedic Consultation"} • {new Date(s.created_at || Date.now()).toLocaleDateString()}</p>
                           </div>
                           <div className="flex items-center gap-2">
@@ -1009,7 +1009,9 @@ export function AstrologerDashboard() {
                     <div className="flex justify-between items-center pb-4 border-b border-amber-900/15 mb-4">
                       <div>
                         <div className="flex items-center gap-2">
-                          <h2 className="text-base font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Live Consultation Room #{activeSession.id?.slice(0, 8)}</h2>
+                          <h2 className="text-base font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>
+                            Consultation with {activeSession.user_name || activeSession.user_email?.split("@")[0] || `Devotee (#${activeSession.user_id?.slice(0, 6)})`}
+                          </h2>
                           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-ping" /> Real-time Live
                           </span>

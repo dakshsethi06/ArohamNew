@@ -291,7 +291,16 @@ export function ConsultPage() {
       try {
         await supabase
           .from("chat_sessions")
-          .insert({ id: sessionUuid, user_id: activeUser.id, status: "pending", astrologer_id: astro.id, topic: "Vedic Kundali & Horoscope" });
+          .insert({
+            id: sessionUuid,
+            user_id: activeUser.id,
+            user_name: activeUser.user_metadata?.full_name || activeUser.email?.split("@")[0] || "Seeker Devotee",
+            user_email: activeUser.email || "",
+            astrologer_name: astro.name,
+            status: "pending",
+            astrologer_id: astro.id,
+            topic: "Vedic Kundali & Horoscope"
+          });
 
         await supabase.from("chat_messages").insert({
           session_id: sessionUuid,
@@ -930,7 +939,9 @@ export function ConsultPage() {
                           : "bg-white/60 hover:bg-white border-amber-900/10"
                       }`}
                     >
-                      <p className="font-bold text-xs text-[#5B1F24] truncate">Session #{s.id.slice(0, 8)}</p>
+                      <p className="font-bold text-xs text-[#5B1F24] truncate">
+                        Consultation with {s.astrologer_name || astrologers.find(a => a.id === s.astrologer_id)?.name || "Vedic Scholar"}
+                      </p>
                       <p className="text-[11px] text-amber-900/60 mt-0.5">{s.topic || "Vedic Consultation"}</p>
                       <div className="flex items-center justify-between mt-2 pt-2 border-t border-amber-900/5 text-[10px]">
                         <span className="text-amber-900/50">{new Date(s.created_at || Date.now()).toLocaleDateString()}</span>
@@ -949,7 +960,9 @@ export function ConsultPage() {
                   <>
                     <div className="pb-3 mb-3 border-b border-amber-900/10 flex items-center justify-between">
                       <div>
-                        <h4 className="font-bold text-sm text-[#5B1F24]" style={{ fontFamily: SERIF }}>Session #{selectedHistorySession.id.slice(0, 8)} Transcript</h4>
+                        <h4 className="font-bold text-sm text-[#5B1F24]" style={{ fontFamily: SERIF }}>
+                          Consultation with {selectedHistorySession.astrologer_name || astrologers.find(a => a.id === selectedHistorySession.astrologer_id)?.name || "Vedic Scholar"}
+                        </h4>
                         <p className="text-xs text-amber-900/60">Topic: {selectedHistorySession.topic || "Vedic Guidance"}</p>
                       </div>
                       <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
