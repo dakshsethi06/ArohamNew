@@ -326,7 +326,8 @@ export function ConsultPage() {
             id: m.id,
             sender: m.sender || m.sender_type,
             text: m.text || m.message_text,
-            timestamp: new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            timestamp: new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            recommendedProduct: m.recommended_product_slug ? DEFAULT_PRODUCTS.find(p => p.slug === m.recommended_product_slug) : null
           }));
 
           setMessages(prev => {
@@ -396,7 +397,8 @@ export function ConsultPage() {
             id: payload.new.id,
             sender: payload.new.sender || payload.new.sender_type,
             text: payload.new.text || payload.new.message_text,
-            timestamp: new Date(payload.new.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            timestamp: new Date(payload.new.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            recommendedProduct: payload.new.recommended_product_slug ? DEFAULT_PRODUCTS.find(p => p.slug === payload.new.recommended_product_slug) : null
           };
           setMessages(prev => {
             const index = prev.findIndex(m => m.id === newMsg.id || (m.text?.trim() === newMsg.text?.trim() && m.sender === newMsg.sender));

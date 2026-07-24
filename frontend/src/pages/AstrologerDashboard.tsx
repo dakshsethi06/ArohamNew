@@ -418,7 +418,8 @@ export function AstrologerDashboard() {
             session_id: payload.new.session_id,
             sender: payload.new.sender || payload.new.sender_type,
             text: payload.new.text || payload.new.message_text,
-            created_at: payload.new.created_at || new Date().toISOString()
+            created_at: payload.new.created_at || new Date().toISOString(),
+            recommendedProduct: payload.new.recommended_product_slug ? remedyProducts.find(p => p.slug === payload.new.recommended_product_slug) : null
           };
           setMessages(prev => {
             const index = prev.findIndex(m => m.id === newMsg.id || (m.text?.trim() === newMsg.text?.trim() && m.sender === newMsg.sender));
@@ -708,7 +709,8 @@ export function AstrologerDashboard() {
         loadedMsgs = data.map(m => ({
           ...m,
           sender: m.sender || m.sender_type,
-          text: m.text || m.message_text
+          text: m.text || m.message_text,
+          recommendedProduct: m.recommended_product_slug ? remedyProducts.find(p => p.slug === m.recommended_product_slug) : null
         }));
       }
     } catch (e) {}
