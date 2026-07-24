@@ -123,7 +123,8 @@ export function ConsultPage() {
           id: m.id,
           sender: m.sender || m.sender_type,
           text: m.text || m.message_text,
-          timestamp: new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          timestamp: new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          recommendedProduct: m.recommended_product_slug ? DEFAULT_PRODUCTS.find(p => p.slug === m.recommended_product_slug) : null
         })));
       }
     } catch (e) {}
@@ -427,6 +428,11 @@ export function ConsultPage() {
           typingTimerRef.current = setTimeout(() => setIsTyping(false), 3000);
         }
       })
+      .on("broadcast", { event: "end-chat" }, () => {
+        setSession(null);
+        setSelectedAstrologer(null);
+        setMessages([]);
+      })
       .subscribe();
 
     const syncTypingStorage = () => {
@@ -511,6 +517,18 @@ export function ConsultPage() {
   const endSession = async () => {
     if (session?.id) {
       try {
+        const endChannel = supabase.channel(`typing-${session.id}`);
+        endChannel.subscribe(async (status) => {
+          if (status === 'SUBSCRIBED') {
+            await endChannel.send({
+              type: "broadcast",
+              event: "end-chat",
+              payload: { sessionId: session.id }
+            });
+            supabase.removeChannel(endChannel);
+          }
+        });
+
         await supabase
           .from("chat_sessions")
           .update({ status: "completed", ended_at: new Date().toISOString() })
@@ -592,7 +610,10 @@ export function ConsultPage() {
                     <p className="whitespace-pre-line font-medium">{m.text}</p>
                     
                     {m.recommendedProduct && (
-                      <div className="mt-3.5 p-3.5 rounded-2xl bg-[#FCFAF7] border border-amber-400/40 text-[#4A3E31] shadow-sm hover:border-amber-400 transition-all duration-300 group/prod">
+                      <div 
+                        onClick={() => navigate(`/product/${m.recommendedProduct.slug}`)}
+                        className="mt-3.5 p-3.5 rounded-2xl bg-[#FCFAF7] border border-amber-400/40 text-[#4A3E31] shadow-sm hover:border-amber-400 cursor-pointer transition-all duration-300 group/prod"
+                      >
                         <p className="text-[9px] font-extrabold uppercase tracking-wider text-amber-700 mb-2 flex items-center gap-1 border-b border-amber-900/5 pb-1">
                           <Sparkles size={12} className="text-amber-500 fill-amber-500" /> Sacred Prescribed Remedy
                         </p>
@@ -604,7 +625,7 @@ export function ConsultPage() {
                             <p className="text-[10px] text-amber-900/60 truncate font-semibold mt-0.5">⭐ {m.recommendedProduct.rating} ({m.recommendedProduct.reviews} reviews)</p>
                           </div>
                           <button
-                            onClick={() => addToCart(m.recommendedProduct, 1)}
+                            onClick={(e) => { e.stopPropagation(); addToCart(m.recommendedProduct, 1); }}
                             className="px-3.5 py-2 rounded-xl text-[11px] font-extrabold text-white shadow-md active:scale-95 transition-all flex items-center gap-1.5 whitespace-nowrap bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110 hover:shadow-[#6D2025]/20"
                           >
                             <ShoppingBag size={11} /> Add to Cart
@@ -963,6 +984,29 @@ export function ConsultPage() {
                             }`}
                           >
                             <p className="whitespace-pre-line">{m.text}</p>
+                            {m.recommendedProduct && (
+                              <div 
+                                onClick={() => navigate(`/product/${m.recommendedProduct.slug}`)}
+                                className="mt-2.5 p-3 rounded-xl bg-[#FCFAF7] border border-amber-400/40 text-[#4A3E31] shadow-sm hover:border-amber-400 cursor-pointer transition-all duration-300 group/prod text-left"
+                              >
+                                <p className="text-[8px] font-extrabold uppercase tracking-wider text-amber-700 mb-1.5 flex items-center gap-1 border-b border-amber-900/5 pb-1">
+                                  <Sparkles size={10} className="text-amber-500 fill-amber-500" /> Sacred Prescribed Remedy
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  <img src={m.recommendedProduct.img} alt={m.recommendedProduct.name} className="w-10 h-10 rounded-lg object-cover border-amber-900/10 group-hover/prod:scale-105 transition-transform duration-300" />
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="font-bold text-[11px] truncate text-[#5B1F24]">{m.recommendedProduct.name}</h4>
+                                    <p className="text-[10px] font-extrabold text-amber-700">₹{m.recommendedProduct.price.toLocaleString("en-IN")}</p>
+                                  </div>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); addToCart(m.recommendedProduct, 1); }}
+                                    className="px-2.5 py-1.5 rounded-lg text-[10px] font-extrabold text-white shadow-md active:scale-95 transition-all flex items-center gap-1 whitespace-nowrap bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110"
+                                  >
+                                    <ShoppingBag size={10} /> Buy
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                             <span className="text-[9px] opacity-70 block mt-1 text-right">{m.timestamp}</span>
                           </div>
                         ))

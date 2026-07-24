@@ -442,6 +442,11 @@ export function AstrologerDashboard() {
           seekerTypingTimerRef.current = setTimeout(() => setIsSeekerTyping(false), 3000);
         }
       })
+      .on("broadcast", { event: "end-chat" }, () => {
+        setActiveSession(null);
+        setMessages([]);
+        fetchSessions();
+      })
       .subscribe();
 
     const syncSeekerTypingStorage = () => {
@@ -771,17 +776,29 @@ export function AstrologerDashboard() {
     const totalAmount = durationMins * ratePerMin;
 
     try {
+      const endChannel = supabase.channel(`typing-${activeSession.id}`);
+      endChannel.subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await endChannel.send({
+            type: "broadcast",
+            event: "end-chat",
+            payload: { sessionId: activeSession.id }
+          });
+          supabase.removeChannel(endChannel);
+        }
+      });
+    } catch (e) {}
+
+    try {
       await supabase.from("chat_sessions").update({
         status: "completed",
-        ended_at: endedAt,
-        duration_mins: durationMins,
-        total_amount: totalAmount
+        ended_at: endedAt
       }).eq("id", activeSession.id);
     } catch {}
 
     try {
       await supabase.from("astrologer_transactions").insert({
-        astrologer_id: user?.id || "astro-1",
+        astrologer_id: currentAstroId,
         session_id: activeSession.id,
         user_name: `Seeker #${activeSession.user_id?.slice(0, 6) || "Guest"}`,
         session_type: "Live Chat",
