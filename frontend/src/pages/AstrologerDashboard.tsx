@@ -209,7 +209,9 @@ export function AstrologerDashboard() {
     }
   });
 
-  const currentAstroId = user?.id || "astro-1";
+  const mockStrForId = localStorage.getItem("aroham_mock_session");
+  const currentUserObj = user || (mockStrForId ? JSON.parse(mockStrForId) : null);
+  const currentAstroId = currentUserObj?.id || "astro-1";
 
   // Collect all possible IDs this astrologer might be known by
   const getAllAstroIds = (): string[] => {
@@ -227,7 +229,7 @@ export function AstrologerDashboard() {
   };
 
   const syncProfileToDBAndLocal = async (p: typeof profile) => {
-    if (!user?.id) return;
+    if (!currentAstroId) return;
 
     let languagesList: string[] = ["Hindi", "English"];
     if (Array.isArray(p.languages)) {
@@ -237,7 +239,7 @@ export function AstrologerDashboard() {
     }
 
     const formattedObj = {
-      id: user.id,
+      id: currentAstroId,
       name: p.name || "Acharya Astrologer",
       title: p.title || "Senior Vedic Astrologer",
       experience: `${p.experience || 5}+ Years Exp`,
@@ -253,7 +255,7 @@ export function AstrologerDashboard() {
 
     try {
       const existing = JSON.parse(localStorage.getItem("aroham_registered_astrologers") || "[]");
-      const idx = existing.findIndex((a: any) => a.id === user.id);
+      const idx = existing.findIndex((a: any) => a.id === currentAstroId);
       let updated = [...existing];
       if (idx !== -1) {
         updated[idx] = { ...updated[idx], ...formattedObj };
@@ -266,7 +268,7 @@ export function AstrologerDashboard() {
 
     try {
       await supabase.from("astrologers").upsert({
-        id: user.id,
+        id: currentAstroId,
         full_name: p.name,
         email: p.email,
         phone: p.phone,
@@ -587,8 +589,8 @@ export function AstrologerDashboard() {
     } catch (e) {}
 
     try {
-      if (user?.id) {
-        await supabase.from("astrologers").update({ is_online: statusBool }).eq("id", user.id);
+      if (currentAstroId) {
+        await supabase.from("astrologers").update({ is_online: statusBool }).eq("id", currentAstroId);
       }
     } catch (e) {}
   };
@@ -635,8 +637,8 @@ export function AstrologerDashboard() {
         updatedProfile.bio = "Certified Vedic Astrologer guiding seekers with sacred remedies, Kundali readings, and traditional wisdom.";
       }
       setProfile(updatedProfile);
-      localStorage.setItem(`aroham_astro_profile_${user?.id}`, JSON.stringify(updatedProfile));
-      localStorage.setItem(`aroham_astro_wizard_done_${user?.id || "default"}`, "true");
+      localStorage.setItem(`aroham_astro_profile_${currentAstroId}`, JSON.stringify(updatedProfile));
+      localStorage.setItem(`aroham_astro_wizard_done_${currentAstroId}`, "true");
       await syncProfileToDBAndLocal(updatedProfile);
     } catch (e) {}
 
@@ -671,7 +673,7 @@ export function AstrologerDashboard() {
     } catch (e) {}
 
     try {
-      await supabase.from("chat_sessions").update({ status: "active", astrologer_id: user?.id || "astro-1" }).eq("id", s.id);
+      await supabase.from("chat_sessions").update({ status: "active", astrologer_id: currentAstroId }).eq("id", s.id);
     } catch (e) {}
 
     fetchMessages(s.id);
