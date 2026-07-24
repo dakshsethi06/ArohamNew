@@ -58,7 +58,7 @@ const QUICK_ASTRO_RESPONSES = [
   "According to your 7th House position, Jupiter brings strong marriage prospects."
 ];
 
-type MainTab = "overview" | "workstation" | "calls" | "wallet" | "reviews" | "remedies" | "profile";
+type MainTab = "overview" | "workstation" | "wallet" | "reviews" | "remedies" | "profile";
 
 export function AstrologerDashboard() {
   const navigate = useNavigate();
@@ -92,7 +92,6 @@ export function AstrologerDashboard() {
   const [reply, setReply] = useState("");
 
   const [isChatOnline, setIsChatOnline] = useState(true);
-  const [isCallOnline, setIsCallOnline] = useState(true);
   const [filterTab, setFilterTab] = useState<"all" | "active" | "completed">("all");
 
   const [workingHours, setWorkingHours] = useState(() => {
@@ -111,7 +110,6 @@ export function AstrologerDashboard() {
   const [dbTransactions, setDbTransactions] = useState<any[]>([]);
   const [seekerNames, setSeekerNames] = useState<Record<string, string>>({});
   const [dbReviews, setDbReviews] = useState<any[]>([]);
-  const [dbCallLogs, setDbCallLogs] = useState<any[]>([]);
   const [remedyProducts, setRemedyProducts] = useState<any[]>(DEFAULT_PRODUCTS || []);
   const [financialStats, setFinancialStats] = useState({
     todayEarnings: 0,
@@ -611,16 +609,7 @@ export function AstrologerDashboard() {
       }
     } catch (e) {}
 
-    try {
-      const { data: calls } = await supabase
-        .from("chat_sessions")
-        .select("*")
-        .eq("astrologer_id", currentAstroId)
-        .eq("session_type", "Audio Call")
-        .order("created_at", { ascending: false });
 
-      if (calls && calls.length > 0) setDbCallLogs(calls);
-    } catch (e) {}
 
     try {
       const { data: prods } = await supabase.from("products").select("*").limit(15);
@@ -650,9 +639,7 @@ export function AstrologerDashboard() {
     broadcastStatus(nextStatus);
   };
 
-  const toggleCallOnline = () => {
-    setIsCallOnline(prev => !prev);
-  };
+
 
   const broadcastStatus = async (statusBool: boolean) => {
     try {
@@ -1083,7 +1070,6 @@ export function AstrologerDashboard() {
             {[
               { id: "overview", label: "Dashboard & Analytics", icon: BarChart2 },
               { id: "workstation", label: "Live Workstation & Queue", icon: MessageCircle, badge: pendingCount },
-              { id: "calls", label: "Call & Audio Consults", icon: PhoneCall },
               { id: "wallet", label: "Earnings & Wallet", icon: Wallet },
               { id: "reviews", label: "Ratings & Reviews", icon: Star },
               { id: "remedies", label: "Remedies Catalog", icon: ShoppingBag },
@@ -1511,55 +1497,6 @@ export function AstrologerDashboard() {
             </div>
           )}
 
-          {activeTab === "calls" && (
-            <div className="p-6 sm:p-8 space-y-6 max-w-5xl mx-auto w-full overflow-y-auto">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Audio & Call Consultations</h2>
-                  <p className="text-xs text-amber-900/70 font-semibold">Manage live audio call requests and consultation logs.</p>
-                </div>
-                <button
-                  onClick={toggleCallOnline}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
-                    isCallOnline ? "bg-emerald-600 text-white border-emerald-600 shadow-xs" : "bg-gray-200 text-gray-700 border-gray-300"
-                  }`}
-                >
-                  CALL STATUS: {isCallOnline ? "ONLINE" : "OFFLINE"}
-                </button>
-              </div>
-
-              <div className="bg-white border border-amber-900/15 rounded-3xl p-6 shadow-xs">
-                <h3 className="text-sm font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Call History & Database Logs</h3>
-                {dbCallLogs.length === 0 ? (
-                  <div className="p-8 text-center text-xs text-amber-900/60 mt-4 bg-amber-50/50 rounded-2xl border border-amber-900/10">
-                    No completed audio call records in database yet.
-                  </div>
-                ) : (
-                  <div className="space-y-3 mt-4">
-                    {dbCallLogs.map(call => (
-                      <div key={call.id} className="p-4 rounded-2xl bg-[#FAF6F0] border border-amber-900/10 flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2.5 rounded-xl bg-amber-900/10 text-[#5B1F24]">
-                            <PhoneCall size={16} />
-                          </div>
-                          <div>
-                            <p className="font-bold text-[#5B1F24] text-sm">Seeker #{call.user_id?.slice(0, 6) || "Client"}</p>
-                            <p className="text-amber-900/60 text-[11px]">{new Date(call.created_at).toLocaleString()} • Duration: {call.duration_mins || 15} mins</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-emerald-700 text-sm">₹{call.total_amount || 300}</p>
-                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                            {call.status}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
 
           {activeTab === "wallet" && (
             <div className="p-6 sm:p-8 space-y-6 max-w-5xl mx-auto w-full overflow-y-auto">
