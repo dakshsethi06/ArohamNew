@@ -180,9 +180,14 @@ export function AstrologerDashboard() {
       (currentUser?.user_metadata as any)?.role === "astrologer" ||
       mockSession?.role === "astrologer";
 
-    if (!currentUser || !isAstroRole) {
-      navigate("/auth?role=astrologer", { replace: true });
-      return;
+    if (!currentUser) {
+      const graceTimer = setTimeout(() => {
+        const recheckMock = localStorage.getItem("aroham_mock_session");
+        if (!recheckMock && !user) {
+          navigate("/auth?role=astrologer", { replace: true });
+        }
+      }, 500);
+      return () => clearTimeout(graceTimer);
     }
 
     let currentP = { ...profile };

@@ -158,6 +158,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         deleteCookie("aroham_session");
       }
     }
+
+    const syncSupabaseSession = async () => {
+      try {
+        const { data: { session: sbSession } } = await supabase.auth.getSession();
+        if (sbSession?.user) {
+          const u = {
+            id: sbSession.user.id,
+            email: sbSession.user.email,
+            user_metadata: sbSession.user.user_metadata,
+            role: sbSession.user.user_metadata?.role || "astrologer"
+          };
+          setUser(u as any);
+          setIsLoggedIn(true);
+          setSession(sbSession);
+          localStorage.setItem("aroham_mock_session", JSON.stringify(u));
+          setCookie("aroham_session", JSON.stringify(u), 365);
+        }
+      } catch (e) {}
+    };
+
+    syncSupabaseSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_evt, sbSession) => {
+      if (sbSession?.user) {
+        const u = {
+          id: sbSession.user.id,
+          email: sbSession.user.email,
+          user_metadata: sbSession.user.user_metadata,
+          role: sbSession.user.user_metadata?.role || "astrologer"
+        };
+        setUser(u as any);
+        setIsLoggedIn(true);
+        setSession(sbSession);
+        localStorage.setItem("aroham_mock_session", JSON.stringify(u));
+        setCookie("aroham_session", JSON.stringify(u), 365);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = (userData?: any) => {
