@@ -1085,7 +1085,7 @@ export function AstrologerDashboard() {
                 <p className="text-xs text-amber-900/70">Overview of active consultations, seeker metrics, and total database payouts.</p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="max-w-md">
                 <div className="p-5 rounded-3xl bg-white border border-amber-900/15 shadow-xs space-y-2">
                   <div className="flex items-center justify-between text-amber-900/60 text-xs font-bold">
                     <span>Total Consultations</span>
@@ -1095,33 +1095,6 @@ export function AstrologerDashboard() {
                   <p className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
                     <TrendingUp size={11} /> Realtime Database Log
                   </p>
-                </div>
-
-                <div className="p-5 rounded-3xl bg-white border border-emerald-200 shadow-xs space-y-2">
-                  <div className="flex items-center justify-between text-emerald-800 text-xs font-bold">
-                    <span>Monthly Earnings</span>
-                    <DollarSign size={16} className="text-emerald-600" />
-                  </div>
-                  <h3 className="text-2xl font-black text-emerald-600">₹{(financialStats.monthlyEarnings || 0).toLocaleString("en-IN")}</h3>
-                  <p className="text-[10px] text-emerald-600 font-bold">Settled to Bank Account</p>
-                </div>
-
-                <div className="p-5 rounded-3xl bg-white border border-amber-900/15 shadow-xs space-y-2">
-                  <div className="flex items-center justify-between text-amber-900/60 text-xs font-bold">
-                    <span>Seeker Satisfaction</span>
-                    <Star size={16} fill="#C8A044" stroke="none" />
-                  </div>
-                  <h3 className="text-2xl font-black text-[#5B1F24]">{financialStats.averageRating} ★</h3>
-                  <p className="text-[10px] text-amber-900/60">Based on Verified Ratings</p>
-                </div>
-
-                <div className="p-5 rounded-3xl bg-white border border-purple-200 shadow-xs space-y-2">
-                  <div className="flex items-center justify-between text-purple-800 text-xs font-bold">
-                    <span>Lifetime Payouts</span>
-                    <Wallet size={16} className="text-purple-600" />
-                  </div>
-                  <h3 className="text-2xl font-black text-purple-700">₹{(financialStats.lifetimeEarnings || 0).toLocaleString("en-IN")}</h3>
-                  <p className="text-[10px] text-purple-600 font-bold">Total Settled Earnings</p>
                 </div>
               </div>
 
