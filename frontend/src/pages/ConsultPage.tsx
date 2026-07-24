@@ -232,12 +232,32 @@ export function ConsultPage() {
   }, [messages, isTyping]);
 
   const startConsultation = async (astro: Astrologer) => {
+    let activeUser = user;
+
     if (!isLoggedIn || !user?.id) {
-      openAuth();
-      return;
+      // Quick inline name prompt instead of full auth page
+      const guestName = prompt("Enter your name to start a live chat:");
+      if (!guestName || !guestName.trim()) return;
+
+      const guestId = generateUUID();
+      const guestUser = {
+        id: guestId,
+        email: null,
+        user_metadata: { full_name: guestName.trim(), phone: "", role: "user" }
+      };
+
+      // Persist the guest user session so they stay logged in
+      try {
+        localStorage.setItem("aroham_mock_session", JSON.stringify(guestUser));
+        window.dispatchEvent(new Event("storage"));
+      } catch (e) {}
+
+      login(guestUser);
+      activeUser = guestUser;
     }
 
-    const activeUser = user;
+    if (!activeUser?.id) return;
+
     setSelectedAstrologer(astro);
 
     let sessionUuid = generateUUID();
