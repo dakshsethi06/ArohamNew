@@ -558,10 +558,11 @@ export function AstrologerDashboard() {
 
   const fetchDatabaseData = async () => {
     try {
+      const allIds = getAllAstroIds();
       const { data: txns } = await supabase
         .from("astrologer_transactions")
         .select("*")
-        .eq("astrologer_id", currentAstroId)
+        .in("astrologer_id", allIds)
         .order("created_at", { ascending: false });
 
       let loadedTxns = txns || [];
@@ -694,6 +695,27 @@ export function AstrologerDashboard() {
         }
       }
     } catch (e) {}
+
+    sessionList.sort((a, b) => {
+      const statusWeight = (status: string) => {
+        if (status === "pending") return 3;
+        if (status === "active") return 2;
+        if (status === "completed") return 1;
+        return 0;
+      };
+
+      const weightA = statusWeight(a.status);
+      const weightB = statusWeight(b.status);
+
+      if (weightA !== weightB) {
+        return weightB - weightA;
+      }
+
+      const timeA = new Date(a.created_at || 0).getTime();
+      const timeB = new Date(b.created_at || 0).getTime();
+      return timeB - timeA;
+    });
+
     setSessions(sessionList);
     fetchSeekerNames(sessionList);
 
