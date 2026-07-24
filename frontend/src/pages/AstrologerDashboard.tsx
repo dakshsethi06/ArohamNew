@@ -230,6 +230,9 @@ export function AstrologerDashboard() {
     };
   }, [user, currentAstroId]);
 
+  const [isSeekerTyping, setIsSeekerTyping] = useState(false);
+  const seekerTypingTimerRef = useRef<any>(null);
+
   useEffect(() => {
     if (!activeSession?.id) return;
 
@@ -263,11 +266,56 @@ export function AstrologerDashboard() {
       })
       .subscribe();
 
+    const astroTypingChannel = supabase
+      .channel(`typing-${activeSession.id}`)
+      .on("broadcast", { event: "typing" }, payload => {
+        if (payload.payload?.sender === "user") {
+          setIsSeekerTyping(true);
+          if (seekerTypingTimerRef.current) clearTimeout(seekerTypingTimerRef.current);
+          seekerTypingTimerRef.current = setTimeout(() => setIsSeekerTyping(false), 3000);
+        }
+      })
+      .subscribe();
+
+    const syncSeekerTypingStorage = () => {
+      try {
+        const lastTyping = localStorage.getItem(`aroham_typing_${activeSession.id}_user`);
+        if (lastTyping && Date.now() - Number(lastTyping) < 3000) {
+          setIsSeekerTyping(true);
+          if (seekerTypingTimerRef.current) clearTimeout(seekerTypingTimerRef.current);
+          seekerTypingTimerRef.current = setTimeout(() => setIsSeekerTyping(false), 3000);
+        }
+      } catch (e) {}
+    };
+
+    window.addEventListener("storage", syncSeekerTypingStorage);
+
     return () => {
       clearInterval(activeMsgInterval);
+      if (seekerTypingTimerRef.current) clearTimeout(seekerTypingTimerRef.current);
+      window.removeEventListener("storage", syncSeekerTypingStorage);
       supabase.removeChannel(channel);
+      supabase.removeChannel(astroTypingChannel);
     };
   }, [activeSession?.id]);
+
+  const handleReplyChange = (val: string) => {
+    setReply(val);
+    if (!activeSession?.id) return;
+
+    try {
+      localStorage.setItem(`aroham_typing_${activeSession.id}_astrologer`, String(Date.now()));
+      window.dispatchEvent(new Event("storage"));
+    } catch (e) {}
+
+    try {
+      supabase.channel(`typing-${activeSession.id}`).send({
+        type: "broadcast",
+        event: "typing",
+        payload: { sender: "astrologer", timestamp: Date.now() }
+      });
+    } catch (e) {}
+  };
 
   const fetchDatabaseData = async () => {
     try {
@@ -1001,6 +1049,13 @@ export function AstrologerDashboard() {
                           )}
                         </div>
                       ))}
+
+                      {isSeekerTyping && (
+                        <div className="flex items-center gap-2 text-xs font-semibold text-amber-900/80 p-3 bg-white rounded-2xl w-fit border border-amber-900/10 shadow-xs animate-pulse">
+                          <RefreshCw size={13} className="animate-spin text-amber-600" />
+                          <span>Devotee is typing...</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="mb-3 flex gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -1037,7 +1092,7 @@ export function AstrologerDashboard() {
                       <input
                         type="text"
                         value={reply}
-                        onChange={e => setReply(e.target.value)}
+                        onChange={e => handleReplyChange(e.target.value)}
                         onKeyDown={e => e.key === "Enter" && sendMessage()}
                         placeholder="Type your astrological remedy or guidance..."
                         className="flex-1 h-12 px-4 rounded-xl text-xs bg-white border border-amber-900/20 text-[#4A3E31] outline-none focus:border-[#5B1F24] transition-all shadow-xs"

@@ -378,14 +378,61 @@ export function ConsultPage() {
       })
       .subscribe();
 
+    const typingChannel = supabase
+      .channel(`typing-${session.id}`)
+      .on("broadcast", { event: "typing" }, payload => {
+        if (payload.payload?.sender === "astrologer") {
+          setIsTyping(true);
+          if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+          typingTimerRef.current = setTimeout(() => setIsTyping(false), 3000);
+        }
+      })
+      .subscribe();
+
+    const syncTypingStorage = () => {
+      try {
+        const lastTyping = localStorage.getItem(`aroham_typing_${session.id}_astrologer`);
+        if (lastTyping && Date.now() - Number(lastTyping) < 3000) {
+          setIsTyping(true);
+          if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+          typingTimerRef.current = setTimeout(() => setIsTyping(false), 3000);
+        }
+      } catch (e) {}
+    };
+
+    window.addEventListener("storage", syncTypingStorage);
+
     return () => {
       clearInterval(pollInterval);
       clearInterval(statusInterval);
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
       window.removeEventListener("storage", syncLiveMessages);
+      window.removeEventListener("storage", syncTypingStorage);
       supabase.removeChannel(channel);
       supabase.removeChannel(sessionChannel);
+      supabase.removeChannel(typingChannel);
     };
   }, [session?.id]);
+
+  const typingTimerRef = useRef<any>(null);
+
+  const handleInputChange = (val: string) => {
+    setInputMessage(val);
+    if (!session?.id) return;
+
+    try {
+      localStorage.setItem(`aroham_typing_${session.id}_user`, String(Date.now()));
+      window.dispatchEvent(new Event("storage"));
+    } catch (e) {}
+
+    try {
+      supabase.channel(`typing-${session.id}`).send({
+        type: "broadcast",
+        event: "typing",
+        payload: { sender: "user", timestamp: Date.now() }
+      });
+    } catch (e) {}
+  };
 
   const handleSendMessage = async (textToSend?: string) => {
     const messageText = textToSend || inputMessage;
@@ -560,7 +607,7 @@ export function ConsultPage() {
             <input
               type="text"
               value={inputMessage}
-              onChange={e => setInputMessage(e.target.value)}
+              onChange={e => handleInputChange(e.target.value)}
               onKeyDown={e => e.key === "Enter" && handleSendMessage()}
               placeholder="Ask about Kundali, Rudraksha, Gemstones or Vastu..."
               className="flex-1 h-12.5 px-4.5 rounded-2xl text-xs sm:text-sm border border-amber-900/20 outline-none focus:border-[#5B1F24] focus:ring-2 focus:ring-[#5B1F24]/10 transition-all bg-[#FAF6F0]/50 text-[#3C3024] font-medium"
