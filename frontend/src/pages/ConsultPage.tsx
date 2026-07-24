@@ -621,7 +621,7 @@ export function ConsultPage() {
             {isTyping && (
               <div className="flex items-center gap-2 text-xs font-semibold text-amber-900/70 p-3 bg-white/95 rounded-2xl w-fit border border-amber-900/10 shadow-md animate-pulse">
                 <RefreshCw size={13} className="animate-spin text-amber-600" />
-                <span>{selectedAstrologer.name} is consulting charts...</span>
+                <span>pandit ji is typing...</span>
               </div>
             )}
             <div ref={messagesEndRef} />
