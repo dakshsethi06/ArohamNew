@@ -421,7 +421,8 @@ export function ConsultPage() {
           .order("created_at", { ascending: true });
 
         if (pastMsgs && pastMsgs.length > 0) {
-          setMessages(pastMsgs.map(m => ({
+          const filtered = pastMsgs.filter(m => (m.text || m.message_text) !== "Namaste! Astrologer will join your chat soon.");
+          setMessages(filtered.map(m => ({
             id: m.id,
             sender: m.sender || m.sender_type,
             text: m.text || m.message_text,
@@ -446,7 +447,8 @@ export function ConsultPage() {
           .order("created_at", { ascending: true });
 
         if (data && data.length > 0) {
-          const dbFormatted = data.map(m => ({
+          const filtered = data.filter(m => (m.text || m.message_text) !== "Namaste! Astrologer will join your chat soon.");
+          const dbFormatted = filtered.map(m => ({
             id: m.id,
             sender: m.sender || m.sender_type,
             text: m.text || m.message_text,
@@ -484,9 +486,10 @@ export function ConsultPage() {
       try {
         const stored = JSON.parse(localStorage.getItem(`aroham_live_chat_${session.id}`) || "[]");
         if (Array.isArray(stored) && stored.length > 0) {
+          const filteredStored = stored.filter(m => m.text !== "Namaste! Astrologer will join your chat soon.");
           setMessages(prev => {
             const merged = [...prev];
-            stored.forEach(m => {
+            filteredStored.forEach(m => {
               const index = merged.findIndex(p => {
                 if (p.id === m.id) return true;
                 if (m.sender === "user" && p.sender === "user" && p.text?.trim() === m.text?.trim()) {

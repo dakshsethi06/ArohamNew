@@ -808,7 +808,8 @@ export function AstrologerDashboard() {
     try {
       const { data } = await supabase.from("chat_messages").select("*").eq("session_id", sessionId).order("created_at", { ascending: true });
       if (data && data.length > 0) {
-        loadedMsgs = data.map(m => ({
+        const filtered = data.filter(m => (m.text || m.message_text) !== "Namaste! Astrologer will join your chat soon.");
+        loadedMsgs = filtered.map(m => ({
           ...m,
           sender: m.sender || m.sender_type,
           text: m.text || m.message_text,
@@ -820,7 +821,8 @@ export function AstrologerDashboard() {
     try {
       const localMsgs = JSON.parse(localStorage.getItem(`aroham_live_chat_${sessionId}`) || "[]");
       if (Array.isArray(localMsgs) && localMsgs.length > 0) {
-        localMsgs.forEach(lm => {
+        const filteredLocal = localMsgs.filter(lm => lm.text !== "Namaste! Astrologer will join your chat soon.");
+        filteredLocal.forEach(lm => {
           const index = loadedMsgs.findIndex(m => m.id === lm.id || (m.text?.trim() === lm.text?.trim() && m.sender === lm.sender));
           if (index === -1) {
             loadedMsgs.push(lm);
