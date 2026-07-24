@@ -112,7 +112,11 @@ export function ConsultPage() {
           }
         }
         setUserHistorySessions(uniqueThreads);
-        viewPastSessionChat(uniqueThreads[0]);
+        if (window.innerWidth >= 768) {
+          viewPastSessionChat(uniqueThreads[0]);
+        } else {
+          setSelectedHistorySession(null);
+        }
       }
     } catch (e) {}
   };
@@ -1043,7 +1047,10 @@ export function ConsultPage() {
                 <h3 className="text-base sm:text-lg font-bold" style={{ fontFamily: SERIF }}>My Saved Consultation & Chat History</h3>
               </div>
               <button
-                onClick={() => setShowUserHistoryModal(false)}
+                onClick={() => {
+                  setShowUserHistoryModal(false);
+                  setSelectedHistorySession(null);
+                }}
                 className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 border border-white/10"
               >
                 <X size={16} />
@@ -1053,7 +1060,7 @@ export function ConsultPage() {
             {/* Content Area */}
             <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
               {/* Left Column: Sessions List */}
-              <div className="w-full md:w-1/3 border-r border-amber-900/15 overflow-y-auto p-4 space-y-3 bg-[#F9F5EF] scrollbar-thin">
+              <div className={`w-full md:w-1/3 border-r border-amber-900/15 overflow-y-auto p-4 space-y-3 bg-[#F9F5EF] scrollbar-thin ${selectedHistorySession ? "hidden md:block" : "block"}`}>
                 <p className="text-[10px] font-extrabold text-[#5B1F24] uppercase tracking-wider mb-2">Past Consultations</p>
                 {userHistorySessions.length === 0 ? (
                   <div className="p-6 text-center text-xs text-amber-900/50 bg-white rounded-2xl border border-amber-900/10">
@@ -1092,15 +1099,24 @@ export function ConsultPage() {
               </div>
 
               {/* Right Column: Messages View */}
-              <div className="flex-1 flex flex-col bg-white overflow-hidden p-5">
+              <div className={`flex-1 flex flex-col bg-white overflow-hidden p-4 sm:p-5 ${!selectedHistorySession ? "hidden md:flex" : "flex"}`}>
                 {selectedHistorySession ? (
                   <>
                     <div className="pb-3.5 mb-3.5 border-b border-amber-900/10 flex items-center justify-between shrink-0">
-                      <div>
-                        <h4 className="font-bold text-sm text-[#5B1F24]" style={{ fontFamily: SERIF }}>
-                          Consultation with {selectedHistorySession.astrologer_name || astrologers.find(a => a.id === selectedHistorySession.astrologer_id)?.name || "Vedic Scholar"}
-                        </h4>
-                        <p className="text-[11px] font-semibold text-amber-900/60">Topic: {selectedHistorySession.topic || "Vedic Guidance"}</p>
+                      <div className="flex items-center gap-2 min-w-0">
+                        {/* Mobile Back button */}
+                        <button
+                          onClick={() => setSelectedHistorySession(null)}
+                          className="md:hidden p-2 rounded-xl bg-amber-900/10 text-amber-900 hover:bg-amber-900/20 transition-all active:scale-95 shrink-0"
+                        >
+                          <ChevronLeft size={16} />
+                        </button>
+                        <div className="min-w-0">
+                          <h4 className="font-bold text-sm text-[#5B1F24] truncate" style={{ fontFamily: SERIF }}>
+                            Consultation with {selectedHistorySession.astrologer_name || astrologers.find(a => a.id === selectedHistorySession.astrologer_id)?.name || "Vedic Scholar"}
+                          </h4>
+                          <p className="text-[10px] sm:text-[11px] font-semibold text-amber-900/60 truncate">Topic: {selectedHistorySession.topic || "Vedic Guidance"}</p>
+                        </div>
                       </div>
                     </div>
 
