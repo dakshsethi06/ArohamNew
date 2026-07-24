@@ -589,14 +589,14 @@ export function ConsultPage() {
               </div>
               
               <div>
-                <h3 className="font-bold text-sm sm:text-base text-white flex items-center gap-1.5" style={{ fontFamily: SERIF }}>
-                  {selectedAstrologer.name}
-                  <span className="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-400/20 text-amber-200 border border-amber-400/40 tracking-wider uppercase">
+                <h3 className="font-bold text-sm sm:text-base text-white flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-1.5 leading-tight" style={{ fontFamily: SERIF }}>
+                  <span className="truncate">{selectedAstrologer.name}</span>
+                  <span className="px-1.5 py-0.5 rounded-full text-[8px] font-extrabold bg-amber-400/25 text-amber-200 border border-amber-400/30 tracking-wider uppercase w-fit">
                     Vedic Certified
                   </span>
                 </h3>
-                <p className="text-[11px] text-amber-200/80 font-medium flex items-center gap-1">
-                  <Sparkles size={11} className="text-amber-400" />
+                <p className="text-[10px] sm:text-[11px] text-amber-200/70 font-semibold flex items-center gap-1 mt-0.5 truncate max-w-[125px] sm:max-w-none">
+                  <Sparkles size={10} className="text-amber-400" />
                   {selectedAstrologer.title}
                 </p>
               </div>
@@ -640,16 +640,20 @@ export function ConsultPage() {
                         <p className="text-[9px] font-extrabold uppercase tracking-wider text-amber-700 mb-2 flex items-center gap-1 border-b border-amber-900/5 pb-1">
                           <Sparkles size={12} className="text-amber-500 fill-amber-500" /> Sacred Prescribed Remedy
                         </p>
-                        <div className="flex items-center gap-3">
-                          <img src={m.recommendedProduct.img} alt={m.recommendedProduct.name} className="w-14 h-14 rounded-xl object-cover border-amber-900/10 group-hover/prod:scale-105 transition-transform duration-300" />
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-bold text-xs truncate text-[#5B1F24]">{m.recommendedProduct.name}</h4>
-                            <p className="text-xs font-extrabold text-amber-700 mt-0.5">₹{m.recommendedProduct.price.toLocaleString("en-IN")}</p>
-                            <p className="text-[10px] text-amber-900/60 truncate font-semibold mt-0.5">⭐ {m.recommendedProduct.rating} ({m.recommendedProduct.reviews} reviews)</p>
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <img src={m.recommendedProduct.img} alt={m.recommendedProduct.name} className="w-12 h-12 rounded-xl object-cover border border-amber-900/10 group-hover/prod:scale-105 transition-transform duration-300 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-bold text-xs text-[#5B1F24] leading-tight truncate sm:whitespace-normal">{m.recommendedProduct.name}</h4>
+                              <div className="flex items-baseline gap-2 mt-0.5">
+                                <span className="text-xs font-extrabold text-amber-700">₹{m.recommendedProduct.price.toLocaleString("en-IN")}</span>
+                                <span className="text-[9px] text-amber-900/50 font-bold">⭐ {m.recommendedProduct.rating}</span>
+                              </div>
+                            </div>
                           </div>
                           <button
                             onClick={(e) => { e.stopPropagation(); addToCart(m.recommendedProduct, 1); }}
-                            className="px-3.5 py-2 rounded-xl text-[11px] font-extrabold text-white shadow-md active:scale-95 transition-all flex items-center gap-1.5 whitespace-nowrap bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110 hover:shadow-[#6D2025]/20"
+                            className="w-full sm:w-auto px-4 py-2 rounded-xl text-[10px] sm:text-[11px] font-extrabold text-white shadow-md active:scale-95 transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110 shadow-[#6D2025]/20 shrink-0"
                           >
                             <ShoppingBag size={11} /> Add to Cart
                           </button>
@@ -687,22 +691,22 @@ export function ConsultPage() {
           )}
 
           {/* Input Box Footer Bar */}
-          <div className="p-4 sm:p-5 border-t border-amber-900/15 bg-white flex items-center gap-3 shrink-0 z-10 shadow-[0_-5px_15px_rgba(45,11,14,0.02)]">
+          <div className="p-3 sm:p-5 border-t border-amber-900/15 bg-white flex items-center gap-2.5 shrink-0 z-10 shadow-[0_-5px_15px_rgba(45,11,14,0.02)]">
             <input
               type="text"
               value={inputMessage}
               onChange={e => handleInputChange(e.target.value)}
               onKeyDown={e => e.key === "Enter" && handleSendMessage()}
-              placeholder="Ask about Kundali, Rudraksha, Gemstones or Vastu..."
-              className="flex-1 h-12.5 px-4.5 rounded-2xl text-xs sm:text-sm border border-amber-900/20 outline-none focus:border-[#5B1F24] focus:ring-2 focus:ring-[#5B1F24]/10 transition-all bg-[#FAF6F0]/50 text-[#3C3024] font-medium"
+              placeholder="Ask scholar..."
+              className="flex-1 h-12 px-4 rounded-2xl text-xs sm:text-sm border border-amber-900/20 outline-none focus:border-[#5B1F24] focus:ring-2 focus:ring-[#5B1F24]/10 transition-all bg-[#FAF6F0]/50 text-[#3C3024] font-medium"
             />
             <button
               onClick={() => handleSendMessage()}
               disabled={!inputMessage.trim()}
-              className="h-12.5 px-6 rounded-2xl font-bold text-xs sm:text-sm text-white flex items-center gap-2 shadow-lg active:scale-95 transition-all disabled:opacity-50 shrink-0 bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110 shadow-[#6D2025]/20"
+              className="h-12 w-12 sm:w-auto sm:px-6 rounded-2xl font-bold text-xs sm:text-sm text-white flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all disabled:opacity-50 shrink-0 bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110 shadow-[#6D2025]/20"
             >
-              <span>Ask Scholar</span>
-              <Send size={14} />
+              <span className="hidden sm:inline">Ask Scholar</span>
+              <Send size={15} />
             </button>
           </div>
         </div>
