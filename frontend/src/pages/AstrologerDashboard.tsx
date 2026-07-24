@@ -1175,72 +1175,75 @@ export function AstrologerDashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 p-6 rounded-3xl bg-white border border-amber-900/15 shadow-xs space-y-4">
-                  <h3 className="text-sm font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Recent Completed Consultations</h3>
-                  {sessions.filter(s => s.status === "completed").length === 0 ? (
-                    <div className="p-8 text-center text-xs text-amber-900/60 bg-amber-50/50 rounded-2xl border border-amber-900/10">
-                      No completed session records in database yet. Completed sessions will show here.
-                    </div>
-                  ) : (
+              {/* Hiding Recent Completed Consultations & Quick Controls for now */}
+              {false && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2 p-6 rounded-3xl bg-white border border-amber-900/15 shadow-xs space-y-4">
+                    <h3 className="text-sm font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Recent Completed Consultations</h3>
+                    {sessions.filter(s => s.status === "completed").length === 0 ? (
+                      <div className="p-8 text-center text-xs text-amber-900/60 bg-amber-50/50 rounded-2xl border border-amber-900/10">
+                        No completed session records in database yet. Completed sessions will show here.
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {sessions.filter(s => s.status === "completed").slice(0, 4).map(s => (
+                          <div key={s.id} className="p-3.5 rounded-2xl bg-[#FAF6F0] border border-amber-900/10 flex items-center justify-between text-xs">
+                            <div>
+                              <p className="font-bold text-[#5B1F24]">{s.user_name || s.user_email?.split("@")[0] || seekerNames[s.user_id] || `Devotee (#${s.user_id?.slice(0, 6)})`}</p>
+                              <p className="text-[11px] text-amber-900/60">{s.topic || "Vedic Consultation"} • {new Date(s.created_at || Date.now()).toLocaleDateString()}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                Completed
+                              </span>
+                              <button
+                                onClick={() => {
+                                  setActiveSession(s);
+                                  setActiveTab("workstation");
+                                  fetchMessages(s.id);
+                                }}
+                                className="px-3 py-1.5 rounded-xl text-[11px] font-bold bg-amber-900/10 hover:bg-amber-900/15 text-[#5B1F24] transition-all flex items-center gap-1"
+                              >
+                                <MessageSquare size={12} />
+                                <span>View Chat Log</span>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-6 rounded-3xl bg-white border border-amber-900/15 shadow-xs space-y-4">
+                    <h3 className="text-sm font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Quick Controls</h3>
                     <div className="space-y-3">
-                      {sessions.filter(s => s.status === "completed").slice(0, 4).map(s => (
-                        <div key={s.id} className="p-3.5 rounded-2xl bg-[#FAF6F0] border border-amber-900/10 flex items-center justify-between text-xs">
-                          <div>
-                            <p className="font-bold text-[#5B1F24]">{s.user_name || s.user_email?.split("@")[0] || seekerNames[s.user_id] || `Devotee (#${s.user_id?.slice(0, 6)})`}</p>
-                            <p className="text-[11px] text-amber-900/60">{s.topic || "Vedic Consultation"} • {new Date(s.created_at || Date.now()).toLocaleDateString()}</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                              Completed
-                            </span>
-                            <button
-                              onClick={() => {
-                                setActiveSession(s);
-                                setActiveTab("workstation");
-                                fetchMessages(s.id);
-                              }}
-                              className="px-3 py-1.5 rounded-xl text-[11px] font-bold bg-amber-900/10 hover:bg-amber-900/15 text-[#5B1F24] transition-all flex items-center gap-1"
-                            >
-                              <MessageSquare size={12} />
-                              <span>View Chat Log</span>
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                      <button
+                        onClick={() => setActiveTab("workstation")}
+                        className="w-full p-3.5 rounded-2xl bg-amber-900/10 hover:bg-amber-900/15 text-[#5B1F24] font-bold text-xs flex items-center justify-between transition-all"
+                      >
+                        <span className="flex items-center gap-2"><MessageCircle size={15} /> Enter Live Workstation</span>
+                        <ArrowUpRight size={15} />
+                      </button>
+
+                      <button
+                        onClick={() => setActiveTab("wallet")}
+                        className="w-full p-3.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center justify-between transition-all border border-emerald-200"
+                      >
+                        <span className="flex items-center gap-2"><Wallet size={15} /> Request Instant Payout</span>
+                        <ArrowUpRight size={15} />
+                      </button>
+
+                      <button
+                        onClick={() => setActiveTab("profile")}
+                        className="w-full p-3.5 rounded-2xl bg-amber-50 hover:bg-amber-100 text-[#5B1F24] font-bold text-xs flex items-center justify-between transition-all border border-amber-900/15"
+                      >
+                        <span className="flex items-center gap-2"><Settings size={15} /> Edit Per-Minute Fee</span>
+                        <ArrowUpRight size={15} />
+                      </button>
                     </div>
-                  )}
-                </div>
-
-                <div className="p-6 rounded-3xl bg-white border border-amber-900/15 shadow-xs space-y-4">
-                  <h3 className="text-sm font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Quick Controls</h3>
-                  <div className="space-y-3">
-                    <button
-                      onClick={() => setActiveTab("workstation")}
-                      className="w-full p-3.5 rounded-2xl bg-amber-900/10 hover:bg-amber-900/15 text-[#5B1F24] font-bold text-xs flex items-center justify-between transition-all"
-                    >
-                      <span className="flex items-center gap-2"><MessageCircle size={15} /> Enter Live Workstation</span>
-                      <ArrowUpRight size={15} />
-                    </button>
-
-                    <button
-                      onClick={() => setActiveTab("wallet")}
-                      className="w-full p-3.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center justify-between transition-all border border-emerald-200"
-                    >
-                      <span className="flex items-center gap-2"><Wallet size={15} /> Request Instant Payout</span>
-                      <ArrowUpRight size={15} />
-                    </button>
-
-                    <button
-                      onClick={() => setActiveTab("profile")}
-                      className="w-full p-3.5 rounded-2xl bg-amber-50 hover:bg-amber-100 text-[#5B1F24] font-bold text-xs flex items-center justify-between transition-all border border-amber-900/15"
-                    >
-                      <span className="flex items-center gap-2"><Settings size={15} /> Edit Per-Minute Fee</span>
-                      <ArrowUpRight size={15} />
-                    </button>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
