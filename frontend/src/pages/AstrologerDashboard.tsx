@@ -83,6 +83,56 @@ export function AstrologerDashboard() {
     averageRating: 4.95
   });
 
+  const [loginPhone, setLoginPhone] = useState("");
+  const [loginOtp, setLoginOtp] = useState("");
+  const [loginStep, setLoginStep] = useState<"phone" | "otp">("phone");
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [portalError, setPortalError] = useState("");
+
+  const handleSendOtp = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loginPhone.trim() || loginPhone.replace(/\D/g, "").length < 10) {
+      setPortalError("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+    setPortalError("");
+    setPortalLoading(true);
+    setTimeout(() => {
+      setPortalLoading(false);
+      setLoginStep("otp");
+    }, 500);
+  };
+
+  const handleVerifyPortalOtp = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loginOtp !== "123456" && loginOtp.length !== 6) {
+      setPortalError("Invalid OTP. Use test OTP 123456.");
+      return;
+    }
+    setPortalLoading(true);
+    const astroUser = {
+      id: "astro-1",
+      email: `astrologer_${loginPhone.slice(-4)}@aroham.com`,
+      user_metadata: {
+        full_name: "Acharya Devrat Sharma",
+        phone: loginPhone,
+        role: "astrologer"
+      },
+      role: "astrologer"
+    };
+
+    try {
+      localStorage.setItem("aroham_mock_session", JSON.stringify(astroUser));
+      localStorage.setItem("aroham_accepted_session_ids", JSON.stringify([]));
+      window.dispatchEvent(new Event("storage"));
+    } catch (e) {}
+
+    setTimeout(() => {
+      setPortalLoading(false);
+      window.location.reload();
+    }, 400);
+  };
+
   const [profile, setProfile] = useState({
     name: user?.user_metadata?.full_name || "Acharya Astrologer",
     email: user?.email || "acharya.vedic@aroham.com",
@@ -649,6 +699,86 @@ export function AstrologerDashboard() {
 
   const pendingCount = sessions.filter(s => s.status === "pending" && !acceptedSessionIds.has(s.id)).length;
 
+  const mockStr = localStorage.getItem("aroham_mock_session");
+  const currentUser = user || (mockStr ? JSON.parse(mockStr) : null);
+
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-[#FAF6F0] flex items-center justify-center p-4" style={{ fontFamily: SANS }}>
+        <div className="bg-white border-2 border-amber-900/15 rounded-3xl p-8 max-w-md w-full shadow-2xl space-y-6 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-[#5B1F24] text-amber-300 flex items-center justify-center mx-auto shadow-md">
+            <Award size={32} />
+          </div>
+          <div>
+            <span className="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase bg-amber-100 text-amber-800 border border-amber-300">
+              Verified Scholar Access
+            </span>
+            <h1 className="text-2xl font-extrabold text-[#5B1F24] mt-2" style={{ fontFamily: SERIF }}>Aroham Scholar Portal</h1>
+            <p className="text-xs text-amber-900/60 mt-1 font-medium">Sign in with your registered phone number to manage your consultation workstation.</p>
+          </div>
+
+          {portalError && (
+            <div className="p-3 rounded-xl bg-red-50 text-red-700 text-xs font-bold border border-red-200">
+              {portalError}
+            </div>
+          )}
+
+          {loginStep === "phone" ? (
+            <form onSubmit={handleSendOtp} className="space-y-4 text-left">
+              <div>
+                <label className="block text-xs font-bold text-[#5B1F24] mb-1">Mobile Phone Number</label>
+                <input
+                  type="tel"
+                  value={loginPhone}
+                  onChange={e => setLoginPhone(e.target.value)}
+                  placeholder="e.g. 9876543210"
+                  className="w-full h-12 px-4 rounded-xl text-xs bg-amber-50/50 border border-amber-900/20 text-[#3C3024] outline-none focus:border-[#5B1F24] font-semibold"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={portalLoading}
+                className="w-full py-3.5 rounded-xl text-xs font-bold text-white shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
+                style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}
+              >
+                <span>{portalLoading ? "Sending OTP..." : "Get Verification Code"}</span>
+                <Send size={14} />
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyPortalOtp} className="space-y-4 text-left">
+              <div>
+                <label className="block text-xs font-bold text-[#5B1F24] mb-1">Enter 6-Digit OTP Code</label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={loginOtp}
+                  onChange={e => setLoginOtp(e.target.value)}
+                  placeholder="Use test code 123456"
+                  className="w-full h-12 px-4 rounded-xl text-center text-base tracking-widest font-mono bg-amber-50/50 border border-amber-900/20 text-[#3C3024] outline-none focus:border-[#5B1F24]"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={portalLoading}
+                className="w-full py-3.5 rounded-xl text-xs font-bold text-white shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
+                style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}
+              >
+                <span>{portalLoading ? "Verifying..." : "Verify & Open Workstation"}</span>
+                <CheckCircle2 size={14} />
+              </button>
+            </form>
+          )}
+
+          <div className="pt-4 border-t border-amber-900/10 flex items-center justify-between text-xs font-semibold text-amber-900/60">
+            <button onClick={() => navigate("/")} className="hover:underline hover:text-[#5B1F24]">← Return Home</button>
+            <span>Need Help? Contact Support</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF6F0]" style={{ fontFamily: SANS, color: "#4A3E31" }}>
       
@@ -683,7 +813,7 @@ export function AstrologerDashboard() {
 
           <div className="px-3 py-1.5 rounded-xl bg-amber-400/15 border border-amber-400/30 text-amber-200 text-xs font-bold flex items-center gap-1.5 shadow-xs">
             <Wallet size={14} className="text-amber-300" />
-            <span>Today: ₹{financialStats.todayEarnings.toLocaleString("en-IN")}</span>
+            <span>Today: ₹{(financialStats.todayEarnings || 0).toLocaleString("en-IN")}</span>
           </div>
 
           <button
