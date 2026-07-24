@@ -266,17 +266,60 @@ export function AstrologerDashboard() {
       return;
     }
 
+    const astroId = currentUser?.id;
+    if (!astroId) return;
+
     let currentP = { ...profile };
     try {
-      const cached = localStorage.getItem(`aroham_astro_profile_${user?.id}`);
+      const cached = localStorage.getItem(`aroham_astro_profile_${astroId}`);
       if (cached) {
         const parsed = JSON.parse(cached);
         currentP = { ...currentP, ...parsed };
         setProfile(currentP);
+        if (currentP.bio && currentP.bio !== "PENDING_WIZARD_COMPLETION" && currentP.bio.trim() !== "") {
+          localStorage.setItem(`aroham_astro_wizard_done_${astroId}`, "true");
+          setShowProfileWizard(false);
+        }
       }
     } catch (e) {}
 
-    syncProfileToDBAndLocal(currentP);
+    const fetchAndSyncAstroProfile = async () => {
+      try {
+        const { data } = await supabase
+          .from("astrologers")
+          .select("*")
+          .eq("id", astroId)
+          .maybeSingle();
+
+        if (data) {
+          const dbProfile = {
+            name: data.full_name || data.name || currentP.name,
+            email: data.email || currentP.email,
+            phone: data.phone || currentP.phone,
+            dob: data.dob || "1988-06-15",
+            title: data.title || currentP.title,
+            experience: String(data.experience_years || currentP.experience),
+            specialty: Array.isArray(data.specialties) ? data.specialties[0] : (data.specialties || currentP.specialty),
+            languages: Array.isArray(data.languages) ? data.languages.join(", ") : (data.languages || currentP.languages),
+            degree: data.degree || currentP.degree,
+            bio: data.bio || "",
+            avatar: data.avatar_url || currentP.avatar,
+            pricePerMin: String(data.price_per_min || currentP.pricePerMin)
+          };
+          
+          setProfile(dbProfile);
+          localStorage.setItem(`aroham_astro_profile_${astroId}`, JSON.stringify(dbProfile));
+          if (dbProfile.bio && dbProfile.bio !== "PENDING_WIZARD_COMPLETION" && dbProfile.bio.trim() !== "") {
+            localStorage.setItem(`aroham_astro_wizard_done_${astroId}`, "true");
+            setShowProfileWizard(false);
+          }
+        } else {
+          syncProfileToDBAndLocal(currentP);
+        }
+      } catch (e) {}
+    };
+
+    fetchAndSyncAstroProfile();
 
     const syncAll = () => {
       fetchSessions();
