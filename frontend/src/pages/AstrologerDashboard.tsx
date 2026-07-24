@@ -1024,20 +1024,20 @@ export function AstrologerDashboard() {
         }
       `}</style>
       
-      <header className="px-6 py-3.5 border-b border-amber-900/15 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-40 shadow-xl" style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}>
+      <header className="px-6 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-40 transition-all duration-500" style={{ background: "rgba(250,247,242,0.97)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(91,31,36,0.1)", boxShadow: "0 2px 24px rgba(91,31,36,0.06)" }}>
         <div className="flex items-center gap-3.5">
           <div className="relative">
             <img src={profile.avatar} alt={profile.name} className="w-11 h-11 rounded-2xl object-cover border-2 border-amber-300 shadow-md" />
-            <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-[#5B1F24] ${isChatOnline ? "bg-emerald-400 animate-pulse" : "bg-gray-400"}`} />
+            <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-[#FAF7F2] ${isChatOnline ? "bg-emerald-400 animate-pulse" : "bg-gray-400"}`} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-bold text-white tracking-wide" style={{ fontFamily: SERIF }}>{profile.name}</h1>
-              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-400/20 text-amber-200 border border-amber-400/30 flex items-center gap-1">
+              <h1 className="text-base font-bold text-[#5B1F24] tracking-wide" style={{ fontFamily: SERIF }}>{profile.name}</h1>
+              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-400/10 text-amber-800 border border-amber-400/20 flex items-center gap-1">
                 <Award size={10} /> Certified Scholar
               </span>
             </div>
-            <p className="text-xs text-amber-200/80">{profile.title} • ₹{profile.pricePerMin}/min</p>
+            <p className="text-xs text-amber-900/60 font-semibold">{profile.title} • ₹{profile.pricePerMin}/min</p>
           </div>
         </div>
 
@@ -1053,14 +1053,12 @@ export function AstrologerDashboard() {
             </button>
           )}
 
-
-
           <button
             onClick={toggleChatOnline}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shadow-xs ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-extrabold tracking-wide transition-all flex items-center gap-1.5 border shadow-sm active:scale-95 ${
               isChatOnline
-                ? "bg-emerald-600/30 text-emerald-200 border-emerald-400/40 hover:bg-emerald-600/40"
-                : "bg-black/30 text-amber-200/60 border-white/20 hover:bg-black/40"
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                : "bg-amber-900/5 text-amber-900/60 border-amber-900/10 hover:bg-amber-900/10"
             }`}
           >
             <MessageSquare size={13} />
@@ -1070,7 +1068,7 @@ export function AstrologerDashboard() {
           <button
             onClick={handleLogout}
             title="Log Out Astrologer Session"
-            className="px-3 py-1.5 rounded-xl text-xs font-bold bg-red-900/40 hover:bg-red-900/60 text-red-200 border border-red-500/30 transition-all flex items-center gap-1.5 shadow-xs active:scale-95"
+            className="px-3.5 py-2 rounded-xl text-xs font-extrabold tracking-wide bg-red-50 hover:bg-red-100 text-red-700 border border-red-200/60 transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
           >
             <LogOut size={14} />
             <span className="hidden sm:inline">Logout</span>
@@ -1080,7 +1078,7 @@ export function AstrologerDashboard() {
 
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         
-        <aside className="w-full lg:w-64 bg-[#F5EDE0] border-r border-amber-900/15 p-4 flex lg:flex-col justify-between overflow-x-auto lg:overflow-y-auto shrink-0 scrollbar-none">
+        <aside className="w-full lg:w-64 bg-[#FCFAF7] border-r border-amber-900/10 p-4 flex lg:flex-col justify-between overflow-x-auto lg:overflow-y-auto shrink-0 scrollbar-none">
           <div className="space-y-1 flex lg:flex-col gap-1 w-full">
             {[
               { id: "overview", label: "Dashboard & Analytics", icon: BarChart2 },
@@ -1097,12 +1095,12 @@ export function AstrologerDashboard() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as MainTab)}
-                  className={`w-full px-3.5 py-3 rounded-2xl text-xs font-bold flex items-center justify-between transition-all whitespace-nowrap ${
+                  className={`w-full px-3.5 py-3 rounded-2xl text-xs font-extrabold flex items-center justify-between transition-all whitespace-nowrap ${
                     isActive
                       ? "text-white shadow-md"
                       : "text-amber-900/80 hover:text-[#5B1F24] hover:bg-amber-900/10"
                   }`}
-                  style={isActive ? { background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` } : {}}
+                  style={isActive ? { background: `linear-gradient(135deg, ${MAROON}, #8C1D24)` } : {}}
                 >
                   <div className="flex items-center gap-3">
                     <Icon size={16} className={isActive ? "text-amber-300" : "text-amber-900/60"} />
@@ -1119,14 +1117,14 @@ export function AstrologerDashboard() {
           </div>
 
           <div className="hidden lg:block pt-4 border-t border-amber-900/15 mt-6 space-y-3">
-            <div className="p-3.5 rounded-2xl bg-white/60 border border-amber-900/10 text-xs">
+            <div className="p-3.5 rounded-2xl bg-white border border-amber-900/10 text-xs shadow-xs">
               <p className="text-xs font-bold text-[#5B1F24] mb-1" style={{ fontFamily: SERIF }}>Aroham Scholar Helpline</p>
               <p className="text-[10px] text-amber-900/70 leading-relaxed">Dedicated Astrologer support available 24x7.</p>
             </div>
 
             <button
               onClick={handleLogout}
-              className="w-full py-2.5 rounded-2xl text-xs font-bold bg-red-900/10 hover:bg-red-900/20 text-red-800 border border-red-900/20 transition-all flex items-center justify-center gap-2 active:scale-95"
+              className="w-full py-2.5 rounded-2xl text-xs font-extrabold bg-red-50 hover:bg-red-100 text-red-700 border border-red-200/40 transition-all flex items-center justify-center gap-2 active:scale-95"
             >
               <LogOut size={14} /> Log Out Account
             </button>
