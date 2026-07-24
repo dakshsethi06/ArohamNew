@@ -632,53 +632,54 @@ export function ConsultPage() {
               </span>
             </div>
 
-            {messages.map(m => {
-              const isUser = m.sender === "user";
-              return (
-                <div key={m.id} className={`flex flex-col ${isUser ? "items-end" : "items-start"} space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-                  <div
-                    className={`max-w-[85%] sm:max-w-[75%] p-4 rounded-3xl text-xs sm:text-sm shadow-xs leading-relaxed ${
-                      isUser
-                        ? "rounded-tr-xs text-white"
-                        : "rounded-tl-xs bg-white text-[#3E3125] border border-amber-900/10"
-                    }`}
-                    style={isUser ? { background: `linear-gradient(135deg, ${MAROON} 0%, #802B31 100%)`, boxShadow: "0 4px 15px rgba(91,31,36,0.08)" } : { boxShadow: "0 4px 12px rgba(45,11,14,0.02)" }}
-                  >
-                    <p className="whitespace-pre-line font-medium">{m.text}</p>
-                    
-                    {m.recommendedProduct && (
-                      <div 
-                        onClick={() => navigate(`/product/${m.recommendedProduct.slug}`)}
-                        className="mt-3.5 p-3.5 rounded-2xl bg-[#FCFAF7] border border-amber-400/40 text-[#4A3E31] shadow-sm hover:border-amber-400 cursor-pointer transition-all duration-300 group/prod"
-                      >
-                        <p className="text-[9px] font-extrabold uppercase tracking-wider text-amber-700 mb-2 flex items-center gap-1 border-b border-amber-900/5 pb-1">
-                          <Sparkles size={12} className="text-amber-500 fill-amber-500" /> Sacred Prescribed Remedy
-                        </p>
-                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <img src={m.recommendedProduct.img} alt={m.recommendedProduct.name} className="w-12 h-12 rounded-xl object-cover border border-amber-900/10 group-hover/prod:scale-105 transition-transform duration-300 flex-shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-bold text-xs text-[#5B1F24] leading-tight truncate sm:whitespace-normal">{m.recommendedProduct.name}</h4>
-                              <div className="flex items-baseline gap-2 mt-0.5">
-                                <span className="text-xs font-extrabold text-amber-700">₹{m.recommendedProduct.price.toLocaleString("en-IN")}</span>
-                                <span className="text-[9px] text-amber-900/50 font-bold">⭐ {m.recommendedProduct.rating}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); addToCart(m.recommendedProduct, 1); }}
-                            className="w-full sm:w-auto px-4 py-2 rounded-xl text-[10px] sm:text-[11px] font-extrabold text-white shadow-md active:scale-95 transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110 shadow-[#6D2025]/20 shrink-0"
-                          >
-                            <ShoppingBag size={11} /> Add to Cart
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <span className="text-[10px] font-bold text-amber-900/40 px-2">{m.timestamp || "Just now"}</span>
-                </div>
-              );
-            })}
+             {messages.map(m => {
+               const isUser = m.sender === "user";
+               const resolvedProduct = m.recommendedProduct || (m.recommended_product_slug ? findProduct(m.recommended_product_slug) : null);
+               return (
+                 <div key={m.id} className={`flex flex-col ${isUser ? "items-end" : "items-start"} space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+                   <div
+                     className={`max-w-[85%] sm:max-w-[75%] p-4 rounded-3xl text-xs sm:text-sm shadow-xs leading-relaxed ${
+                       isUser
+                         ? "rounded-tr-xs text-white"
+                         : "rounded-tl-xs bg-white text-[#3E3125] border border-amber-900/10"
+                     }`}
+                     style={isUser ? { background: `linear-gradient(135deg, ${MAROON} 0%, #802B31 100%)`, boxShadow: "0 4px 15px rgba(91,31,36,0.08)" } : { boxShadow: "0 4px 12px rgba(45,11,14,0.02)" }}
+                   >
+                     <p className="whitespace-pre-line font-medium">{m.text}</p>
+                     
+                     {resolvedProduct && (
+                       <div 
+                         onClick={() => navigate(`/product/${resolvedProduct.slug}`)}
+                         className="mt-3.5 p-3.5 rounded-2xl bg-[#FCFAF7] border border-amber-400/40 text-[#4A3E31] shadow-sm hover:border-amber-400 cursor-pointer transition-all duration-300 group/prod"
+                       >
+                         <p className="text-[9px] font-extrabold uppercase tracking-wider text-amber-700 mb-2 flex items-center gap-1 border-b border-amber-900/5 pb-1">
+                           <Sparkles size={12} className="text-amber-500 fill-amber-500" /> Sacred Prescribed Remedy
+                         </p>
+                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                           <div className="flex items-center gap-3 flex-1 min-w-0">
+                             <img src={resolvedProduct.img || resolvedProduct.image} alt={resolvedProduct.name} className="w-12 h-12 rounded-xl object-cover border border-amber-900/10 group-hover/prod:scale-105 transition-transform duration-300 flex-shrink-0" />
+                             <div className="flex-1 min-w-0">
+                               <h4 className="font-bold text-xs text-[#5B1F24] leading-tight truncate sm:whitespace-normal">{resolvedProduct.name}</h4>
+                               <div className="flex items-baseline gap-2 mt-0.5">
+                                 <span className="text-xs font-extrabold text-amber-700">₹{resolvedProduct.price.toLocaleString("en-IN")}</span>
+                                 <span className="text-[9px] text-amber-900/50 font-bold">⭐ {resolvedProduct.rating || 5}</span>
+                               </div>
+                             </div>
+                           </div>
+                           <button
+                             onClick={(e) => { e.stopPropagation(); addToCart(resolvedProduct, 1); }}
+                             className="w-full sm:w-auto px-4 py-2 rounded-xl text-[10px] sm:text-[11px] font-extrabold text-white shadow-md active:scale-95 transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#6D2025] to-[#8C1D24] hover:brightness-110 shadow-[#6D2025]/20 shrink-0"
+                           >
+                             <ShoppingBag size={11} /> Add to Cart
+                           </button>
+                         </div>
+                       </div>
+                     )}
+                   </div>
+                   <span className="text-[10px] font-bold text-amber-900/40 px-2">{m.timestamp || "Just now"}</span>
+                 </div>
+               );
+             })}
 
             {isTyping && (
               <div className="flex items-center gap-2 text-xs font-semibold text-amber-900/70 p-3 bg-white/95 rounded-2xl w-fit border border-amber-900/10 shadow-md animate-pulse">
