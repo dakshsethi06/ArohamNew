@@ -62,6 +62,27 @@ export function AstrologerDashboard() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
+  const mockStrForId = localStorage.getItem("aroham_mock_session");
+  const currentUserObj = user || (mockStrForId ? JSON.parse(mockStrForId) : null);
+  // Use a valid UUID syntax fallback instead of 'astro-1' to prevent Postgres syntax errors when executing queries.
+  const currentAstroId = currentUserObj?.id || "00000000-0000-0000-0000-000000000001";
+
+  // Collect all possible IDs this astrologer might be known by
+  const getAllAstroIds = (): string[] => {
+    const ids = new Set<string>();
+    ids.add(currentAstroId);
+    try {
+      const mockStr = localStorage.getItem("aroham_mock_session");
+      if (mockStr) {
+        const mock = JSON.parse(mockStr);
+        if (mock?.id) ids.add(mock.id);
+        if (mock?.astrologerProfile?.id) ids.add(mock.astrologerProfile.id);
+      }
+    } catch (e) {}
+    return Array.from(ids);
+  };
+
+
   const [activeTab, setActiveTab] = useState<MainTab>("overview");
   const [sessions, setSessions] = useState<any[]>([]);
   const [activeSession, setActiveSession] = useState<any>(null);
@@ -127,7 +148,7 @@ export function AstrologerDashboard() {
       }
     } catch (err) {}
 
-    const finalAstroId = matchedAstro?.id || `astro-${generateUUID()}`;
+    const finalAstroId = matchedAstro?.id || generateUUID();
     const finalAstroName = matchedAstro?.full_name || matchedAstro?.name || "Acharya Devrat Sharma";
     const finalEmail = matchedAstro?.email || `astrologer_${phoneDigits.slice(-4)}@aroham.com`;
 
@@ -212,24 +233,6 @@ export function AstrologerDashboard() {
     }
   });
 
-  const mockStrForId = localStorage.getItem("aroham_mock_session");
-  const currentUserObj = user || (mockStrForId ? JSON.parse(mockStrForId) : null);
-  const currentAstroId = currentUserObj?.id || "astro-1";
-
-  // Collect all possible IDs this astrologer might be known by
-  const getAllAstroIds = (): string[] => {
-    const ids = new Set<string>();
-    ids.add(currentAstroId);
-    try {
-      const mockStr = localStorage.getItem("aroham_mock_session");
-      if (mockStr) {
-        const mock = JSON.parse(mockStr);
-        if (mock?.id) ids.add(mock.id);
-        if (mock?.astrologerProfile?.id) ids.add(mock.astrologerProfile.id);
-      }
-    } catch (e) {}
-    return Array.from(ids);
-  };
 
   const syncProfileToDBAndLocal = async (p: typeof profile) => {
     if (!currentAstroId) return;
