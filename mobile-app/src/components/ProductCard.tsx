@@ -53,9 +53,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, onAd
 
         {/* Prices & Discount Info */}
         <View style={styles.priceRow}>
-          <Text style={styles.price}>₹{product.price.toLocaleString('en-IN')}</Text>
+          <Text style={styles.price}>₹{Math.round(product.price).toLocaleString('en-IN')}</Text>
           {product.original > product.price && (
-            <Text style={styles.original}>₹{product.original.toLocaleString('en-IN')}</Text>
+            <Text style={styles.original}>₹{Math.round(product.original).toLocaleString('en-IN')}</Text>
           )}
           {discount > 0 && (
             <Text style={styles.discountPercent}>{discount}% OFF</Text>
