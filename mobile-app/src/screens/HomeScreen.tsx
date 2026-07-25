@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { MAROON, GOLD, IVORY, SPACE_BLACK, BORDER_COLOR, CARD_BG } from '../constants/theme';
 import { ArohamProduct, ActiveTab } from '../types';
-import { fetchProducts } from '../services/api';
+import { useProducts } from '@logic/hooks/useProducts';
 import { ProductCard } from '../components/ProductCard';
 
 const { width } = Dimensions.get('window');
@@ -25,17 +25,8 @@ interface HomeScreenProps {
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ setTab, onProductPress }) => {
-  const [products, setProducts] = useState<ArohamProduct[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [carouselIndex, setCarouselIndex] = useState(1); // highlighted active card
-
-  useEffect(() => {
-    (async () => {
-      const prods = await fetchProducts();
-      setProducts(prods);
-      setLoading(false);
-    })();
-  }, []);
+  const { products, loading } = useProducts();
+  const [carouselIndex, setCarouselIndex] = useState(1);
 
   if (loading) {
     return (

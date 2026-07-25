@@ -4,6 +4,7 @@ import { CartItem } from "@logic/types/cart";
 import { useAuth } from "./AuthContext";
 import { api } from "@logic/lib/api";
 import { supabase } from "@logic/lib/supabase";
+import { safeLocalStorage, safeSessionStorage } from "@logic/utils/storage";
 
 export interface AppliedCoupon {
   code: string;
@@ -66,22 +67,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (justLoggedOut) {
       // User just logged out — clear current view
       setItems([]);
-      localStorage.removeItem("aroham_cart");
-      localStorage.removeItem("aroham_buy_now_intent");
+      safeLocalStorage.removeItem("aroham_cart");
+      safeLocalStorage.removeItem("aroham_buy_now_intent");
       setTimeout(() => { isLoggingOut.current = false; }, 100);
     } else if (user?.id) {
       // User logged in — restore saved account cart!
-      const userCart = localStorage.getItem(`aroham_user_cart_${user.id}`);
+      const userCart = safeLocalStorage.getItem(`aroham_user_cart_${user.id}`);
       if (userCart) {
         try { setItems(JSON.parse(userCart)); } catch (e) {}
       } else {
-        const local = localStorage.getItem("aroham_cart");
+        const local = safeLocalStorage.getItem("aroham_cart");
         if (local) {
           try { setItems(JSON.parse(local)); } catch (e) {}
         }
       }
     } else {
-      const local = localStorage.getItem("aroham_cart");
+      const local = safeLocalStorage.getItem("aroham_cart");
       if (local) {
         try { setItems(JSON.parse(local)); } catch (e) {}
       }
@@ -90,9 +91,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isLoggingOut.current) {
-      localStorage.setItem("aroham_cart", JSON.stringify(items));
+      safeLocalStorage.setItem("aroham_cart", JSON.stringify(items));
       if (user?.id) {
-        localStorage.setItem(`aroham_user_cart_${user.id}`, JSON.stringify(items));
+        safeLocalStorage.setItem(`aroham_user_cart_${user.id}`, JSON.stringify(items));
         // Non-blocking sync to Supabase user_carts DB
         Promise.resolve(
           supabase.from("user_carts").upsert({
@@ -107,7 +108,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(() => {
     try {
-      const saved = sessionStorage.getItem("aroham_applied_coupon");
+      const saved = safeSessionStorage.getItem("aroham_applied_coupon");
       return saved ? JSON.parse(saved) : null;
     } catch (e) {
       return null;
@@ -164,13 +165,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       label: found.label
     };
     setAppliedCoupon(coupon);
-    sessionStorage.setItem("aroham_applied_coupon", JSON.stringify(coupon));
+    safeSessionStorage.setItem("aroham_applied_coupon", JSON.stringify(coupon));
     return { success: true, message: `Coupon ${cleanCode} applied!` };
   };
 
   const removeCoupon = () => {
     setAppliedCoupon(null);
-    sessionStorage.removeItem("aroham_applied_coupon");
+    safeSessionStorage.removeItem("aroham_applied_coupon");
   };
 
   const addToCart = async (product: ArohamProduct, qty: number = 1, openSidebar: boolean = false) => {
@@ -211,8 +212,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }));
     
     if (isLoggedIn) {
-      // Backend likely supports PUT /cart/:id or we just POST with relative quantity/overwrite
-      // Assuming PUT updates the exact quantity
       await api(`/cart/${id}`, {
         method: "PUT",
         body: JSON.stringify({ qty: newQty })
@@ -225,7 +224,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (isLoggedIn) {
       await api("/cart", { method: "DELETE" }).catch(e => console.error("Error clearing cart", e));
     } else {
-      localStorage.removeItem("aroham_cart");
+      safeLocalStorage.removeItem("aroham_cart");
     }
   };
 
@@ -237,43 +236,45 @@ export function CartProvider({ children }: { children: ReactNode }) {
       addToCart, removeFromCart, updateQty, clearCart, toast,
     }}>
       {children}
-      {/* Add-to-cart toast */}
-      <div
-        style={{
-          position: "fixed",
-          top: 24,
-          left: "50%",
-          transform: `translateX(-50%) translateY(${toast ? "0" : "-120%"})`,
-          opacity: toast ? 1 : 0,
-          transition: "all 0.35s cubic-bezier(0.4,0,0.2,1)",
-          zIndex: 9999,
-          pointerEvents: "none",
-        }}
-      >
+      {/* Add-to-cart toast for Web DOM */}
+      {typeof document !== "undefined" && (
         <div
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            padding: "12px 20px",
-            borderRadius: 16,
-            background: "rgba(91,31,36,0.95)",
-            backdropFilter: "blur(12px)",
-            boxShadow: "0 8px 32px rgba(91,31,36,0.3), 0 2px 8px rgba(0,0,0,0.1)",
-            color: "#FAF7F2",
-            fontFamily: "'Space Grotesk', sans-serif",
-            fontSize: 13,
-            fontWeight: 600,
-            whiteSpace: "nowrap",
-            maxWidth: "90vw",
+            position: "fixed",
+            top: 24,
+            left: "50%",
+            transform: `translateX(-50%) translateY(${toast ? "0" : "-120%"})`,
+            opacity: toast ? 1 : 0,
+            transition: "all 0.35s cubic-bezier(0.4,0,0.2,1)",
+            zIndex: 9999,
+            pointerEvents: "none",
           }}
         >
-          <span style={{ fontSize: 18 }}>✓</span>
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
-            {toast} added to cart
-          </span>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "12px 20px",
+              borderRadius: 16,
+              background: "rgba(91,31,36,0.95)",
+              backdropFilter: "blur(12px)",
+              boxShadow: "0 8px 32px rgba(91,31,36,0.3), 0 2px 8px rgba(0,0,0,0.1)",
+              color: "#FAF7F2",
+              fontFamily: "'Space Grotesk', sans-serif",
+              fontSize: 13,
+              fontWeight: 600,
+              whiteSpace: "nowrap",
+              maxWidth: "90vw",
+            }}
+          >
+            <span style={{ fontSize: 18 }}>✓</span>
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+              {toast} added to cart
+            </span>
+          </div>
         </div>
-      </div>
+      )}
     </CartContext.Provider>
   );
 }

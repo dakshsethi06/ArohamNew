@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { ArohamProduct } from '../types';
-import { MAROON, GOLD, IVORY } from '../constants/theme';
+import { MAROON, GOLD } from '../constants/theme';
 import { Stars } from '../components/Stars';
 import { MOCK_REVIEWS } from '../services/api';
+import { useWishlist } from '../context/WishlistContext';
 
 interface ProductDetailScreenProps {
   product: ArohamProduct;
@@ -20,6 +21,8 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({
 }) => {
   const [showBenefits, setShowBenefits] = useState(false);
   const [showSpecs, setShowSpecs] = useState(false);
+  const { toggleWishlist, isInWishlist } = useWishlist();
+  const isWished = isInWishlist(product.id);
 
   const discount = product.original > product.price
     ? Math.round(((product.original - product.price) / product.original) * 100)
@@ -33,6 +36,9 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({
           <Text style={styles.backText}>← Back to Shop</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>{product.name}</Text>
+        <TouchableOpacity onPress={() => toggleWishlist(product)} style={styles.wishlistHeaderBtn}>
+          <Text style={styles.wishlistHeaderIcon}>{isWished ? '❤️' : '🤍'}</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
@@ -165,6 +171,12 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#3E3125',
     textTransform: 'uppercase',
+  },
+  wishlistHeaderBtn: {
+    padding: 6,
+  },
+  wishlistHeaderIcon: {
+    fontSize: 18,
   },
   scroll: {
     backgroundColor: '#FCFAF7',

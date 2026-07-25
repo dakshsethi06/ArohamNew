@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, TextInput } from 'react-native';
-import { MAROON, GOLD, IVORY } from '../constants/theme';
+import { MAROON, GOLD } from '../constants/theme';
+import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 
 interface HeaderProps {
-  onSearchPress?: () => void;
+  onSearchPress?: (query: string) => void;
   onCartPress?: () => void;
   onWishlistPress?: () => void;
   onMenuPress?: () => void;
@@ -17,9 +19,15 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [showSearch, setShowSearch] = useState(false);
   const [query, setQuery] = useState('');
+  const { cartCount } = useCart();
+  const { wishlist } = useWishlist();
+
+  const handleSearchSubmit = () => {
+    if (onSearchPress) onSearchPress(query);
+  };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <View style={styles.container}>
         <View style={styles.left}>
           {/* Logo Disc */}
@@ -36,14 +44,24 @@ export const Header: React.FC<HeaderProps> = ({
 
           <TouchableOpacity onPress={onWishlistPress} style={styles.iconBtn}>
             <Text style={styles.iconText}>❤️</Text>
+            {wishlist.length > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{wishlist.length}</Text>
+              </View>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity onPress={onCartPress} style={styles.iconBtn}>
             <Text style={styles.iconText}>🛒</Text>
+            {cartCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{cartCount}</Text>
+              </View>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity onPress={onMenuPress} style={styles.iconBtn}>
-            <Text style={styles.iconText}>☰</Text>
+            <Text style={styles.iconText}>👤</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -52,14 +70,18 @@ export const Header: React.FC<HeaderProps> = ({
         <View style={styles.searchBox}>
           <TextInput
             style={styles.searchInput}
-            placeholder="Search sacred store..."
+            placeholder="Search sacred Store..."
             placeholderTextColor="#8B7355"
             value={query}
-            onChangeText={setQuery}
+            onChangeText={(text) => {
+              setQuery(text);
+              if (onSearchPress) onSearchPress(text);
+            }}
+            onSubmitEditing={handleSearchSubmit}
           />
         </View>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -102,14 +124,34 @@ const styles = StyleSheet.create({
   right: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   iconBtn: {
     padding: 6,
+    position: 'relative',
   },
   iconText: {
     fontSize: 18,
     color: '#3E3125',
+  },
+  badge: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    backgroundColor: MAROON,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+    borderWidth: 1,
+    borderColor: '#FFFFFF',
+  },
+  badgeText: {
+    color: GOLD,
+    fontSize: 9,
+    fontWeight: '800',
   },
   searchBox: {
     backgroundColor: '#FAF8F5',

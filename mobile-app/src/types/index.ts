@@ -1,24 +1,7 @@
-export interface ArohamProduct {
-  id: number;
-  slug: string;
-  name: string;
-  subtitle: string;
-  category?: string;
-  purpose?: string;
-  price: number;
-  original: number;
-  rating?: number;
-  reviews?: number;
-  img: string;
-  badges?: string[];
-  shortDesc?: string;
-  description?: string | string[];
-  benefits?: string[];
-  size?: string;
-  material?: string;
-  useFor?: string[];
-  stock?: number;
-}
+import { ArohamProduct } from '@logic/types/product';
+import { CartItem } from '@logic/types/cart';
+
+export type { ArohamProduct, CartItem };
 
 export interface Astrologer {
   id: string;
@@ -33,10 +16,6 @@ export interface Astrologer {
   status: "online" | "busy" | "offline";
   pricePerMin: number;
   bio?: string;
-}
-
-export interface CartItem extends ArohamProduct {
-  qty: number;
 }
 
 export interface Message {
@@ -61,7 +40,7 @@ export interface Order {
   id: string;
   amount: number;
   status: "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
-  items: string;
+  items: any;
   address?: Address;
   created_at: string;
   tracking_id?: string;

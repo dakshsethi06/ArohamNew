@@ -1,6 +1,5 @@
-import React from 'react';
-import { View, Text, ScrollView, Image, TouchableOpacity, StyleSheet, Modal, Dimensions } from 'react-native';
-import { CartItem } from '../types';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, Image, TouchableOpacity, StyleSheet, Modal, Dimensions, TextInput } from 'react-native';
 import { MAROON, GOLD } from '../constants/theme';
 import { useCart } from '../context/CartContext';
 
@@ -15,7 +14,16 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onClose,
   onCheckout
 }) => {
-  const { cart, updateQty, removeFromCart, cartTotal } = useCart();
+  const { cart, updateQty, removeFromCart, subtotal, discount, total, appliedCoupon, applyCoupon, removeCoupon } = useCart();
+  const [couponCode, setCouponCode] = useState('');
+  const [couponMsg, setCouponMsg] = useState<{ text: string; isError: boolean } | null>(null);
+
+  const handleApplyCoupon = () => {
+    if (!couponCode.trim()) return;
+    const res = applyCoupon(couponCode);
+    setCouponMsg({ text: res.message, isError: !res.success });
+    if (res.success) setCouponCode('');
+  };
 
   return (
     <Modal
@@ -49,54 +57,102 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             <>
               {/* Scrollable list */}
               <ScrollView style={styles.scrollList} showsVerticalScrollIndicator={false}>
-                {cart.map((item) => (
-                  <View key={item.id} style={styles.cartCard}>
-                    <Image source={{ uri: item.img }} style={styles.img} />
-                    
-                    <View style={styles.info}>
-                      <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
-                      <Text style={styles.subtitle}>{item.subtitle}</Text>
-                      <Text style={styles.price}>₹{item.price.toLocaleString('en-IN')}</Text>
-                    </View>
+                {cart.map((item) => {
+                  const product = (item as any).product || item;
+                  return (
+                    <View key={product.id} style={styles.cartCard}>
+                      <Image source={{ uri: product.img }} style={styles.img} />
+                      
+                      <View style={styles.info}>
+                        <Text style={styles.name} numberOfLines={1}>{product.name}</Text>
+                        <Text style={styles.subtitle}>{product.subtitle}</Text>
+                        <Text style={styles.price}>₹{product.price.toLocaleString('en-IN')}</Text>
+                      </View>
 
-                    {/* Quantity selectors & Delete */}
-                    <View style={styles.actions}>
-                      <TouchableOpacity 
-                        style={styles.trashBtn} 
-                        onPress={() => removeFromCart(item.id)}
-                      >
-                        <Text style={styles.trashIcon}>🗑️</Text>
-                      </TouchableOpacity>
+                      {/* Quantity selectors & Delete */}
+                      <View style={styles.actions}>
+                        <TouchableOpacity 
+                          style={styles.trashBtn} 
+                          onPress={() => removeFromCart(product.id)}
+                        >
+                          <Text style={styles.trashIcon}>🗑️</Text>
+                        </TouchableOpacity>
 
-                      <View style={styles.qtyRow}>
-                        <TouchableOpacity 
-                          style={styles.qtyBtn} 
-                          onPress={() => updateQty(item.id, Math.max(1, item.qty - 1))}
-                        >
-                          <Text style={styles.qtyBtnText}>-</Text>
-                        </TouchableOpacity>
-                        
-                        <Text style={styles.qtyText}>{item.qty}</Text>
-                        
-                        <TouchableOpacity 
-                          style={styles.qtyBtn} 
-                          onPress={() => updateQty(item.id, item.qty + 1)}
-                        >
-                          <Text style={styles.qtyBtnText}>+</Text>
-                        </TouchableOpacity>
+                        <View style={styles.qtyRow}>
+                          <TouchableOpacity 
+                            style={styles.qtyBtn} 
+                            onPress={() => updateQty(product.id, -1)}
+                          >
+                            <Text style={styles.qtyBtnText}>-</Text>
+                          </TouchableOpacity>
+                          
+                          <Text style={styles.qtyText}>{item.qty}</Text>
+                          
+                          <TouchableOpacity 
+                            style={styles.qtyBtn} 
+                            onPress={() => updateQty(product.id, 1)}
+                          >
+                            <Text style={styles.qtyBtnText}>+</Text>
+                          </TouchableOpacity>
+                        </View>
                       </View>
                     </View>
-                  </View>
-                ))}
+                  );
+                })}
+
+                {/* Coupon Code Section */}
+                <View style={styles.couponContainer}>
+                  <Text style={styles.couponTitle}>Sacred Promo Code</Text>
+                  {appliedCoupon ? (
+                    <View style={styles.appliedCouponRow}>
+                      <View style={styles.couponBadge}>
+                        <Text style={styles.couponBadgeText}>🏷️ {appliedCoupon.code}</Text>
+                        <Text style={styles.couponLabelText}>{appliedCoupon.label}</Text>
+                      </View>
+                      <TouchableOpacity onPress={removeCoupon} style={styles.removeCouponBtn}>
+                        <Text style={styles.removeCouponText}>Remove</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <View style={styles.couponInputRow}>
+                      <TextInput
+                        style={styles.couponInput}
+                        placeholder="Enter AROHAM10 or FIRST100"
+                        placeholderTextColor="#8B7355"
+                        value={couponCode}
+                        onChangeText={setCouponCode}
+                        autoCapitalize="characters"
+                      />
+                      <TouchableOpacity style={styles.applyBtn} onPress={handleApplyCoupon}>
+                        <Text style={styles.applyBtnText}>APPLY</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                  {couponMsg && (
+                    <Text style={[styles.couponMsg, couponMsg.isError ? styles.couponError : styles.couponSuccess]}>
+                      {couponMsg.text}
+                    </Text>
+                  )}
+                </View>
               </ScrollView>
 
               {/* Total & Checkout button */}
               <View style={styles.footer}>
                 <View style={styles.totalRow}>
-                  <Text style={styles.totalLabel}>Subtotal</Text>
-                  <Text style={styles.totalVal}>₹{cartTotal.toLocaleString('en-IN')}</Text>
+                  <Text style={styles.subtotalLabel}>Subtotal</Text>
+                  <Text style={styles.subtotalVal}>₹{subtotal.toLocaleString('en-IN')}</Text>
                 </View>
-                <Text style={styles.taxLabel}>* Free Express Shipping & Pooja Consecration Included</Text>
+                {discount > 0 && (
+                  <View style={styles.totalRow}>
+                    <Text style={styles.discountLabel}>Coupon Discount</Text>
+                    <Text style={styles.discountVal}>-₹{discount.toLocaleString('en-IN')}</Text>
+                  </View>
+                )}
+                <View style={[styles.totalRow, { marginTop: 4 }]}>
+                  <Text style={styles.totalLabel}>Total Payable</Text>
+                  <Text style={styles.totalVal}>₹{total.toLocaleString('en-IN')}</Text>
+                </View>
+                <Text style={styles.taxLabel}>* Free Express Shipping & Sacred Consecration Included</Text>
 
                 <TouchableOpacity style={styles.checkoutBtn} onPress={onCheckout}>
                   <Text style={styles.checkoutText}>PROCEED TO SHIPPING</Text>
@@ -122,7 +178,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sheet: {
-    height: height * 0.75,
+    height: height * 0.82,
     backgroundColor: '#FCFAF7',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -266,6 +322,86 @@ const styles = StyleSheet.create({
     color: '#3E3125',
     paddingHorizontal: 8,
   },
+  couponContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(200, 160, 68, 0.15)',
+    marginVertical: 12,
+    gap: 8,
+  },
+  couponTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: MAROON,
+    textTransform: 'uppercase',
+  },
+  couponInputRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  couponInput: {
+    flex: 1,
+    height: 38,
+    backgroundColor: '#FAF8F5',
+    borderWidth: 1,
+    borderColor: '#E5D7C3',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    fontSize: 12,
+    color: '#3E3125',
+  },
+  applyBtn: {
+    backgroundColor: MAROON,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  applyBtnText: {
+    color: GOLD,
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  appliedCouponRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(91, 31, 36, 0.05)',
+    padding: 10,
+    borderRadius: 10,
+  },
+  couponBadge: {
+    gap: 2,
+  },
+  couponBadgeText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: MAROON,
+  },
+  couponLabelText: {
+    fontSize: 10,
+    color: '#8B7355',
+  },
+  removeCouponBtn: {
+    padding: 4,
+  },
+  removeCouponText: {
+    fontSize: 11,
+    color: '#D9381E',
+    fontWeight: '700',
+  },
+  couponMsg: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  couponSuccess: {
+    color: '#2E7D32',
+  },
+  couponError: {
+    color: '#D9381E',
+  },
   footer: {
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
@@ -279,9 +415,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 4,
   },
-  totalLabel: {
+  subtotalLabel: {
+    fontSize: 12,
+    color: '#8B7355',
+  },
+  subtotalVal: {
     fontSize: 13,
     fontWeight: '700',
+    color: '#3E3125',
+  },
+  discountLabel: {
+    fontSize: 12,
+    color: '#2E7D32',
+    fontWeight: '700',
+  },
+  discountVal: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#2E7D32',
+  },
+  totalLabel: {
+    fontSize: 13,
+    fontWeight: '800',
     color: '#3E3125',
   },
   totalVal: {

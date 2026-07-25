@@ -1,12 +1,13 @@
 import { supabase } from "./supabase";
 import { firebaseAuth } from "./firebase";
+import { getEnv } from "../utils/env";
 
-const isLocal = typeof window !== "undefined" && (
+const isLocal = typeof window !== "undefined" && window.location && (
   window.location.hostname === "localhost" || 
   window.location.hostname === "127.0.0.1" || 
   window.location.hostname.startsWith("192.168.")
 );
-const API_BASE = import.meta.env.VITE_API_BASE || (isLocal ? "http://localhost:5000/api" : "/api");
+const API_BASE = getEnv("VITE_API_BASE", isLocal ? "http://localhost:5000/api" : "http://localhost:5000/api");
 
 export async function api(endpoint: string, options: RequestInit = {}) {
   // Get token from Firebase Auth first, fallback to Supabase

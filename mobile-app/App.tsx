@@ -16,6 +16,44 @@ import { CartDrawer } from './src/components/CartDrawer';
 import { MAROON, GOLD } from './src/constants/theme';
 import { ActiveTab, ArohamProduct, Astrologer, Address } from './src/types';
 
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: any }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error("App Root ErrorBoundary caught error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#5B1F24', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+          <Text style={{ fontSize: 40, marginBottom: 12 }}>🕉️</Text>
+          <Text style={{ color: '#C8A044', fontSize: 20, fontWeight: '800', marginBottom: 8, textAlign: 'center' }}>
+            Aroham Sacred App
+          </Text>
+          <Text style={{ color: '#FFFFFF', fontSize: 13, textAlign: 'center', marginBottom: 20, lineHeight: 18 }}>
+            {this.state.error?.message || "Something went wrong. Tap to reload."}
+          </Text>
+          <TouchableOpacity
+            style={{ backgroundColor: '#C8A044', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 20 }}
+            onPress={() => this.setState({ hasError: false, error: null })}
+          >
+            <Text style={{ color: '#5B1F24', fontSize: 13, fontWeight: '800' }}>RETRY AGAIN</Text>
+          </TouchableOpacity>
+        </SafeAreaView>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function MainAppShell() {
   const { user } = useAuth();
   const { cart, addToCart, cartTotal, clearCart } = useCart();
@@ -23,6 +61,7 @@ function MainAppShell() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('home');
   const [selectedProduct, setSelectedProduct] = useState<ArohamProduct | null>(null);
   const [selectedAstro, setSelectedAstro] = useState<Astrologer | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   
   const [flow, setFlow] = useState<'normal' | 'productDetail' | 'chatRoom' | 'checkoutShipping' | 'checkoutPayment' | 'checkoutConfirm' | 'trackOrder' | 'policies'>('normal');
   const [shippingAddress, setShippingAddress] = useState<Address | null>(null);
@@ -32,26 +71,23 @@ function MainAppShell() {
   // Hardware Back Button Interceptor for Android / mobile devices
   useEffect(() => {
     const backAction = () => {
-      // Close cart drawer if visible
       if (cartVisible) {
         setCartVisible(false);
         return true;
       }
-      // If we are in a subflow, step back
       if (flow !== 'normal') {
         if (flow === 'checkoutPayment') {
           setFlow('checkoutShipping');
         } else {
           setFlow('normal');
         }
-        return true; // prevent default (app exit)
+        return true;
       }
-      // If we are not on the main home screen, go back to home tab
       if (activeTab !== 'home') {
         setActiveTab('home');
-        return true; // prevent default
+        return true;
       }
-      return false; // let default action happen (app exit)
+      return false;
     };
 
     const backHandler = BackHandler.addEventListener(
@@ -76,6 +112,12 @@ function MainAppShell() {
   const handleBuyNow = (p: ArohamProduct) => {
     addToCart(p, 1);
     setFlow('checkoutShipping');
+  };
+
+  const handleSearchHeader = (query: string) => {
+    setSearchQuery(query);
+    setActiveTab('shop');
+    setFlow('normal');
   };
 
   // Render Screens based on active tabs & stack navigation flows
@@ -149,12 +191,19 @@ function MainAppShell() {
       case 'consult':
         return <ConsultScreen onAstrologerPress={handleAstroPress} onHistoryPress={() => {}} />;
       case 'shop':
-        return <ShopScreen onProductPress={handleProductPress} onAddToCart={(p) => { addToCart(p, 1); setCartVisible(true); }} />;
+        return (
+          <ShopScreen
+            onProductPress={handleProductPress}
+            onAddToCart={(p) => { addToCart(p, 1); setCartVisible(true); }}
+            searchQuery={searchQuery}
+          />
+        );
       case 'profile':
         return (
           <ProfileScreens
             onTrackOrder={() => setFlow('trackOrder')}
             onPolicies={() => setFlow('policies')}
+            onWishlistPress={() => { setActiveTab('shop'); setFlow('normal'); }}
           />
         );
       default:
@@ -165,12 +214,13 @@ function MainAppShell() {
   const showHeader = flow === 'normal';
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#5B1F24" />
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
       {/* Shared Header (only on root tabs) */}
       {showHeader && (
         <Header
+          onSearchPress={handleSearchHeader}
           onCartPress={() => setCartVisible(true)}
           onWishlistPress={() => setActiveTab('profile')}
           onMenuPress={() => setActiveTab('profile')}
@@ -215,19 +265,21 @@ function MainAppShell() {
           })}
         </View>
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
 export default function App() {
   return (
-    <AuthProvider>
-      <CartProvider>
-        <WishlistProvider>
-          <MainAppShell />
-        </WishlistProvider>
-      </CartProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <CartProvider>
+          <WishlistProvider>
+            <MainAppShell />
+          </WishlistProvider>
+        </CartProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

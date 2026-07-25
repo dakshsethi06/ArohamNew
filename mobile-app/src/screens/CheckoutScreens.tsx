@@ -105,7 +105,8 @@ export const CheckoutPaymentScreen: React.FC<PaymentProps> = ({
       payment_method: method === 'razorpay' ? 'Razorpay' : 'COD',
       payment_status: method === 'razorpay' ? 'PAID' : 'PENDING',
       address: `${address?.line1}, ${address?.city}, ${address?.state} - ${address?.pincode}`,
-      shipping_address: address
+      shipping_address: address,
+      created_at: new Date().toISOString()
     };
 
     try {
@@ -117,7 +118,7 @@ export const CheckoutPaymentScreen: React.FC<PaymentProps> = ({
     setTimeout(() => {
       setLoading(false);
       onNext(orderId);
-    }, 1500);
+    }, 1200);
   };
 
   return (

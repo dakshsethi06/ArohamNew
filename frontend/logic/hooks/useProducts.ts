@@ -3,6 +3,7 @@ import { api } from "@logic/lib/api";
 import { supabase } from "@logic/lib/supabase";
 import { ArohamProduct } from "@logic/types/product";
 import { DEFAULT_PRODUCTS } from "@logic/constants/products";
+import { safeSessionStorage } from "@logic/utils/storage";
 
 function formatImageUrl(url: any) {
   if (!url || typeof url !== "string") return url;
@@ -45,7 +46,7 @@ function mapSupaProducts(data: any[]): ArohamProduct[] {
 
 export function useProducts() {
   const [products, setProducts] = useState<ArohamProduct[]>(() => {
-    const cached = sessionStorage.getItem("aroham_products_cache");
+    const cached = safeSessionStorage.getItem("aroham_products_cache");
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
@@ -63,7 +64,7 @@ export function useProducts() {
         const data = await api("/products");
         if (Array.isArray(data) && data.length > 0) {
           setProducts(data);
-          sessionStorage.setItem("aroham_products_cache", JSON.stringify(data));
+          safeSessionStorage.setItem("aroham_products_cache", JSON.stringify(data));
           setLoading(false);
           return;
         }
@@ -81,7 +82,7 @@ export function useProducts() {
         if (!error && Array.isArray(supaData) && supaData.length > 0) {
           const mapped = mapSupaProducts(supaData);
           setProducts(mapped);
-          sessionStorage.setItem("aroham_products_cache", JSON.stringify(mapped));
+          safeSessionStorage.setItem("aroham_products_cache", JSON.stringify(mapped));
           setLoading(false);
           return;
         }
@@ -90,7 +91,7 @@ export function useProducts() {
       }
 
       // 3. Fallback to cached or default items if database is unreachable
-      const cached = sessionStorage.getItem("aroham_products_cache");
+      const cached = safeSessionStorage.getItem("aroham_products_cache");
       if (cached) {
         try {
           const parsed = JSON.parse(cached);

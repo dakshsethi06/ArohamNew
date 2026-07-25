@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useRef, ReactNode } fro
 import { ArohamProduct } from "@logic/types/product";
 import { supabase } from "@logic/lib/supabase";
 import { useAuth } from "./AuthContext";
+import { safeLocalStorage } from "@logic/utils/storage";
 
 interface WishlistContextValue {
   wishlist: ArohamProduct[];
@@ -29,18 +30,18 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
 
     if (justLoggedOut) {
       setWishlist([]);
-      localStorage.removeItem("aroham_wishlist");
+      safeLocalStorage.removeItem("aroham_wishlist");
       setTimeout(() => { isLoggingOut.current = false; }, 100);
     } else if (user?.id) {
       // 1. Load user-specific local storage cache first for instant load
       const userKey = `aroham_user_wishlist_${user.id}`;
-      const userCached = localStorage.getItem(userKey);
+      const userCached = safeLocalStorage.getItem(userKey);
       let initialList: ArohamProduct[] = [];
       if (userCached) {
         try { initialList = JSON.parse(userCached); } catch (e) {}
       } else {
         // Fallback to guest list to carry it over on login
-        const guestCached = localStorage.getItem("aroham_wishlist");
+        const guestCached = safeLocalStorage.getItem("aroham_wishlist");
         if (guestCached) {
           try { initialList = JSON.parse(guestCached); } catch (e) {}
         }
@@ -68,7 +69,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         }, () => {});
     } else {
       // Load guest wishlist
-      const guestCached = localStorage.getItem("aroham_wishlist");
+      const guestCached = safeLocalStorage.getItem("aroham_wishlist");
       if (guestCached) {
         try { setWishlist(JSON.parse(guestCached)); } catch (e) {}
       }
@@ -79,9 +80,9 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isLoggingOut.current) return;
 
-    localStorage.setItem("aroham_wishlist", JSON.stringify(wishlist));
+    safeLocalStorage.setItem("aroham_wishlist", JSON.stringify(wishlist));
     if (user?.id) {
-      localStorage.setItem(`aroham_user_wishlist_${user.id}`, JSON.stringify(wishlist));
+      safeLocalStorage.setItem(`aroham_user_wishlist_${user.id}`, JSON.stringify(wishlist));
       // Upsert to Supabase
       Promise.resolve(
         supabase.from("user_wishlists").upsert({

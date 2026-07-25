@@ -17,6 +17,8 @@ export * from "./types/product";
 export * from "./types/cart";
 
 export * from "./utils/uuid";
+export * from "./utils/env";
+export * from "./utils/storage";
 
 export * from "./constants/data";
 export * from "./constants/products";
