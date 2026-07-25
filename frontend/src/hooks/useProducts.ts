@@ -62,8 +62,13 @@ export function useProducts() {
       try {
         const data = await api("/products");
         if (Array.isArray(data) && data.length > 0) {
-          setProducts(data);
-          sessionStorage.setItem("aroham_products_cache", JSON.stringify(data));
+          // Check if data is unmapped (e.g., price is in paise, or missing slug/img)
+          const firstItem = data[0];
+          const needsMapping = firstItem.price > 10000 || !firstItem.slug || !firstItem.img;
+          
+          const mappedData = needsMapping ? mapSupaProducts(data) : data;
+          setProducts(mappedData);
+          sessionStorage.setItem("aroham_products_cache", JSON.stringify(mappedData));
           setLoading(false);
           return;
         }
