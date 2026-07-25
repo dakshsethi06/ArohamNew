@@ -42,9 +42,9 @@ export async function fetchProducts(): Promise<ArohamProduct[]> {
 
     return data.map((p: any) => {
       const rawPrice = Number(p.price) || 0;
-      const priceVal = rawPrice > 10000 ? rawPrice / 100 : rawPrice;
+      const priceVal = Math.round(rawPrice > 10000 ? rawPrice / 100 : rawPrice);
       const rawOrig = p.original_price ? Number(p.original_price) : 0;
-      const origVal = rawOrig > 0 ? (rawOrig > 10000 ? rawOrig / 100 : rawOrig) : Math.round(priceVal * 1.25);
+      const origVal = Math.round(rawOrig > 0 ? (rawOrig > 10000 ? rawOrig / 100 : rawOrig) : priceVal * 1.25);
 
       return {
         id: p.id,
@@ -131,7 +131,7 @@ export const MOCK_PRODUCTS: ArohamProduct[] = [
     category: "Bracelet",
     purpose: "Protection",
     price: 439,
-    original: 548.75,
+    original: 549,
     rating: 5,
     reviews: 1,
     img: "https://images.unsplash.com/photo-1611312449408-fcece27cdbb7?w=400",
@@ -207,7 +207,7 @@ export const MOCK_PRODUCTS: ArohamProduct[] = [
     category: "Yantra",
     purpose: "Vastu",
     price: 1299,
-    original: 1623.75,
+    original: 1624,
     rating: 4.8,
     reviews: 84,
     img: "https://images.unsplash.com/photo-1596394723269-e5e2dbdbf4db?w=400",
@@ -226,7 +226,7 @@ export const MOCK_PRODUCTS: ArohamProduct[] = [
     category: "Yantra",
     purpose: "Vastu",
     price: 999,
-    original: 1248.75,
+    original: 1249,
     rating: 5,
     reviews: 62,
     img: "https://images.unsplash.com/photo-1600298881974-6be191ceeda1?w=400",

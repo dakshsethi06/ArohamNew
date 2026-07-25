@@ -64,12 +64,12 @@ export function ProductCard({ product: p, onProductClick, onAddToCart, wishKey =
           </div>
         </div>
       </div>
-      <div className="p-3 pt-2 flex flex-col gap-2 border-t border-black/[0.04]">
+      <div className="p-3 pt-1 flex flex-col gap-2">
         <div className="flex items-baseline justify-between gap-1 flex-wrap">
           <div className="flex items-baseline gap-1.5 min-w-0">
-            <span className="text-sm font-bold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{p.price.toLocaleString("en-IN")}</span>
+            <span className="text-sm font-bold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>₹{Math.round(p.price).toLocaleString("en-IN")}</span>
             {p.original > p.price && (
-              <span className="text-[10px] line-through opacity-70" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{p.original.toLocaleString("en-IN")}</span>
+              <span className="text-[10px] line-through opacity-70" style={{ fontFamily: PRICE_FONT, color: "#9A8A78" }}>₹{Math.round(p.original).toLocaleString("en-IN")}</span>
             )}
           </div>
           {p.original > p.price && (

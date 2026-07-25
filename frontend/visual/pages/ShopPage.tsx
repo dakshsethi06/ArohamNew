@@ -552,29 +552,29 @@ export function ShopPage() {
                               {p.name}
                             </h3>
 
-                            {/* Subtitle — hidden on mobile for Myntra-like compactness */}
-                            <p className="hidden sm:block text-xs line-clamp-1 font-medium" style={{ color: "#7A6A58" }}>
+                            {/* Subtitle */}
+                            <p className="text-[10px] sm:text-xs line-clamp-1 font-medium" style={{ color: "#7A6A58" }}>
                               {p.subtitle}
                             </p>
                           </div>
 
                           {/* Price + Cart */}
-                          <div className="pt-1.5 sm:pt-3 sm:border-t sm:border-amber-900/10 space-y-1.5 sm:space-y-3">
+                          <div className="pt-1 space-y-1.5 sm:space-y-2">
                             {/* Pricing row */}
-                            <div className="flex items-baseline gap-1 sm:gap-2 flex-wrap sm:justify-between">
+                            <div className="flex items-baseline gap-1 sm:gap-2 flex-wrap justify-between">
                               <div className="flex items-baseline gap-1 sm:gap-2 flex-wrap">
                                 <span className="text-sm sm:text-xl font-extrabold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>
-                                  ₹{p.price.toLocaleString("en-IN")}
+                                  ₹{Math.round(p.price).toLocaleString("en-IN")}
                                 </span>
                                 {p.original > p.price && (
                                   <span className="text-[10px] sm:text-xs line-through opacity-60 font-semibold" style={{ fontFamily: PRICE_FONT, color: "#8A7A68" }}>
-                                    ₹{p.original.toLocaleString("en-IN")}
+                                    ₹{Math.round(p.original).toLocaleString("en-IN")}
                                   </span>
                                 )}
                               </div>
 
                               {discountPct > 0 && (
-                                <span className="text-[9px] sm:text-[10px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-sm sm:rounded-full bg-orange-50 sm:bg-emerald-50 text-orange-600 sm:text-emerald-700 sm:border sm:border-emerald-200">
+                                <span className="text-[9px] sm:text-[10px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                                   {discountPct}% OFF
                                 </span>
                               )}
@@ -718,11 +718,11 @@ export function ShopPage() {
                           <div className="flex flex-col sm:items-end">
                             <div className="flex items-baseline gap-2">
                               <span className="text-xl font-extrabold" style={{ fontFamily: PRICE_FONT, color: MAROON }}>
-                                ₹{p.price.toLocaleString("en-IN")}
+                                ₹{Math.round(p.price).toLocaleString("en-IN")}
                               </span>
                               {p.original > p.price && (
                                 <span className="text-xs line-through opacity-60 font-semibold" style={{ fontFamily: PRICE_FONT, color: "#8A7A68" }}>
-                                  ₹{p.original.toLocaleString("en-IN")}
+                                  ₹{Math.round(p.original).toLocaleString("en-IN")}
                                 </span>
                               )}
                             </div>
