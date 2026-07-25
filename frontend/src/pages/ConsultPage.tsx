@@ -944,7 +944,8 @@ export function ConsultPage() {
                 <span>Verified Temple Scholars</span>
               </div>
               <h1 className="tracking-tight text-[#5B1F24]" style={{ fontFamily: SERIF, fontSize: "clamp(2.0rem, 5vw, 3.6rem)", fontWeight: 800 }}>
-                Consult Verified <span className="bg-gradient-to-r from-amber-600 to-amber-800 bg-clip-text text-transparent">Vedic Acharyas</span>
+                Consult Verified <br className="sm:hidden" />
+                <span className="bg-gradient-to-r from-amber-600 to-amber-800 bg-clip-text text-transparent">Vedic Acharyas</span>
               </h1>
               <p className="text-xs sm:text-sm mt-2 sm:mt-3 max-w-2xl font-medium text-amber-950/70 leading-relaxed">
                 Connect live with certified Vedic Astrologers and scholars registered in the Aroham database for Kundali, Gemstone prescriptions, Rudraksha analysis, and authentic remedies.
