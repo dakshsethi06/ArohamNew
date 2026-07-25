@@ -176,6 +176,7 @@ export function ConsultPage() {
 
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatScrollContainerRef = useRef<HTMLDivElement>(null);
   const historyContainerRef = useRef<HTMLDivElement>(null);
 
   const [showUserHistoryModal, setShowUserHistoryModal] = useState(false);
@@ -334,7 +335,11 @@ export function ConsultPage() {
   }, []);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatScrollContainerRef.current) {
+      chatScrollContainerRef.current.scrollTop = chatScrollContainerRef.current.scrollHeight;
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   useEffect(() => {
@@ -693,9 +698,9 @@ export function ConsultPage() {
 
   if (session && selectedAstrologer) {
     return createPortal(
-      <div className="fixed top-0 left-0 w-screen h-screen z-[9999] bg-[#1C0608]/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4" style={{ fontFamily: SANS }}>
+      <div className="fixed inset-0 w-full h-[100dvh] z-[9999] bg-[#1C0608]/85 backdrop-blur-md flex items-center justify-center p-0 sm:p-4" style={{ fontFamily: SANS }}>
         {/* Animated Main Chat Container */}
-        <div className="w-full max-w-5xl bg-[#FCFAF7] rounded-[32px] border-2 border-amber-900/15 shadow-2xl flex flex-col h-[90vh] max-h-[880px] overflow-hidden relative animate-in fade-in zoom-in-95 duration-300">
+        <div className="w-full max-w-5xl bg-[#FCFAF7] rounded-none sm:rounded-[32px] border-0 sm:border-2 sm:border-amber-900/15 shadow-2xl flex flex-col h-[100dvh] sm:h-[90vh] sm:max-h-[880px] overflow-hidden relative animate-in fade-in zoom-in-95 duration-300">
           
           {/* Subtle spiritual background mandala pattern */}
           <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: `radial-gradient(circle at 50% 50%, ${MAROON} 1px, transparent 1px), radial-gradient(circle at 0 0, ${MAROON} 1px, transparent 1px)`, backgroundSize: "40px 40px" }} />
@@ -764,7 +769,11 @@ export function ConsultPage() {
           ) : (
             <>
               {/* Premium Chat Messages Body */}
-              <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 bg-[#F8F4ED]/60 relative z-10 scrollbar-thin">
+              <div 
+                ref={chatScrollContainerRef}
+                className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 bg-[#F8F4ED]/60 relative z-10 scrollbar-thin"
+                style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch", overscrollBehaviorY: "contain" }}
+              >
                 <div className="text-center my-2">
                   <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-amber-900/5 text-[#5B1F24] border border-amber-900/10 shadow-xs">
                     <Lock size={11} className="text-amber-700" /> Secure Live consultation
