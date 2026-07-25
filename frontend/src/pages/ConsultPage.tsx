@@ -924,45 +924,45 @@ export function ConsultPage() {
       `}</style>
       
       {/* Luxury Sacred Hero Header with radial starry glow */}
-      <div className="relative pt-6 sm:pt-16 pb-6 sm:pb-12 px-4 sm:px-6 lg:px-10 border-b border-amber-900/10 overflow-hidden" style={{ background: "linear-gradient(180deg, #F8F4ED 0%, #FCFAF7 100%)" }}>
+      <div className="relative pt-4 sm:pt-16 pb-4 sm:pb-12 px-4 sm:px-6 lg:px-10 border-b border-amber-900/10 overflow-hidden" style={{ background: "linear-gradient(180deg, #F8F4ED 0%, #FCFAF7 100%)" }}>
         
         {/* Decorative Golden Ambient Orbs */}
         <div className="absolute top-12 right-1/4 w-80 h-80 rounded-full bg-amber-200/20 blur-[100px] pointer-events-none" />
         <div className="absolute -bottom-10 left-10 w-60 h-60 rounded-full bg-red-100/30 blur-[80px] pointer-events-none" />
         
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="flex items-center gap-2 mb-4 text-xs font-semibold text-amber-900/50">
+          <div className="flex items-center gap-2 mb-2 sm:mb-4 text-xs font-semibold text-amber-900/50">
             <button onClick={() => navigate("/")} className="hover:underline hover:text-[#5B1F24] transition-colors">Home</button>
             <span>/</span>
             <span className="font-bold text-[#5B1F24]">Vedic Consultations</span>
           </div>
 
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-8">
             <div>
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider mb-4 border border-amber-400/30 bg-amber-400/10 text-amber-800">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider mb-2.5 sm:mb-4 border border-amber-400/30 bg-amber-400/10 text-amber-800">
                 <Sparkles size={13} className="text-amber-600 fill-amber-600/30 animate-pulse" />
                 <span>Verified Temple Scholars</span>
               </div>
-              <h1 className="tracking-tight text-[#5B1F24]" style={{ fontFamily: SERIF, fontSize: "clamp(2.2rem, 5vw, 3.6rem)", fontWeight: 800 }}>
+              <h1 className="tracking-tight text-[#5B1F24]" style={{ fontFamily: SERIF, fontSize: "clamp(2.0rem, 5vw, 3.6rem)", fontWeight: 800 }}>
                 Consult Verified <span className="bg-gradient-to-r from-amber-600 to-amber-800 bg-clip-text text-transparent">Vedic Acharyas</span>
               </h1>
-              <p className="text-xs sm:text-sm mt-3 max-w-2xl font-medium text-amber-950/70 leading-relaxed">
+              <p className="text-xs sm:text-sm mt-2 sm:mt-3 max-w-2xl font-medium text-amber-950/70 leading-relaxed">
                 Connect live with certified Vedic Astrologers and scholars registered in the Aroham database for Kundali, Gemstone prescriptions, Rudraksha analysis, and authentic remedies.
               </p>
             </div>
 
-            <div className="flex items-center gap-4 bg-white/70 backdrop-blur-md p-4.5 rounded-3xl border border-amber-900/10 shadow-[0_8px_30px_rgb(91,31,36,0.02)] shrink-0 self-start lg:self-auto">
+            <div className="flex items-center gap-3 sm:gap-4 bg-white/70 backdrop-blur-md p-3 sm:p-4.5 rounded-2xl sm:rounded-3xl border border-amber-900/10 shadow-[0_8px_30px_rgb(91,31,36,0.02)] shrink-0 self-start lg:self-auto">
               <div className="flex -space-x-3">
                 {astrologers.slice(0, 4).map((a, i) => (
-                  <img key={a.id} src={a.avatar} alt={a.name} className="w-10.5 h-10.5 rounded-full object-cover border-2 border-white shadow-md z-10" style={{ zIndex: 40 - i }} />
+                  <img key={a.id} src={a.avatar} alt={a.name} className="w-8.5 h-8.5 sm:w-10.5 sm:h-10.5 rounded-full object-cover border-2 border-white shadow-md z-10" style={{ zIndex: 40 - i }} />
                 ))}
               </div>
               <div>
-                <p className="font-extrabold text-emerald-600 text-sm flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <p className="font-extrabold text-emerald-600 text-xs sm:text-sm flex items-center gap-1.5">
+                  <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                   {onlineCount} Scholars Active
                 </p>
-                <p className="text-[11px] text-amber-900/60 font-bold">Instant live chat available</p>
+                <p className="text-[10px] sm:text-[11px] text-amber-900/60 font-bold">Instant live chat available</p>
               </div>
             </div>
           </div>
@@ -970,32 +970,32 @@ export function ConsultPage() {
       </div>
 
       {/* Main Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-1 pb-10 sm:py-10 space-y-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-1 pb-10 sm:py-10 space-y-5 sm:space-y-8">
         
         {/* Search & Topic Filters Bar */}
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-white p-4.5 rounded-3xl border border-amber-900/10 shadow-[0_4px_25px_rgba(91,31,36,0.02)]">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4 bg-white p-3.5 sm:p-4.5 rounded-2xl sm:rounded-3xl border border-amber-900/10 shadow-[0_4px_25px_rgba(91,31,36,0.02)]">
           
           {/* Search Box */}
           <div className="relative flex-1 max-w-md">
-            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-900/40" />
+            <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-900/40" />
             <input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search scholar by name, specialty..."
-              className="w-full h-11.5 pl-11 pr-4 rounded-2xl text-xs bg-amber-50/20 border border-amber-900/10 outline-none focus:border-[#5B1F24] focus:ring-2 focus:ring-[#5B1F24]/5 focus:bg-white transition-all text-[#3C3024] font-medium"
+              className="w-full h-10 sm:h-11.5 pl-11 pr-4 rounded-xl sm:rounded-2xl text-xs bg-amber-50/20 border border-amber-900/10 outline-none focus:border-[#5B1F24] focus:ring-2 focus:ring-[#5B1F24]/5 focus:bg-white transition-all text-[#3C3024] font-medium"
             />
           </div>
 
           {/* Action and Filter Row */}
-          <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3.5 flex-1 justify-end min-w-0">
+          <div className="flex flex-row items-center gap-2 flex-1 justify-end min-w-0">
             {/* Topic Category Pills */}
-            <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1 min-w-0 w-full lg:w-auto">
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1 min-w-0 w-full">
               {["All", "Online Now", "Kundali", "Rudraksha", "Gemstone", "Vastu", "Career", "Marriage"].map(topic => (
                 <button
                   key={topic}
                   onClick={() => setSelectedTopic(topic)}
-                  className={`px-4.5 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap border ${
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border ${
                     selectedTopic === topic
                       ? "bg-[#5B1F24] text-white border-[#5B1F24] shadow-md shadow-[#5B1F24]/10"
                       : "bg-[#FAF8F5] text-[#4A3E31] border-amber-900/10 hover:bg-amber-900/5 hover:border-amber-900/20"
@@ -1005,20 +1005,11 @@ export function ConsultPage() {
                 </button>
               ))}
             </div>
-
-            {/* History Button - Prominent on mobile, aligned on desktop */}
-            <button
-              onClick={openUserHistoryModal}
-              className="px-4.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all whitespace-nowrap bg-amber-900/10 hover:bg-amber-900/15 text-[#5B1F24] border border-amber-900/20 flex items-center justify-center gap-1.5 shadow-xs shrink-0 w-full lg:w-auto"
-            >
-              <Clock size={14} className="text-amber-700" />
-              <span>My Saved Chat History</span>
-            </button>
           </div>
         </div>
 
         {/* Database Astrologers Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6.5">
           {filteredAstrologers.length === 0 ? (
             <div className="col-span-full p-16 rounded-[32px] bg-white border border-amber-900/10 text-center space-y-4 shadow-sm max-w-md mx-auto">
               <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mx-auto text-amber-900/30">
@@ -1084,7 +1075,7 @@ export function ConsultPage() {
                 </div>
 
                 {/* Mobile List Card */}
-                <div onClick={() => startConsultation(astro)} className="flex md:hidden bg-white rounded-2xl p-4.5 border border-amber-900/10 shadow-xs gap-4 items-center w-full cursor-pointer hover:shadow-md hover:border-amber-500/20 transition-all duration-300">
+                <div onClick={() => startConsultation(astro)} className="flex md:hidden bg-white rounded-2xl p-3.5 border border-amber-900/10 shadow-xs gap-3.5 items-center w-full cursor-pointer hover:shadow-md hover:border-amber-500/20 transition-all duration-300">
                   {/* Left Side: Circular Avatar, Status Dot, Stars & Orders */}
                   <div className="flex flex-col items-center flex-shrink-0 min-w-[85px]">
                     <div className="relative">
@@ -1154,6 +1145,17 @@ export function ConsultPage() {
               </div>
             ))
           )}
+        </div>
+
+        {/* Saved Chat History Button at the bottom of the listings */}
+        <div className="flex justify-center pt-2 pb-4">
+          <button
+            onClick={openUserHistoryModal}
+            className="px-6 py-3 rounded-2xl text-xs font-extrabold transition-all bg-amber-900/10 hover:bg-amber-900/15 text-[#5B1F24] border border-amber-900/20 flex items-center justify-center gap-1.5 shadow-xs active:scale-95"
+          >
+            <Clock size={14} className="text-amber-700" />
+            <span>My Saved Chat History</span>
+          </button>
         </div>
 
         {/* Authentic Guidance Guarantee Footer Banner */}
