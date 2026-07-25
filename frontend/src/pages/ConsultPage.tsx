@@ -10,7 +10,6 @@ import { GOLD, IVORY, SANS, SERIF, MAROON } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/lib/supabase";
-import { DEFAULT_PRODUCTS } from "@/constants/products";
 import { useProducts } from "@/hooks/useProducts";
 
 interface Astrologer {
@@ -152,7 +151,7 @@ export function ConsultPage() {
   const { products } = useProducts();
 
   const findProduct = (slug: string) => {
-    return products.find(p => p.slug === slug) || DEFAULT_PRODUCTS.find(p => p.slug === slug);
+    return products.find(p => p.slug === slug);
   };
 
   const [selectedTopic, setSelectedTopic] = useState<string>("All");
@@ -428,7 +427,7 @@ export function ConsultPage() {
             text: m.text || m.message_text,
             timestamp: new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             recommended_product_slug: m.recommended_product_slug,
-            recommendedProduct: m.recommended_product_slug ? DEFAULT_PRODUCTS.find(p => p.slug === m.recommended_product_slug) : null
+            recommendedProduct: m.recommended_product_slug ? findProduct(m.recommended_product_slug) : null
           })));
         }
       } catch (e) {}

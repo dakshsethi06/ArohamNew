@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { supabase } from "@/lib/supabase";
 import { MAROON, GOLD, IVORY, SANS, SERIF } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
-import { DEFAULT_PRODUCTS } from "@/constants/products";
+import { useProducts } from "@/hooks/useProducts";
 import { generateUUID } from "@/utils/uuid";
 import {
   Send,
@@ -110,7 +110,9 @@ export function AstrologerDashboard() {
   const [dbTransactions, setDbTransactions] = useState<any[]>([]);
   const [seekerNames, setSeekerNames] = useState<Record<string, string>>({});
   const [dbReviews, setDbReviews] = useState<any[]>([]);
-  const [remedyProducts, setRemedyProducts] = useState<any[]>(DEFAULT_PRODUCTS || []);
+  const [dbRemedyProducts, setDbRemedyProducts] = useState<any[]>([]);
+  const { products: hookRemedyProducts } = useProducts();
+  const remedyProducts = dbRemedyProducts.length > 0 ? dbRemedyProducts : hookRemedyProducts;
   const [financialStats, setFinancialStats] = useState({
     todayEarnings: 0,
     monthlyEarnings: 0,
@@ -621,7 +623,7 @@ export function AstrologerDashboard() {
             ...p,
             price: p.price / 100
           }));
-        setRemedyProducts(filtered);
+        setDbRemedyProducts(filtered);
       }
     } catch (e) {}
   };
@@ -1521,7 +1523,7 @@ export function AstrologerDashboard() {
                                 onClick={() => sendMessage(`I recommend wearing this sacred item to balance your planetary stars:`, prod)}
                                 className="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-amber-50 border border-amber-900/15 text-[#4A3E31] flex items-center gap-2 transition-all active:scale-95 shadow-xs"
                               >
-                                <img src={prod.image || prod.img} alt={prod.name} className="w-5 h-5 rounded-md object-cover" />
+                                <img src={(prod as any).image || prod.img} alt={prod.name} className="w-5 h-5 rounded-md object-cover" />
                                 <span>{prod.name} (₹{prod.price})</span>
                               </button>
                             ))}
@@ -1694,7 +1696,7 @@ export function AstrologerDashboard() {
                 {remedyProducts.map(prod => (
                   <div key={prod.slug || prod.id} className="p-4 rounded-3xl bg-white border border-amber-900/15 space-y-3 flex flex-col justify-between shadow-xs">
                     <div>
-                      <img src={prod.image || prod.img} alt={prod.name} className="w-full h-32 rounded-2xl object-cover border border-amber-900/10 mb-3" />
+                      <img src={(prod as any).image || prod.img} alt={prod.name} className="w-full h-32 rounded-2xl object-cover border border-amber-900/10 mb-3" />
                       <h4 className="font-bold text-xs text-[#5B1F24]">{prod.name}</h4>
                       <p className="text-xs font-bold text-amber-700 mt-1">₹{prod.price}</p>
                     </div>
