@@ -11,23 +11,11 @@ import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 
-function isSameCategory(prodCategory?: string, filterCat?: string, prodName?: string): boolean {
-  if (!filterCat) return false;
+function isSameCategory(prodCategory?: string, filterCat?: string): boolean {
+  if (!prodCategory || !filterCat) return false;
+  const pCatNorm = prodCategory.toLowerCase().trim().replace(/s$/, "");
   const cNorm = filterCat.toLowerCase().trim().replace(/s$/, "");
-  
-  if (prodCategory) {
-    const pCatNorm = prodCategory.toLowerCase().trim().replace(/s$/, "");
-    if (pCatNorm === cNorm || prodCategory.toLowerCase().trim() === filterCat.toLowerCase().trim()) {
-      return true;
-    }
-  }
-
-  if (prodName) {
-    const nameLower = prodName.toLowerCase();
-    if (nameLower.includes(cNorm)) return true;
-  }
-
-  return false;
+  return pCatNorm === cNorm || prodCategory.toLowerCase().trim() === filterCat.toLowerCase().trim();
 }
 
 export function ShopPage() {
@@ -66,7 +54,7 @@ export function ShopPage() {
 
   const filtered = products.filter(p => {
     if (cats.length) {
-      const matchesCat = cats.some(c => isSameCategory(p.category, c, p.name));
+      const matchesCat = cats.some(c => isSameCategory(p.category, c));
       if (!matchesCat) return false;
     }
     if (prps.length && p.purpose && !prps.includes(p.purpose)) return false;
@@ -137,7 +125,7 @@ export function ShopPage() {
         </h3>
         <div className="space-y-2">
           {CATEGORIES.map(c => {
-            const count = products.filter(p => isSameCategory(p.category, c, p.name)).length;
+            const count = products.filter(p => isSameCategory(p.category, c)).length;
             const isSelected = cats.includes(c);
             return (
               <button
