@@ -11,6 +11,13 @@ import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 
+function isSameCategory(catA?: string, catB?: string): boolean {
+  if (!catA || !catB) return false;
+  const aNorm = catA.toLowerCase().trim().replace(/s$/, "");
+  const bNorm = catB.toLowerCase().trim().replace(/s$/, "");
+  return aNorm === bNorm || catA.toLowerCase().trim() === catB.toLowerCase().trim();
+}
+
 export function ShopPage() {
   const navigate = useNavigate();
   const { items, addToCart, updateQty, removeFromCart } = useCart();
@@ -18,44 +25,28 @@ export function ShopPage() {
   const [searchParams] = useSearchParams();
   const titleParam = searchParams.get("title") || searchParams.get("collection") || "";
   const catParam = searchParams.get("category") || "";
-  const prpParam = searchParams.get("purpose") || "";
-  
-  const [cats, setCats] = useState<string[]>(() => {
-    if (catParam) return [catParam];
-    if (CATEGORIES.includes(titleParam)) return [titleParam];
-    return [];
-  });
-  const [prps, setPrps] = useState<string[]>(() => {
-    if (prpParam) return [prpParam];
-    if (PURPOSES.includes(titleParam)) return [titleParam];
-    return [];
-  });
-  const [cols, setCols] = useState<string[]>(() => {
-    if (titleParam && !CATEGORIES.includes(titleParam) && !PURPOSES.includes(titleParam)) return [titleParam];
-    return [];
-  });
+
+  const [selectedTopic, setSelectedTopic] = useState<string>("All");
+  const [cats, setCats] = useState<string[]>(catParam ? [catParam] : []);
+  const [prps, setPrps] = useState<string[]>([]);
+  const [cols, setCols] = useState<string[]>(titleParam ? [titleParam] : []);
   const [maxPrice, setMaxPrice] = useState<number>(30000);
-  const [sort, setSort] = useState("popular");
+  const [sort, setSort] = useState<string>("recommended");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [quickViewProduct, setQuickViewProduct] = useState<any>(null);
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   useEffect(() => {
     if (catParam) setCats([catParam]);
-    else if (CATEGORIES.includes(titleParam)) setCats([titleParam]);
-    else setCats([]);
+  }, [catParam]);
 
-    if (prpParam) setPrps([prpParam]);
-    else if (PURPOSES.includes(titleParam)) setPrps([titleParam]);
-    else setPrps([]);
+  useEffect(() => {
+    if (titleParam) setCols([titleParam]);
+  }, [titleParam]);
 
-    if (titleParam && !CATEGORIES.includes(titleParam) && !PURPOSES.includes(titleParam)) setCols([titleParam]);
-    else setCols([]);
-  }, [titleParam, catParam, prpParam]);
-
-  let displayTitle = "Sacred Products";
-  if (cols.length === 1) displayTitle = cols[0];
-  else if (cats.length === 1 && prps.length === 0) displayTitle = cats[0];
-  else if (prps.length === 1 && cats.length === 0) displayTitle = prps[0];
+  let displayTitle = titleParam || (cats.length === 1 ? cats[0] : "Sacred Products");
+  if (cats.length === 1) displayTitle = cats[0];
   else if (cats.length > 1 || prps.length > 1 || cols.length > 1) displayTitle = "Filtered Products";
   const isCustom = displayTitle !== "Sacred Products";
 
@@ -63,11 +54,7 @@ export function ShopPage() {
 
   const filtered = products.filter(p => {
     if (cats.length && p.category) {
-      const pCatNorm = p.category.toLowerCase().trim().replace(/s$/, "");
-      const matchesCat = cats.some(c => {
-        const cNorm = c.toLowerCase().trim().replace(/s$/, "");
-        return cNorm === pCatNorm || c.toLowerCase().trim() === p.category.toLowerCase().trim();
-      });
+      const matchesCat = cats.some(c => isSameCategory(c, p.category));
       if (!matchesCat) return false;
     }
     if (prps.length && p.purpose && !prps.includes(p.purpose)) return false;
@@ -138,7 +125,7 @@ export function ShopPage() {
         </h3>
         <div className="space-y-2">
           {CATEGORIES.map(c => {
-            const count = products.filter(p => p.category === c).length;
+            const count = products.filter(p => isSameCategory(p.category, c)).length;
             const isSelected = cats.includes(c);
             return (
               <button

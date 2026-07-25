@@ -43,10 +43,12 @@ app.use((req, res, next) => {
   next();
 });
 
-// Keep raw body for Razorpay webhook signature verification
+// Keep raw body for Razorpay webhook signature verification & allow large image payloads
 app.use(express.json({
+  limit: "50mb",
   verify: (req, res, buf) => { req.rawBody = buf.toString(); },
 }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // ---- Routes ----
 app.use("/api/products", require("./routes/products"));
