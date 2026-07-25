@@ -6,6 +6,7 @@ import {
 import { MAROON, GOLD, IVORY, SPACE_BLACK, BORDER_COLOR, CARD_BG } from '../constants/theme';
 import { ArohamProduct, ActiveTab } from '../types';
 import { useProducts } from '@logic/hooks/useProducts';
+import { DEFAULT_PRODUCTS } from '@logic/constants/products';
 import { ProductCard } from '../components/ProductCard';
 
 const { width } = Dimensions.get('window');
@@ -22,9 +23,10 @@ const STAR_COORDS = [
 interface HomeScreenProps {
   setTab: (tab: ActiveTab) => void;
   onProductPress: (p: ArohamProduct) => void;
+  onAddToCart?: (p: ArohamProduct) => void;
 }
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({ setTab, onProductPress }) => {
+export const HomeScreen: React.FC<HomeScreenProps> = ({ setTab, onProductPress, onAddToCart }) => {
   const { products, loading } = useProducts();
   const [carouselIndex, setCarouselIndex] = useState(1);
 
@@ -37,12 +39,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ setTab, onProductPress }
     );
   }
 
-  // 3D Carousel Data (representing the highlighted items in "Explore Our Sacred Store")
-  const carouselItems = [
-    { id: 26, name: 'Brass Sun for East Wall', desc: 'Vedic Energized & Authentic', img: 'https://images.unsplash.com/photo-1596394723269-e5e2dbdbf4db?w=400' },
-    { id: 21, name: 'Khatu Shyam Murti Dome', desc: 'Authentic & Energized', img: 'https://images.unsplash.com/photo-1600298881974-6be191ceeda1?w=400' },
-    { id: 20, name: 'Dhan Labh Tortoise', desc: 'Authentic & Energized', img: 'https://images.unsplash.com/photo-1611312449408-fcece27cdbb7?w=400' }
-  ];
+  // Dynamic 3D Carousel Data from live loaded sacred products
+  const carouselItems = (products && products.length >= 3 ? products.slice(0, 3) : DEFAULT_PRODUCTS.slice(0, 3)).map(p => ({
+    id: p.id,
+    name: p.name,
+    desc: p.subtitle || p.shortDesc || 'Authentic & Temple Energized',
+    img: p.img,
+    product: p
+  }));
 
   const consecrationCards = [
     { id: 4, title: 'PYRITE SUN RING', desc: 'Consecrated through 108 mantra rounds', tags: ['Certificate', 'Vedic Pandit'] },
@@ -134,7 +138,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ setTab, onProductPress }
                   idx === 2 && { transform: [{ rotateY: '-15deg' }, { scale: 0.95 }] }
                 ]}
                 activeOpacity={0.9}
-                onPress={() => setCarouselIndex(idx)}
+                onPress={() => { setCarouselIndex(idx); onProductPress(item.product); }}
               >
                 <Image source={{ uri: item.img }} style={styles.carouselImg} />
                 <View style={styles.carouselTag}>
@@ -190,7 +194,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ setTab, onProductPress }
             <ProductCard
               product={item}
               onPress={() => onProductPress(item)}
-              onAddToCart={() => {}}
+              onAddToCart={() => onAddToCart && onAddToCart(item)}
             />
           )}
           showsHorizontalScrollIndicator={false}

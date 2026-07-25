@@ -187,7 +187,7 @@ function MainAppShell() {
 
     switch (activeTab) {
       case 'home':
-        return <HomeScreen setTab={setActiveTab} onProductPress={handleProductPress} />;
+        return <HomeScreen setTab={setActiveTab} onProductPress={handleProductPress} onAddToCart={(p) => { addToCart(p, 1); setCartVisible(true); }} />;
       case 'consult':
         return <ConsultScreen onAstrologerPress={handleAstroPress} onHistoryPress={() => {}} />;
       case 'shop':
@@ -207,7 +207,7 @@ function MainAppShell() {
           />
         );
       default:
-        return <HomeScreen setTab={setActiveTab} onProductPress={handleProductPress} />;
+        return <HomeScreen setTab={setActiveTab} onProductPress={handleProductPress} onAddToCart={(p) => { addToCart(p, 1); setCartVisible(true); }} />;
     }
   };
 
