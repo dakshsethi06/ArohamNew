@@ -23,8 +23,10 @@
 
     /* Path Aliases */
     "paths": {
-      "@/*": ["./src/*"]
+      "@logic/*": ["./logic/*"],
+      "@visual/*": ["./visual/*"],
+      "@/*": ["./visual/*"]
     }
   },
-  "include": ["src"]
+  "include": ["logic", "visual"]
 }
