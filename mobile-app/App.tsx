@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, StatusBar, SafeAreaView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, StatusBar, SafeAreaView, BackHandler } from 'react-native';
 import { CartProvider, useCart } from './src/context/CartContext';
 import { WishlistProvider, useWishlist } from './src/context/WishlistContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
@@ -27,6 +27,40 @@ function MainAppShell() {
   const [flow, setFlow] = useState<'normal' | 'productDetail' | 'chatRoom' | 'checkoutShipping' | 'checkoutPayment' | 'checkoutConfirm' | 'trackOrder' | 'policies'>('normal');
   const [shippingAddress, setShippingAddress] = useState<Address | null>(null);
   const [cartVisible, setCartVisible] = useState(false);
+  const [placedOrderId, setPlacedOrderId] = useState('');
+
+  // Hardware Back Button Interceptor for Android / mobile devices
+  useEffect(() => {
+    const backAction = () => {
+      // Close cart drawer if visible
+      if (cartVisible) {
+        setCartVisible(false);
+        return true;
+      }
+      // If we are in a subflow, step back
+      if (flow !== 'normal') {
+        if (flow === 'checkoutPayment') {
+          setFlow('checkoutShipping');
+        } else {
+          setFlow('normal');
+        }
+        return true; // prevent default (app exit)
+      }
+      // If we are not on the main home screen, go back to home tab
+      if (activeTab !== 'home') {
+        setActiveTab('home');
+        return true; // prevent default
+      }
+      return false; // let default action happen (app exit)
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, [flow, activeTab, cartVisible]);
 
   // Navigation handlers
   const handleProductPress = (p: ArohamProduct) => {
@@ -86,7 +120,7 @@ function MainAppShell() {
           cart={cart}
           cartTotal={cartTotal}
           address={shippingAddress}
-          onNext={() => setFlow('checkoutConfirm')}
+          onNext={(orderId) => { setPlacedOrderId(orderId); setFlow('checkoutConfirm'); }}
           onBack={() => setFlow('checkoutShipping')}
         />
       );
@@ -95,6 +129,7 @@ function MainAppShell() {
     if (flow === 'checkoutConfirm') {
       return (
         <CheckoutConfirmScreen
+          orderId={placedOrderId}
           onHomePress={() => { clearCart(); setFlow('normal'); setActiveTab('home'); }}
         />
       );

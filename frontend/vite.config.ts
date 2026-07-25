@@ -10,7 +10,7 @@ function figmaAssetResolver() {
     resolveId(id) {
       if (id.startsWith('figma:asset/')) {
         const filename = id.replace('figma:asset/', '')
-        return path.resolve(__dirname, 'src/assets', filename)
+        return path.resolve(__dirname, 'visual/imports', filename)
       }
     },
   }
@@ -26,8 +26,9 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      // Alias @ to the src directory
-      '@': path.resolve(__dirname, './src'),
+      '@logic': path.resolve(__dirname, './logic'),
+      '@visual': path.resolve(__dirname, './visual'),
+      '@': path.resolve(__dirname, './visual'),
     },
   },
 
