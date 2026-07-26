@@ -9,8 +9,19 @@ const config = getDefaultConfig(projectRoot);
 // Watch workspace root so Metro can see packages/*
 config.watchFolders = [workspaceRoot];
 
+// Tell Metro to follow symlinks (pnpm hoists via symlinks into .pnpm store)
+config.resolver.unstable_enableSymlinks = true;
+
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
+  path.resolve(workspaceRoot, 'node_modules'),
+];
+
+// Ensure Metro can resolve .cjs / .mjs files shipped by @supabase/supabase-js v2+
+config.resolver.sourceExts = [
+  ...(config.resolver.sourceExts || []),
+  'cjs',
+  'mjs',
 ];
 
 config.resolver.extraNodeModules = {

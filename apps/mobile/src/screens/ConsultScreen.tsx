@@ -8,7 +8,6 @@ import { Astrologer } from '../types';
 import { fetchAstrologers, isAstrologerActive } from '@aroham/shared-api';
 import { supabase } from '../services/supabase';
 import { AstrologerCard } from '../components/AstrologerCard';
-import { AuthModal } from '../components/AuthModal';
 import { useAuth } from '../context/AuthContext';
 
 const TOPICS = ['All', 'Online Now', 'Kundali', 'Gemstones', 'Rudraksha', 'Vastu', 'Remedies'];
@@ -22,17 +21,16 @@ export const ConsultScreen: React.FC<ConsultScreenProps> = ({
   onAstrologerPress,
   onHistoryPress
 }) => {
-  const { user } = useAuth();
+  const { user, openAuth } = useAuth();
   const [astrologers, setAstrologers] = useState<Astrologer[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTopic, setActiveTopic] = useState('All');
   const [search, setSearch] = useState('');
-  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Matches web's startConsultation gate — never enter a chat while logged out.
   const handleStartConsultation = (a: Astrologer) => {
     if (!user?.id) {
-      setShowAuthModal(true);
+      openAuth();
       return;
     }
     onAstrologerPress(a);
@@ -182,7 +180,7 @@ export const ConsultScreen: React.FC<ConsultScreenProps> = ({
 
       {/* Saved Chat History Button */}
       <View style={styles.historyContainer}>
-        <TouchableOpacity style={styles.historyBtn} onPress={() => (user?.id ? onHistoryPress() : setShowAuthModal(true))} activeOpacity={0.85}>
+        <TouchableOpacity style={styles.historyBtn} onPress={() => (user?.id ? onHistoryPress() : openAuth())} activeOpacity={0.85}>
           <Text style={styles.historyIcon}>📋</Text>
           <View>
             <Text style={styles.historyTitle}>My Saved Chat History</Text>
@@ -200,7 +198,6 @@ export const ConsultScreen: React.FC<ConsultScreenProps> = ({
       </View>
 
       <View style={{ height: 100 }} />
-      <AuthModal visible={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </ScrollView>
   );
 };

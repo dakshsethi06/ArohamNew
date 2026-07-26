@@ -246,7 +246,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ setTab, onProductPress, 
                   idx === 2 && { transform: [{ rotateY: '-15deg' }, { scale: 0.95 }] }
                 ]}
                 activeOpacity={0.9}
-                onPress={() => { setCarouselIndex(idx); onProductPress(item.product); }}
+                onPress={() => { isCenter ? onProductPress(item.product) : setCarouselIndex(idx); }}
               >
                 <Image source={{ uri: item.img }} style={styles.carouselImg} />
                 <View style={styles.carouselTag}>
@@ -595,7 +595,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   featureCard: {
-    width: (width - 40) / 2,
+    width: '48%',
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: CARD_BG,
@@ -875,7 +875,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   statBox: {
-    width: (width - 40) / 2,
+    width: '48%',
     backgroundColor: 'rgba(255, 255, 255, 0.03)',
     borderWidth: 1,
     borderColor: 'rgba(200, 160, 68, 0.15)',

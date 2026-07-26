@@ -9,10 +9,9 @@ export function getEnv(key: string, fallback: string = ""): string {
   } catch (e) {}
 
   try {
-    // @ts-ignore
-    if (typeof import.meta !== "undefined" && import.meta && import.meta.env && import.meta.env[key]) {
-      // @ts-ignore
-      return String(import.meta.env[key]).replace(/["']/g, "").trim();
+    const metaEnv = new Function("try { return import.meta.env; } catch(e) { return undefined; }")();
+    if (metaEnv && metaEnv[key]) {
+      return String(metaEnv[key]).replace(/["']/g, "").trim();
     }
   } catch (e) {}
 

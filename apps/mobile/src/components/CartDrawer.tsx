@@ -61,7 +61,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   const product = (item as any).product || item;
                   return (
                     <View key={product.id} style={styles.cartCard}>
-                      <Image source={{ uri: product.img }} style={styles.img} />
+                      <View style={styles.imgWrap}>
+                        <Image source={{ uri: product.img }} style={styles.img} />
+                      </View>
                       
                       <View style={styles.info}>
                         <Text style={styles.name} numberOfLines={1}>{product.name}</Text>
@@ -261,11 +263,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  img: {
+  imgWrap: {
     width: 60,
     height: 60,
     borderRadius: 10,
-    resizeMode: 'cover',
+    backgroundColor: '#FAF8F5',
+    padding: 4,
+    overflow: 'hidden',
+  },
+  img: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
   },
   info: {
     flex: 1,

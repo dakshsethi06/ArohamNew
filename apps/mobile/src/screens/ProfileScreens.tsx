@@ -5,7 +5,6 @@ import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
 import { trackOrder as apiTrackOrder, api } from '@aroham/shared-api';
 import { supabase } from '../services/supabase';
-import { AuthModal } from '../components/AuthModal';
 
 interface ProfileMainProps {
   onTrackOrder: () => void;
@@ -17,9 +16,8 @@ interface ProfileMainProps {
 }
 
 export const ProfileScreens: React.FC<ProfileMainProps> = ({ onTrackOrder, onPolicies, onWishlistPress, onOrders, onEditProfile, onAddresses }) => {
-  const { user, logout, isLoggedIn } = useAuth();
+  const { user, logout, isLoggedIn, openAuth } = useAuth();
   const { wishlist } = useWishlist();
-  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const userName = user?.user_metadata?.full_name || (user as any)?.name || 'Devotee';
   const userPhone = user?.user_metadata?.phone || (user as any)?.phone || '';
@@ -32,7 +30,7 @@ export const ProfileScreens: React.FC<ProfileMainProps> = ({ onTrackOrder, onPol
           <Text style={styles.authTitle}>🕉️ Welcome to Aroham</Text>
           <Text style={styles.authDesc}>Join India's most trusted ecosystem for authentic Vedic solutions & remedies.</Text>
 
-          <TouchableOpacity style={styles.loginBtn} onPress={() => setShowAuthModal(true)}>
+          <TouchableOpacity style={styles.loginBtn} onPress={() => openAuth()}>
             <Text style={styles.loginBtnText}>SIGN IN / CREATE ACCOUNT</Text>
           </TouchableOpacity>
 
@@ -48,8 +46,6 @@ export const ProfileScreens: React.FC<ProfileMainProps> = ({ onTrackOrder, onPol
             </TouchableOpacity>
           </View>
         </View>
-
-        <AuthModal visible={showAuthModal} onClose={() => setShowAuthModal(false)} />
       </ScrollView>
     );
   }
@@ -129,7 +125,7 @@ export const ProfileScreens: React.FC<ProfileMainProps> = ({ onTrackOrder, onPol
           <Text style={styles.menuArrow}>›</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem} onPress={logout}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => { logout(); openAuth(); }}>
           <Text style={styles.menuIcon}>🚪</Text>
           <View style={styles.menuInfo}>
             <Text style={styles.menuLabel}>Sign Out</Text>

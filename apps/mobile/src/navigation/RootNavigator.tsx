@@ -9,6 +9,7 @@ import { useCart } from '../context/CartContext';
 import { TabNavigator } from './TabNavigator';
 import { CartDrawerProvider, useCartDrawer } from './CartDrawerContext';
 import { CartDrawer } from '../components/CartDrawer';
+import { AuthModal } from '../components/AuthModal';
 import { AstrologerPortal } from '../screens/AstrologerPortal';
 import { ProductDetailScreen } from '../screens/ProductDetailScreen';
 import { ChatRoomScreen } from '../screens/ChatRoomScreen';
@@ -32,8 +33,8 @@ function ProductDetailRoute({ route, navigation }: RootStackScreenProps<'Product
     <ProductDetailScreen
       product={route.params.product}
       onBack={() => navigation.goBack()}
-      onAddToCart={(p, qty) => { addToCart(p, qty); cartDrawer.open(); }}
-      onBuyNow={(p, qty) => { addToCart(p, qty); navigation.navigate('CheckoutShipping'); }}
+      onAddToCart={(p, qty) => { if (addToCart(p, qty)) cartDrawer.open(); }}
+      onBuyNow={(p, qty) => { if (addToCart(p, qty)) navigation.navigate('CheckoutShipping'); }}
     />
   );
 }
@@ -123,8 +124,15 @@ function ChatHistoryRoute({ navigation }: RootStackScreenProps<'ChatHistory'>) {
 }
 
 function AppShell() {
-  const { user } = useAuth();
+  const { user, isLoggedIn, showAuth, openAuth, closeAuth } = useAuth();
   const cartDrawer = useCartDrawer();
+
+  // Gate the whole app behind sign-in on cold launch — shown once per launch;
+  // tapping "Skip" (closeAuth) just dismisses it for the rest of this session.
+  React.useEffect(() => {
+    if (!isLoggedIn) openAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (user?.role === 'astrologer') {
     // Standalone shell, no navigator — matches the original behavior of
@@ -167,6 +175,9 @@ function AppShell() {
           }
         }}
       />
+      {/* Mounted once at the root so any screen can gate an action behind login via
+          useAuth().openAuth(), instead of every screen owning its own modal instance. */}
+      <AuthModal visible={showAuth} onClose={() => closeAuth()} />
     </SafeAreaView>
   );
 }

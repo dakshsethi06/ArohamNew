@@ -16,8 +16,7 @@ export const WishlistScreen: React.FC<WishlistScreenProps> = ({ onBack, onProduc
   const { addToCart } = useCart();
 
   const handleAddToCart = (product: ArohamProduct) => {
-    addToCart(product, 1, false);
-    removeFromWishlist(product.id);
+    if (addToCart(product, 1, false)) removeFromWishlist(product.id);
   };
 
   return (
@@ -188,11 +187,12 @@ const styles = StyleSheet.create({
     aspectRatio: 3 / 4,
     backgroundColor: '#FAF8F5',
     position: 'relative',
+    padding: 10,
   },
   image: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
+    resizeMode: 'contain',
   },
   removeBtn: {
     position: 'absolute',

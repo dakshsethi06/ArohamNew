@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
   image: {
     width: width,
     aspectRatio: 1,
-    resizeMode: 'cover',
+    resizeMode: 'contain',
     backgroundColor: '#FFFFFF',
   },
   infoBlock: {

@@ -116,11 +116,12 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     backgroundColor: '#FAF8F5',
     position: 'relative',
+    padding: 10,
   },
   image: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
+    resizeMode: 'contain',
   },
   heartBtn: {
     position: 'absolute',

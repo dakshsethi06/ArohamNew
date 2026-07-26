@@ -1,30 +1,20 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, TextInput } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MAROON, GOLD } from '../constants/theme';
-import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { useAuth } from '../context/AuthContext';
 
 interface HeaderProps {
-  onSearchPress?: (query: string) => void;
-  onCartPress?: () => void;
   onWishlistPress?: () => void;
   onMenuPress?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  onSearchPress,
-  onCartPress,
   onWishlistPress,
   onMenuPress,
 }) => {
-  const [showSearch, setShowSearch] = useState(false);
-  const [query, setQuery] = useState('');
-  const { cartCount } = useCart();
   const { wishlist } = useWishlist();
-
-  const handleSearchSubmit = () => {
-    if (onSearchPress) onSearchPress(query);
-  };
+  const { isLoggedIn } = useAuth();
 
   return (
     <View style={styles.safeArea}>
@@ -32,55 +22,30 @@ export const Header: React.FC<HeaderProps> = ({
         <View style={styles.left}>
           {/* Logo Disc */}
           <View style={styles.logoDisc}>
-            <Text style={styles.logoOm}>🕉️</Text>
+            <Text style={styles.logoOm}>ॐ</Text>
           </View>
           <Text style={styles.title}>Aroham</Text>
         </View>
 
         <View style={styles.right}>
-          <TouchableOpacity onPress={() => setShowSearch(!showSearch)} style={styles.iconBtn}>
-            <Text style={styles.iconText}>🔍</Text>
-          </TouchableOpacity>
+          {isLoggedIn && (
+            <>
+              <TouchableOpacity onPress={onWishlistPress} style={styles.iconBtn}>
+                <Text style={styles.iconText}>❤️</Text>
+                {wishlist.length > 0 && (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{wishlist.length}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
 
-          <TouchableOpacity onPress={onWishlistPress} style={styles.iconBtn}>
-            <Text style={styles.iconText}>❤️</Text>
-            {wishlist.length > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{wishlist.length}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={onCartPress} style={styles.iconBtn}>
-            <Text style={styles.iconText}>🛒</Text>
-            {cartCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{cartCount}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={onMenuPress} style={styles.iconBtn}>
-            <Text style={styles.iconText}>👤</Text>
-          </TouchableOpacity>
+              <TouchableOpacity onPress={onMenuPress} style={styles.iconBtn}>
+                <Text style={styles.iconText}>👤</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </View>
-
-      {showSearch && (
-        <View style={styles.searchBox}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search sacred Store..."
-            placeholderTextColor="#8B7355"
-            value={query}
-            onChangeText={(text) => {
-              setQuery(text);
-              if (onSearchPress) onSearchPress(text);
-            }}
-            onSubmitEditing={handleSearchSubmit}
-          />
-        </View>
-      )}
     </View>
   );
 };
@@ -112,7 +77,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logoOm: {
-    fontSize: 14,
+    fontSize: 16,
+    fontWeight: '800',
     color: GOLD,
   },
   title: {
@@ -152,22 +118,5 @@ const styles = StyleSheet.create({
     color: GOLD,
     fontSize: 9,
     fontWeight: '800',
-  },
-  searchBox: {
-    backgroundColor: '#FAF8F5',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#F5ECE0',
-  },
-  searchInput: {
-    height: 36,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E5D7C3',
-    borderRadius: 18,
-    paddingHorizontal: 16,
-    fontSize: 13,
-    color: '#3E3125',
   },
 });

@@ -9,6 +9,10 @@
     "jsEngine": "jsc",
     "web": {
       "bundler": "metro"
-    }
+    },
+    "plugins": [
+      "expo-asset",
+      "expo-font"
+    ]
   }
 }

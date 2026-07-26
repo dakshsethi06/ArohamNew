@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  Modal, ActivityIndicator, ScrollView, Dimensions
+  Modal, ActivityIndicator, ScrollView, SafeAreaView,
+  KeyboardAvoidingView, Platform
 } from 'react-native';
 import { MAROON, GOLD } from '../constants/theme';
 import { useAuth } from '../context/AuthContext';
@@ -421,21 +422,51 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     </>
   );
 
-  return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View style={styles.modalContent}>
-          {/* Header */}
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>
-              {isAstrologerMode ? 'Aroham Astrologer Portal' : 'Sacred Login'}
-            </Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Text style={styles.closeText}>✕</Text>
-            </TouchableOpacity>
-          </View>
+  const screenTitle = isAstrologerMode
+    ? (activeTab === 'signin' ? 'Astrologer Sign In' : 'Register as Astrologer')
+    : (activeTab === 'signin' ? 'Welcome Back' : 'Create Account');
 
-          <ScrollView contentContainerStyle={styles.scrollBody} showsVerticalScrollIndicator={false}>
+  const screenSub = isAstrologerMode
+    ? (activeTab === 'signin' ? 'Access your live consultation workstation' : 'Register your profile as a certified Vedic Astrologer')
+    : (activeTab === 'signin' ? 'Enter your mobile number to sign in to your account' : 'Enter your full name and mobile number to get started');
+
+  return (
+    <Modal visible={visible} animationType="none" onRequestClose={onClose} presentationStyle="fullScreen">
+      <SafeAreaView style={styles.screen}>
+        {/* Full-screen top bar — brand mark on the left, skip on the right */}
+        <View style={styles.topBar}>
+          <View style={styles.brandRow}>
+            <View style={styles.brandLogoDisc}>
+              <Text style={styles.brandLogoOm}>ॐ</Text>
+            </View>
+            <Text style={styles.brandName}>Aroham</Text>
+          </View>
+          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+            <Text style={styles.closeText}>Skip</Text>
+          </TouchableOpacity>
+        </View>
+
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <ScrollView
+            contentContainerStyle={styles.scrollBody}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {step !== 'otp' && step !== 'profile-setup' && (
+              <View style={styles.heroWrap}>
+                <View style={styles.heroLogoDisc}>
+                  <Text style={styles.heroLogoOm}>ॐ</Text>
+                </View>
+                {isAstrologerMode && (
+                  <View style={styles.astroBadge}>
+                    <Text style={styles.astroBadgeText}>✨ Certified Astrologer Portal</Text>
+                  </View>
+                )}
+                <Text style={styles.heroTitle}>{screenTitle}</Text>
+                <Text style={styles.heroSub}>{screenSub}</Text>
+              </View>
+            )}
+
             {step !== 'profile-setup' && (
               <View style={styles.tabContainer}>
                 <TouchableOpacity
@@ -465,17 +496,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </TouchableOpacity>
               </View>
             ) : null}
-
-            {step !== 'profile-setup' && (
-              <TouchableOpacity
-                style={styles.modeBtn}
-                onPress={() => setIsAstrologerMode(!isAstrologerMode)}
-              >
-                <Text style={styles.modeBtnText}>
-                  {isAstrologerMode ? '🔮 Switch to Devotee Account' : '✨ Are you a Certified Astrologer? Click here'}
-                </Text>
-              </TouchableOpacity>
-            )}
 
             {errorMsg ? (
               <View style={styles.errorBox}>
@@ -534,6 +554,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   </View>
                 )}
 
+                <Text style={styles.termsText}>
+                  By continuing, you agree to Aroham's Terms of Service and Privacy Policy
+                </Text>
+
                 <TouchableOpacity
                   style={styles.actionBtn}
                   onPress={handleSendOtp}
@@ -543,16 +567,30 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     <ActivityIndicator color={GOLD} />
                   ) : (
                     <Text style={styles.actionBtnText}>
-                      {activeTab === 'signin' ? 'GET OTP CODE' : 'PROCEED TO VERIFY'}
+                      {isAstrologerMode
+                        ? (activeTab === 'signin' ? 'SIGN IN TO ASTROLOGER PORTAL' : 'CREATE ASTROLOGER ACCOUNT')
+                        : (activeTab === 'signin' ? 'SIGN IN WITH OTP' : 'GET OTP & CREATE ACCOUNT')}
                     </Text>
                   )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.modeBtn}
+                  onPress={() => setIsAstrologerMode(!isAstrologerMode)}
+                >
+                  <Text style={styles.modeBtnText}>
+                    {isAstrologerMode ? '← Looking for Devotee Login? Tap here' : '✨ Are you a Certified Astrologer? Tap here'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}
 
             {step === 'otp' && (
               <View style={styles.formGroup}>
-                <Text style={styles.otpHeaderTitle}>Enter 6-Digit OTP</Text>
+                <View style={styles.stepIconWrap}>
+                  <Text style={styles.stepIconText}>🔒</Text>
+                </View>
+                <Text style={styles.otpHeaderTitle}>Verify Your Number</Text>
                 <Text style={styles.otpSub}>Sent via SMS to +91 {phone}</Text>
                 <Text style={styles.testOtpBadge}>Test Code: 111111</Text>
 
@@ -574,7 +612,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   {loading ? (
                     <ActivityIndicator color={GOLD} />
                   ) : (
-                    <Text style={styles.actionBtnText}>VERIFY & LOGIN</Text>
+                    <Text style={styles.actionBtnText}>VERIFY & CONTINUE</Text>
                   )}
                 </TouchableOpacity>
 
@@ -589,13 +627,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </View>
 
                 <TouchableOpacity onPress={() => setStep(activeTab)} style={styles.backBtn}>
-                  <Text style={styles.backBtnText}>← Change Mobile Number</Text>
+                  <Text style={styles.backBtnText}>← Edit Mobile Number</Text>
                 </TouchableOpacity>
               </View>
             )}
 
             {step === 'profile-setup' && (
               <View style={styles.formGroup}>
+                <View style={styles.stepIconWrap}>
+                  <Text style={styles.stepIconText}>👤</Text>
+                </View>
                 <Text style={styles.otpHeaderTitle}>Complete Your Profile</Text>
                 <Text style={styles.otpSub}>Help us personalize your cosmic journey</Text>
 
@@ -640,28 +681,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </View>
             )}
           </ScrollView>
-        </View>
-      </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </Modal>
   );
 };
 
-const height = Dimensions.get('window').height;
-
 const styles = StyleSheet.create({
-  overlay: {
+  screen: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    maxHeight: height * 0.85,
     backgroundColor: '#FCFAF7',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    overflow: 'hidden',
   },
-  modalHeader: {
+  topBar: {
     height: 56,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
@@ -671,23 +702,111 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
   },
-  modalTitle: {
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  brandLogoDisc: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: GOLD,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brandLogoOm: {
     fontSize: 15,
     fontWeight: '800',
+    color: '#1A0D0E',
+  },
+  brandName: {
+    fontSize: 17,
+    fontWeight: '800',
     color: MAROON,
-    textTransform: 'uppercase',
   },
   closeBtn: {
-    padding: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
   },
   closeText: {
-    fontSize: 18,
-    color: '#8B7355',
-    fontWeight: '700',
+    fontSize: 13,
+    color: MAROON,
+    fontWeight: '800',
   },
   scrollBody: {
-    padding: 20,
+    flexGrow: 1,
+    padding: 24,
+    paddingBottom: 40,
     gap: 16,
+  },
+  heroWrap: {
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  heroLogoDisc: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    backgroundColor: MAROON,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    borderWidth: 3,
+    borderColor: 'rgba(200, 160, 68, 0.3)',
+  },
+  heroLogoOm: {
+    fontSize: 36,
+    fontWeight: '800',
+    color: GOLD,
+  },
+  astroBadge: {
+    backgroundColor: 'rgba(200, 160, 68, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(200, 160, 68, 0.3)',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    marginBottom: 10,
+  },
+  astroBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: MAROON,
+  },
+  heroTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: MAROON,
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  heroSub: {
+    fontSize: 12,
+    color: '#7A6A58',
+    textAlign: 'center',
+    lineHeight: 18,
+    paddingHorizontal: 12,
+  },
+  termsText: {
+    fontSize: 11,
+    color: '#7A6A58',
+    textAlign: 'center',
+    lineHeight: 16,
+    paddingHorizontal: 8,
+  },
+  stepIconWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    backgroundColor: MAROON,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    marginBottom: 4,
+  },
+  stepIconText: {
+    fontSize: 28,
   },
   tabContainer: {
     flexDirection: 'row',
