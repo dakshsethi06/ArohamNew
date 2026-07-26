@@ -1,0 +1,85 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [
+      "DOM",
+      "ES2022"
+    ],
+    "strict": false,
+    "jsx": "react-jsx",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@aroham/shared-types": [
+        "../../packages/shared-types/src/index.ts"
+      ],
+      "@aroham/shared-types/*": [
+        "../../packages/shared-types/src/*"
+      ],
+      "@aroham/shared-config": [
+        "../../packages/shared-config/src/index.ts"
+      ],
+      "@aroham/shared-config/*": [
+        "../../packages/shared-config/src/*"
+      ],
+      "@aroham/shared-utils": [
+        "../../packages/shared-utils/src/index.ts"
+      ],
+      "@aroham/shared-utils/*": [
+        "../../packages/shared-utils/src/*"
+      ],
+      "@aroham/shared-services": [
+        "../../packages/shared-services/src/index.ts"
+      ],
+      "@aroham/shared-services/*": [
+        "../../packages/shared-services/src/*"
+      ],
+      "@aroham/shared-api": [
+        "../../packages/shared-api/src/index.ts"
+      ],
+      "@aroham/shared-api/*": [
+        "../../packages/shared-api/src/*"
+      ],
+      "@aroham/shared-auth": [
+        "../../packages/shared-auth/src/index.ts"
+      ],
+      "@aroham/shared-auth/*": [
+        "../../packages/shared-auth/src/*"
+      ],
+      "@aroham/shared-state": [
+        "../../packages/shared-state/src/index.ts"
+      ],
+      "@aroham/shared-state/*": [
+        "../../packages/shared-state/src/*"
+      ],
+      "@aroham/shared-hooks": [
+        "../../packages/shared-hooks/src/index.ts"
+      ],
+      "@aroham/shared-hooks/*": [
+        "../../packages/shared-hooks/src/*"
+      ],
+      "@aroham/shared-validation": [
+        "../../packages/shared-validation/src/index.ts"
+      ],
+      "@aroham/shared-validation/*": [
+        "../../packages/shared-validation/src/*"
+      ],
+      "@/*": [
+        "./src/*"
+      ]
+    }
+  },
+  "include": [
+    "src",
+    "App.tsx",
+    "index.ts",
+    "../../packages/*/src"
+  ],
+  "extends": "expo/tsconfig.base"
+}
