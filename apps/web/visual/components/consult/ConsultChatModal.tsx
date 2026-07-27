@@ -47,14 +47,19 @@ export function ConsultChatModal({
     }
   }, [messages, isTyping]);
 
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
   useEffect(() => {
     if (session?.status === "completed" || session?.status === "ended") {
       const timer = setTimeout(() => {
-        onClose();
+        onCloseRef.current();
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [session?.status, onClose]);
+  }, [session?.status]);
 
   if (!session || !selectedAstrologer) return null;
 
