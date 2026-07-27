@@ -70,13 +70,7 @@ export function AstrologerCard({ astro, onStartConsultation }: AstrologerCardPro
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
 
-          {/* Status Badge */}
-          <div
-            className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-[9px] font-extrabold tracking-wider flex items-center gap-1.5 shadow-md ${statusColor}`}
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-            <span>{statusLabel}</span>
-          </div>
+
 
           <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold bg-black/65 text-amber-300 border border-white/10 flex items-center gap-1 backdrop-blur-xs shadow-md">
             <Star size={12} className="fill-amber-400 text-amber-400" />
