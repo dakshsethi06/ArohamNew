@@ -141,6 +141,7 @@ export function ConsultPage() {
           sender: m.sender || m.sender_type,
           text: m.text || m.message_text,
           timestamp: new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          created_at: m.created_at || new Date().toISOString(),
           recommendedProduct: m.recommended_product_slug ? findProduct(m.recommended_product_slug) : null
         })));
       }

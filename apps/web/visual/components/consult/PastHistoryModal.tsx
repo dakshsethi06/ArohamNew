@@ -33,6 +33,26 @@ export function PastHistoryModal({
     return matched ? matched.name : "Vedic Scholar";
   };
 
+  const getRelativeTimestamp = (dateStr: string, timeStr: string) => {
+    if (!dateStr) return timeStr;
+    const date = new Date(dateStr);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return `Today, ${timeStr}`;
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return `Yesterday, ${timeStr}`;
+    } else {
+      const formattedDate = date.toLocaleDateString([], {
+        day: "numeric",
+        month: "short",
+      });
+      return `${formattedDate}, ${timeStr}`;
+    }
+  };
+
   return createPortal(
     <div className="fixed inset-0 z-[10000] bg-black/70 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
       <div className="bg-[#FAF7F2] w-full max-w-4xl h-[90vh] rounded-3xl border border-amber-900/20 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -136,7 +156,7 @@ export function PastHistoryModal({
                     }`}
                   >
                     <p className="leading-relaxed">{m.text}</p>
-
+ 
                     {m.recommendedProduct && (
                       <div className="mt-2 pt-2 border-t border-amber-900/10 flex items-center gap-2">
                         <img
@@ -162,7 +182,9 @@ export function PastHistoryModal({
                       </div>
                     )}
                   </div>
-                  <span className="text-[9px] text-stone-400 mt-0.5 px-1">{m.timestamp}</span>
+                  <span className="text-[9px] text-stone-400 mt-0.5 px-1">
+                    {getRelativeTimestamp(m.created_at, m.timestamp)}
+                  </span>
                 </div>
               ))
             )}
