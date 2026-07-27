@@ -5,6 +5,8 @@ import { MAROON, GOLD, IVORY, SANS, SERIF } from "@aroham/shared-config/theme";
 import { useAuth } from "@aroham/shared-auth";
 import { useProducts } from "@aroham/shared-hooks/useProducts";
 import { generateUUID } from "@aroham/shared-utils/uuid";
+import { AstrologerOnboardingWizard } from "../components/astrologer/AstrologerOnboardingWizard";
+import { AstrologerOnboardingStatus } from "../components/astrologer/AstrologerOnboardingStatus";
 import {
   Send,
   UserCheck,
@@ -249,6 +251,38 @@ export function AstrologerDashboard() {
   });
 
   const [showProfileWizard, setShowProfileWizard] = useState(false);
+
+  const [onboardingApp, setOnboardingApp] = useState<any>(() => {
+    try {
+      const stored = localStorage.getItem(`aroham_astro_onboarding_app_${currentAstroId}`) ||
+                     localStorage.getItem("aroham_astro_onboarding_app_current");
+      return stored ? JSON.parse(stored) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const [bypassedOnboarding, setBypassedOnboarding] = useState(false);
+
+  useEffect(() => {
+    const fetchOnboardingStatus = async () => {
+      if (!currentAstroId) return;
+      try {
+        const apiBase = (import.meta.env.VITE_ADMIN_API_URL as string) || (import.meta.env.VITE_API_BASE_URL as string) || "http://localhost:5001";
+        const res = await fetch(`${apiBase}/api/admin/onboarding/applications/${currentAstroId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.application) {
+            setOnboardingApp(data.application);
+            localStorage.setItem(`aroham_astro_onboarding_app_${currentAstroId}`, JSON.stringify(data.application));
+          }
+        }
+      } catch (e) {}
+    };
+
+    fetchOnboardingStatus();
+    const interval = setInterval(fetchOnboardingStatus, 3000);
+    return () => clearInterval(interval);
+  }, [currentAstroId]);
 
   useEffect(() => {
     const wizardDone = localStorage.getItem(`aroham_astro_wizard_done_${currentAstroId}`);
@@ -1056,6 +1090,31 @@ export function AstrologerDashboard() {
           </div>
         </div>
       </div>
+    );
+  }
+
+  const isApprovedAndLive = (onboardingApp?.status === "APPROVED" && onboardingApp?.is_live === true) || bypassedOnboarding;
+
+  if (!isApprovedAndLive) {
+    if (!onboardingApp) {
+      return (
+        <AstrologerOnboardingWizard
+          initialPhone={loginPhone || profile.phone}
+          astroId={currentAstroId}
+          onComplete={(appData) => {
+            setOnboardingApp(appData);
+          }}
+        />
+      );
+    }
+
+    return (
+      <AstrologerOnboardingStatus
+        application={onboardingApp}
+        onEnterDashboard={() => {
+          setBypassedOnboarding(true);
+        }}
+      />
     );
   }
 

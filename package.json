@@ -2,7 +2,7 @@
   "name": "aroham",
   "private": true,
   "version": "0.0.1",
-  "packageManager": "pnpm@9.5.0",
+  "packageManager": "pnpm@9.15.9",
   "scripts": {
     "dev:web": "turbo run dev --filter=@aroham/web",
     "dev:mobile": "turbo run dev --filter=@aroham/mobile",
