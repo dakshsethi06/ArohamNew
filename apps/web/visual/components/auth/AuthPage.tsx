@@ -124,6 +124,7 @@ export function AuthPage() {
     const last10 = phoneDigits.slice(-10);
 
     if (isAstrologerMode) {
+      let existingAstro: any = null;
       try {
         const { data } = await supabase
           .from('astrologers')
@@ -131,12 +132,23 @@ export function AuthPage() {
           .or(`phone.eq.${last10},phone.eq.+91${last10},phone.eq.91${last10},phone.ilike.%${last10}`)
           .limit(1);
         const astroObj = data && data.length > 0 ? data[0] : null;
-        if (astroObj && String(astroObj.status).toUpperCase() === "BLOCKED") {
-          setLoading(false);
-          setErrorMsg("Sorry, you are blocked. Can't login.");
-          return;
+        if (astroObj) {
+          existingAstro = astroObj;
+          if (String(astroObj.status).toUpperCase() === "BLOCKED") {
+            setLoading(false);
+            setErrorMsg("Sorry, you are blocked. Can't login.");
+            return;
+          }
         }
       } catch (e) {}
+
+      if (activeTab === "signin" && !existingAstro) {
+        setLoading(false);
+        setActiveTab("signup");
+        setAuthState("signup");
+        setErrorMsg("Mobile number not registered. Please enter your details to create an astrologer account.");
+        return;
+      }
 
       setTimeout(() => {
         setLoading(false);
@@ -299,6 +311,11 @@ export function AuthPage() {
           } catch (e) {}
 
           // No existing astrologer found — proceed to create new one (falls through to astrologer creation below)
+          if (activeTab === "signin") {
+            setLoading(false);
+            setErrorMsg("Mobile number not registered. Please create an astrologer account.");
+            return;
+          }
         } else {
           // Normal user mode: check backend API & database first for live status
           try {
