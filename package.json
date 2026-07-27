@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.1",
   "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
     "dev:web": "turbo run dev --filter=@aroham/web",
     "dev:mobile": "turbo run dev --filter=@aroham/mobile",
