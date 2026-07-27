@@ -1256,13 +1256,6 @@ export function AstrologerDashboard() {
               <p className="text-xs font-bold text-[#5B1F24] mb-1" style={{ fontFamily: SERIF }}>Aroham Scholar Helpline</p>
               <p className="text-[10px] text-amber-900/70 leading-relaxed">Dedicated Astrologer support available 24x7.</p>
             </div>
-
-            <button
-              onClick={handleLogout}
-              className="w-full py-2.5 rounded-2xl text-xs font-extrabold bg-red-50 hover:bg-red-100 text-red-700 border border-red-200/40 transition-all flex items-center justify-center gap-2 active:scale-95"
-            >
-              <LogOut size={14} /> Log Out Account
-            </button>
           </div>
         </aside>
 
