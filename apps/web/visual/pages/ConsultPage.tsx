@@ -111,6 +111,10 @@ export function ConsultPage() {
             workingHours: liveData.working_hours
           }));
           setAstrologers(dbFormatted);
+          // Sync back to local storage so focus/storage listeners don't overwrite with old/empty cache
+          try {
+            localStorage.setItem("aroham_registered_astrologers", JSON.stringify(dbFormatted));
+          } catch (e) {}
         }
       } catch (err) {}
     };
