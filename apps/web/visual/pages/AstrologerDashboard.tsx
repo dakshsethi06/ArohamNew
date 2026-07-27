@@ -224,6 +224,7 @@ export function AstrologerDashboard() {
     }
 
     try {
+      localStorage.removeItem("aroham_astro_onboarding_app_current");
       localStorage.setItem("aroham_mock_session", JSON.stringify(astroUser));
       localStorage.setItem("aroham_accepted_session_ids", JSON.stringify([]));
       window.dispatchEvent(new Event("storage"));
@@ -665,6 +666,12 @@ export function AstrologerDashboard() {
   const handleLogout = async () => {
     await broadcastStatus(false);
     try {
+      localStorage.removeItem("aroham_astro_onboarding_app_current");
+      localStorage.removeItem("aroham_mock_session");
+      localStorage.removeItem(`aroham_astro_onboarding_app_${currentAstroId}`);
+      localStorage.removeItem(`aroham_astro_profile_${currentAstroId}`);
+      localStorage.removeItem(`aroham_astro_working_hours_${currentAstroId}`);
+      localStorage.removeItem(`aroham_astro_wizard_done_${currentAstroId}`);
       await logout();
     } catch (e) {}
     navigate("/auth?role=astrologer");

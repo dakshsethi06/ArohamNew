@@ -45,6 +45,13 @@ export const AstrologerOnboardingStatus: React.FC<AstrologerOnboardingStatusProp
           // Sync back to local current
           localStorage.setItem("aroham_astro_onboarding_app_current", JSON.stringify(data.application));
         }
+      } else if (res.status === 404 && app) {
+        // Automatically sync the local application to the backend if the backend doesn't have it
+        await fetch(`${apiBase}/api/admin/onboarding/applications`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(app)
+        });
       }
     } catch (e) {}
   };
