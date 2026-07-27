@@ -90,9 +90,14 @@ export function PastHistoryModal({
                         }`}
                       >
                         {new Date(sess.created_at).toLocaleDateString([], {
+                          weekday: "short",
                           day: "numeric",
                           month: "short",
-                          year: "numeric",
+                        })}
+                        {", "}
+                        {new Date(sess.created_at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
                         })}
                       </span>
                       <span
