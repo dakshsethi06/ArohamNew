@@ -13,9 +13,7 @@ const STEPS = [
   { id: 2, label: "Basic Info", title: "Basic Personal Information", icon: User },
   { id: 3, label: "Expertise", title: "Professional Expertise & Pricing", icon: Award },
   { id: 4, label: "Lineage", title: "Astrological Lineage & Qualifications", icon: BookOpen },
-  { id: 5, label: "Identity", title: "Identity Verification & Bank Details", icon: ShieldCheck },
-  { id: 6, label: "Intro Video", title: "Introduction Video & Profile Photo", icon: Video },
-  { id: 7, label: "Bio & Links", title: "Public Bio & Final Submission", icon: FileText }
+  { id: 5, label: "Identity", title: "Identity Verification & Bank Details", icon: ShieldCheck }
 ];
 
 const EXPERTISE_OPTIONS = [
@@ -154,7 +152,7 @@ export const AstrologerOnboardingWizard: React.FC<AstrologerOnboardingWizardProp
       }
     }
 
-    if (currentStep < 7) {
+    if (currentStep < 5) {
       setCurrentStep(prev => prev + 1);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
@@ -298,7 +296,7 @@ export const AstrologerOnboardingWizard: React.FC<AstrologerOnboardingWizardProp
                     </div>
                     <span className="text-xs whitespace-nowrap">{step.label}</span>
                   </div>
-                  {step.id < 7 && <div className="w-4 h-[2px] bg-amber-900/10 flex-shrink-0" />}
+                  {step.id < 5 && <div className="w-4 h-[2px] bg-amber-900/10 flex-shrink-0" />}
                 </div>
               );
             })}
@@ -308,7 +306,7 @@ export const AstrologerOnboardingWizard: React.FC<AstrologerOnboardingWizardProp
           <div className="w-full bg-[#FAF6F0] h-1.5 rounded-full mt-3 overflow-hidden">
             <div
               className="bg-[#5B1F24] h-full transition-all duration-300 rounded-full"
-              style={{ width: `${(currentStep / 7) * 100}%` }}
+              style={{ width: `${(currentStep / 5) * 100}%` }}
             />
           </div>
         </div>
@@ -753,127 +751,8 @@ export const AstrologerOnboardingWizard: React.FC<AstrologerOnboardingWizardProp
                   />
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* STEP 6: INTRO VIDEO & PHOTO */}
-          {currentStep === 6 && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-xl font-bold font-serif text-[#4A151B] flex items-center gap-2">
-                  <Video className="w-5 h-5 text-[#C8A044]" /> Step 6: Introduction Video & Profile Photo
-                </h3>
-                <p className="text-xs text-amber-950/60 font-medium mt-1">
-                  Upload a short 1-minute introduction video for evaluation and customer confidence.
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-[11px] uppercase font-bold text-amber-950/70 mb-1 tracking-wider">
-                  Profile Photo URL / Avatar
-                </label>
-                <input
-                  type="text"
-                  placeholder="https://..."
-                  value={formData.profilePictureUrl}
-                  onChange={(e) => updateForm({ profilePictureUrl: e.target.value })}
-                  className="w-full bg-[#FFFDF9] border border-amber-900/20 rounded-full px-5 py-3 text-xs font-semibold text-[#3C3024] outline-none focus:border-[#5B1F24]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] uppercase font-bold text-amber-950/70 mb-1 tracking-wider">
-                  Introductory Video URL (YouTube / Google Drive / Vimeo)
-                </label>
-                <input
-                  type="text"
-                  placeholder="https://youtube.com/watch?v=..."
-                  value={formData.introVideoUrl}
-                  onChange={(e) => updateForm({ introVideoUrl: e.target.value })}
-                  className="w-full bg-[#FFFDF9] border border-amber-900/20 rounded-full px-5 py-3 text-xs font-semibold text-[#3C3024] outline-none focus:border-[#5B1F24]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] uppercase font-bold text-amber-950/70 mb-1 tracking-wider">
-                  Sample Consultation Link (Optional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="Link to audio/video sample recording..."
-                  value={formData.sampleConsultationUrl}
-                  onChange={(e) => updateForm({ sampleConsultationUrl: e.target.value })}
-                  className="w-full bg-[#FFFDF9] border border-amber-900/20 rounded-full px-5 py-3 text-xs font-semibold text-[#3C3024] outline-none focus:border-[#5B1F24]"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* STEP 7: BIO & SUBMISSION */}
-          {currentStep === 7 && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-xl font-bold font-serif text-[#4A151B] flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-[#C8A044]" /> Step 7: Public Bio & Final Submission
-                </h3>
-                <p className="text-xs text-amber-950/60 font-medium mt-1">
-                  Craft your bio for seekers on Aroham and submit your application for evaluation.
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-[11px] uppercase font-bold text-amber-950/70 mb-1 tracking-wider">
-                  Public Astrologer Bio *
-                </label>
-                <textarea
-                  rows={4}
-                  placeholder="Certified Jyotish Acharya guiding seekers with sacred remedies, Kundali readings, and traditional wisdom..."
-                  value={formData.bio}
-                  onChange={(e) => updateForm({ bio: e.target.value })}
-                  className="w-full bg-[#FFFDF9] border border-amber-900/20 rounded-2xl p-4 text-xs font-semibold text-[#3C3024] outline-none focus:border-[#5B1F24]"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-[11px] uppercase font-bold text-amber-950/70 mb-1 tracking-wider">
-                    Website URL
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="https://..."
-                    value={formData.websiteUrl}
-                    onChange={(e) => updateForm({ websiteUrl: e.target.value })}
-                    className="w-full bg-[#FFFDF9] border border-amber-900/20 rounded-full px-4 py-2.5 text-xs font-semibold text-[#3C3024] outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] uppercase font-bold text-amber-950/70 mb-1 tracking-wider">
-                    YouTube Channel
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="https://youtube.com/..."
-                    value={formData.youtubeUrl}
-                    onChange={(e) => updateForm({ youtubeUrl: e.target.value })}
-                    className="w-full bg-[#FFFDF9] border border-amber-900/20 rounded-full px-4 py-2.5 text-xs font-semibold text-[#3C3024] outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] uppercase font-bold text-amber-950/70 mb-1 tracking-wider">
-                    Instagram Handle
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="@..."
-                    value={formData.instagramUrl}
-                    onChange={(e) => updateForm({ instagramUrl: e.target.value })}
-                    className="w-full bg-[#FFFDF9] border border-amber-900/20 rounded-full px-4 py-2.5 text-xs font-semibold text-[#3C3024] outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="p-4 bg-[#FAF6F0] rounded-2xl border border-[#5B1F24]/10 flex items-start gap-3">
+              <div className="p-4 bg-[#FAF6F0] rounded-2xl border border-[#5B1F24]/10 flex items-start gap-3 mt-6">
                 <input
                   type="checkbox"
                   id="termsCheck"
@@ -906,8 +785,8 @@ export const AstrologerOnboardingWizard: React.FC<AstrologerOnboardingWizardProp
               disabled={loading}
               className="px-8 py-3 bg-[#5B1F24] hover:bg-[#7A2A30] text-white font-bold text-xs rounded-full shadow-md transition-all cursor-pointer flex items-center gap-1.5 ml-auto"
             >
-              <span>{currentStep === 7 ? (loading ? "Submitting Application..." : "Submit Application ✓") : "Next Step"}</span>
-              {currentStep < 7 && <ChevronRight className="w-4 h-4" />}
+              <span>{currentStep === 5 ? (loading ? "Submitting Application..." : "Submit Application ✓") : "Next Step"}</span>
+              {currentStep < 5 && <ChevronRight className="w-4 h-4" />}
             </button>
           </div>
 
