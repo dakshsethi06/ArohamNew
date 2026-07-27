@@ -5,6 +5,7 @@ import { MAROON, SAFFRON, GOLD, IVORY, SANS, SERIF } from "@aroham/shared-config
 
 import { ArohamProduct } from "@aroham/shared-types/product";
 import { ProductCard } from "@visual/components/product/ProductCard";
+import { useTranslation } from "@visual/context/LanguageContext";
 
 export function ProductsAndCombos({ products, onProductClick, onAddCombo: _onAddCombo, onAddToCart }: {
   products: ArohamProduct[];
@@ -14,17 +15,20 @@ export function ProductsAndCombos({ products, onProductClick, onAddCombo: _onAdd
 }) {
   const navigate = useNavigate();
   const [wish, setWish] = useState<Record<string, boolean>>({});
+  const { t } = useTranslation();
+
   const toggleWish = (key: string, e: React.MouseEvent) => { e.stopPropagation(); setWish(w => ({ ...w, [key]: !w[key] })); };
 
   if (!products || products.length === 0) return null;
 
   const shelves: [string, string, string, ArohamProduct[], string][] = [
-    ["Bestselling Products", "Top Picks",     "🔥 Trending", products.slice(0, 6),                                                       SAFFRON],
-    ["Fav Items",            "Fan Favourites", "❤️ Loved",   [...products].reverse().slice(0, 6),                                         "#E74C3C"],
-    ["Combo Deals",          "Bundle & Save",  "🎁 Kits",    products.slice(0, 6),                                                        GOLD],
-    ["Mega Sale",            "Limited Time",   "⚡ Hot",      [...products].sort((a, b) => (b.original - b.price) - (a.original - a.price)).slice(0, 6), SAFFRON],
-    ["Discount Zone",        "Best Savings",   "🏷️ Off",     [...products].sort((a, b) => (1 - b.price / b.original) - (1 - a.price / a.original)).slice(0, 6), "#4A8A4A"],
+    [t("products.bestselling", "Bestselling Products"), t("products.top_picks", "Top Picks"), "🔥 " + t("products.trending", "Trending"), products.slice(0, 6), SAFFRON],
+    [t("products.fav_items", "Fav Items"), t("products.fan_favourites", "Fan Favourites"), "❤️ " + t("products.loved", "Loved"), [...products].reverse().slice(0, 6), "#E74C3C"],
+    [t("products.combo_deals", "Combo Deals"), t("products.bundle_save", "Bundle & Save"), "🎁 " + t("products.kits", "Kits"), products.slice(0, 6), GOLD],
+    [t("products.mega_sale", "Mega Sale"), t("products.limited_time", "Limited Time"), "⚡ " + t("products.hot", "Hot"), [...products].sort((a, b) => (b.original - b.price) - (a.original - a.price)).slice(0, 6), SAFFRON],
+    [t("products.discount_zone", "Discount Zone"), t("products.best_savings", "Best Savings"), "🏷️ " + t("products.off", "Off"), [...products].sort((a, b) => (1 - b.price / b.original) - (1 - a.price / a.original)).slice(0, 6), "#4A8A4A"],
   ];
+
 
   return (
     <section className="py-10 lg:py-20 px-4 sm:px-6 lg:px-10" style={{ background: "#FAF7F2" }}>
@@ -41,9 +45,10 @@ export function ProductsAndCombos({ products, onProductClick, onAddCombo: _onAdd
                 <h2 style={{ fontFamily: SERIF, fontSize: "clamp(1.6rem,3.5vw,2.5rem)", fontWeight: 500, color: MAROON, lineHeight: 1.15 }}>{title}</h2>
               </div>
               <button onClick={() => navigate(`/shop?title=${encodeURIComponent(title as string)}`)} className="flex items-center gap-1 text-sm font-medium whitespace-nowrap transition-opacity hover:opacity-60" style={{ color: MAROON }}>
-                View all <ChevronRight size={14} />
+                {t("common.view_all", "View all")} <ChevronRight size={14} />
               </button>
             </div>
+
             <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-6 gap-4">
               {products.slice(0, 6).map((p, pi) => (
                 <ProductCard key={`${si}-${pi}`} product={p} wishKey={`${si}-${p.id}`}

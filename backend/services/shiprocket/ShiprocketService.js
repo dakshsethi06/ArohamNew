@@ -167,6 +167,28 @@ class ShiprocketService {
     console.log(`[ShiprocketService] Order(s) cancelled: ${orderIds.join(', ')}`);
     return data;
   }
+
+  /**
+   * Track a shipment by its Shiprocket shipment ID
+   * @param {number|string} shipmentId
+   * @returns {Object} Tracking details from Shiprocket
+   */
+  async trackShipment(shipmentId) {
+    if (!shipmentId) throw new Error("shipmentId is required for tracking");
+    console.log(`[ShiprocketService] Tracking shipment #${shipmentId}...`);
+    return await this.api.request(`/courier/track/shipment/${shipmentId}`, 'GET');
+  }
+
+  /**
+   * Track a shipment by its AWB (Air Waybill) code
+   * @param {string} awbCode
+   * @returns {Object} Tracking details from Shiprocket
+   */
+  async trackByAwb(awbCode) {
+    if (!awbCode) throw new Error("awbCode is required for tracking");
+    console.log(`[ShiprocketService] Tracking AWB ${awbCode}...`);
+    return await this.api.request(`/courier/track/awb/${awbCode}`, 'GET');
+  }
 }
 
 module.exports = ShiprocketService;

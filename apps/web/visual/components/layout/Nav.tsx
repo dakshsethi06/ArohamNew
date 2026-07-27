@@ -6,6 +6,9 @@ import { useCart } from "@aroham/shared-state";
 import { useAuth } from "@aroham/shared-auth";
 import { useWishlist } from "@aroham/shared-state";
 import { SearchModal } from "./SearchModal";
+import { LanguageSelector } from "./LanguageSelector";
+import { useTranslation } from "@visual/context/LanguageContext";
+
 
 export function Nav() {
   const navigate = useNavigate();
@@ -13,6 +16,7 @@ export function Nav() {
   const { cartCount, openCart } = useCart();
   const { isLoggedIn, openAuth } = useAuth();
   const { wishlist } = useWishlist();
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -34,10 +38,10 @@ export function Nav() {
   const solid = scrolled || isCartPage || open;
 
   const navLinks: [string, () => void][] = [
-    ["Home", () => { navigate("/"); setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50); }],
-    ["Shop", () => navigate("/shop")],
-    ["Consult", () => navigate("/consult")],
-    ...(isLoggedIn ? [["My Orders", () => navigate("/profile?tab=orders")] as [string, () => void]] : []),
+    [t("nav.home", "Home"), () => { navigate("/"); setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50); }],
+    [t("nav.shop", "Shop"), () => navigate("/shop")],
+    [t("nav.consult", "Consult"), () => navigate("/consult")],
+    ...(isLoggedIn ? [[t("nav.my_orders", "My Orders"), () => navigate("/profile?tab=orders")] as [string, () => void]] : []),
   ];
 
   return (
@@ -74,6 +78,8 @@ export function Nav() {
           </div>
           
           <div className="hidden lg:flex items-center gap-4 transition-all duration-300">
+            {/* Multilingual Selector Placed Directly in Front of Search Button */}
+            <LanguageSelector solid={solid} />
             <div className="relative">
               <div className="flex items-center transition-all duration-500 ease-out overflow-hidden rounded-full"
                    style={{
@@ -85,7 +91,7 @@ export function Nav() {
                 {isSearchOpen ? (
                   <>
                     <Search size={16} className="ml-3 flex-shrink-0" style={{ color: solid ? MAROON : GOLD }} />
-                    <input id="nav-search-input" type="text" placeholder="Search for yantras, rudraksha..."
+                    <input id="nav-search-input" type="text" placeholder={t("nav.search_placeholder", "Search for yantras, rudraksha...")}
                       className="flex-1 w-full bg-transparent border-none outline-none px-3 py-2 text-sm"
                       style={{ color: solid ? MAROON : IVORY, fontFamily: SANS }}
                       value={query} onChange={(e) => setQuery(e.target.value)} />
@@ -117,9 +123,9 @@ export function Nav() {
               </button>
             ) : (
               <div className="flex items-center gap-2">
-                <button onClick={openAuth} className="px-5 py-2 rounded-full text-sm font-medium tracking-wide transition-all duration-200 hover:opacity-90 shadow-2xs" style={{ background: MAROON, color: IVORY }}>Sign In</button>
+                <button onClick={openAuth} className="px-5 py-2 rounded-full text-sm font-medium tracking-wide transition-all duration-200 hover:opacity-90 shadow-2xs" style={{ background: MAROON, color: IVORY }}>{t("nav.sign_in", "Sign In")}</button>
                 <button onClick={() => { navigate("/auth?role=astrologer"); }} className="px-4 py-2 rounded-full text-xs font-bold tracking-wide transition-all duration-200 hover:bg-amber-900/10 border flex items-center gap-1" style={{ borderColor: solid ? "rgba(91,31,36,0.3)" : "rgba(200,160,68,0.4)", color: solid ? MAROON : GOLD }}>
-                  <span>Astrologer? Sign In / Join</span>
+                  <span>{t("nav.astrologer_signin", "Astrologer? Sign In / Join")}</span>
                 </button>
               </div>
             )}
@@ -127,6 +133,8 @@ export function Nav() {
 
           {/* Mobile Right Action Icons */}
           <div className="lg:hidden flex items-center gap-3 transition-all duration-300" style={{ color: solid ? MAROON : IVORY }}>
+            {/* Multilingual Selector Placed Directly in Front of Search Button on Mobile */}
+            <LanguageSelector solid={solid} isMobile />
             <div className="relative w-full flex justify-end">
               <div className="flex items-center transition-all duration-500 ease-out overflow-hidden rounded-full"
                    style={{ 
@@ -137,7 +145,7 @@ export function Nav() {
                 {isSearchOpen ? (
                   <>
                     <Search size={14} className="ml-3 flex-shrink-0" style={{ color: solid ? MAROON : GOLD }} />
-                    <input id="nav-search-input-mobile" type="text" placeholder="Search..."
+                    <input id="nav-search-input-mobile" type="text" placeholder={t("nav.search_placeholder", "Search...")}
                       className="flex-1 w-full bg-transparent border-none outline-none px-2 py-1.5 text-[13px]"
                       style={{ color: solid ? MAROON : IVORY, fontFamily: SANS }}
                       value={query} onChange={(e) => setQuery(e.target.value)} />
@@ -175,18 +183,18 @@ export function Nav() {
               <button key={l} onClick={() => { fn(); setOpen(false); }} className="py-2 text-sm font-medium border-b text-left" style={{ color: MAROON, borderColor: "rgba(91,31,36,0.08)" }}>{l}</button>
             ))}
             <button onClick={() => { navigate("/wishlist"); setOpen(false); }} className="py-2 text-sm font-medium border-b text-left flex items-center justify-between" style={{ color: MAROON, borderColor: "rgba(91,31,36,0.08)" }}>
-              <span>Wishlist</span>
+              <span>{t("nav.wishlist", "Wishlist")}</span>
             </button>
             {!isLoggedIn && (
               <button onClick={() => { openAuth(); navigate("?role=astrologer", { replace: true }); setOpen(false); }} className="py-2 text-sm font-semibold border-b text-left text-amber-900 flex items-center justify-between" style={{ borderColor: "rgba(91,31,36,0.08)" }}>
-                <span>Astrologer? Sign In / Join</span>
+                <span>{t("nav.astrologer_signin", "Astrologer? Sign In / Join")}</span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold">Vedic Portal</span>
               </button>
             )}
             {isLoggedIn ? (
               <button onClick={() => { navigate("/profile?tab=profile"); setOpen(false); }} className="mt-2 py-3 rounded-full text-sm font-medium flex items-center justify-center gap-2" style={{ background: MAROON, color: IVORY }}><User size={15} />My Profile</button>
             ) : (
-              <button onClick={() => { openAuth(); setOpen(false); }} className="mt-2 py-3 rounded-full text-sm font-medium" style={{ background: MAROON, color: IVORY }}>Sign In</button>
+              <button onClick={() => { openAuth(); setOpen(false); }} className="mt-2 py-3 rounded-full text-sm font-medium" style={{ background: MAROON, color: IVORY }}>{t("nav.sign_in", "Sign In")}</button>
             )}
           </div>
         </div>
@@ -194,3 +202,4 @@ export function Nav() {
     </>
   );
 }
+

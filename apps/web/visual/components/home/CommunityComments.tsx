@@ -6,6 +6,7 @@ import { ArohamProduct } from "@aroham/shared-types/product";
 import { FloatingInput } from "@visual/components/auth/FloatingInput";
 import { FloatingSelect } from "@visual/components/auth/FloatingSelect";
 import { supabase } from "@aroham/shared-services";
+import { useTranslation } from "@visual/context/LanguageContext";
 
 export function CommunityComments({ products = [] }: { products?: ArohamProduct[] }) {
   const [liked, setLiked] = useState<Record<string | number, boolean>>({});
@@ -15,6 +16,8 @@ export function CommunityComments({ products = [] }: { products?: ArohamProduct[
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
+
 
   // Custom user-submitted reviews list + default comments
   const [customReviews, setCustomReviews] = useState<any[]>(() => {
@@ -154,9 +157,9 @@ export function CommunityComments({ products = [] }: { products?: ArohamProduct[
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-14">
           <div>
-            <span className="text-xs tracking-[0.2em] uppercase font-medium mb-3 block" style={{ color: GOLD, fontFamily: SANS }}>Community</span>
-            <h2 style={{ fontFamily: SERIF, fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 500, color: MAROON }}>What Our Community Says</h2>
-            <p className="text-sm mt-1" style={{ color: "#7A6A58" }}>{allReviews.length} verified reviews · 4.8 average rating</p>
+            <span className="text-xs tracking-[0.2em] uppercase font-medium mb-3 block" style={{ color: GOLD, fontFamily: SANS }}>{t("community.badge", "Community")}</span>
+            <h2 style={{ fontFamily: SERIF, fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 500, color: MAROON }}>{t("community.title", "What Our Community Says")}</h2>
+            <p className="text-sm mt-1" style={{ color: "#7A6A58" }}>{allReviews.length} {t("community.reviews_count", "verified reviews")} · 4.8 {t("community.avg_rating", "average rating")}</p>
           </div>
           <div className="flex items-center gap-3 self-start">
             <button onClick={() => {
@@ -168,10 +171,11 @@ export function CommunityComments({ products = [] }: { products?: ArohamProduct[
               }}
               className="flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-semibold transition-all hover:opacity-80"
               style={{ background: MAROON, color: IVORY }}>
-              ✍ Write a Review
+              ✍ {t("community.write_review", "Write a Review")}
             </button>
           </div>
         </div>
+
 
         {showForm && (
           <div className="mb-10 rounded-3xl p-7" style={{ background: "#FFFFFF", border: "1px solid rgba(91,31,36,0.08)", boxShadow: "0 4px 30px rgba(91,31,36,0.07)" }}>

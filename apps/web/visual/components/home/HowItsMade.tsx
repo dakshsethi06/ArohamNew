@@ -2,10 +2,12 @@ import { useState, useRef, useEffect } from "react";
 import { ChevronRight, Pickaxe, Hammer, PenTool, Flame, BadgeCheck } from "lucide-react";
 import { GOLD, IVORY, MAROON, SANS, SERIF } from "@aroham/shared-config/theme";
 import { CRAFT_STEPS, CRAFT_IMAGES } from "@aroham/shared-config/data";
+import { useTranslation } from "@visual/context/LanguageContext";
 
 export function HowItsMade() {
   const [step, setStep] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { t } = useTranslation();
 
   const resetTimer = () => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -22,6 +24,11 @@ export function HowItsMade() {
   const ICONS = [Pickaxe, Hammer, PenTool, Flame, BadgeCheck];
   const ActiveIcon = ICONS[step];
 
+  const getStepTitle = (idx: number) => {
+    const keys = ["crafts.step1", "crafts.step2", "crafts.step3", "crafts.step4", "crafts.step5"];
+    return t(keys[idx], CRAFT_STEPS[idx].title);
+  };
+
   return (
     <section className="py-20 relative overflow-hidden" style={{ background: "#0D0508" }}>
       <style>{`
@@ -31,12 +38,13 @@ export function HowItsMade() {
       <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: `radial-gradient(circle,${GOLD} 1px,transparent 1px)`, backgroundSize: "32px 32px" }} />
       <div className="max-w-6xl mx-auto px-6 lg:px-10 relative z-10">
         <div className="text-center mb-14">
-          <span className="text-xs tracking-[0.25em] uppercase font-medium mb-3 block" style={{ color: GOLD, fontFamily: SANS }}>Craftsmanship</span>
+          <span className="text-xs tracking-[0.25em] uppercase font-medium mb-3 block" style={{ color: GOLD, fontFamily: SANS }}>{t("crafts.badge", "CRAFTSMANSHIP")}</span>
           <h2 style={{ fontFamily: SERIF, fontSize: "clamp(1.75rem,4vw,2.75rem)", fontWeight: 500, color: IVORY, lineHeight: 1.15 }}>
-            From Earth to Sacred Artifact
+            {t("crafts.title", "From Earth to Sacred Artifact")}
           </h2>
-          <p className="text-sm mt-2" style={{ color: "rgba(250,247,242,0.45)" }}>Every Aroham product follows a sacred 5-step ritual process</p>
+          <p className="text-sm mt-2" style={{ color: "rgba(250,247,242,0.45)" }}>{t("crafts.subtitle", "Every Aroham product follows a sacred 5-step ritual process")}</p>
         </div>
+
         <div className="flex flex-wrap justify-center gap-2 mb-12">
           {CRAFT_STEPS.map((cs, i) => (
             <button key={i} onClick={() => goToStep(i)}

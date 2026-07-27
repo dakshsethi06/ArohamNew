@@ -2,17 +2,18 @@ import { Flame, Gem, Star, Shield, Package, Award, Mail, Phone, MessageCircle } 
 import { MAROON, GOLD, SAFFRON, IVORY, SANS, SERIF } from "@aroham/shared-config/theme";
 import { CONTACT_INFO } from "@aroham/shared-config/contact";
 import { pyramidImg, baglaImg, navratnaImg, gemstonImg, yantraPlateImg, pendantSilImg } from "@aroham/shared-config/data";
-
-const WHY_ITEMS = [
-  { icon: Flame,   title: "Temple Energized",    desc: "Every product undergoes Pran Pratishtha — consecration rituals by certified Vedic pandits.",    img: pyramidImg,    tag: "Sacred Ritual"       },
-  { icon: Gem,     title: "100% Authentic",       desc: "Sourced directly from master artisans across India's most revered sacred craft centres.",         img: baglaImg,      tag: "Verified Quality"    },
-  { icon: Star,    title: "Astrologer Curated",   desc: "Each product recommended by India's most respected Jyotish and Vastu experts.",                   img: navratnaImg,   tag: "Expert Endorsed"     },
-  { icon: Shield,  title: "Secure Shopping",      desc: "PCI-DSS compliant checkout with 256-bit SSL encryption and zero stored card data.",               img: gemstonImg,    tag: "256-bit SSL"         },
-  { icon: Package, title: "Premium Packaging",    desc: "Luxury gift packaging with an authenticity certificate sealed inside every shipment.",             img: yantraPlateImg,tag: "Certificate Included"},
-  { icon: Award,   title: "Easy Returns",         desc: "Hassle-free 7-day returns on every product. Your satisfaction is our sacred promise.",             img: pendantSilImg, tag: "7-Day Policy"        },
-];
+import { useTranslation } from "@visual/context/LanguageContext";
 
 export function WhyAroham() {
+  const { t } = useTranslation();
+
+  const WHY_ITEMS = [
+    { icon: Flame,   title: t("why.temple_energized", "Temple Energized"),    desc: t("why.mantra_rounds", "Every item consecrated through 108 mantra rounds by Vedic pandits"),    img: pyramidImg,    tag: "Sacred Ritual"       },
+    { icon: Gem,     title: t("why.artisan_direct", "Artisan-Direct Authenticity"), desc: t("why.artisan_desc", "We visit every craftsman at India's sacred centres personally. No middlemen, no factories — ever."), img: baglaImg, tag: "Verified Quality" },
+    { icon: Star,    title: t("why.astrology_approved", "Jyotish & Vastu Approved"), desc: t("why.astrology_desc", "India's most respected astrologers and Vastu consultants curate each product before it reaches you."), img: navratnaImg, tag: "Expert Endorsed" },
+    { icon: Shield,  title: t("why.guarantee_title", "Worry-Free Guarantee"), desc: t("why.guarantee_desc", "Don't feel the energy shift? Return anything within 7 days, no questions. Your peace comes first."), img: gemstonImg, tag: "7-Day Policy" },
+  ];
+
   return (
     <section className="relative overflow-hidden" style={{ background: "#07030A" }}>
       <style>{`
@@ -32,18 +33,18 @@ export function WhyAroham() {
           <div>
             <div className="flex items-center gap-3 mb-3 lg:mb-6">
               <div style={{ width: 32, height: 1, background: `linear-gradient(to right,${GOLD},transparent)` }} />
-              <span className="text-[10px] tracking-[0.35em] uppercase font-bold" style={{ color: GOLD, fontFamily: SANS }}>The Aroham Difference</span>
+              <span className="text-[10px] tracking-[0.35em] uppercase font-bold" style={{ color: GOLD, fontFamily: SANS }}>{t("why.badge", "The Aroham Difference")}</span>
             </div>
-            <p className="mb-1 lg:mb-2 text-[10px] lg:text-sm font-medium tracking-widest uppercase" style={{ color: "rgba(250,247,242,0.28)", fontFamily: SANS, letterSpacing: "0.22em" }}>Why Choose Us</p>
+            <p className="mb-1 lg:mb-2 text-[10px] lg:text-sm font-medium tracking-widest uppercase" style={{ color: "rgba(250,247,242,0.28)", fontFamily: SANS, letterSpacing: "0.22em" }}>{t("why.title", "Why Choose Us")}</p>
             <h2 style={{ fontFamily: SERIF, fontSize: "clamp(1.9rem,6vw,5rem)", fontWeight: 600, color: IVORY, lineHeight: 1.05, letterSpacing: "-0.02em" }}>
-              Not just products.<br />
+              {t("why.heading", "Not just products.")}<br />
               <span style={{ background: `linear-gradient(120deg,${GOLD},${SAFFRON},${GOLD})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
                 Sacred instruments.
               </span>
             </h2>
           </div>
           <p className="hidden lg:block text-sm leading-relaxed lg:max-w-xs" style={{ color: "rgba(250,247,242,0.45)", fontFamily: SANS }}>
-            12,000+ families trust Aroham because we treat authenticity as a non-negotiable — not a marketing claim.
+            {t("why.subheading", "12,000+ families trust Aroham because we treat authenticity as a non-negotiable — not a marketing claim.")}
           </p>
         </div>
 
@@ -56,23 +57,16 @@ export function WhyAroham() {
               <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: `rgba(231,139,47,0.2)`, border: `1px solid ${SAFFRON}50` }}>
                 <Flame size={14} style={{ color: SAFFRON }} />
               </div>
-              <span className="text-[10px] font-bold tracking-[0.3em] uppercase" style={{ color: SAFFRON, fontFamily: SANS }}>Pran Pratishtha Certified</span>
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase" style={{ color: SAFFRON, fontFamily: SANS }}>{t("why.pran_certified", "Pran Pratishtha Certified")}</span>
             </div>
             <div>
               <h3 className="mb-5" style={{ fontFamily: SERIF, fontSize: "clamp(1.8rem,4vw,3rem)", fontWeight: 500, color: IVORY, lineHeight: 1.15, maxWidth: "560px" }}>
-                Every item consecrated through 108 mantra rounds by Vedic pandits
+                {t("why.mantra_rounds", "Every item consecrated through 108 mantra rounds by Vedic pandits")}
               </h3>
-              <div className="flex flex-wrap gap-3">
-                {["Signed Temple Certificate", "108 Mantra Rounds", "Verified Pandit"].map(tag => (
-                  <span key={tag} className="px-4 py-1.5 rounded-full text-[10px] font-semibold tracking-wider uppercase"
-                    style={{ background: "rgba(200,160,68,0.12)", border: "1px solid rgba(200,160,68,0.3)", color: GOLD, fontFamily: SANS }}>
-                    {tag}
-                  </span>
-                ))}
-              </div>
             </div>
           </div>
         </div>
+
 
         <div className="md:hidden -mx-6 px-6 mb-6">
           <div className="flex gap-3 overflow-x-auto pb-3" style={{ scrollbarWidth: "none", msOverflowStyle: "none", scrollSnapType: "x mandatory" }}>
@@ -127,10 +121,10 @@ export function WhyAroham() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-px mb-5" style={{ background: "rgba(250,247,242,0.06)", borderRadius: 20, overflow: "hidden" }}>
           {[
-            { n: "12,000+", l: "Families Served",   sub: "Across 18 states"        },
-            { n: "100%",    l: "Temple Energized",   sub: "No exceptions"           },
-            { n: "4.9 / 5", l: "Customer Rating",   sub: "3,200+ reviews"          },
-            { n: "7 Days",  l: "Return Window",      sub: "No questions asked"      },
+            { n: "12,000+", l: t("why.stat_families", "Families Served"), sub: t("why.stat_states", "Across 18 states") },
+            { n: "100%",    l: t("why.temple_energized", "Temple Energized"), sub: "No exceptions" },
+            { n: "4.9 / 5", l: t("why.stat_rating", "Customer Rating"), sub: "3,200+ reviews" },
+            { n: "7 Days",  l: t("why.stat_window", "Return Window"), sub: "No questions asked" },
           ].map(({ n, l, sub }) => (
             <div key={l} className="flex flex-col items-center justify-center py-6 lg:py-9 px-3 text-center transition-all duration-300 hover:bg-white/5" style={{ background: "rgba(250,247,242,0.02)" }}>
               <div style={{ fontFamily: SERIF, fontSize: "clamp(1.2rem,3.5vw,2.4rem)", fontWeight: 600, color: IVORY, letterSpacing: "-0.02em" }}>{n}</div>
@@ -145,15 +139,15 @@ export function WhyAroham() {
         <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 20% 50%,rgba(200,160,68,0.1) 0%,transparent 60%)", pointerEvents: "none" }} />
         <div className="relative z-10 px-6 py-8 lg:px-10 lg:py-10 flex flex-col gap-6">
           <div>
-            <span className="text-[10px] tracking-[0.3em] uppercase font-bold mb-3 block" style={{ color: GOLD, fontFamily: SANS }}>Expert Guidance</span>
-            <h3 className="mb-2" style={{ fontFamily: SERIF, fontSize: "clamp(1.3rem,3vw,2rem)", fontWeight: 700, color: IVORY, lineHeight: 1.15 }}>Confused? Let Us Help You Choose.</h3>
-            <p className="text-sm" style={{ color: "rgba(250,247,242,0.5)", fontFamily: SANS }}>Our Vedic experts will personally guide you to the right remedy for your specific situation.</p>
+            <span className="text-[10px] tracking-[0.3em] uppercase font-bold mb-3 block" style={{ color: GOLD, fontFamily: SANS }}>{t("help.badge", "Expert Guidance")}</span>
+            <h3 className="mb-2" style={{ fontFamily: SERIF, fontSize: "clamp(1.3rem,3vw,2rem)", fontWeight: 700, color: IVORY, lineHeight: 1.15 }}>{t("help.title", "Confused? Let Us Help You Choose.")}</h3>
+            <p className="text-sm" style={{ color: "rgba(250,247,242,0.5)", fontFamily: SANS }}>{t("help.subtitle", "Our Vedic experts will personally guide you to the right remedy for your specific situation.")}</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
-              { icon: Mail,          label: "Email Us",  sub: CONTACT_INFO.email,        href: CONTACT_INFO.emailMailto, green: false, target: undefined },
-              { icon: Phone,         label: "Call Us",   sub: CONTACT_INFO.phoneDisplay, href: CONTACT_INFO.phoneTel,     green: false, target: undefined },
-              { icon: MessageCircle, label: "WhatsApp",  sub: "Chat instantly",          href: CONTACT_INFO.whatsappUrl,   green: true,  target: "_blank" },
+              { icon: Mail,          label: t("help.email", "Email Us"),  sub: CONTACT_INFO.email,        href: CONTACT_INFO.emailMailto, green: false, target: undefined },
+              { icon: Phone,         label: t("help.call", "Call Us"),   sub: CONTACT_INFO.phoneDisplay, href: CONTACT_INFO.phoneTel,     green: false, target: undefined },
+              { icon: MessageCircle, label: t("help.whatsapp", "WhatsApp"),  sub: t("help.chat", "Chat instantly"),          href: CONTACT_INFO.whatsappUrl,   green: true,  target: "_blank" },
             ].map(({ icon: Ic, label, sub, href, green, target }) => (
               <a key={label} href={href} target={target} rel="noopener noreferrer" className="flex items-center gap-4 px-5 py-4 rounded-2xl cursor-pointer transition-all duration-200 hover:brightness-110 active:scale-98"
                 style={{ background: green ? "rgba(74,183,95,0.85)" : "rgba(250,247,242,0.06)", border: green ? "none" : "1px solid rgba(250,247,242,0.08)" }}>
@@ -170,3 +164,4 @@ export function WhyAroham() {
     </section>
   );
 }
+

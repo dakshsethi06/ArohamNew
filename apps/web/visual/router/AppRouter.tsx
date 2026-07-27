@@ -22,6 +22,7 @@ import { ContactUsPage } from "@visual/pages/ContactUsPage";
 import { TrackOrderPage } from "@visual/pages/TrackOrderPage";
 import { PrivacyPolicyPage } from "@visual/pages/PrivacyPolicyPage";
 import { TermsOfServicePage } from "@visual/pages/TermsOfServicePage";
+import { BlogPage } from "@visual/pages/BlogPage";
 import { WishlistPage } from "@visual/pages/WishlistPage";
 import { useCart } from "@aroham/shared-state";
 import { useAuth } from "@aroham/shared-auth";
@@ -135,6 +136,7 @@ export function AppRouter() {
           <Route path="/track" element={<TrackOrderPage />} />
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/terms" element={<TermsOfServicePage />} />
+          <Route path="/blog" element={<BlogPage />} />
           
           <Route path="/checkout/shipping" element={<ShippingPage />} />
           <Route path="/checkout/payment" element={<PaymentPage />} />

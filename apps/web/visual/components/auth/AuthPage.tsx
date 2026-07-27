@@ -16,6 +16,9 @@ import * as Popover from "@radix-ui/react-popover";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 
+import { useTranslation } from "@visual/context/LanguageContext";
+import { LanguageSelector } from "@visual/components/layout/LanguageSelector";
+
 type AuthState = "signin" | "signup" | "otp" | "profile-setup" | "success";
 
 const LEFT_PANELS = {
@@ -28,6 +31,7 @@ const LEFT_PANELS = {
 
 export function AuthPage() {
   const { login, closeAuth } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -679,7 +683,7 @@ export function AuthPage() {
             boxShadow: activeTab === "signin" ? "0 4px 12px rgba(91,31,36,0.2)" : "none"
           }}
         >
-          Sign In
+          {t("auth.sign_in", "Sign In")}
         </button>
         <button
           type="button"
@@ -691,7 +695,7 @@ export function AuthPage() {
             boxShadow: activeTab === "signup" ? "0 4px 12px rgba(91,31,36,0.2)" : "none"
           }}
         >
-          Create Account
+          {t("auth.create_account", "Create Account")}
         </button>
       </div>
 
@@ -704,8 +708,8 @@ export function AuthPage() {
         )}
         <h2 className="mb-2" style={{ fontFamily: SERIF, fontSize: "1.85rem", fontWeight: 600, color: MAROON }}>
           {isAstrologerMode
-            ? (activeTab === "signin" ? "Astrologer Sign In" : "Register as Astrologer")
-            : (activeTab === "signin" ? "Welcome Back" : "Create Account")}
+            ? (activeTab === "signin" ? t("auth.astrologer_sign_in", "Astrologer Sign In") : t("auth.astrologer_register", "Register as Astrologer"))
+            : (activeTab === "signin" ? t("auth.welcome_back", "Welcome Back") : t("auth.create_account", "Create Account"))}
         </h2>
         <p className="text-sm leading-relaxed" style={{ color: "#7A6A58", fontFamily: SANS }}>
           {isAstrologerMode
@@ -713,8 +717,8 @@ export function AuthPage() {
                 ? "Enter your details to access your live consultation workstation"
                 : "Register your profile as a certified Vedic Astrologer")
             : (activeTab === "signin"
-                ? "Enter your mobile number to sign in to your account"
-                : "Enter your full name and mobile number to get started")}
+                ? t("auth.welcome_subtitle", "Enter your mobile number to sign in to your account")
+                : t("auth.create_subtitle", "Enter your full name and mobile number to get started"))}
         </p>
       </div>
 
@@ -729,7 +733,7 @@ export function AuthPage() {
       )}
 
       {activeTab === "signup" && (
-        <AuthInput label={isAstrologerMode ? "Astrologer Full Name" : "Full Name"} value={name} onChange={setName} />
+        <AuthInput label={isAstrologerMode ? t("auth.astrologer_name", "Astrologer Full Name") : t("auth.full_name", "Full Name")} value={name} onChange={setName} />
       )}
 
       {activeTab === "signup" && isAstrologerMode && (
@@ -766,14 +770,16 @@ export function AuthPage() {
       )}
 
       <div>
-        <label className="block text-xs font-semibold mb-1" style={{ color: MAROON, fontFamily: SANS }}>Mobile Number</label>
+        <label className="block text-xs font-semibold mb-1" style={{ color: MAROON, fontFamily: SANS }}>
+          {t("auth.mobile_number", "Mobile Number")}
+        </label>
         <div className="flex items-center rounded-2xl overflow-hidden" style={{ background: "#FFFFFF", border: "1.5px solid rgba(91,31,36,0.14)" }}>
           <span className="px-3.5 py-3 text-xs font-bold border-r flex items-center gap-1 flex-shrink-0 select-none" style={{ background: "rgba(91,31,36,0.04)", color: MAROON, borderColor: "rgba(91,31,36,0.1)", fontFamily: SANS }}>
             🇮🇳 +91
           </span>
           <input
             type="tel"
-            placeholder="10-digit mobile number"
+            placeholder={t("auth.mobile_placeholder", "10-digit mobile number")}
             maxLength={10}
             value={phone}
             onChange={e => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
@@ -784,10 +790,14 @@ export function AuthPage() {
       </div>
 
       <p className="text-xs text-center leading-relaxed px-4" style={{ color: "#7A6A58" }}>
-        By continuing, you agree to Aroham's{" "}
-        <Link to="/terms" onClick={e => e.stopPropagation()} className="font-semibold underline decoration-dotted" style={{ color: MAROON }}>Terms of Service</Link>
-        {" "}and{" "}
-        <Link to="/privacy" onClick={e => e.stopPropagation()} className="font-semibold underline decoration-dotted" style={{ color: MAROON }}>Privacy Policy</Link>
+        {t("auth.terms_agree", "By continuing, you agree to Aroham's")}{" "}
+        <Link to="/terms" onClick={e => e.stopPropagation()} className="font-semibold underline decoration-dotted" style={{ color: MAROON }}>
+          {t("auth.terms_link", "Terms of Service")}
+        </Link>
+        {" "}{t("auth.and", "and")}{" "}
+        <Link to="/privacy" onClick={e => e.stopPropagation()} className="font-semibold underline decoration-dotted" style={{ color: MAROON }}>
+          {t("auth.privacy_link", "Privacy Policy")}
+        </Link>
       </p>
 
       <button
@@ -807,8 +817,8 @@ export function AuthPage() {
             <Lock size={16} />
             <span>
               {isAstrologerMode
-                ? (activeTab === "signin" ? "Sign In to Astrologer Portal" : "Create Astrologer Account")
-                : (activeTab === "signin" ? "Sign In with OTP" : "Get OTP & Create Account")}
+                ? (activeTab === "signin" ? t("auth.astrologer_btn_signin", "Sign In to Astrologer Portal") : t("auth.astrologer_btn_signup", "Create Astrologer Account"))
+                : (activeTab === "signin" ? t("auth.get_otp", "Sign In with OTP") : t("auth.get_otp_signup", "Get OTP & Create Account"))}
             </span>
           </>
         )}
@@ -821,14 +831,14 @@ export function AuthPage() {
             onClick={() => setIsAstrologerMode(false)}
             className="text-xs font-bold text-amber-900 hover:underline inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-amber-900/5 hover:bg-amber-900/10 border border-amber-900/15 transition-all active:scale-95"
           >
-            <span>← Looking for Customer Login? Click here</span>
+            <span>{t("auth.astro_switch_customer", "← Looking for Customer Login? Click here")}</span>
           </button>
         ) : (
           <button
             onClick={() => setIsAstrologerMode(true)}
             className="text-xs font-bold text-amber-900 hover:underline inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-amber-900/5 hover:bg-amber-900/10 border border-amber-900/15 transition-all active:scale-95"
           >
-            <span>🔮 Are you a Certified Astrologer? Click here to Login / Join</span>
+            <span>{t("auth.customer_switch_astro", "🔮 Are you a Certified Astrologer? Click here to Login / Join")}</span>
           </button>
         )}
       </div>
@@ -1106,9 +1116,12 @@ export function AuthPage() {
           <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-sm transition-transform group-hover:scale-105" style={{ background: `linear-gradient(135deg,${SAFFRON},${GOLD})`, color: "#1A0D0E" }}>ॐ</div>
           <span className="font-semibold text-lg" style={{ fontFamily: SERIF, color: MAROON }}>Aroham</span>
         </Link>
-        <button onClick={handleClose} className="p-2 rounded-full hover:bg-black/5 text-gray-500 transition-colors" aria-label="Close">
-          <X size={20} />
-        </button>
+        <div className="flex items-center gap-3">
+          <LanguageSelector solid />
+          <button onClick={handleClose} className="p-2 rounded-full hover:bg-black/5 text-gray-500 transition-colors" aria-label="Close">
+            <X size={20} />
+          </button>
+        </div>
       </div>
 
       {/* Main Container */}

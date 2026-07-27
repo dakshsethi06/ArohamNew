@@ -1,166 +1,145 @@
-import { MAROON, GOLD, SERIF, SANS } from "@aroham/shared-config/theme";
+import { MAROON, GOLD, SERIF } from "@aroham/shared-config/theme";
+import { useTranslation } from "@visual/context/LanguageContext";
 
 export function TermsOfServicePage() {
+  const { t } = useTranslation();
+
+  const sections = [
+    {
+      title: "UPDATION",
+      content:
+        "The Website may update/amend/modify these Terms of Usage from time to time. The User is responsible to check and go through the Terms of Usage periodically to remain in compliance with these terms before you access the website or avail services made available on the website of Aroham."
+    },
+    {
+      title: "USER CONSENT",
+      content:
+        "By accessing or downloading the Website and using it, you ('Member', 'You', 'Your') indicate that you understand the terms and unconditionally & expressly consent to the Terms of Usage of this Website and agree to abide by them. If you do not agree with the Terms of Usage, please do not click on the 'I AGREE' button. Your use and continued usage of the Website shall signify your acceptance of the terms of usage and your agreement to be legally bound by the same."
+    },
+    {
+      title: "GENERAL DESCRIPTION",
+      content:
+        "The Website is an internet-based portal providing a platform for obtaining astrological content, reports, telephone/chat consultations, and temple-energized Vedic products (including Rudraksha, Yantras, Gemstones, and Crystals). Services consist of either Free Services, Paid Services, or a combination of the two."
+    },
+    {
+      title: "REGISTRATION AND ELIGIBILITY",
+      content:
+        "By using this website, you agree that you are over the age of 18 years and are allowed to enter into a legally binding contract under the Indian Contract Act, 1872. You agree to provide current, complete, and accurate registration data and maintain the secrecy and confidentiality of your account password."
+    },
+    {
+      title: "ASTROLOGICAL CONSULTATIONS & SERVICE PROVIDERS",
+      content:
+        "Service providers listed on Aroham operate in their personal capacity when offering predictions, advice, and consultations. Astrological consultations are intended solely for personal insight and reflection and do not constitute medical, legal, or financial advice."
+    },
+    {
+      title: "WEBSITE CONTENT & SPIRITUAL PRODUCTS",
+      content:
+        "All sacred items sold on Aroham undergo traditional Vedic energization (Pran Pratishtha) by qualified Pandits. Aroham makes no warranties regarding specific medical, financial, or personal outcomes from spiritual advice or product usage."
+    },
+    {
+      title: "PRIVACY POLICY",
+      content:
+        "By using Aroham, you acknowledge and consent to the collection and use of your personal data as outlined in our Privacy Policy, in compliance with the Information Technology Act, 2000 and applicable data protection laws."
+    },
+    {
+      title: "DELIVERY, CANCELLATION AND REFUND",
+      content:
+        "No refund shall be processed once an order reaches the processing or assigned stage. Please refer to our Return & Refund Policy for complete guidelines on eligible product returns and transit replacements."
+    },
+    {
+      title: "USER OBLIGATIONS & PROHIBITED CONDUCT",
+      content:
+        "Users agree not to post, publish, or transmit any false, misleading, defamatory, offensive, or unlawful content. Commercial exploitation, reverse engineering, scraping, or interfering with system security is strictly prohibited."
+    },
+    {
+      title: "BANK ACCOUNT & PAYMENT INFORMATION",
+      content:
+        "Payments on Aroham are processed through authorized, secure third-party payment gateways. Users represent and warrant that they possess lawful authority to use the credit/debit card or banking credentials provided during payment."
+    },
+    {
+      title: "DISCLAIMER / LIMITATION OF LIABILITY / WARRANTY",
+      content:
+        "The Website and all services are provided on an 'as is' basis. Aroham's total cumulative liability to any user for any cause whatsoever will at all times be limited to the amount paid by the user to the Website for the specific service or product."
+    },
+    {
+      title: "INDEMNIFICATION & PROPRIETARY RIGHTS",
+      content:
+        "You agree to indemnify, defend, and hold harmless Aroham, its officers, directors, and partners from any third-party claims arising from your breach of these terms. All content, designs, and text are proprietary property of Aroham."
+    },
+    {
+      title: "GOVERNING LAW & JURISDICTION",
+      content:
+        "These Terms of Usage shall be governed by and construed in accordance with the laws of India. Any disputes arising hereunder shall be subject to the exclusive jurisdiction of the courts located in Varanasi, Uttar Pradesh, India."
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-[#FAF7F2] font-sans selection:bg-[#C8A044] selection:text-[#0D0508] pb-10">
       <div className="max-w-4xl mx-auto px-6 pt-32 pb-20">
-        <div className="text-center mb-12">
-          <h1 style={{ fontFamily: SERIF, color: MAROON }} className="text-4xl md:text-5xl font-medium mb-4">Terms of Service</h1>
+        <div className="text-center mb-10">
+          <h1 style={{ fontFamily: SERIF, color: MAROON }} className="text-3xl md:text-4xl font-bold tracking-tight mb-4 uppercase">
+            TERMS AND CONDITIONS OF USAGE
+          </h1>
           <div className="h-1 w-24 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${GOLD}, transparent)` }} />
-          <p className="mt-6 text-sm" style={{ color: "#7A6A58" }}>Last Updated: 22 July 2026</p>
         </div>
         
-        <div className="bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-[rgba(91,31,36,0.05)] space-y-10" style={{ color: "#4A3A2A", lineHeight: 1.8 }}>
-
-          <section>
-            <h2 style={{ fontFamily: SERIF, color: MAROON }} className="text-2xl font-semibold mb-3">1. Acceptance of Terms</h2>
+        <div className="bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-[rgba(91,31,36,0.05)] space-y-8" style={{ color: "#4A3A2A", lineHeight: 1.8 }}>
+          
+          {/* Header Preamble matching Astrotalk format */}
+          <div className="space-y-4 text-sm md:text-base text-[#4A3A2A]">
             <p>
-              By accessing or using the Aroham website (<strong>aroham.in</strong>), including all content, features, and services offered on or through the Site (collectively, the "Services"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to all of these Terms, you must not use the Site. We reserve the right to modify these Terms at any time, and your continued use of the Site constitutes acceptance of any such modifications.
+              This website is owned and operated by Aroham ("us", "We", "the Company" or "Aroham" which also includes its affiliates) (<a href="mailto:priyanshubansal720@gmail.com" style={{ color: GOLD }} className="hover:underline">priyanshubansal720@gmail.com</a>). The Platform may be provided or be accessible via multiple websites or applications whether owned and/or operated by us or by third parties, including, without limitation, the website <a href="https://aroham.in" style={{ color: GOLD }} className="hover:underline font-semibold">aroham.in</a> and its related apps.
             </p>
-          </section>
-
-          <section>
-            <h2 style={{ fontFamily: SERIF, color: MAROON }} className="text-2xl font-semibold mb-3">2. Eligibility</h2>
             <p>
-              You must be at least 18 years of age to use this Site or make a purchase. By using the Site and agreeing to these Terms, you represent and warrant that you are at least 18 years old and have the legal capacity to enter into a binding agreement.
+              Following Terms and Conditions (the "Agreement") govern your access and use of our online platform through which consulting, information related to Indian Astrology, temple-energized products and other allied spiritual sciences (collectively, the "Spiritual Advisory Services") are administered and accessible to any person.
             </p>
-          </section>
-
-          <section>
-            <h2 style={{ fontFamily: SERIF, color: MAROON }} className="text-2xl font-semibold mb-3">3. User Accounts</h2>
             <p>
-              When you create an account on our Site, you are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You agree to provide accurate, current, and complete information during registration and to update such information to keep it accurate. We reserve the right to suspend or terminate your account if any information provided proves to be inaccurate, not current, or incomplete.
+              By accessing or using the Platform, you are entering into this Agreement. You should read this Agreement carefully before starting to use the Platform. If you do not agree to be bound to any term of this Agreement, you must not access the Platform.
             </p>
-          </section>
-
-          <section>
-            <h2 style={{ fontFamily: SERIF, color: MAROON }} className="text-2xl font-semibold mb-3">4. Products and Services</h2>
-            
-            <h3 className="font-semibold mt-4 mb-2" style={{ color: MAROON }}>4.1 Product Descriptions</h3>
             <p>
-              We make every effort to display the colours, features, and details of our products as accurately as possible. However, we do not guarantee that the colours, dimensions, or other visual representations on your device's screen will be an exact representation of the physical product. All product descriptions are subject to change without notice.
+              When the terms "we", "us", "our" or similar are used in this Agreement, they refer to any company that owns and operates the Platform (the "Company").
             </p>
+          </div>
 
-            <h3 className="font-semibold mt-4 mb-2" style={{ color: MAROON }}>4.2 Energization & Spiritual Claims</h3>
+          {/* Emergency Disclaimer Box matching screenshot */}
+          <div className="p-6 md:p-8 rounded-3xl bg-[#FAF7F2] border border-amber-900/10 space-y-4 text-xs md:text-sm font-semibold uppercase text-[#5B1F24] leading-relaxed shadow-2xs">
             <p>
-              Aroham sells spiritual and sacred products including but not limited to Rudraksha, Yantras, Gemstones, and Crystals. While these items are energized through traditional Vedic rituals (Pran Pratishtha) performed by qualified Pandits, the results and benefits attributed to these products are based on traditional beliefs and individual faith. Aroham makes <strong>no guarantees</strong> regarding specific spiritual, health, financial, or astrological outcomes from the use of any product. Our products are not intended to diagnose, treat, cure, or prevent any medical condition and are not substitutes for professional medical, legal, or financial advice.
+              IF YOU ARE THINKING ABOUT HARMING YOURSELF OR OTHERS OR IF YOU FEEL THAT ANY OTHER PERSON MAY BE IN ANY DANGER OR IF YOU HAVE ANY MEDICAL EMERGENCY, YOU MUST IMMEDIATELY CALL THE POLICE OR A SUICIDE PREVENTION HELPLINE AND NOTIFY THEM. THE PLATFORM IS NOT DESIGNED FOR USE IN ANY OF THE AFOREMENTIONED CASES AND THE SERVICE PROVIDERS CANNOT PROVIDE THE ASSISTANCE REQUIRED IN ANY OF THE AFOREMENTIONED CASES. IF YOU PROCEED TO USE THE PLATFORM NOTWITHSTANDING THIS NOTICE, YOU DO SO ENTIRELY AT YOUR OWN RISK.
             </p>
-
-            <h3 className="font-semibold mt-4 mb-2" style={{ color: MAROON }}>4.3 Pricing & Availability</h3>
             <p>
-              All prices are listed in Indian Rupees (INR) and are inclusive of applicable taxes unless otherwise stated. We reserve the right to modify prices, discontinue products, or limit quantities at any time without prior notice. In the event of a pricing error, we reserve the right to cancel orders placed at the incorrect price.
+              THE PLATFORM IS NOT INTENDED FOR THE PROVISION OF CLINICAL DIAGNOSIS REQUIRING AN IN-PERSON EVALUATION. IT IS ALSO NOT INTENDED FOR ANY INFORMATION REGARDING WHICH DRUGS OR MEDICAL TREATMENT MAY BE APPROPRIATE FOR YOU, AND YOU SHOULD DISREGARD ANY SUCH ADVICE IF DELIVERED THROUGH THE PLATFORM.
             </p>
-          </section>
-
-          <section>
-            <h2 style={{ fontFamily: SERIF, color: MAROON }} className="text-2xl font-semibold mb-3">5. Orders and Payment</h2>
             <p>
-              Placing an order on our Site constitutes an offer to purchase. All orders are subject to acceptance and availability. We reserve the right to refuse or cancel any order for any reason, including but not limited to product availability, errors in product or pricing information, or suspected fraudulent activity.
+              DO NOT DISREGARD, AVOID, OR DELAY IN OBTAINING IN-PERSON CARE FROM YOUR DOCTOR OR OTHER QUALIFIED PROFESSIONAL BECAUSE OF INFORMATION OR ADVICE YOU RECEIVED THROUGH THE PLATFORM.
             </p>
-            <p className="mt-3">
-              Payments are processed through secure third-party payment gateways (e.g., Razorpay). We do not store your credit/debit card details on our servers. By providing your payment information, you represent that you are authorized to use the payment method.
-            </p>
-          </section>
+          </div>
 
-          <section>
-            <h2 style={{ fontFamily: SERIF, color: MAROON }} className="text-2xl font-semibold mb-3">6. Shipping and Delivery</h2>
-            <p>
-              Please refer to our <a href="/shipping" style={{ color: GOLD }} className="hover:underline font-semibold">Shipping Policy</a> page for detailed information on energization timelines, estimated delivery windows, and delivery coverage. Aroham is not responsible for delays caused by third-party courier services, customs, natural disasters, or other circumstances beyond our reasonable control.
-            </p>
-          </section>
+          {/* Sections starting with UPDATION */}
+          <div className="space-y-8 pt-4">
+            {sections.map((sec) => (
+              <section key={sec.title}>
+                <h2 style={{ fontFamily: SERIF, color: MAROON }} className="text-lg md:text-xl font-bold mb-2 uppercase tracking-wide">
+                  {sec.title}
+                </h2>
+                <p className="text-sm md:text-base leading-relaxed text-[#5A4A3A]">
+                  {sec.content}
+                </p>
+              </section>
+            ))}
+          </div>
 
-          <section>
-            <h2 style={{ fontFamily: SERIF, color: MAROON }} className="text-2xl font-semibold mb-3">7. Returns, Refunds, and Cancellations</h2>
-            <p>
-              Please refer to our <a href="/returns" style={{ color: GOLD }} className="hover:underline font-semibold">Return & Refund Policy</a> page for detailed information. In summary:
-            </p>
-            <ul className="list-disc pl-6 mt-2 space-y-1">
-              <li>Returns are accepted within 7 days of delivery for unused items in original condition.</li>
-              <li>Refunds for eligible returns will be processed within 5-7 business days to your original payment method.</li>
-              <li>Custom-energized products may be exempt from return unless physically damaged in transit.</li>
-              <li>Cancellation of orders is permitted before the product has been dispatched. Once shipped, the return policy applies.</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 style={{ fontFamily: SERIF, color: MAROON }} className="text-2xl font-semibold mb-3">8. Intellectual Property</h2>
-            <p>
-              All content on this Site, including but not limited to text, graphics, logos, images, product photographs, UI design, and software, is the property of Aroham or its content suppliers and is protected by Indian and international copyright, trademark, and other intellectual property laws. You may not reproduce, distribute, modify, create derivative works of, publicly display, or exploit any content from this Site without our prior written consent.
-            </p>
-          </section>
-
-          <section>
-            <h2 style={{ fontFamily: SERIF, color: MAROON }} className="text-2xl font-semibold mb-3">9. Prohibited Conduct</h2>
-            <p className="mb-3">You agree not to:</p>
-            <ul className="list-disc pl-6 space-y-1">
-              <li>Use the Site for any unlawful purpose or in violation of any applicable laws or regulations.</li>
-              <li>Attempt to gain unauthorized access to any part of the Site, other users' accounts, or any systems or networks connected to the Site.</li>
-              <li>Use automated scripts, bots, or scrapers to collect data from the Site.</li>
-              <li>Submit false, misleading, or fraudulent orders or reviews.</li>
-              <li>Interfere with or disrupt the integrity or performance of the Site.</li>
-              <li>Impersonate any person or entity, or falsely state or misrepresent your affiliation with a person or entity.</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 style={{ fontFamily: SERIF, color: MAROON }} className="text-2xl font-semibold mb-3">10. Limitation of Liability</h2>
-            <p>
-              To the fullest extent permitted by applicable law, Aroham and its directors, employees, partners, agents, and affiliates shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to loss of profits, data, goodwill, or other intangible losses, resulting from:
-            </p>
-            <ul className="list-disc pl-6 mt-2 space-y-1">
-              <li>Your access to or use of (or inability to access or use) the Site or Services.</li>
-              <li>Any conduct or content of any third party on the Site.</li>
-              <li>Any unauthorized access, use, or alteration of your transmissions or content.</li>
-              <li>Any reliance on spiritual or astrological claims associated with our products.</li>
-            </ul>
-            <p className="mt-3">
-              In no event shall our total liability to you for all claims exceed the amount you paid to Aroham for the specific product giving rise to the claim.
-            </p>
-          </section>
-
-          <section>
-            <h2 style={{ fontFamily: SERIF, color: MAROON }} className="text-2xl font-semibold mb-3">11. Disclaimer of Warranties</h2>
-            <p>
-              The Site and all products are provided on an <strong>"as is"</strong> and <strong>"as available"</strong> basis without warranties of any kind, whether express or implied, including but not limited to implied warranties of merchantability, fitness for a particular purpose, and non-infringement. We do not warrant that the Site will be uninterrupted, timely, secure, or error-free.
-            </p>
-          </section>
-
-          <section>
-            <h2 style={{ fontFamily: SERIF, color: MAROON }} className="text-2xl font-semibold mb-3">12. Indemnification</h2>
-            <p>
-              You agree to indemnify, defend, and hold harmless Aroham and its officers, directors, employees, agents, and affiliates from and against any and all claims, damages, obligations, losses, liabilities, costs, and expenses (including reasonable attorney's fees) arising from your use of the Site, your violation of these Terms, or your violation of any rights of a third party.
-            </p>
-          </section>
-
-          <section>
-            <h2 style={{ fontFamily: SERIF, color: MAROON }} className="text-2xl font-semibold mb-3">13. Governing Law and Jurisdiction</h2>
-            <p>
-              These Terms shall be governed by and construed in accordance with the laws of India. Any disputes arising out of or in connection with these Terms shall be subject to the exclusive jurisdiction of the courts located in Varanasi, Uttar Pradesh, India.
-            </p>
-          </section>
-
-          <section>
-            <h2 style={{ fontFamily: SERIF, color: MAROON }} className="text-2xl font-semibold mb-3">14. Severability</h2>
-            <p>
-              If any provision of these Terms is found to be unlawful, void, or unenforceable, that provision shall be deemed severable from these Terms and shall not affect the validity and enforceability of any remaining provisions.
-            </p>
-          </section>
-
-          <section>
-            <h2 style={{ fontFamily: SERIF, color: MAROON }} className="text-2xl font-semibold mb-3">15. Entire Agreement</h2>
-            <p>
-              These Terms, together with our Privacy Policy, Shipping Policy, and Return Policy, constitute the entire agreement between you and Aroham regarding your use of the Site and supersede all prior agreements and understandings, whether written or oral.
-            </p>
-          </section>
-
-          <section>
-            <h2 style={{ fontFamily: SERIF, color: MAROON }} className="text-2xl font-semibold mb-3">16. Contact Information</h2>
-            <p>
+          {/* Section: Contact Information without number 16 */}
+          <section className="pt-4 border-t border-amber-900/10">
+            <h2 style={{ fontFamily: SERIF, color: MAROON }} className="text-lg md:text-xl font-bold mb-3 uppercase tracking-wide">
+              Contact Information
+            </h2>
+            <p className="text-sm md:text-base text-[#5A4A3A] mb-4">
               If you have any questions about these Terms of Service, please contact us at:
             </p>
-            <div className="mt-3 p-4 rounded-xl" style={{ background: "#FAF7F2" }}>
-              <p><strong>Aroham</strong></p>
-              <p>Email: <a href="mailto:priyanshubansal720@gmail.com" style={{ color: GOLD }} className="hover:underline">priyanshubansal720@gmail.com</a></p>
+            <div className="p-5 rounded-2xl border border-amber-900/10 bg-[#FAF7F2]/80 shadow-xs">
+              <p className="font-bold text-[#5B1F24] text-base">Aroham</p>
+              <p className="text-sm mt-1 text-[#4A3A2A]">
+                Email: <a href="mailto:priyanshubansal720@gmail.com" style={{ color: GOLD }} className="hover:underline font-semibold">priyanshubansal720@gmail.com</a>
+              </p>
             </div>
           </section>
 

@@ -2,9 +2,13 @@ import { ArrowRight, Flame, CheckCircle, Truck, Shield } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF } from "@aroham/shared-config/theme";
 import { ArohamProduct } from "@aroham/shared-types/product";
 import { HexPrismCarousel } from "./HexPrismCarousel";
+import { useTranslation } from "@visual/context/LanguageContext";
+
 
 export function ShopConsultCards({ products, onShop, onProductClick }: { products: ArohamProduct[]; onShop: () => void; onProductClick?: (p: ArohamProduct) => void }) {
   const displayProducts = products.length >= 3 ? products.slice(0, 3) : [];
+  const { t } = useTranslation();
+
   return (
     <section className="py-10 lg:py-20 px-4 sm:px-6 lg:px-10" style={{ background: "#FAF7F2" }}>
       <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-6 min-w-0">
@@ -15,8 +19,8 @@ export function ShopConsultCards({ products, onShop, onProductClick }: { product
             <div className="absolute inset-0 opacity-5" style={{ backgroundImage: `radial-gradient(circle,${GOLD} 1px,transparent 1px)`, backgroundSize: "24px 24px" }} />
             <div className="flex-1 relative z-10" />
             <div className="relative z-10">
-              <h2 style={{ fontFamily: SERIF, fontSize: "clamp(2rem,3.5vw,2.6rem)", fontWeight: 700, color: IVORY, lineHeight: 1.1, marginBottom: 8 }}>Sacred Store</h2>
-              <p className="text-sm leading-relaxed" style={{ color: GOLD, maxWidth: 480 }}>Yantras, Rudraksha, Crystals, Pendants &amp; complete Vastu remedies — all temple energized.</p>
+              <h2 style={{ fontFamily: SERIF, fontSize: "clamp(2rem,3.5vw,2.6rem)", fontWeight: 700, color: IVORY, lineHeight: 1.1, marginBottom: 8 }}>{t("cards.shop_title", "Sacred Products")}</h2>
+              <p className="text-sm leading-relaxed" style={{ color: GOLD, maxWidth: 480 }}>{t("cards.shop_desc", "Explore authentic gemstones, yantras & rudrakshas.")}</p>
             </div>
             <div className="grid grid-cols-3 gap-2 sm:gap-3 relative z-10">
               {displayProducts.map(p => (
@@ -48,7 +52,7 @@ export function ShopConsultCards({ products, onShop, onProductClick }: { product
             <button onClick={onShop}
               className="relative z-10 w-full hidden sm:flex items-center justify-center gap-3 rounded-2xl font-bold transition-all hover:opacity-90 hover:scale-[1.02]"
               style={{ background: GOLD, color: "#5C1B23", fontFamily: SANS, fontSize: "clamp(1rem,2vw,1.2rem)", padding: "18px 24px", letterSpacing: "0.01em" }}>
-              Shop Now <ArrowRight size={18} />
+              {t("cards.explore", "Explore Now")} <ArrowRight size={18} />
             </button>
           </div>
         </div>
@@ -68,3 +72,4 @@ export function ShopConsultCards({ products, onShop, onProductClick }: { product
     </section>
   );
 }
+

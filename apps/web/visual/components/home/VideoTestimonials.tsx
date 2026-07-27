@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 import { MAROON, GOLD, SAFFRON, IVORY, SANS, SERIF } from "@aroham/shared-config/theme";
 import { VIDEO_REVIEWS, yantraPlateImg, gemstonImg, pendantSilImg } from "@aroham/shared-config/data";
+import { useTranslation } from "@visual/context/LanguageContext";
 
 const BASE_REELS = [
   ...VIDEO_REVIEWS,
@@ -18,6 +19,7 @@ export function VideoTestimonials() {
   const [isSwiping, setIsSwiping] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const n = BASE_REELS.length;
+  const { t } = useTranslation();
 
   const goTo = useCallback((i: number) => {
     setActive(((i % n) + n) % n);
@@ -64,10 +66,11 @@ export function VideoTestimonials() {
       style={{ background: "#0D0508" }}
     >
       <div className="text-center mb-8 sm:mb-10 px-6">
-        <span className="text-xs tracking-[0.25em] uppercase font-medium mb-3 block" style={{ color: SAFFRON, fontFamily: SANS }}>Real Transformations</span>
-        <h2 style={{ fontFamily: SERIF, fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 500, color: IVORY }}>Customer Stories</h2>
-        <p className="text-sm mt-2" style={{ color: "rgba(250,247,242,0.5)", fontFamily: SANS }}>Swipe through real stories from our community</p>
+        <span className="text-xs tracking-[0.25em] uppercase font-medium mb-3 block" style={{ color: SAFFRON, fontFamily: SANS }}>{t("stories.badge", "Real Transformations")}</span>
+        <h2 style={{ fontFamily: SERIF, fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 500, color: IVORY }}>{t("stories.title", "Customer Stories")}</h2>
+        <p className="text-sm mt-2" style={{ color: "rgba(250,247,242,0.5)", fontFamily: SANS }}>{t("stories.subtitle", "Swipe through real stories from our community")}</p>
       </div>
+
 
       <div className="relative" ref={containerRef}>
         {/* Navigation arrows — desktop only */}
