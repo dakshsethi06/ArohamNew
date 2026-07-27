@@ -343,6 +343,7 @@ export function ConsultPage() {
         historySessionMessages={historySessionMessages}
         onSelectSession={viewPastSessionChat}
         onAddToCart={handleAddToCart}
+        astrologers={astrologers}
       />
 
       <ConsultChatModal

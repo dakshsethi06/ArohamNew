@@ -11,6 +11,7 @@ interface PastHistoryModalProps {
   historySessionMessages: any[];
   onSelectSession: (sess: any) => void;
   onAddToCart: (p: any) => void;
+  astrologers: any[];
 }
 
 export function PastHistoryModal({
@@ -21,10 +22,16 @@ export function PastHistoryModal({
   historySessionMessages,
   onSelectSession,
   onAddToCart,
+  astrologers,
 }: PastHistoryModalProps) {
   const { t } = useTranslation();
 
   if (!isOpen) return null;
+
+  const getAstroName = (astroId: string) => {
+    const matched = astrologers.find(a => a.id === astroId);
+    return matched ? matched.name : "Vedic Scholar";
+  };
 
   return createPortal(
     <div className="fixed inset-0 z-[10000] bg-black/70 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
@@ -76,17 +83,26 @@ export function PastHistoryModal({
                         {sess.status}
                       </span>
                     </div>
-                    <span
-                      className={`text-[10px] block ${
-                        isSel ? "text-amber-200/70" : "text-stone-400"
-                      }`}
-                    >
-                      {new Date(sess.created_at).toLocaleDateString([], {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </span>
+                    <div className="flex items-center justify-between mt-1">
+                      <span
+                        className={`text-[10px] block ${
+                          isSel ? "text-amber-200/70" : "text-stone-400"
+                        }`}
+                      >
+                        {new Date(sess.created_at).toLocaleDateString([], {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </span>
+                      <span
+                        className={`text-[10px] font-semibold truncate max-w-[130px] ${
+                          isSel ? "text-amber-300" : "text-[#5B1F24]"
+                        }`}
+                      >
+                        with {getAstroName(sess.astrologer_id)}
+                      </span>
+                    </div>
                   </div>
                 );
               })
