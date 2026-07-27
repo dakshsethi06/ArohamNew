@@ -63,6 +63,14 @@ export function ConsultPage() {
   const [selectedHistorySession, setSelectedHistorySession] = useState<any | null>(null);
   const [historySessionMessages, setHistorySessionMessages] = useState<any[]>([]);
 
+  useEffect(() => {
+    if (!isLoggedIn || !user) {
+      setUserHistorySessions([]);
+      setSelectedHistorySession(null);
+      setHistorySessionMessages([]);
+    }
+  }, [isLoggedIn, user]);
+
   const findProduct = (slug: string) => products.find(p => p.slug === slug);
 
   const handleAddToCart = (product: any) => {
