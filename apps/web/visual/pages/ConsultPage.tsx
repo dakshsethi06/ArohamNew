@@ -284,8 +284,12 @@ export function ConsultPage() {
     };
   }, [session?.id, session?.status]);
 
-  const endSession = () => {
+  const endSession = async () => {
+    if (!session?.id) return;
     setSession(prev => prev ? { ...prev, status: "completed" } : null);
+    try {
+      await supabase.from("chat_sessions").update({ status: "completed", ended_at: new Date().toISOString() }).eq("id", session.id);
+    } catch (e) {}
   };
 
   const filteredAstrologers = astrologers.filter(a => {

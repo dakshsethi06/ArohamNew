@@ -47,6 +47,15 @@ export function ConsultChatModal({
     }
   }, [messages, isTyping]);
 
+  useEffect(() => {
+    if (session?.status === "completed" || session?.status === "ended") {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [session?.status, onClose]);
+
   if (!session || !selectedAstrologer) return null;
 
   return createPortal(
@@ -170,9 +179,9 @@ export function ConsultChatModal({
     
             {/* Input Bar */}
             {session.status === "completed" || session.status === "ended" ? (
-              <div className="p-4 border-t border-amber-900/15 bg-amber-50 text-center text-xs font-bold text-amber-900 flex items-center justify-center gap-2 shrink-0">
+              <div className="p-4 border-t border-amber-900/15 bg-amber-50 text-center text-xs font-bold text-amber-900 flex items-center justify-center gap-2 shrink-0 animate-pulse">
                 <CheckCircle2 size={16} className="text-amber-700" />
-                <span>Consultation Session Completed.</span>
+                <span>Chat session ended. Redirecting to consult page in 3 seconds...</span>
               </div>
             ) : (
               <div className="p-3 sm:p-5 border-t border-amber-900/15 bg-white flex items-center gap-2.5 shrink-0">
