@@ -13,7 +13,8 @@ import { AstrologerCard, Astrologer } from "@visual/components/consult/Astrologe
 import { PastHistoryModal } from "@visual/components/consult/PastHistoryModal";
 import { ConsultChatModal } from "@visual/components/consult/ConsultChatModal";
 
-const isAstrologerActive = (workingHours: any) => {
+const isAstrologerActive = (isOnline: boolean, workingHours: any) => {
+  if (!isOnline) return false;
   if (workingHours && workingHours.enabled) {
     const { start, end } = workingHours;
     if (start && end) {
@@ -22,13 +23,13 @@ const isAstrologerActive = (workingHours: any) => {
       const mins = String(nowTime.getMinutes()).padStart(2, "0");
       const currentTimeStr = `${hrs}:${mins}`;
       if (start <= end) {
-        if (currentTimeStr >= start && currentTimeStr <= end) return true;
+        if (currentTimeStr < start || currentTimeStr > end) return false;
       } else {
-        if (currentTimeStr >= start || currentTimeStr <= end) return true;
+        if (currentTimeStr < start && currentTimeStr > end) return false;
       }
     }
   }
-  return false;
+  return true;
 };
 
 const getDatabaseAstrologers = (): Astrologer[] => {
@@ -77,7 +78,9 @@ export function ConsultPage() {
       let list = getDatabaseAstrologers();
       const computedList = list.map(a => ({
         ...a,
-        status: (isAstrologerActive(a.workingHours) ? "online" : "offline") as "online" | "offline" | "busy"
+        status: (isAstrologerActive(a.status === "online" || a.status === "busy", a.workingHours)
+          ? (a.status === "busy" ? "busy" : "online")
+          : "offline") as "online" | "offline" | "busy"
       }));
       setAstrologers(computedList);
     };
@@ -101,7 +104,7 @@ export function ConsultPage() {
             specialties: liveData.specialties || ["Vedic Kundali", "Gemstones"],
             languages: liveData.languages || ["Hindi", "English"],
             avatar: liveData.avatar_url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
-            status: (isAstrologerActive(liveData.working_hours) ? "online" : "offline") as "online" | "offline" | "busy",
+            status: (isAstrologerActive(liveData.is_online, liveData.working_hours) ? "online" : "offline") as "online" | "offline" | "busy",
             pricePerMin: Number(liveData.price_per_min) || 20,
             bio: liveData.bio,
             lastActiveAt: liveData.last_active_at,
