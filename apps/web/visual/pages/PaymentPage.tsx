@@ -15,7 +15,7 @@ declare global {
 }
 
 // Razorpay public key — safe to expose in frontend
-const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_T905SJtpz903AN";
+const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_TIXODQAA4JFwih";
 
 function CheckoutHeader() {
   const navigate = useNavigate();
