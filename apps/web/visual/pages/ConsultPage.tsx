@@ -93,7 +93,7 @@ export function ConsultPage() {
       try {
         const { data } = await supabase.from("astrologers").select("*");
         if (data) {
-          const completedData = data.filter(liveData => liveData.bio && liveData.bio !== "PENDING_WIZARD_COMPLETION" && liveData.bio.trim() !== "");
+          const completedData = data.filter(liveData => liveData.bio && liveData.bio !== "PENDING_WIZARD_COMPLETION" && liveData.bio.trim() !== "" && liveData.status !== "BLOCKED");
           const dbFormatted: Astrologer[] = completedData.map(liveData => ({
             id: liveData.id,
             name: liveData.full_name || liveData.name || "Acharya Astrologer",
