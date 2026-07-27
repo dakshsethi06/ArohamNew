@@ -282,7 +282,14 @@ export function AstrologerDashboard() {
       return null;
     }
   });
-  const [bypassedOnboarding, setBypassedOnboarding] = useState(false);
+  const [bypassedOnboarding, setBypassedOnboarding] = useState(() => {
+    try {
+      const stored = localStorage.getItem(`aroham_astro_wizard_done_${currentAstroId}`);
+      return stored === "true";
+    } catch (e) {
+      return false;
+    }
+  });
 
   useEffect(() => {
     const fetchOnboardingStatus = async () => {
@@ -1140,6 +1147,9 @@ export function AstrologerDashboard() {
       <AstrologerOnboardingStatus
         application={onboardingApp}
         onEnterDashboard={() => {
+          try {
+            localStorage.setItem(`aroham_astro_wizard_done_${currentAstroId}`, "true");
+          } catch (e) {}
           setBypassedOnboarding(true);
         }}
       />
