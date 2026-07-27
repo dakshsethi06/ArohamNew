@@ -104,6 +104,26 @@ export function AstrologerDashboard() {
       return { enabled: false, start: "09:00", end: "22:00" };
     }
   });
+
+  const checkIsCurrentlyWorking = () => {
+    if (workingHours && workingHours.enabled) {
+      const { start, end } = workingHours;
+      if (start && end) {
+        const nowTime = new Date();
+        const hrs = String(nowTime.getHours()).padStart(2, "0");
+        const mins = String(nowTime.getMinutes()).padStart(2, "0");
+        const currentTimeStr = `${hrs}:${mins}`;
+        if (start <= end) {
+          return currentTimeStr >= start && currentTimeStr <= end;
+        } else {
+          return currentTimeStr >= start || currentTimeStr <= end;
+        }
+      }
+    }
+    return false;
+  };
+  const isCurrentlyWorking = checkIsCurrentlyWorking();
+
   const [isChatOnlineRef, setIsChatOnlineRef] = useState(isChatOnline);
   useEffect(() => {
     setIsChatOnlineRef(isChatOnline);
@@ -326,7 +346,7 @@ export function AstrologerDashboard() {
       specialties: p.specialty ? (Array.isArray(p.specialty) ? p.specialty : [p.specialty, "Vedic Kundali"]) : ["Vedic Kundali"],
       languages: languagesList,
       avatar: p.avatar || PRESET_AVATARS[0],
-      status: isChatOnline ? "online" : "offline",
+      status: checkIsCurrentlyWorking() ? "online" : "offline",
       pricePerMin: parseFloat(p.pricePerMin) || 20,
       bio: p.bio || "",
       working_hours: workingHours
@@ -445,6 +465,7 @@ export function AstrologerDashboard() {
     };
 
     fetchAndSyncAstroProfile();
+    broadcastStatus(checkIsCurrentlyWorking());
 
     const syncAll = () => {
       fetchSessions();
@@ -1141,7 +1162,7 @@ export function AstrologerDashboard() {
         <div className="flex items-center gap-3.5">
           <div className="relative">
             <img src={profile.avatar} alt={profile.name} className="w-11 h-11 rounded-2xl object-cover border-2 border-amber-300 shadow-md" />
-            <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-[#FAF7F2] ${isChatOnline ? "bg-emerald-400 animate-pulse" : "bg-gray-400"}`} />
+            <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-[#FAF7F2] ${isCurrentlyWorking ? "bg-emerald-400 animate-pulse" : "bg-gray-400"}`} />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -1166,17 +1187,7 @@ export function AstrologerDashboard() {
             </button>
           )}
 
-          <button
-            onClick={toggleChatOnline}
-            className={`px-3.5 py-2 rounded-xl text-xs font-extrabold tracking-wide transition-all flex items-center gap-1.5 border shadow-sm active:scale-95 ${
-              isChatOnline
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
-                : "bg-amber-900/5 text-amber-900/60 border-amber-900/10 hover:bg-amber-900/10"
-            }`}
-          >
-            <MessageSquare size={13} />
-            <span>CHAT: {isChatOnline ? "ONLINE" : "OFFLINE"}</span>
-          </button>
+
 
           <button
             onClick={handleLogout}
