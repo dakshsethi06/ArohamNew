@@ -120,7 +120,9 @@ export function ConsultPage() {
     };
 
     fetchRealtimeAstrologers();
+    const interval = setInterval(fetchRealtimeAstrologers, 3000);
     return () => {
+      clearInterval(interval);
       window.removeEventListener("storage", syncAstrologers);
       window.removeEventListener("focus", syncAstrologers);
     };
