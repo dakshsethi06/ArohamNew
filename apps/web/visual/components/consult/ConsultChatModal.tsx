@@ -91,87 +91,109 @@ export function ConsultChatModal({
           </button>
         </div>
 
-        {/* Live Messages Body */}
-        <div ref={chatScrollContainerRef} className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4">
-          {messages.map((m) => (
-            <div key={m.id} className={`flex flex-col ${m.sender === "user" ? "items-end" : "items-start"}`}>
-              <div className={`max-w-[85%] sm:max-w-[70%] p-3.5 sm:p-4 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-sm ${
-                m.sender === "user"
-                  ? "bg-[#5B1F24] text-white rounded-br-none"
-                  : "bg-white text-[#3E3125] border border-amber-900/10 rounded-bl-none"
-              }`}>
-                <p>{m.text}</p>
-
-                {m.recommendedProduct && (
-                  <div className="mt-3 pt-3 border-t border-amber-900/10 flex items-center gap-3 bg-amber-50/50 p-2.5 rounded-xl">
-                    <img src={m.recommendedProduct.img} alt={m.recommendedProduct.name} className="w-12 h-12 rounded-lg object-cover border border-amber-900/10" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-[#5B1F24] truncate">{m.recommendedProduct.name}</p>
-                      <p className="text-xs font-extrabold text-amber-700">₹{m.recommendedProduct.price}</p>
-                    </div>
-                    <button
-                      onClick={() => onAddToCart(m.recommendedProduct)}
-                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#5B1F24] text-white flex items-center gap-1 shadow-sm active:scale-95"
-                    >
-                      <ShoppingBag size={12} />
-                      Buy
-                    </button>
-                  </div>
-                )}
-              </div>
-              <span className="text-[10px] text-amber-900/40 mt-1 px-1">{m.timestamp}</span>
+        {session.status === "pending" ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-6 bg-[#FCFAF7]">
+            <div className="relative flex items-center justify-center">
+              <div className="w-24 h-24 rounded-full border-4 border-amber-900/10 border-t-[#5B1F24] animate-spin absolute" />
+              <img src={selectedAstrologer.avatar} alt="" className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg" />
             </div>
-          ))}
-
-          {isTyping && (
-            <div className="flex items-center gap-2 p-3 bg-white rounded-2xl text-xs text-amber-900/60 border border-amber-900/10 w-fit">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-bounce" />
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-bounce delay-100" />
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-bounce delay-200" />
-              <span className="font-semibold text-[11px] ml-1">{selectedAstrologer.name} is typing...</span>
+            <div className="space-y-2 max-w-md">
+              <h3 className="text-xl font-bold text-[#5B1F24]" style={{ fontFamily: SERIF }}>Connecting to {selectedAstrologer.name}...</h3>
+              <p className="text-xs text-amber-950/70 leading-relaxed font-semibold">
+                Please wait while the astrologer accepts your consultation request. This usually takes less than a minute.
+              </p>
             </div>
-          )}
-        </div>
-
-        {/* Starter Questions Pills */}
-        {messages.length < 3 && (
-          <div className="px-4 py-2 bg-amber-50/60 border-t border-amber-900/10 flex items-center gap-2 overflow-x-auto scrollbar-none">
-            {starterQuestions.map((q) => (
-              <button
-                key={q}
-                onClick={() => onSendMessage(q)}
-                className="px-3 py-1.5 rounded-xl text-[11px] font-semibold bg-white text-amber-900 border border-amber-900/15 hover:bg-amber-100 whitespace-nowrap shadow-2xs"
-              >
-                {q}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Input Bar */}
-        {session.status === "completed" || session.status === "ended" ? (
-          <div className="p-4 border-t border-amber-900/15 bg-amber-50 text-center text-xs font-bold text-amber-900 flex items-center justify-center gap-2 shrink-0">
-            <CheckCircle2 size={16} className="text-amber-700" />
-            <span>Consultation Session Completed.</span>
+            <div className="flex gap-1.5 justify-center items-center">
+              <span className="w-2 h-2 rounded-full bg-amber-600 animate-bounce" />
+              <span className="w-2 h-2 rounded-full bg-amber-600 animate-bounce delay-100" />
+              <span className="w-2 h-2 rounded-full bg-amber-600 animate-bounce delay-200" />
+            </div>
           </div>
         ) : (
-          <div className="p-3 sm:p-5 border-t border-amber-900/15 bg-white flex items-center gap-2.5 shrink-0">
-            <input
-              type="text"
-              value={inputMessage}
-              onChange={(e) => onInputChange(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && onSendMessage()}
-              placeholder={t("consult.type_placeholder", "Type your message...")}
-              className="flex-1 h-12 px-4 rounded-2xl text-xs sm:text-sm border border-amber-900/20 outline-none focus:border-[#5B1F24] transition-all bg-[#FAF6F0]/50 text-[#3C3024] font-medium"
-            />
-            <button
-              onClick={() => onSendMessage()}
-              disabled={!inputMessage.trim()}
-              className="h-12 w-12 sm:w-auto sm:px-6 rounded-2xl font-bold text-xs sm:text-sm text-white flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all disabled:opacity-50 bg-[#5B1F24] hover:brightness-110"
-            >
-              <Send size={15} />
-            </button>
-          </div>
+          <>
+            {/* Live Messages Body */}
+            <div ref={chatScrollContainerRef} className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4">
+              {messages.map((m) => (
+                <div key={m.id} className={`flex flex-col ${m.sender === "user" ? "items-end" : "items-start"}`}>
+                  <div className={`max-w-[85%] sm:max-w-[70%] p-3.5 sm:p-4 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-sm ${
+                    m.sender === "user"
+                      ? "bg-[#5B1F24] text-white rounded-br-none"
+                      : "bg-white text-[#3E3125] border border-amber-900/10 rounded-bl-none"
+                  }`}>
+                    <p>{m.text}</p>
+    
+                    {m.recommendedProduct && (
+                      <div className="mt-3 pt-3 border-t border-amber-900/10 flex items-center gap-3 bg-amber-50/50 p-2.5 rounded-xl">
+                        <img src={m.recommendedProduct.img} alt={m.recommendedProduct.name} className="w-12 h-12 rounded-lg object-cover border border-amber-900/10" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-[#5B1F24] truncate">{m.recommendedProduct.name}</p>
+                          <p className="text-xs font-extrabold text-amber-700">₹{m.recommendedProduct.price}</p>
+                        </div>
+                        <button
+                          onClick={() => onAddToCart(m.recommendedProduct)}
+                          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#5B1F24] text-white flex items-center gap-1 shadow-sm active:scale-95"
+                        >
+                          <ShoppingBag size={12} />
+                          Buy
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-amber-900/40 mt-1 px-1">{m.timestamp}</span>
+                </div>
+              ))}
+    
+              {isTyping && (
+                <div className="flex items-center gap-2 p-3 bg-white rounded-2xl text-xs text-amber-900/60 border border-amber-900/10 w-fit">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-bounce" />
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-bounce delay-100" />
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-bounce delay-200" />
+                  <span className="font-semibold text-[11px] ml-1">{selectedAstrologer.name} is typing...</span>
+                </div>
+              )}
+            </div>
+    
+            {/* Starter Questions Pills */}
+            {messages.length < 3 && (
+              <div className="px-4 py-2 bg-amber-50/60 border-t border-amber-900/10 flex items-center gap-2 overflow-x-auto scrollbar-none">
+                {starterQuestions.map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => onSendMessage(q)}
+                    className="px-3 py-1.5 rounded-xl text-[11px] font-semibold bg-white text-amber-900 border border-amber-900/15 hover:bg-amber-100 whitespace-nowrap shadow-2xs"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
+    
+            {/* Input Bar */}
+            {session.status === "completed" || session.status === "ended" ? (
+              <div className="p-4 border-t border-amber-900/15 bg-amber-50 text-center text-xs font-bold text-amber-900 flex items-center justify-center gap-2 shrink-0">
+                <CheckCircle2 size={16} className="text-amber-700" />
+                <span>Consultation Session Completed.</span>
+              </div>
+            ) : (
+              <div className="p-3 sm:p-5 border-t border-amber-900/15 bg-white flex items-center gap-2.5 shrink-0">
+                <input
+                  type="text"
+                  value={inputMessage}
+                  onChange={(e) => onInputChange(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && onSendMessage()}
+                  placeholder={t("consult.type_placeholder", "Type your message...")}
+                  className="flex-1 h-12 px-4 rounded-2xl text-xs sm:text-sm border border-amber-900/20 outline-none focus:border-[#5B1F24] transition-all bg-[#FAF6F0]/50 text-[#3C3024] font-medium"
+                />
+                <button
+                  onClick={() => onSendMessage()}
+                  disabled={!inputMessage.trim()}
+                  className="h-12 w-12 sm:w-auto sm:px-6 rounded-2xl font-bold text-xs sm:text-sm text-white flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all disabled:opacity-50 bg-[#5B1F24] hover:brightness-110"
+                >
+                  <Send size={15} />
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 

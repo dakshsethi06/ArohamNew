@@ -150,7 +150,7 @@ export function ConsultPage() {
     } catch (e) {}
   };
 
-  const startConsultation = (astro: Astrologer) => {
+  const startConsultation = async (astro: Astrologer) => {
     if (!isLoggedIn || !user?.id) { openAuth(); return; }
     setSelectedAstrologer(astro);
     const sessionUuid = generateUUID();
@@ -164,15 +164,124 @@ export function ConsultPage() {
     };
     setSession(createdSession);
     setMessages([]);
+
+    // Insert into Supabase table
+    try {
+      await supabase.from("chat_sessions").insert(createdSession);
+    } catch (e) {}
+
+    // Save to localStorage for instant local/offline sync
+    try {
+      localStorage.setItem("aroham_latest_live_session", JSON.stringify(createdSession));
+      window.dispatchEvent(new Event("storage"));
+    } catch (e) {}
   };
 
   const handleSendMessage = async (textToSend?: string) => {
     const msgText = textToSend || inputMessage;
     if (!msgText.trim() || !session || !selectedAstrologer) return;
-    const userMsg = { id: "msg-" + Date.now(), sender: "user", text: msgText, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
+    
+    const userMsg = {
+      id: "msg-" + Date.now(),
+      session_id: session.id,
+      sender: "user",
+      text: msgText,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      created_at: new Date().toISOString()
+    };
+    
     setMessages(prev => [...prev, userMsg]);
     if (!textToSend) setInputMessage("");
+
+    // Insert to Supabase table
+    try {
+      await supabase.from("chat_messages").insert({
+        session_id: session.id,
+        sender: "user",
+        sender_type: "user",
+        text: msgText,
+        message_text: msgText
+      });
+    } catch (e) {}
+
+    // Save to localStorage for instant offline/same-browser sync
+    try {
+      const existingKey = `aroham_live_chat_${session.id}`;
+      const existing = JSON.parse(localStorage.getItem(existingKey) || "[]");
+      localStorage.setItem(existingKey, JSON.stringify([...existing, userMsg]));
+      window.dispatchEvent(new Event("storage"));
+    } catch (e) {}
   };
+
+  // Sync session status and messages between user and astrologer
+  useEffect(() => {
+    if (!session?.id) return;
+
+    const syncInterval = setInterval(async () => {
+      // 1. Fetch latest session status
+      try {
+        const { data: sessData } = await supabase
+          .from("chat_sessions")
+          .select("status")
+          .eq("id", session.id)
+          .maybeSingle();
+        if (sessData && sessData.status !== session.status) {
+          setSession((prev: any) => prev ? { ...prev, status: sessData.status } : null);
+        }
+      } catch (e) {}
+
+      // 2. Fetch latest messages from Supabase
+      try {
+        const { data: dbMsgs } = await supabase
+          .from("chat_messages")
+          .select("*")
+          .eq("session_id", session.id)
+          .order("created_at", { ascending: true });
+        if (dbMsgs) {
+          const formatted = dbMsgs.map(m => ({
+            id: m.id,
+            sender: m.sender || m.sender_type,
+            text: m.text || m.message_text,
+            timestamp: new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            recommendedProduct: m.recommended_product_slug ? findProduct(m.recommended_product_slug) : null
+          }));
+          setMessages(formatted);
+        }
+      } catch (e) {}
+    }, 2000);
+
+    const handleStorage = () => {
+      try {
+        const latestLocal = localStorage.getItem("aroham_latest_live_session");
+        if (latestLocal) {
+          const parsed = JSON.parse(latestLocal);
+          if (parsed.id === session.id && parsed.status !== session.status) {
+            setSession((prev: any) => prev ? { ...prev, status: parsed.status } : null);
+          }
+        }
+
+        const localMsgs = JSON.parse(localStorage.getItem(`aroham_live_chat_${session.id}`) || "[]");
+        if (Array.isArray(localMsgs) && localMsgs.length > 0) {
+          setMessages(prev => {
+            const merged = [...prev];
+            localMsgs.forEach(lm => {
+              if (!merged.some(m => m.id === lm.id)) {
+                merged.push(lm);
+              }
+            });
+            return merged;
+          });
+        }
+      } catch (e) {}
+    };
+
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      clearInterval(syncInterval);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, [session?.id, session?.status]);
 
   const endSession = () => {
     setSession(prev => prev ? { ...prev, status: "completed" } : null);
