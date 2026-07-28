@@ -1,0 +1,390 @@
+{
+    "Nakshatra": {
+        "Ashwini": {
+            "Gan": "Dev",
+            "Nadi": "Adi",
+            "Yoni": "Ashwa",
+            "Yunja": "Poorva",
+            "Syllables": [
+                "Chu",
+                "Che",
+                "Cho",
+                "La"
+            ]
+        },
+        "Bharani": {
+            "Gan": "Manushya",
+            "Nadi": "Madhya",
+            "Yoni": "Gaja",
+            "Yunja": "Madhya",
+            "Syllables": [
+                "Li",
+                "Lu",
+                "Le",
+                "Lo"
+            ]
+        },
+        "Krittika": {
+            "Gan": "Rakshas",
+            "Nadi": "Antya",
+            "Yoni": "Mesha",
+            "Yunja": "Uttara",
+            "Syllables": [
+                "A",
+                "I",
+                "U",
+                "Ea"
+            ]
+        },
+        "Rohini": {
+            "Gan": "Manushya",
+            "Nadi": "Antya",
+            "Yoni": "Sarpa",
+            "Yunja": "Poorva",
+            "Syllables": [
+                "O",
+                "Va",
+                "Vi",
+                "Vu"
+            ]
+        },
+        "Mrigashira": {
+            "Gan": "Dev",
+            "Nadi": "Madhya",
+            "Yoni": "Sarpa",
+            "Yunja": "Madhya",
+            "Syllables": [
+                "We",
+                "Wo",
+                "Ka",
+                "Ki"
+            ]
+        },
+        "Ardra": {
+            "Gan": "Manushya",
+            "Nadi": "Adi",
+            "Yoni": "Shwan",
+            "Yunja": "Uttara",
+            "Syllables": [
+                "Ku",
+                "Gha",
+                "Ing",
+                "Chha"
+            ]
+        },
+        "Punarvasu": {
+            "Gan": "Dev",
+            "Nadi": "Adi",
+            "Yoni": "Marjar",
+            "Yunja": "Poorva",
+            "Syllables": [
+                "Ke",
+                "Ko",
+                "Ha",
+                "Hi"
+            ]
+        },
+        "Pushya": {
+            "Gan": "Dev",
+            "Nadi": "Madhya",
+            "Yoni": "Mesh",
+            "Yunja": "Madhya",
+            "Syllables": [
+                "Hu",
+                "He",
+                "Ho",
+                "Da"
+            ]
+        },
+        "Ashlesha": {
+            "Gan": "Rakshas",
+            "Nadi": "Antya",
+            "Yoni": "Marjar",
+            "Yunja": "Uttara",
+            "Syllables": [
+                "Di",
+                "Du",
+                "De",
+                "Do"
+            ]
+        },
+        "Magha": {
+            "Gan": "Rakshas",
+            "Nadi": "Antya",
+            "Yoni": "Mushak",
+            "Yunja": "Poorva",
+            "Syllables": [
+                "Ma",
+                "Mi",
+                "Mu",
+                "Me"
+            ]
+        },
+        "PurvaPhalguni": {
+            "Gan": "Manushya",
+            "Nadi": "Madhya",
+            "Yoni": "Mushak",
+            "Yunja": "Madhya",
+            "Syllables": [
+                "Mo",
+                "Ta",
+                "Ti",
+                "Tu"
+            ]
+        },
+        "UttaraPhalguni": {
+            "Gan": "Manushya",
+            "Nadi": "Adi",
+            "Yoni": "Gau",
+            "Yunja": "Uttara",
+            "Syllables": [
+                "Te",
+                "To",
+                "Pa",
+                "Pi"
+            ]
+        },
+        "Hasta": {
+            "Gan": "Dev",
+            "Nadi": "Adi",
+            "Yoni": "Mahish",
+            "Yunja": "Poorva",
+            "Syllables": [
+                "Pu",
+                "Sha",
+                "Na",
+                "Tha"
+            ]
+        },
+        "Chitra": {
+            "Gan": "Rakshas",
+            "Nadi": "Madhya",
+            "Yoni": "Vyaghra",
+            "Yunja": "Madhya",
+            "Syllables": [
+                "Pe",
+                "Po",
+                "Ra",
+                "Ri"
+            ]
+        },
+        "Swati": {
+            "Gan": "Dev",
+            "Nadi": "Antya",
+            "Yoni": "Mahish",
+            "Yunja": "Uttara",
+            "Syllables": [
+                "Ru",
+                "Re",
+                "Ro",
+                "Ta"
+            ]
+        },
+        "Vishakha": {
+            "Gan": "Rakshas",
+            "Nadi": "Antya",
+            "Yoni": "Vyaghra",
+            "Yunja": "Poorva",
+            "Syllables": [
+                "Ti",
+                "Tu",
+                "Te",
+                "To"
+            ]
+        },
+        "Anuradha": {
+            "Gan": "Dev",
+            "Nadi": "Madhya",
+            "Yoni": "Mrig",
+            "Yunja": "Madhya",
+            "Syllables": [
+                "Na",
+                "Ni",
+                "Nu",
+                "Ne"
+            ]
+        },
+        "Jyeshtha": {
+            "Gan": "Rakshas",
+            "Nadi": "Adi",
+            "Yoni": "Mrig",
+            "Yunja": "Uttara",
+            "Syllables": [
+                "No",
+                "Ya",
+                "Yi",
+                "Yu"
+            ]
+        },
+        "Mula": {
+            "Gan": "Rakshas",
+            "Nadi": "Adi",
+            "Yoni": "Shwan",
+            "Yunja": "Poorva",
+            "Syllables": [
+                "Ye",
+                "Yo",
+                "Bha",
+                "Bhi"
+            ]
+        },
+        "PurvaAshadha": {
+            "Gan": "Manushya",
+            "Nadi": "Madhya",
+            "Yoni": "Vanar",
+            "Yunja": "Madhya",
+            "Syllables": [
+                "Bhu",
+                "Dha",
+                "Bha",
+                "Dha"
+            ]
+        },
+        "UttaraAshadha": {
+            "Gan": "Manushya",
+            "Nadi": "Antya",
+            "Yoni": "Nakul",
+            "Yunja": "Uttara",
+            "Syllables": [
+                "Bhe",
+                "Bho",
+                "Ja",
+                "Ji"
+            ]
+        },
+        "Shravana": {
+            "Gan": "Dev",
+            "Nadi": "Antya",
+            "Yoni": "Vanar",
+            "Yunja": "Poorva",
+            "Syllables": [
+                "Ju",
+                "Je",
+                "Jo",
+                "Gha"
+            ]
+        },
+        "Dhanishta": {
+            "Gan": "Rakshas",
+            "Nadi": "Madhya",
+            "Yoni": "Simha",
+            "Yunja": "Madhya",
+            "Syllables": [
+                "Ga",
+                "Gi",
+                "Gu",
+                "Ge"
+            ]
+        },
+        "Shatabhisha": {
+            "Gan": "Rakshas",
+            "Nadi": "Adi",
+            "Yoni": "Ashwa",
+            "Yunja": "Uttara",
+            "Syllables": [
+                "Go",
+                "Sa",
+                "Si",
+                "Su"
+            ]
+        },
+        "PurvaBhadrapada": {
+            "Gan": "Manushya",
+            "Nadi": "Adi",
+            "Yoni": "Simha",
+            "Yunja": "Poorva",
+            "Syllables": [
+                "Se",
+                "So",
+                "Da",
+                "Di"
+            ]
+        },
+        "UttaraBhadrapada": {
+            "Gan": "Manushya",
+            "Nadi": "Madhya",
+            "Yoni": "Gau",
+            "Yunja": "Madhya",
+            "Syllables": [
+                "Du",
+                "Tha",
+                "Jha",
+                "Da"
+            ]
+        },
+        "Revati": {
+            "Gan": "Dev",
+            "Nadi": "Antya",
+            "Yoni": "Gaja",
+            "Yunja": "Uttara",
+            "Syllables": [
+                "De",
+                "Do",
+                "Cha",
+                "Chi"
+            ]
+        }
+    },
+    "Rashi": {
+        "Aries": {
+            "Varna": "Kshatriya",
+            "Tatva": "Fire",
+            "Lord": "Mars"
+        },
+        "Taurus": {
+            "Varna": "Vaishya",
+            "Tatva": "Earth",
+            "Lord": "Venus"
+        },
+        "Gemini": {
+            "Varna": "Shudra",
+            "Tatva": "Air",
+            "Lord": "Mercury"
+        },
+        "Cancer": {
+            "Varna": "Brahmin",
+            "Tatva": "Water",
+            "Lord": "Moon"
+        },
+        "Leo": {
+            "Varna": "Kshatriya",
+            "Tatva": "Fire",
+            "Lord": "Sun"
+        },
+        "Virgo": {
+            "Varna": "Vaishya",
+            "Tatva": "Earth",
+            "Lord": "Mercury"
+        },
+        "Libra": {
+            "Varna": "Shudra",
+            "Tatva": "Air",
+            "Lord": "Venus"
+        },
+        "Scorpio": {
+            "Varna": "Brahmin",
+            "Tatva": "Water",
+            "Lord": "Mars"
+        },
+        "Sagittarius": {
+            "Varna": "Kshatriya",
+            "Tatva": "Fire",
+            "Lord": "Jupiter"
+        },
+        "Capricorn": {
+            "Varna": "Vaishya",
+            "Tatva": "Earth",
+            "Lord": "Saturn"
+        },
+        "Aquarius": {
+            "Varna": "Shudra",
+            "Tatva": "Air",
+            "Lord": "Saturn"
+        },
+        "Pisces": {
+            "Varna": "Brahmin",
+            "Tatva": "Water",
+            "Lord": "Jupiter"
+        }
+    }
+}

@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Outlet, useLocation, Navigate, useNavigat
 import { Nav } from "@visual/components/layout/Nav";
 import { Footer } from "@visual/components/layout/Footer";
 import { WhatsAppButton } from "@visual/components/layout/WhatsAppButton";
+import { AstroChatWidget } from "@visual/components/product/AstroChatWidget";
 import { CartSidebar } from "@visual/components/cart/CartSidebar";
 import { AuthPage } from "@visual/components/auth/AuthPage";
 import { ArohamLogoLoader } from "@visual/components/layout/ArohamLogoLoader";
@@ -103,6 +104,7 @@ function MainLayout() {
 
       <Footer />
       <WhatsAppButton />
+      <AstroChatWidget />
     </div>
   );
 }

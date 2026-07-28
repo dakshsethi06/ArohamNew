@@ -27,6 +27,25 @@ export function ProductDetailPage() {
   const { products, loading: productsLoading } = useProducts();
   const [product, setProduct] = useState<ArohamProduct | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (product?.id) {
+      const fetchNeighbors = async () => {
+        try {
+          const apiBase = (import.meta.env.VITE_API_BASE_URL as string) || "http://localhost:5000";
+          const res = await fetch(`${apiBase}/api/recommendations/item/${product.id}`);
+          if (res.ok) {
+            const data = await res.json();
+            setRecommendations(data.recommendations || []);
+          }
+        } catch (err) {
+          console.error("Failed to fetch item neighbors", err);
+        }
+      };
+      fetchNeighbors();
+    }
+  }, [product?.id]);
 
   useEffect(() => {
     if (slug) {
@@ -420,8 +439,24 @@ export function ProductDetailPage() {
               </button>
               
               <button
-                onClick={async () => { 
-                  await addToCart(product, qty); 
+                onClick={() => {
+                  addToCart({
+                    id: String(product.id),
+                    title: product.name,
+                    price: Number(product.price) || 0,
+                    image: product.image || product.img || "",
+                    quantity: qty,
+                  } as any);
+
+                  // Dispatch add_to_cart Telemetry
+                  const activeUserId = user?.id || localStorage.getItem("aroham_guest_user_id") || "anonymous_user";
+                  const apiBase = (import.meta.env.VITE_API_BASE_URL as string) || "http://localhost:5000";
+                  fetch(`${apiBase}/api/telemetry/event`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ userId: activeUserId, productId: String(product.id), eventType: "add_to_cart" })
+                  }).catch(console.error);
+
                   navigate("/checkout/shipping");
                   window.scrollTo({ top: 0, behavior: "instant" });
                 }}
@@ -537,6 +572,59 @@ export function ProductDetailPage() {
       <div className="max-w-7xl mx-auto px-6 lg:px-10 pt-6 pb-2">
         <div className="w-full">{tabContent[tab]}</div>
       </div>
+
+      {/* Frequently Bought Together / Item-to-Item Recommendations */}
+      {recommendations.length > 0 && (
+        <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10">
+          <div className="flex items-center gap-2 mb-6">
+            <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center border border-amber-900/10">
+              <Sparkles className="w-4 h-4 text-amber-600" />
+            </div>
+            <div>
+              <h3 className="font-bold text-xl text-[#3C3024]" style={{ fontFamily: SERIF }}>
+                Frequently Bought Together
+              </h3>
+              <p className="text-xs text-[#7A6A58] font-medium mt-0.5">
+                Devotees who brought home this sacred item also resonated with these.
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {recommendations.map((rec) => (
+              <div
+                key={rec.id}
+                onClick={() => navigate(`/shop/${rec.slug || rec.id}`)}
+                className="bg-white rounded-2xl p-3 border border-amber-900/10 hover:border-amber-900/30 transition-all cursor-pointer group shadow-sm hover:shadow-md flex flex-col justify-between"
+              >
+                <div>
+                  {rec.reasonBadge && (
+                    <span className="inline-block mb-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold text-amber-800 bg-amber-100 border border-amber-900/10">
+                      {rec.reasonBadge}
+                    </span>
+                  )}
+                  {rec.img && (
+                    <img
+                      src={rec.img}
+                      alt={rec.name}
+                      className="w-full h-32 object-cover rounded-xl mb-3 bg-amber-50 group-hover:scale-[1.02] transition-transform"
+                    />
+                  )}
+                  <h4 className="font-bold text-sm text-[#3C3024] line-clamp-2 group-hover:text-amber-800">
+                    {rec.name}
+                  </h4>
+                  <p className="text-xs text-[#7A6A58] line-clamp-1 mt-1 font-medium">
+                    {rec.short_desc || rec.subtitle || "Sacred remedy"}
+                  </p>
+                </div>
+                <div className="mt-3">
+                  <span className="font-bold text-sm text-amber-700">₹{(rec.price / 100).toFixed(2)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Contact section */}
       <div className="px-6 lg:px-10 mt-2 mb-8">
         <div className="max-w-7xl mx-auto">

@@ -36,6 +36,26 @@ export function ShopPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [quickViewProduct, setQuickViewProduct] = useState<any>(null);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+
+  const fetchRecommendations = () => {
+    const apiBase = (import.meta.env.VITE_API_BASE_URL as string) || "http://localhost:5000";
+    const guestId = localStorage.getItem("aroham_guest_user_id") || "guest_user";
+    fetch(`${apiBase}/api/recommendations/${guestId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.recommendations) {
+          setRecommendations(data.recommendations);
+        } else if (data.recommendations) {
+          setRecommendations(data.recommendations);
+        }
+      })
+      .catch(err => console.error("Recs fetch error:", err));
+  };
+
+  useEffect(() => {
+    fetchRecommendations();
+  }, [cats, prps, cols]);
 
   useEffect(() => {
     if (catParam) setCats([catParam]);
@@ -301,6 +321,66 @@ export function ShopPage() {
 
       {/* Main Content Area */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-8">
+
+        {/* Machine Learning Recommendations Banner */}
+        {recommendations.length > 0 && !hasActiveFilters && (
+          <div className="mb-10 p-6 rounded-3xl bg-gradient-to-r from-[#4D1418] via-[#5B1F24] to-[#3C1014] text-white border border-amber-500/20 shadow-xl relative overflow-hidden">
+            <div className="flex items-center justify-between mb-4 relative z-10">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center border border-amber-400/30">
+                  <Sparkles className="w-4 h-4 text-amber-300" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-xl text-amber-100" style={{ fontFamily: SERIF }}>
+                    ✨ Specially Curated For You
+                  </h3>
+                  <p className="text-sm text-amber-200/80 font-medium mt-1">
+                    Sacred remedies and temple-energized tools selected for your spiritual journey.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 relative z-10">
+              {recommendations.map((rec) => (
+                <div
+                  key={rec.id}
+                  onClick={() => navigate(`/shop/${rec.slug || rec.id}`)}
+                  className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 hover:border-amber-400/50 transition-all cursor-pointer group flex flex-col justify-between"
+                >
+                  <div>
+                    {rec.reasonBadge && (
+                      <span className="inline-block mb-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold text-amber-200 bg-amber-500/20 border border-amber-400/30">
+                        {rec.reasonBadge}
+                      </span>
+                    )}
+                    {rec.img && (
+                      <img
+                        src={rec.img}
+                        alt={rec.name}
+                        className="w-full h-28 object-cover rounded-xl mb-2 bg-amber-950/20 group-hover:scale-105 transition-transform"
+                      />
+                    )}
+                    <h4 className="font-bold text-xs text-white truncate group-hover:text-amber-200">
+                      {rec.name}
+                    </h4>
+                    <p className="text-[10px] text-amber-200/70 line-clamp-1 mt-0.5 font-medium">
+                      {rec.short_desc || rec.subtitle || "Sacred remedy"}
+                    </p>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between">
+                    <span className="font-extrabold text-xs text-amber-300">
+                      ₹{typeof rec.price === "number" ? (rec.price / 100).toFixed(0) : rec.price}
+                    </span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-amber-200/80 bg-white/10 px-2 py-0.5 rounded-full border border-white/10">
+                      View
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         
         {/* Active Filters Bar (Hidden on mobile, only shown on tablet/desktop if user manually filtered) */}
         {hasActiveFilters && (

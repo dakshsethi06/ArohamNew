@@ -8,7 +8,7 @@ import { useWishlist } from "@aroham/shared-state";
 import { SearchModal } from "./SearchModal";
 import { LanguageSelector } from "./LanguageSelector";
 import { useTranslation } from "@visual/context/LanguageContext";
-
+import { KundliModal } from "../product/KundliModal";
 
 export function Nav() {
   const navigate = useNavigate();
@@ -20,6 +20,7 @@ export function Nav() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isKundliOpen, setIsKundliOpen] = useState(false);
   const [query, setQuery] = useState("");
 
   useEffect(() => {
@@ -41,6 +42,7 @@ export function Nav() {
     [t("nav.home", "Home"), () => { navigate("/"); setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50); }],
     [t("nav.shop", "Shop"), () => navigate("/shop")],
     [t("nav.consult", "Consult"), () => navigate("/consult")],
+    ["📜 Make My Kundli", () => setIsKundliOpen(true)],
     ...(isLoggedIn ? [[t("nav.my_orders", "My Orders"), () => navigate("/profile?tab=orders")] as [string, () => void]] : []),
   ];
 
@@ -199,6 +201,7 @@ export function Nav() {
           </div>
         </div>
       </nav>
+      <KundliModal isOpen={isKundliOpen} onClose={() => setIsKundliOpen(false)} />
     </>
   );
 }

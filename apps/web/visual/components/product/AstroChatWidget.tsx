@@ -1,27 +1,87 @@
 import { useState, useRef, useEffect } from "react";
-import { MessageSquare, Send, X, ChevronUp, Sparkles } from "lucide-react";
+import { MessageSquare, Send, X, Sparkles, ShoppingBag, ExternalLink, Video, UserCheck, RotateCcw, Copy } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF } from "@aroham/shared-config/theme";
 import { useAuth } from "@aroham/shared-auth";
+import { useCart } from "@aroham/shared-state";
+import { useNavigate } from "react-router";
+
+interface ProductRecommendation {
+  id: number | string;
+  slug?: string;
+  name: string;
+  price: string;
+  desc?: string;
+  img?: string;
+  raw_price?: number;
+}
 
 interface ChatMessage {
   id: string;
   sender: "user" | "bot";
   text: string;
+  products?: ProductRecommendation[];
+  consultationHandoff?: boolean;
 }
+
+const DEFAULT_WELCOME_MSG: ChatMessage = {
+  id: "msg-welcome",
+  sender: "bot",
+  text: "Namaste! I am your AstroGuide. How can I help you align your stars and find the perfect supportive remedies today?",
+};
 
 export function AstroChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "msg-welcome",
-      sender: "bot",
-      text: "Namaste! I am your AstroGuide. How can I help you align your stars and find the perfect supportive remedies today?",
-    },
-  ]);
+  const [showProactive, setShowProactive] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    try {
+      const saved = sessionStorage.getItem("aroham_astro_chat_history");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error("Error reading chat history from sessionStorage:", e);
+    }
+    return [DEFAULT_WELCOME_MSG];
+  });
+
   const [inputVal, setInputVal] = useState("");
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
+  const { addToCart } = useCart();
+  const navigate = useNavigate();
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Feature 1: Proactive Greeting Bubble (5s delay)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!isOpen && messages.length === 1) {
+        setShowProactive(true);
+      }
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [isOpen, messages.length]);
+
+  // Persistent Guest ID for seamless ML telemetry tracking
+  const [guestId, setGuestId] = useState<string>("");
+
+  useEffect(() => {
+    let saved = localStorage.getItem("aroham_guest_user_id");
+    if (!saved) {
+      saved = "guest_" + Math.random().toString(36).substring(2, 10);
+      localStorage.setItem("aroham_guest_user_id", saved);
+    }
+    setGuestId(saved);
+  }, []);
+
+  // Save chat history to sessionStorage whenever messages change (Option 2)
+  useEffect(() => {
+    try {
+      sessionStorage.setItem("aroham_astro_chat_history", JSON.stringify(messages));
+    } catch (e) {
+      console.error("Error saving chat history to sessionStorage:", e);
+    }
+  }, [messages]);
 
   useEffect(() => {
     if (chatEndRef.current) {
@@ -67,12 +127,16 @@ export function AstroChatWidget() {
 
     try {
       const apiBase = (import.meta.env.VITE_API_BASE_URL as string) || "http://localhost:5000";
+      const activeUserId = user?.id || guestId || "anonymous_user";
+
       const res = await fetch(`${apiBase}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: user?.id || "anonymous_user",
+          userId: activeUserId,
           message: text,
+          pageContext: window.location.pathname,
+          history: messages.slice(1),
         }),
       });
 
@@ -85,6 +149,8 @@ export function AstroChatWidget() {
           id: "msg-res-" + Date.now(),
           sender: "bot",
           text: data.reply || "I cannot reach the cosmos right now.",
+          products: data.products || [],
+          consultationHandoff: data.consultation_handoff || false,
         },
       ]);
     } catch (err) {
@@ -102,27 +168,60 @@ export function AstroChatWidget() {
     }
   };
 
+  const handleProductClick = (prod: ProductRecommendation) => {
+    const slug = prod.slug || String(prod.id);
+    setIsOpen(false);
+    navigate(`/shop/${slug}`);
+  };
+
+  const handleConsultClick = () => {
+    setIsOpen(false);
+    navigate("/consult");
+  };
+
   return (
     <div className="fixed bottom-6 right-6 z-[999]" style={{ fontFamily: SANS }}>
+      {/* Feature 1: Proactive Greeting Bubble */}
+      {!isOpen && showProactive && (
+        <div className="absolute bottom-16 right-0 mb-2 w-52 bg-white rounded-2xl p-3 shadow-xl border border-amber-900/10 animate-in fade-in slide-in-from-bottom-2">
+          <button onClick={() => setShowProactive(false)} className="absolute top-1.5 right-1.5 text-amber-900/40 hover:text-amber-900"><X className="w-3 h-3" /></button>
+          <div className="flex items-start gap-2">
+            <span className="text-lg">✨</span>
+            <p className="text-[11px] font-semibold text-[#3C3024] leading-tight pr-2">
+              Looking for personalized Vedic remedies or astrological guidance?
+            </p>
+          </div>
+          <div className="absolute -bottom-1.5 right-6 w-3 h-3 bg-white border-b border-r border-amber-900/10 rotate-45" />
+        </div>
+      )}
+
       {/* Floating Toggle Button */}
       {!isOpen && (
         <button
-          onClick={() => setIsOpen(true)}
-          className="w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95"
+          onClick={() => {
+            setIsOpen(true);
+            setShowProactive(false);
+          }}
+          className="w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95 relative"
           style={{
             background: `linear-gradient(135deg, ${MAROON}, #7A2A30)`,
             boxShadow: "0 8px 32px rgba(91,31,36,0.3)",
           }}
         >
           <MessageSquare className="w-6 h-6" style={{ color: IVORY }} />
-          <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white animate-pulse" />
+          {showProactive && (
+            <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white animate-pulse" />
+          )}
+          {!showProactive && (
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white animate-pulse" />
+          )}
         </button>
       )}
 
       {/* Floating Chat Window */}
       {isOpen && (
         <div
-          className="w-[360px] h-[500px] bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col border border-amber-900/10 animate-in fade-in slide-in-from-bottom-5 duration-300"
+          className="w-[380px] h-[540px] bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col border border-amber-900/10 animate-in fade-in slide-in-from-bottom-5 duration-300"
           style={{
             boxShadow: "0 12px 40px rgba(91,31,36,0.15)",
           }}
@@ -145,12 +244,24 @@ export function AstroChatWidget() {
                 </span>
               </div>
             </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="p-1 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-all"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => {
+                  setMessages([DEFAULT_WELCOME_MSG]);
+                  sessionStorage.removeItem("aroham_astro_chat_history");
+                }}
+                className="p-1.5 rounded-lg bg-white/5 text-white/80 hover:bg-white/20 hover:text-white transition-all"
+                title="Start Fresh"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-1.5 rounded-lg bg-white/5 text-white/80 hover:bg-white/20 hover:text-white transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {/* Messages List */}
@@ -161,7 +272,7 @@ export function AstroChatWidget() {
                 className={`flex flex-col ${m.sender === "user" ? "items-end" : "items-start"}`}
               >
                 <div
-                  className={`max-w-[85%] p-3.5 rounded-2xl text-xs leading-relaxed shadow-sm ${
+                  className={`max-w-[88%] p-3.5 rounded-2xl text-xs leading-relaxed shadow-sm ${
                     m.sender === "user"
                       ? "text-white rounded-br-none"
                       : "text-[#3C3024] bg-white border border-amber-900/10 rounded-bl-none"
@@ -171,6 +282,131 @@ export function AstroChatWidget() {
                   }}
                   dangerouslySetInnerHTML={{ __html: parseMarkdown(m.text) }}
                 />
+
+                {/* Live Astrologer Consultation Handoff Card (Option 1) */}
+                {m.consultationHandoff && (
+                  <div className="mt-3 w-full p-3 rounded-2xl bg-gradient-to-r from-[#4D1418] via-[#5B1F24] to-[#3C1014] text-white border border-amber-500/30 shadow-md">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <Video className="w-4 h-4 text-amber-300" />
+                      <h5 className="font-bold text-xs text-amber-100" style={{ fontFamily: SERIF }}>
+                        Personal Kundali & Chart Reading Needed?
+                      </h5>
+                    </div>
+                    <p className="text-[10px] text-amber-200/80 mb-2.5 font-medium leading-tight">
+                      For detailed Kundali analysis, Dasha predictions, or matchmaking, consult 1-on-1 with a verified Vedic Astrologer.
+                    </p>
+                    <button
+                      onClick={handleConsultClick}
+                      className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-amber-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm hover:brightness-110 active:scale-95 transition-all"
+                    >
+                      <UserCheck className="w-3.5 h-3.5" />
+                      <span>Book Live Video Consultation</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Render Interactive Recommended Product Cards */}
+                {m.products && m.products.length > 0 && (
+                  <div className="mt-3 w-full space-y-2">
+                    <span className="text-[10px] font-bold tracking-widest text-amber-900/60 uppercase block px-1">
+                      ✨ Recommended Sacred Remedies
+                    </span>
+                    <div className="space-y-2">
+                      {m.products.map((prod) => (
+                        <div
+                          key={prod.id}
+                          className="bg-white rounded-xl p-2.5 border border-amber-900/15 shadow-sm flex items-center justify-between gap-3 hover:border-amber-700 transition-all group"
+                        >
+                          {prod.img && (
+                            <img
+                              src={prod.img}
+                              alt={prod.name}
+                              className="w-11 h-11 rounded-lg object-cover bg-amber-50 shrink-0"
+                            />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <h5 className="font-bold text-xs text-[#3C3024] truncate group-hover:text-[#5B1F24]">
+                              {prod.name}
+                            </h5>
+                            <span className="text-xs font-extrabold text-amber-700 block">
+                              {prod.price}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              onClick={() => handleProductClick(prod)}
+                              className="p-1.5 rounded-lg bg-amber-50 text-amber-900 hover:bg-amber-100 transition-all"
+                              title="View Product"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                addToCart({
+                                  id: String(prod.id),
+                                  title: prod.name,
+                                  price: prod.raw_price || 99900,
+                                  image: prod.img || "",
+                                  quantity: 1,
+                                } as any);
+                              }}
+                              className="p-1.5 rounded-lg text-white transition-all shadow-sm active:scale-95"
+                              style={{ background: `linear-gradient(135deg, ${MAROON}, #7A2A30)` }}
+                              title="Add to Cart"
+                            >
+                              <ShoppingBag className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {m.products.length > 1 && (
+                      <button
+                        onClick={() => {
+                          m.products?.forEach(prod => {
+                            addToCart({
+                              id: String(prod.id),
+                              title: prod.name,
+                              price: prod.raw_price || 99900,
+                              image: prod.img || "",
+                              quantity: 1,
+                            } as any);
+                          });
+                        }}
+                        className="w-full mt-3 py-2 rounded-xl text-white text-xs font-bold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-700 to-amber-900 hover:from-amber-600 hover:to-amber-800"
+                      >
+                        <ShoppingBag className="w-4 h-4" />
+                        Add All Recommended to Cart (Save 10%)
+                      </button>
+                    )}
+                  </div>
+                )}
+                {m.consultationHandoff && (
+                  <div className="mt-3 bg-gradient-to-br from-amber-50 to-white rounded-xl p-3 border border-amber-900/20 shadow-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
+                        <UserCheck className="w-3.5 h-3.5 text-amber-700" />
+                      </div>
+                      <h5 className="font-bold text-[11px] text-[#5B1F24]">Astrologer Consultation Recommended</h5>
+                    </div>
+                    <p className="text-[10px] text-amber-900/80 mb-3 font-medium">For deep insights into your Kundali and personalized life path guidance, we recommend speaking directly with our Vedic Astrologers.</p>
+                    <button
+                      onClick={() => navigate("/consult")}
+                      className="w-full py-2 rounded-lg text-white text-[10px] font-bold shadow-sm transition-all flex items-center justify-center gap-2 bg-[#5B1F24] hover:bg-[#7A2A30]"
+                    >
+                      <Video className="w-3.5 h-3.5" /> Book Live Consultation
+                    </button>
+                  </div>
+                )}
+                {m.sender === "bot" && (
+                  <button
+                    onClick={() => navigator.clipboard.writeText(m.text)}
+                    className="absolute -right-7 bottom-0 p-1 text-amber-900/40 hover:text-amber-900 transition-colors bg-white rounded-md shadow-sm border border-amber-900/10 opacity-0 group-hover:opacity-100"
+                    title="Copy response"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             ))}
 
@@ -179,14 +415,37 @@ export function AstroChatWidget() {
                 <span className="w-2 h-2 rounded-full bg-amber-500 animate-bounce" />
                 <span className="w-2 h-2 rounded-full bg-amber-500 animate-bounce delay-100" />
                 <span className="w-2 h-2 rounded-full bg-amber-500 animate-bounce delay-200" />
-                <span className="font-semibold text-[10px] ml-1">Consulting the cosmos...</span>
+                <span className="font-semibold text-[10px] ml-1">Consulting the cosmos for your sacred guidance...</span>
               </div>
             )}
             <div ref={chatEndRef} />
           </div>
 
+          {/* Quick Suggestion Chips */}
+          {messages.length <= 2 && !loading && (
+            <div className="px-4 py-2 bg-[#FCFAF7] border-t border-amber-900/5 flex items-center gap-1.5 overflow-x-auto shrink-0 no-scrollbar">
+              {[
+                { label: "💼 Career & Business", prefix: "Recommend a remedy for " },
+                { label: "💖 Love & Harmony", prefix: "Recommend a remedy for " },
+                { label: "🛡️ Rahu/Ketu Protection", prefix: "What is a good protection from " },
+                { label: "🪔 Puja & Yantras", prefix: "Tell me about " }
+              ].map((chip) => (
+                <button
+                  key={chip.label}
+                  onClick={() => {
+                    const text = chip.prefix + chip.label.replace(/^[^\s]+\s*/, "");
+                    setInputVal(text);
+                  }}
+                  className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white text-amber-900 border border-amber-900/15 hover:border-amber-700 hover:bg-amber-50 transition-all shrink-0 shadow-xs"
+                >
+                  {chip.label}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Input Box */}
-          <div className="p-4 border-t border-amber-900/10 bg-white flex items-center gap-2 shrink-0">
+          <div className="p-3.5 border-t border-amber-900/10 bg-white flex items-center gap-2 shrink-0">
             <input
               type="text"
               value={inputVal}
