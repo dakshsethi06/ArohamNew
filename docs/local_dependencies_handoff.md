@@ -27,8 +27,9 @@ The system assumes a specific microservice port architecture running on `localho
 
 ## 3. Gorse ML Docker Container
 The recommendation engine requires Gorse to be running locally via Docker. It is **not** hosted in the cloud.
-* **What you need to do:** You must install Docker and spin up the Gorse container manually.
-* **Command:** `docker run -p 8088:8088 zhenghaoz/gorse-in-one`
+* **What you need to do:** You must install Docker and spin up the Gorse container using the provided compose file.
+* **Command:** Run `docker-compose up -d` in the root of the project.
+* **Syncing Products:** If your Gorse engine is completely blank, simply run `node backend/scripts/sync_gorse.js` to instantly pull all products from Supabase into your local Gorse instance.
 * **Dependency:** Without this container, the backend will fallback to Supabase bestsellers (Tier 3 fallback).
 
 ## 4. Session & Storage Dependencies
