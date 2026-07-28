@@ -68,7 +68,7 @@ Key Instructions:
     systemPrompt += `\n\nOur Machine Learning engine recommends these sacred store items for this devotee:\n${productText}\n\nYou MUST naturally weave a recommendation for 1 or 2 of these items into your guidance. Dedicate a section titled "💎 Recommended Sacred Remedies" at the bottom of your message, format the product name in bold, explain why it supports them, and mention it is available in the Aroham Store.`;
   }
 
-  const userProfile = global.kundaliProfiles ? (global.kundaliProfiles[userId] || global.kundaliProfiles["Yashasvi Solanki"]) : null;
+  const userProfile = global.kundaliProfiles ? global.kundaliProfiles[userId] : null;
   if (userProfile) {
     systemPrompt += `\n\n6. ASTROLOGICAL PROFILE: This devotee's active Mahadasha is ${userProfile.mahadasha} (Moon Sign: ${userProfile.moonSign}, Nakshatra: ${userProfile.nakshatra}). ${userProfile.guidanceNote}`;
   }

@@ -71,7 +71,7 @@ router.get("/:userId", async (req, res) => {
 
     // Astrological Recommendation Boosting: Check if derived Kundali profile exists
     const { scoreAndRankProducts } = require("../services/kundliScoring");
-    const userProfile = global.kundaliProfiles ? (global.kundaliProfiles[userId] || global.kundaliProfiles["Yashasvi Solanki"]) : null;
+    const userProfile = global.kundaliProfiles ? global.kundaliProfiles[userId] : null;
 
     if (userProfile && products.length > 0) {
       console.log(`[Recommendations API] Applying Astrological Boosting for ${userId} (Dasha: ${userProfile.mahadasha})`);
