@@ -11,6 +11,7 @@ import { COMBOS } from "@aroham/shared-config/data";
 import { ArohamProduct } from "@aroham/shared-types/product";
 import { useCart } from "@aroham/shared-state";
 import { useProducts } from "@aroham/shared-hooks/useProducts";
+import { AstroChatWidget } from "@visual/components/product/AstroChatWidget";
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -38,6 +39,7 @@ export function HomePage() {
       <VideoTestimonials />
       <CommunityComments products={products} />
       <Newsletter />
+      <AstroChatWidget />
     </main>
   );
 }

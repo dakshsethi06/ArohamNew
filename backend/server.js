@@ -58,6 +58,8 @@ app.use("/api/payments", require("./routes/payments"));
 app.use("/api/addresses", require("./routes/addresses"));
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/shiprocket", require("./routes/shiprocket"));
+app.use("/api/telemetry", require("./routes/telemetry"));
+app.use("/api/chat", require("./routes/chat"));
 
 
 app.get("/api/health", (req, res) => res.json({ status: "ok", service: "aroham-backend" }));

@@ -5,6 +5,7 @@ import { MAROON, GOLD, IVORY, SANS, SERIF, PRICE_FONT } from "@aroham/shared-con
 import { ArohamProduct } from "@aroham/shared-types/product";
 import { useWishlist } from "@aroham/shared-state";
 import { useCart } from "@aroham/shared-state";
+import { useAuth } from "@aroham/shared-auth";
 
 export interface ProductCardProps {
   product: ArohamProduct;
@@ -19,6 +20,7 @@ export function ProductCard({ product: p, onProductClick, onAddToCart, wishKey =
   const navigate = useNavigate();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { items, addToCart, updateQty, removeFromCart } = useCart();
+  const { user } = useAuth();
 
   const isItemWished = propWished !== undefined ? propWished : isInWishlist(p.id);
   const cartItem = items.find(item => item.product.id === p.id);
@@ -32,8 +34,20 @@ export function ProductCard({ product: p, onProductClick, onAddToCart, wishKey =
     toggleWishlist(p);
   };
 
+  const handleCardClick = () => {
+    const userId = user?.id || "anonymous_user";
+    const apiBase = (import.meta.env.VITE_API_BASE_URL as string) || "http://localhost:5000";
+    fetch(`${apiBase}/api/telemetry/click`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, productId: p.id })
+    }).catch(err => console.error("Telemetry error:", err));
+
+    onProductClick(p);
+  };
+
   return (
-    <div onClick={() => onProductClick(p)}
+    <div onClick={handleCardClick}
       className="group rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1.5 cursor-pointer h-full flex flex-col justify-between"
       style={{ background: "#FFFFFF", boxShadow: "0 2px 18px rgba(91,31,36,0.06)", border: "1px solid rgba(91,31,36,0.07)" }}
       onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.boxShadow = "0 14px 36px rgba(91,31,36,0.12)"}
