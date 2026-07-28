@@ -3,7 +3,7 @@ import { X, Clock, Share2, ShoppingBag, Sparkles } from "lucide-react";
 import { BlogPost } from "@visual/data/blogData";
 import { useCart } from "@aroham/shared-state";
 import { ArohamProduct } from "@aroham/shared-types/product";
-import { useTranslation } from "@visual/context/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 interface BlogDetailModalProps {
   post: BlogPost | null;

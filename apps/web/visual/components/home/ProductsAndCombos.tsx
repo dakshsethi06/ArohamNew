@@ -5,7 +5,7 @@ import { MAROON, SAFFRON, GOLD, IVORY, SANS, SERIF } from "@aroham/shared-config
 
 import { ArohamProduct } from "@aroham/shared-types/product";
 import { ProductCard } from "@visual/components/product/ProductCard";
-import { useTranslation } from "@visual/context/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 export function ProductsAndCombos({ products, onProductClick, onAddCombo: _onAddCombo, onAddToCart }: {
   products: ArohamProduct[];

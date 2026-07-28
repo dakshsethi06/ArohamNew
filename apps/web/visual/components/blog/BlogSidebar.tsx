@@ -1,6 +1,6 @@
 import { MAROON, GOLD, SERIF } from "@aroham/shared-config/theme";
 import { LayoutGrid, Sparkles } from "lucide-react";
-import { useTranslation } from "@visual/context/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 interface BlogSidebarProps {
   categories: string[];

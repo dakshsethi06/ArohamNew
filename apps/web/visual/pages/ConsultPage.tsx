@@ -6,7 +6,7 @@ import { useCart } from "@aroham/shared-state";
 import { supabase } from "@aroham/shared-services";
 import { useProducts } from "@aroham/shared-hooks/useProducts";
 import { generateUUID } from "@aroham/shared-utils/uuid";
-import { useTranslation } from "@visual/context/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 import { ConsultHero } from "@visual/components/consult/ConsultHero";
 import { AstrologerCard, Astrologer } from "@visual/components/consult/AstrologerCard";

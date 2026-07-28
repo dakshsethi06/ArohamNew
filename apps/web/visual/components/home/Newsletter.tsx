@@ -4,7 +4,7 @@ import { MAROON, GOLD, IVORY, SANS, SERIF } from "@aroham/shared-config/theme";
 import { supabase } from "@aroham/shared-services";
 import { db } from "@aroham/shared-services";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { useTranslation } from "@visual/context/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 export function Newsletter() {
   const [email, setEmail] = useState("");

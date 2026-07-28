@@ -1,7 +1,7 @@
 import { Instagram, Twitter, Facebook, Youtube } from "lucide-react";
 import { Link } from "react-router";
 import { MAROON, GOLD, SAFFRON, IVORY, SANS, SERIF } from "@aroham/shared-config/theme";
-import { useTranslation } from "@visual/context/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 
 const SOCIAL_LINKS = [

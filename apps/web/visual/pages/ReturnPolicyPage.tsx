@@ -1,5 +1,5 @@
 import { MAROON, GOLD, SERIF } from "@aroham/shared-config/theme";
-import { useTranslation } from "@visual/context/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 export function ReturnPolicyPage() {
   const { t } = useTranslation();

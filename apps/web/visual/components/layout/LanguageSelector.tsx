@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useTranslation } from "@visual/context/LanguageContext";
+import { useTranslation } from "react-i18next";
 import { LANGUAGES, LanguageCode } from "@visual/i18n/translations";
 import { MAROON, GOLD, IVORY } from "@aroham/shared-config/theme";
 
@@ -11,7 +11,9 @@ interface LanguageSelectorProps {
 }
 
 export function LanguageSelector({ solid, isMobile, alignRight = true }: LanguageSelectorProps) {
-  const { language, setLanguage } = useTranslation();
+  const { i18n } = useTranslation();
+  const language = (i18n.language || "en") as LanguageCode;
+  const setLanguage = (lang: LanguageCode) => i18n.changeLanguage(lang);
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 

@@ -28,6 +28,19 @@ export async function api(endpoint: string, options: RequestInit = {}) {
     const { data: { session } } = await supabase.auth.getSession();
     token = session?.access_token || null;
   }
+
+  // Local development fallback: if no real auth token exists, use mock session ID
+  if (!token && typeof window !== "undefined") {
+    try {
+      const mockSession = localStorage.getItem("aroham_mock_session");
+      if (mockSession) {
+        const parsed = JSON.parse(mockSession);
+        if (parsed?.id) {
+          token = `MOCK-USER-ID-${parsed.id}`;
+        }
+      }
+    } catch (e) {}
+  }
   
   const headers: HeadersInit = {
     "Content-Type": "application/json",

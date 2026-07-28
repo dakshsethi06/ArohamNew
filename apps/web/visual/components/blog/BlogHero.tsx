@@ -1,5 +1,5 @@
 import { Search } from "lucide-react";
-import { useTranslation } from "@visual/context/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 interface BlogHeroProps {
   searchQuery: string;

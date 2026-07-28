@@ -1,6 +1,6 @@
 import { Star, MessageSquare } from "lucide-react";
 import { SERIF } from "@aroham/shared-config/theme";
-import { useTranslation } from "@visual/context/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 export interface Astrologer {
   id: string;

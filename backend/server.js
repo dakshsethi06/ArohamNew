@@ -34,6 +34,12 @@ const app = express();
 
 app.use(cors({ origin: true, credentials: true }));
 
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`[HTTP] ${req.method} ${req.url}`);
+  next();
+});
+
 // Standard Security & Cache-Control Headers Middleware
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");

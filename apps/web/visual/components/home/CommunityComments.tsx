@@ -6,7 +6,7 @@ import { ArohamProduct } from "@aroham/shared-types/product";
 import { FloatingInput } from "@visual/components/auth/FloatingInput";
 import { FloatingSelect } from "@visual/components/auth/FloatingSelect";
 import { supabase } from "@aroham/shared-services";
-import { useTranslation } from "@visual/context/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 export function CommunityComments({ products = [] }: { products?: ArohamProduct[] }) {
   const [liked, setLiked] = useState<Record<string | number, boolean>>({});

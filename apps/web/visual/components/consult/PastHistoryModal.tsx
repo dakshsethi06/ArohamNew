@@ -1,7 +1,7 @@
 import { createPortal } from "react-dom";
 import { X, MessageSquare, ShoppingBag } from "lucide-react";
 import { SERIF, SANS } from "@aroham/shared-config/theme";
-import { useTranslation } from "@visual/context/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 interface PastHistoryModalProps {
   isOpen: boolean;

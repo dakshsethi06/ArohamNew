@@ -3,7 +3,7 @@ import { FloatingInput } from "@visual/components/auth/FloatingInput";
 import { useState } from "react";
 import { PackageSearch, Loader2, ChevronLeft, Truck, MapPin, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router";
-import { useTranslation } from "@visual/context/LanguageContext";
+import { useTranslation } from "react-i18next";
 import { api } from "@aroham/shared-api";
 
 interface TrackingResult {

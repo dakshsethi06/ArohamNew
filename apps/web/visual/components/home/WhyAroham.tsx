@@ -2,7 +2,7 @@ import { Flame, Gem, Star, Shield, Package, Award, Mail, Phone, MessageCircle } 
 import { MAROON, GOLD, SAFFRON, IVORY, SANS, SERIF } from "@aroham/shared-config/theme";
 import { CONTACT_INFO } from "@aroham/shared-config/contact";
 import { pyramidImg, baglaImg, navratnaImg, gemstonImg, yantraPlateImg, pendantSilImg } from "@aroham/shared-config/data";
-import { useTranslation } from "@visual/context/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 export function WhyAroham() {
   const { t } = useTranslation();

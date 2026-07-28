@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { MAROON, GOLD, SAFFRON, IVORY, SANS, SERIF } from "@aroham/shared-config/theme";
 import { GRAHAS } from "@aroham/shared-config/data";
-import { useTranslation } from "@visual/context/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 
 const S = 1.05;

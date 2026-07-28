@@ -3,7 +3,7 @@ import { FloatingInput } from "@visual/components/auth/FloatingInput";
 import { useState } from "react";
 import { Mail, MapPin, Phone, Loader2 } from "lucide-react";
 import { supabase } from "@aroham/shared-services";
-import { useTranslation } from "@visual/context/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 export function ContactUsPage() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });

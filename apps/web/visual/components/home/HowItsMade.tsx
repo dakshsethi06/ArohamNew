@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { ChevronRight, Pickaxe, Hammer, PenTool, Flame, BadgeCheck } from "lucide-react";
 import { GOLD, IVORY, MAROON, SANS, SERIF } from "@aroham/shared-config/theme";
 import { CRAFT_STEPS, CRAFT_IMAGES } from "@aroham/shared-config/data";
-import { useTranslation } from "@visual/context/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 export function HowItsMade() {
   const [step, setStep] = useState(0);

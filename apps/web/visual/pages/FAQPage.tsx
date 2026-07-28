@@ -1,7 +1,7 @@
 import { MAROON, GOLD, SERIF } from "@aroham/shared-config/theme";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
-import { useTranslation } from "@visual/context/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 export function FAQPage() {
   const [openIdx, setOpenIdx] = useState<number | null>(0);

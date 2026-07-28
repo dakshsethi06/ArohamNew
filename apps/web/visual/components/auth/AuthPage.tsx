@@ -16,7 +16,7 @@ import * as Popover from "@radix-ui/react-popover";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 
-import { useTranslation } from "@visual/context/LanguageContext";
+import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "@visual/components/layout/LanguageSelector";
 
 type AuthState = "signin" | "signup" | "otp" | "profile-setup" | "success";

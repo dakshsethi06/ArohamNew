@@ -1,7 +1,7 @@
 import { MAROON, GOLD, SERIF } from "@aroham/shared-config/theme";
 import { Clock, ArrowRight } from "lucide-react";
 import { BlogPost } from "@visual/data/blogData";
-import { useTranslation } from "@visual/context/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 interface BlogCardProps {
   post: BlogPost;

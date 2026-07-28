@@ -2,7 +2,7 @@ import { ArrowRight, Flame, CheckCircle, Truck, Shield } from "lucide-react";
 import { MAROON, GOLD, IVORY, SANS, SERIF } from "@aroham/shared-config/theme";
 import { ArohamProduct } from "@aroham/shared-types/product";
 import { HexPrismCarousel } from "./HexPrismCarousel";
-import { useTranslation } from "@visual/context/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 
 export function ShopConsultCards({ products, onShop, onProductClick }: { products: ArohamProduct[]; onShop: () => void; onProductClick?: (p: ArohamProduct) => void }) {
