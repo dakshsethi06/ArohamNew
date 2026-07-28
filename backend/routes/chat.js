@@ -12,7 +12,7 @@ function formatImageUrl(url) {
 }
 
 router.post("/", async (req, res) => {
-  const { message, userId = "user_demo_123", pageContext, history = [] } = req.body;
+  const { message, userId, pageContext, history = [] } = req.body;
   if (!message) {
     return res.status(400).json({ error: "message is required" });
   }
